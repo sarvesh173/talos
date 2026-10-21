@@ -99,7 +99,7 @@ fun LandingScreen(
             )
         }
 
-        // 2. Top-Right: Hot Pink Sphere Agent (Alya) with rose emblem badge
+        // 2. Top-Right: Warm Coral Agent (Claude Code) with spark emblem badge
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -107,10 +107,10 @@ fun LandingScreen(
         ) {
             PinkAgentBlob(
                 modifier = Modifier.size(68.dp),
-                color = Color(0xFFF43F5E)
+                color = Color(0xFFD97757)
             )
             AgentEmblemBadge(
-                emblem = emblemByKey("alya"),
+                emblem = emblemByKey("claude"),
                 modifier = Modifier.align(Alignment.BottomStart)
             )
         }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -171,45 +174,88 @@ fun MainScreen(
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = BgDark,
-                        titleContentColor = TextPrimary
-                    ),
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = roomTitle,
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isConnected) StatusGreen else Color(0xFFEF4444))
-                            )
+                Column(modifier = Modifier.background(BgDark)) {
+                    TopAppBar(
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = BgDark,
+                            titleContentColor = TextPrimary
+                        ),
+                        title = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = roomTitle,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isConnected) StatusGreen else Color(0xFFEF4444))
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu", tint = TextPrimary)
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = onToggleTheme) {
+                                Icon(
+                                    imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                    contentDescription = "Toggle Dark/Light Mode",
+                                    tint = TextMuted
+                                )
+                            }
+                            IconButton(onClick = { showSettingsDialog = true }) {
+                                Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = TextMuted)
+                            }
                         }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu", tint = TextPrimary)
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = onToggleTheme) {
-                            Icon(
-                                imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                contentDescription = "Toggle Dark/Light Mode",
-                                tint = TextMuted
-                            )
-                        }
-                        IconButton(onClick = { showSettingsDialog = true }) {
-                            Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = TextMuted)
+                    )
+
+                    // Horizontal Chamber Quick Switcher Rail
+                    if (rooms.size > 1) {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(rooms) { room: Room ->
+                                val isSelected = room.id == currentRoomId
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(if (isSelected) PrimaryAccent.copy(alpha = 0.2f) else SurfaceDark)
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) PrimaryAccent else SurfaceBorder,
+                                            RoundedCornerShape(20.dp)
+                                        )
+                                        .clickable { client.switchRoom(room.id) }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (room.mode == "dm") Icons.Default.Person else Icons.Default.Groups,
+                                        contentDescription = null,
+                                        tint = if (isSelected) PrimaryAccent else TextMuted,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = room.name,
+                                        color = if (isSelected) PrimaryAccent else TextPrimary,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                }
+                            }
                         }
                     }
-                )
+                }
             },
             bottomBar = {
                 Surface(
@@ -284,14 +330,24 @@ fun MainScreen(
             },
             containerColor = BgDark
         ) { paddingValues ->
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                items(messages) { msg: Message ->
-                    MessageBubble(msg = msg)
+            if (messages.isEmpty()) {
+                ChamberHero(
+                    room = activeRoom,
+                    onPromptClick = { prompt -> inputText = prompt },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    items(messages) { msg: Message ->
+                        MessageBubble(msg = msg)
+                    }
                 }
             }
         }
@@ -422,4 +478,87 @@ fun SettingsDialog(
             }
         }
     )
+}
+
+@Composable
+fun ChamberHero(
+    room: Room?,
+    onPromptClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        ThinkingOrb(
+            state = OrbState.WEAVING,
+            size = 64.dp,
+            dotCount = 48,
+            primaryColor = PrimaryAccent,
+            accentColor = Color(0xFFA855F7)
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = room?.name ?: "Chamber Initialized",
+            color = TextPrimary,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = room?.description ?: "Multi-agent autonomous collaborative mesh. Zero latency, peer-to-peer verification.",
+            color = TextMuted,
+            fontSize = 13.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 18.sp,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Suggested Action Chips
+        val suggestions = listOf(
+            "Deconstruct system architecture",
+            "Simulate multi-agent consensus",
+            "Verify Tailscale mesh telemetry"
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            for (suggestion in suggestions) {
+                Surface(
+                    color = SurfaceDark,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, SurfaceBorder),
+                    modifier = Modifier
+                        .fillMaxWidth(0.92f)
+                        .clickable { onPromptClick(suggestion) }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Terminal,
+                            contentDescription = null,
+                            tint = PrimaryAccent,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = suggestion,
+                            color = TextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

@@ -1,33 +1,65 @@
 package com.sarvesh173.talos.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val BgDark = Color(0xFF080C14)
-val SurfaceDark = Color(0xFF0F172A)
-val SurfaceBorder = Color(0xFF1E293B)
+// Dark & OLED Palette
+val BgDark = Color(0xFF090D15)
+val SurfaceDark = Color(0xFF131926)
+val SurfaceBorderDark = Color(0xFF222B3D)
 val PrimaryAccent = Color(0xFF6366F1)
 val StatusGreen = Color(0xFF10B981)
-val TextPrimary = Color(0xFFF1F5F9)
-val TextMuted = Color(0xFF94A3B8)
-val AlyaPink = Color(0xFFEC4899)
-val OmniBlue = Color(0xFF3B82F6)
+val TextPrimaryDark = Color(0xFFF1F5F9)
+val TextMutedDark = Color(0xFF94A3B8)
 
-private val DarkColorScheme = darkColorScheme(
+// Light Palette
+val BgLight = Color(0xFFF8FAFC)
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceBorderLight = Color(0xFFE2E8F0)
+val TextPrimaryLight = Color(0xFF0F172A)
+val TextMutedLight = Color(0xFF64748B)
+
+val DarkColorScheme = darkColorScheme(
     primary = PrimaryAccent,
     background = BgDark,
     surface = SurfaceDark,
     onPrimary = Color.White,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary
+    onBackground = TextPrimaryDark,
+    onSurface = TextPrimaryDark
 )
 
+val LightColorScheme = lightColorScheme(
+    primary = PrimaryAccent,
+    background = BgLight,
+    surface = SurfaceLight,
+    onPrimary = Color.White,
+    onBackground = TextPrimaryLight,
+    onSurface = TextPrimaryLight
+)
+
+enum class AppThemeMode {
+    DARK,
+    LIGHT,
+    SYSTEM
+}
+
 @Composable
-fun TalosTheme(content: @Composable () -> Unit) {
+fun TalosTheme(
+    themeMode: AppThemeMode = AppThemeMode.DARK,
+    content: @Composable () -> Unit
+) {
+    val isDark = when (themeMode) {
+        AppThemeMode.DARK -> true
+        AppThemeMode.LIGHT -> false
+        AppThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+
     MaterialTheme(
-        colorScheme = DarkColorScheme,
+        colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
         content = content
     )
 }

@@ -56,7 +56,7 @@ class TestAgentOrchestrator(unittest.IsolatedAsyncioTestCase):
 
         final = [p for p in senders if '"message_new"' in p and '"sender_role":"agent"' in p]
         self.assertEqual(len(final), 2, "expected one reply per agent")
-        self.assertTrue(any("Alya" in p for p in final))
+        self.assertTrue(any("Hermes" in p for p in final))
         self.assertTrue(any("OmniRush" in p for p in final))
 
     async def test_mention_selects_single_agent(self):
@@ -64,22 +64,22 @@ class TestAgentOrchestrator(unittest.IsolatedAsyncioTestCase):
         orch = AgentOrchestrator(event_bus=bus, turn_stagger=0.01, token_interval=0.0)
         orch.attach()
 
-        socket = RecordingSocket("alya-dm")
-        await bus.subscribe("alya-dm", socket)
+        socket = RecordingSocket("core-dm")
+        await bus.subscribe("core-dm", socket)
 
         msg = Message(
-            room_id="alya-dm",
+            room_id="core-dm",
             sender_id="sarvesh",
             sender_name="Sarvesh",
             sender_role=Role.human,
-            content="@alya what is the plan?",
+            content="@hermes what is the plan?",
         )
         await bus.dispatch_message(msg)
         await asyncio.sleep(1.0)
 
         final = [p for p in socket.events if '"message_new"' in p and '"sender_role":"agent"' in p]
         self.assertEqual(len(final), 1)
-        self.assertIn("Alya", final[0])
+        self.assertIn("Hermes", final[0])
         self.assertNotIn("OmniRush", final[0])
 
     async def test_agent_messages_do_not_trigger_loops(self):
@@ -92,8 +92,8 @@ class TestAgentOrchestrator(unittest.IsolatedAsyncioTestCase):
 
         msg = Message(
             room_id="the-council",
-            sender_id="alya",
-            sender_name="Alya",
+            sender_id="hermes",
+            sender_name="Hermes",
             sender_role=Role.agent,
             content="Some earlier agent reply.",
         )
@@ -122,13 +122,13 @@ class TestAgentOrchestrator(unittest.IsolatedAsyncioTestCase):
         await bus.dispatch_message(msg)
         await asyncio.sleep(2.0)
 
-        # Typing indicators should start for Alya first, then OmniRush later.
+        # Typing indicators should start for Hermes first, then OmniRush later.
         starts = []
         for payload in socket.events:
             if '"typing_indicator"' in payload and '"is_typing":true' in payload.replace(" ", ""):
                 starts.append(payload)
         self.assertEqual(len(starts), 2)
-        self.assertIn("alya", starts[0])
+        self.assertIn("hermes", starts[0])
         self.assertIn("omnirush", starts[1])
 
     async def test_status_payload(self):

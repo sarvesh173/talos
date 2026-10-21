@@ -70,7 +70,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val _rooms = MutableStateFlow<List<Room>>(emptyList())
     val rooms: StateFlow<List<Room>> = _rooms.asStateFlow()
 
-    private val _currentRoomId = MutableStateFlow("alya-dm")
+    private val _currentRoomId = MutableStateFlow("the-council")
     val currentRoomId: StateFlow<String> = _currentRoomId.asStateFlow()
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
@@ -78,6 +78,24 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private val _isAgentTyping = MutableStateFlow(false)
     val isAgentTyping: StateFlow<Boolean> = _isAgentTyping.asStateFlow()
+
+    private fun loadCachedMessages(roomId: String): List<Message> {
+        val raw = prefs.getString("cached_msgs_$roomId", null) ?: return emptyList()
+        return try {
+            json.decodeFromString<List<Message>>(raw)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveCachedMessages(roomId: String, list: List<Message>) {
+        try {
+            val raw = json.encodeToString(list.takeLast(100))
+            prefs.edit().putString("cached_msgs_$roomId", raw).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to cache messages: ${e.message}")
+        }
+    }
 
     fun updateConfig(newUrl: String, newToken: String) {
         baseUrl = newUrl.trimEnd('/')
@@ -94,7 +112,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     fun switchRoom(roomId: String) {
         if (!isPaired.value) return
         _currentRoomId.value = roomId
-        _messages.value = emptyList()
+        _messages.value = loadCachedMessages(roomId)
         fetchHistory(roomId)
         connectWebSocket(roomId)
     }
@@ -132,6 +150,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                         val body = resp.body?.string() ?: "[]"
                         val list = json.decodeFromString<List<Message>>(body)
                         _messages.value = list
+                        saveCachedMessages(roomId, list)
                     }
                 }
             } catch (e: Exception) {
@@ -177,7 +196,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 "message_new" -> {
                     val payload = event.payload ?: return
                     val msg = json.decodeFromJsonElement<Message>(payload)
-                    _messages.value = _messages.value + msg
+                    val updated = _messages.value + msg
+                    _messages.value = updated
+                    saveCachedMessages(_currentRoomId.value, updated)
                     _isAgentTyping.value = false
                 }
                 "token_delta" -> {

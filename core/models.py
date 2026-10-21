@@ -30,6 +30,8 @@ class EventType(str, Enum):
     typing_indicator = "typing_indicator"
     room_sync = "room_sync"
     agent_reaction = "agent_reaction"
+    turn_start = "turn_start"
+    turn_end = "turn_end"
 
 
 class ToolCall(BaseModel):

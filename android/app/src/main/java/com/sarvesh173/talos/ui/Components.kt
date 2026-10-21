@@ -10,11 +10,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -88,19 +97,180 @@ fun MessageBubble(msg: Message) {
             }
 
             // Message text container
-            Box(
+            val content = msg.content
+            val isAudio = content.contains(".mp3", ignoreCase = true) ||
+                          content.contains(".ogg", ignoreCase = true) ||
+                          content.contains(".wav", ignoreCase = true) ||
+                          content.startsWith("MEDIA:") && (content.endsWith(".ogg") || content.endsWith(".mp3"))
+            val isVideo = content.contains(".mp4", ignoreCase = true) ||
+                          content.contains(".webm", ignoreCase = true)
+
+            when {
+                isAudio -> {
+                    NativeAudioPlayerBubble(
+                        audioUrl = content.removePrefix("MEDIA:").trim(),
+                        isHuman = isHuman
+                    )
+                }
+                isVideo -> {
+                    NativeVideoPreviewBubble(
+                        videoUrl = content.removePrefix("MEDIA:").trim(),
+                        isHuman = isHuman
+                    )
+                }
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isHuman) PrimaryAccent else SurfaceDark)
+                            .border(1.dp, if (isHuman) PrimaryAccent else SurfaceBorder, RoundedCornerShape(16.dp))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = msg.content,
+                            color = TextPrimary,
+                            fontSize = 15.sp,
+                            lineHeight = 21.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NativeAudioPlayerBubble(
+    audioUrl: String,
+    isHuman: Boolean
+) {
+    var isPlaying by remember { mutableStateOf(false) }
+    var progress by remember { mutableFloatStateOf(0.35f) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (isHuman) PrimaryAccent else SurfaceDark)
+            .border(1.dp, if (isHuman) PrimaryAccent else SurfaceBorder, RoundedCornerShape(16.dp))
+            .padding(12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(
+                onClick = { isPlaying = !isPlaying },
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(if (isHuman) PrimaryAccent else SurfaceDark)
-                    .border(1.dp, if (isHuman) PrimaryAccent else SurfaceBorder, RoundedCornerShape(16.dp))
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
             ) {
-                Text(
-                    text = msg.content,
-                    color = TextPrimary,
-                    fontSize = 15.sp,
-                    lineHeight = 21.sp
+                Icon(
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
                 )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.VolumeUp,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = audioUrl.substringAfterLast("/").ifBlank { "Audio Note" },
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1
+                    )
+                }
+                Slider(
+                    value = progress,
+                    onValueChange = { progress = it },
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color.White,
+                        activeTrackColor = Color.White,
+                        inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            IconButton(
+                onClick = { /* local save */ },
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = "Save to cache",
+                    tint = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NativeVideoPreviewBubble(
+    videoUrl: String,
+    isHuman: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(SurfaceDark)
+            .border(1.dp, SurfaceBorder, RoundedCornerShape(16.dp))
+            .padding(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFF090D15)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(
+                    onClick = { /* launch native video playback */ },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryAccent)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play Video",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Videocam,
+                        contentDescription = null,
+                        tint = TextMuted,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = videoUrl.substringAfterLast("/").ifBlank { "Video Stream" },
+                        color = TextMuted,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }

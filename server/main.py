@@ -159,11 +159,11 @@ async def pair_device_and_link_agent():
     token = create_new_token(label)
 
     welcome = Message(
-        room_id="alya-dm",
-        sender_id="alya",
-        sender_name="Alya",
+        room_id="the-council",
+        sender_id="hermes",
+        sender_name="Hermes",
         sender_role=Role.agent,
-        content=f"Tailscale mesh link verified with {peer_name}. Direct channel active.",
+        content=f"Tailscale mesh link verified with {peer_name}. Chamber channel active.",
         thought=f"Verified Tailscale mesh status ({mesh['peers_count']} connected peer(s)). Issued authenticated link token {token[:12]}...",
         created_at=time.time(),
     )

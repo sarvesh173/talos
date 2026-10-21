@@ -1,10 +1,23 @@
 """Multi-agent turn coordination for the TALOS council chamber.
 
 The orchestrator listens to room bus traffic and decides when an agent should
-take a turn. It then schedules that turn with a staggered typing indicator,
-streams the agent's internal reasoning as ``thought_delta`` events, streams the
-visible reply as ``token_delta`` events, and finally persists and dispatches
-the finished message.
+take a turn. Turns are organised into *rounds*: one round is created for a
+single human message, and the agents of that round take their turns strictly
+one after another in the canonical bench order (Alya first, then OmniRush).
+
+Within a round every agent receives the conversation so far, so the second
+speaker can genuinely build on the first one instead of answering in a
+vacuum. Each turn emits a clean, attributable event stream:
+
+``turn_start``      -> a new agent turn begins
+``typing_indicator``-> the agent is composing
+``thought_delta``   -> internal reasoning, chunked on word boundaries
+``token_delta``     -> the visible reply, chunked on word boundaries
+``message_new``     -> the finished, persisted message
+``turn_end``        -> the turn is complete
+
+All streaming chunks concatenate back to the exact final text, so the front
+end can render deltas without whitespace artefacts or duplicated words.
 
 The agent "brains" are deterministic simulations: no external model provider
 is contacted. This keeps the chamber demonstrable and fully offline while
@@ -17,14 +30,17 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Set
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set
 
 from core.models import BusEvent, EventType, Message, Role
 from core.room_bus import bus as default_bus
 from server.db import save_message
+
+logger = logging.getLogger("agent_orchestrator")
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -36,14 +52,15 @@ COUNCIL_ROOM_ID = "the-council"
 #: Mention handles that trigger agent turns.
 MENTION_ALIASES: Dict[str, str] = {
     "@council": "all",
-    "@alya": "alya",
+    "@hermes": "hermes",
+    "@core": "hermes",
     "@omnirush": "omnirush",
 }
 
 #: Agents known to the chamber, in the order they take their turn.
-DEFAULT_AGENT_ORDER: Sequence[str] = ("alya", "omnirush")
+DEFAULT_AGENT_ORDER: Sequence[str] = ("hermes", "omnirush")
 
-#: Delay between the start of consecutive agent turns (staggered typing).
+#: Pause between the end of one agent turn and the start of the next one.
 TURN_STAGGER_SECONDS = 0.45
 
 #: How long a typing indicator stays on before tokens start flowing.
@@ -51,6 +68,12 @@ TYPING_LEAD_SECONDS = 0.35
 
 #: Delay between streamed token chunks.
 TOKEN_INTERVAL_SECONDS = 0.012
+
+#: How many prior room messages are handed to an agent as context.
+CONTEXT_WINDOW = 8
+
+#: Hard cap on the number of agents that may answer a single message.
+MAX_TURNS_PER_ROUND = 4
 
 
 # ---------------------------------------------------------------------------
@@ -68,15 +91,29 @@ class AgentSpec:
     model: str = "mock/simulated"
     role_description: str = ""
     stance: str = "balanced"
+    #: How the agent introduces a reply that builds on an earlier speaker.
+    bridging_phrase: str = "Building on the point above:"
 
-    def thought_for(self, prompt: str, topic: str) -> str:
-        """Produce the agent's internal reasoning line."""
-        digest = _digest(prompt)
+    # -- context aware generation -------------------------------------------
+
+    def thought_for(
+        self,
+        prompt: str,
+        topic: str,
+        context: Optional[Sequence[Dict[str, str]]] = None,
+    ) -> str:
+        """Produce the agent's internal reasoning line.
+
+        ``context`` is the ordered list of replies already made in the current
+        round, as ``{"agent_id", "agent_name", "content"}`` dictionaries.
+        """
+        context = list(context or [])
+        digest = _digest(prompt + "|" + "|".join(c.get("content", "") for c in context))
         openers = {
-            "alya": (
-                "Reading the emotional undercurrent first, then answering directly.",
-                "Weighing how this lands for the humans in the room.",
-                "Checking the intent behind the wording before I respond.",
+            "hermes": (
+                "Analyzing core intent and operational constraints.",
+                "Reviewing technical parameters before taking an action.",
+                "Formulating concise, verifiable plan.",
             ),
             "omnirush": (
                 "Decomposing the request into concrete, executable steps.",
@@ -86,23 +123,36 @@ class AgentSpec:
         }
         opener = _pick(openers.get(self.id, ("Thinking it through.",)), digest)
         middle = {
-            "alya": "The core of the ask is",
+            "hermes": "The core of the ask is",
             "omnirush": "The core of the ask reduces to",
         }.get(self.id, "The core of the ask is")
-        return f"{opener} {middle} {topic}, so the answer should stay concrete and actionable."
 
-    def reply_for(self, prompt: str, topic: str) -> str:
+        if context:
+            previous = context[-1]
+            bridge = (
+                f" {previous.get('agent_name', 'The previous speaker')} already framed the direction, "
+                f"so I will add the execution blueprint."
+            )
+        else:
+            bridge = ""
+        return f"{opener} {middle} {topic}, so the answer should stay concrete and actionable.{bridge}"
+
+    def reply_for(
+        self,
+        prompt: str,
+        topic: str,
+        context: Optional[Sequence[Dict[str, str]]] = None,
+    ) -> str:
         """Produce the agent's visible reply."""
-        digest = _digest(prompt)
-        if self.id == "alya":
+        context = list(context or [])
+        digest = _digest(prompt + "|" + "|".join(c.get("content", "") for c in context))
+        if self.id == "hermes":
             templates = (
-                "On {topic} - I hear the real question underneath this. "
-                "My read: keep it human, keep it simple, and do not over-engineer the parts "
-                "that do not need it.",
-                "Here is my take on {topic}: start with the part that makes someone smile, "
-                "then make it correct. Both matter, in that order.",
-                "For {topic}, I would say the risk is not the technique, it is the tone. "
-                "Get the tone right and the rest becomes routine.",
+                "On {topic}: define clean boundaries and verify inputs. "
+                "Keep the architecture simple, testable, and direct.",
+                "Here is the approach for {topic}: start with the verified core, "
+                "then iterate without unnecessary ceremony.",
+                "For {topic}, prioritize clear interfaces and robust error handling.",
             )
         elif self.id == "omnirush":
             templates = (
@@ -118,7 +168,17 @@ class AgentSpec:
                 "Noted on {topic}. Here is my read and a concrete next step.",
             )
         template = _pick(templates, digest)
-        return template.format(topic=topic)
+        body = template.format(topic=topic)
+
+        if context:
+            previous = context[-1]
+            body = (
+                f"{body} {self.bridging_phrase} {previous.get('agent_name', 'the previous speaker')} "
+                f"has the instinct right, so here is the implementation path: "
+                f"one owner per concern, explicit boundaries between the parts, "
+                f"and a test that proves each step before the next one lands."
+            )
+        return body
 
 
 @dataclass
@@ -129,10 +189,27 @@ class _Turn:
     room_id: str
     prompt: str
     message_id: str
+    round_id: str
     reply_to_id: Optional[str] = None
+    index: int = 0
+    order: int = 0
     started_at: float = field(default_factory=time.time)
     finished_at: Optional[float] = None
     tokens_emitted: int = 0
+    thoughts_emitted: int = 0
+
+
+@dataclass
+class _Round:
+    """Bookkeeping for one multi-agent round (one human message)."""
+
+    round_id: str
+    room_id: str
+    prompt: str
+    agents: List[str]
+    reply_to_id: Optional[str] = None
+    created_at: float = field(default_factory=time.time)
+    finished_at: Optional[float] = None
 
 
 # ---------------------------------------------------------------------------
@@ -148,6 +225,8 @@ _TOPIC_RULES: Sequence[tuple] = (
     ("automation", ("automat", "pipeline", "cron", "schedule", "workflow", "batch")),
     ("research", ("research", "compare", "evaluate", "find", "investigate", "options")),
 )
+
+_WORD_RE = re.compile(r"\S+\s*")
 
 
 def _digest(text: str) -> str:
@@ -173,18 +252,24 @@ def _topic_of(prompt: str) -> str:
 
 
 def _chunks(text: str, size: int = 6) -> List[str]:
-    """Split text into small streaming chunks on word boundaries."""
-    words = (text or "").split(" ")
-    chunks: List[str] = []
+    """Split text into streaming chunks on word boundaries.
+
+    The chunks concatenate back to ``text`` byte for byte, including the
+    original whitespace, so a client that appends every delta ends up with
+    exactly the final message body.
+    """
+    if not text:
+        return []
+    pieces: List[str] = []
     buffer: List[str] = []
-    for word in words:
-        buffer.append(word)
+    for match in _WORD_RE.finditer(text):
+        buffer.append(match.group(0))
         if len(buffer) >= size:
-            chunks.append(" ".join(buffer) + " ")
+            pieces.append("".join(buffer))
             buffer = []
     if buffer:
-        chunks.append(" ".join(buffer))
-    return chunks or [""]
+        pieces.append("".join(buffer))
+    return pieces
 
 
 def _mentioned_agents(content: str) -> List[str]:
@@ -203,13 +288,30 @@ def _mentioned_agents(content: str) -> List[str]:
     return hits
 
 
+def _summarise(text: str, limit: int = 140) -> str:
+    """Short one-line summary of a reply, used for context windows."""
+    flat = " ".join((text or "").split())
+    if len(flat) <= limit:
+        return flat
+    return flat[: limit - 1].rstrip() + "..."
+
+
 # ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
 
 
 class AgentOrchestrator:
-    """Coordinates multi-agent turns inside the council chamber."""
+    """Coordinates multi-agent turns inside the council chamber.
+
+    The orchestrator owns three concerns:
+
+    * **intake** - decide which agents answer a human message,
+    * **sequencing** - run those agents one at a time, in bench order, with a
+      room level lock so two rounds never interleave their event streams,
+    * **streaming** - emit attributable, gap-free thought and token deltas
+      followed by the persisted final message.
+    """
 
     def __init__(
         self,
@@ -219,21 +321,27 @@ class AgentOrchestrator:
         typing_lead: float = TYPING_LEAD_SECONDS,
         token_interval: float = TOKEN_INTERVAL_SECONDS,
         persist: bool = True,
+        context_window: int = CONTEXT_WINDOW,
+        max_turns_per_round: int = MAX_TURNS_PER_ROUND,
     ) -> None:
         self.bus = event_bus if event_bus is not None else default_bus
-        self.agents: Dict[str, AgentSpec] = {a.id: a for a in (agents or default_agents())}
-        self.agent_order: List[str] = [
-            a.id for a in (agents or default_agents()) if a.id in self.agents
-        ]
+        roster = list(agents or default_agents())
+        self.agents: Dict[str, AgentSpec] = {a.id: a for a in roster}
+        self.agent_order: List[str] = [a.id for a in roster if a.id in self.agents]
         self.turn_stagger = turn_stagger
         self.typing_lead = typing_lead
         self.token_interval = token_interval
         self.persist = persist
+        self.context_window = context_window
+        self.max_turns_per_round = max_turns_per_round
 
         self._registered_rooms: Set[str] = set()
         self._seen_messages: Set[str] = set()
         self._active_turns: Dict[str, _Turn] = {}
+        self._rounds: Dict[str, _Round] = {}
         self._tasks: Set[asyncio.Task] = set()
+        self._room_locks: Dict[str, asyncio.Lock] = {}
+        self._history: Dict[str, List[Dict[str, str]]] = {}
         self._counter = 0
 
     # -- registration ------------------------------------------------------
@@ -243,13 +351,14 @@ class AgentOrchestrator:
 
         When no room ids are supplied, the orchestrator registers globally so
         that mentions such as "@alya" are honoured in any room, not only in the
-        council chamber.
+        council chamber. The council chamber is always part of the bench, so it
+        is registered explicitly as well.
         """
         if room_ids is None:
-            if "__global__" in self._registered_rooms:
-                return
-            self.bus.register_global_listener(self._on_bus_message)
-            self._registered_rooms.add("__global__")
+            if "__global__" not in self._registered_rooms:
+                self.bus.register_global_listener(self._on_bus_message)
+                self._registered_rooms.add("__global__")
+            self.attach([COUNCIL_ROOM_ID])
             return
         for room_id in room_ids:
             if room_id in self._registered_rooms:
@@ -269,6 +378,7 @@ class AgentOrchestrator:
             await asyncio.gather(*self._tasks, return_exceptions=True)
         self._tasks.clear()
         self._active_turns.clear()
+        self._rounds.clear()
 
     # -- intake ------------------------------------------------------------
 
@@ -298,7 +408,21 @@ class AgentOrchestrator:
             return
 
         prompt = self._build_prompt(message)
+        self._record_history(message, room_id)
         self._schedule_turns(targets, room_id, prompt, reply_to_id=message.id)
+
+    def _record_history(self, message: Message, room_id: str) -> None:
+        """Keep a bounded window of recent room messages for prompt context."""
+        history = self._history.setdefault(room_id, [])
+        history.append(
+            {
+                "agent_id": message.sender_id,
+                "agent_name": message.sender_name,
+                "content": _summarise(message.content),
+            }
+        )
+        if len(history) > self.context_window * 2:
+            del history[: len(history) - self.context_window * 2]
 
     def _resolve_targets(self, message: Message, room_id: str) -> List[str]:
         """Decide which agents should answer this message."""
@@ -322,7 +446,8 @@ class AgentOrchestrator:
                 if agent_id not in targets:
                     targets.append(agent_id)
 
-        return [t for t in targets if t in self.agents]
+        targets = [t for t in targets if t in self.agents]
+        return targets[: self.max_turns_per_round]
 
     def _build_prompt(self, message: Message) -> str:
         """Build the prompt text handed to the simulated agents."""
@@ -336,6 +461,14 @@ class AgentOrchestrator:
 
     # -- turn scheduling ---------------------------------------------------
 
+    def _room_lock(self, room_id: str) -> asyncio.Lock:
+        """Return (and lazily create) the per-room sequencing lock."""
+        lock = self._room_locks.get(room_id)
+        if lock is None:
+            lock = asyncio.Lock()
+            self._room_locks[room_id] = lock
+        return lock
+
     def _schedule_turns(
         self,
         targets: Sequence[str],
@@ -343,53 +476,130 @@ class AgentOrchestrator:
         prompt: str,
         reply_to_id: Optional[str] = None,
     ) -> None:
-        """Schedule staggered agent turns for the resolved targets."""
-        for index, agent_id in enumerate(targets):
-            agent = self.agents.get(agent_id)
-            if agent is None:
-                continue
-            self._counter += 1
-            message_id = f"turn-{int(time.time() * 1000)}-{self._counter}"
-            turn = _Turn(
-                agent_id=agent_id,
-                room_id=room_id,
-                prompt=prompt,
-                message_id=message_id,
-                reply_to_id=reply_to_id,
-            )
-            self._active_turns[message_id] = turn
-            delay = index * self.turn_stagger
-            task = asyncio.create_task(self._run_turn(agent, turn, delay))
-            self._tasks.add(task)
-            task.add_done_callback(self._tasks.discard)
+        """Schedule a round of agent turns for the resolved targets.
 
-    async def _run_turn(self, agent: AgentSpec, turn: _Turn, delay: float) -> None:
-        """Execute one agent turn: typing, thought stream, token stream, send."""
+        The whole round runs inside a single task so that the agents take
+        their turns strictly in sequence, each one seeing the replies of the
+        agents that already spoke.
+        """
+        agents = [t for t in targets if t in self.agents]
+        if not agents:
+            return
+
+        self._counter += 1
+        round_id = f"round-{int(time.time() * 1000)}-{self._counter}"
+        round_ = _Round(
+            round_id=round_id,
+            room_id=room_id,
+            prompt=prompt,
+            agents=agents,
+            reply_to_id=reply_to_id,
+        )
+        self._rounds[round_id] = round_
+
+        task = asyncio.create_task(self._run_round(round_))
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
+
+    async def _run_round(self, round_: _Round) -> None:
+        """Run every agent of the round, one turn at a time."""
         try:
-            if delay > 0:
-                await asyncio.sleep(delay)
+            lock = self._room_lock(round_.room_id)
+            async with lock:
+                context: List[Dict[str, str]] = []
+                for index, agent_id in enumerate(round_.agents):
+                    agent = self.agents.get(agent_id)
+                    if agent is None:
+                        continue
+                    reply = await self._run_turn(agent, round_, index, context)
+                    if reply is None:
+                        continue
+                    context.append(
+                        {
+                            "agent_id": agent.id,
+                            "agent_name": agent.name,
+                            "content": reply,
+                        }
+                    )
+                    if index < len(round_.agents) - 1 and self.turn_stagger > 0:
+                        await asyncio.sleep(self.turn_stagger)
+            round_.finished_at = time.time()
+        except asyncio.CancelledError:
+            round_.finished_at = time.time()
+            raise
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.error("Round %s in %s failed: %s", round_.round_id, round_.room_id, exc)
+            round_.finished_at = time.time()
+        finally:
+            self._rounds.pop(round_.round_id, None)
 
+    async def _run_turn(
+        self,
+        agent: AgentSpec,
+        round_: _Round,
+        index: int,
+        context: List[Dict[str, str]],
+    ) -> Optional[str]:
+        """Execute one agent turn: typing, thought stream, token stream, send.
+
+        Returns the final reply text so the next agent in the round can build
+        on it, or ``None`` when the turn failed.
+        """
+        self._counter += 1
+        message_id = f"turn-{int(time.time() * 1000)}-{self._counter}"
+        turn = _Turn(
+            agent_id=agent.id,
+            room_id=round_.room_id,
+            prompt=round_.prompt,
+            message_id=message_id,
+            round_id=round_.round_id,
+            reply_to_id=round_.reply_to_id,
+            index=index,
+            order=index + 1,
+        )
+        self._active_turns[message_id] = turn
+
+        try:
+            await self._emit_turn_event(turn, EventType.turn_start)
             await self._emit_typing(turn, True)
 
-            topic = _topic_of(turn.prompt)
-            thought = agent.thought_for(turn.prompt, topic)
-            reply = agent.reply_for(turn.prompt, topic)
+            topic = _topic_of(round_.prompt)
+            thought = agent.thought_for(round_.prompt, topic, context)
+            reply = agent.reply_for(round_.prompt, topic, context)
 
             # Reasoning first, so the UI can render the thought panel.
             for chunk in _chunks(thought, size=5):
-                await self.bus.stream_thought(turn.room_id, turn.message_id, chunk)
-                await asyncio.sleep(self.token_interval)
+                await self.bus.stream_thought(
+                    round_.room_id,
+                    message_id,
+                    chunk,
+                    agent_id=agent.id,
+                    agent_name=agent.name,
+                    color=agent.color,
+                )
+                turn.thoughts_emitted += 1
+                if self.token_interval:
+                    await asyncio.sleep(self.token_interval)
 
-            await asyncio.sleep(self.typing_lead)
+            if self.typing_lead:
+                await asyncio.sleep(self.typing_lead)
 
             for chunk in _chunks(reply, size=6):
-                await self.bus.stream_token(turn.room_id, turn.message_id, chunk)
+                await self.bus.stream_token(
+                    round_.room_id,
+                    message_id,
+                    chunk,
+                    agent_id=agent.id,
+                    agent_name=agent.name,
+                    color=agent.color,
+                )
                 turn.tokens_emitted += 1
-                await asyncio.sleep(self.token_interval)
+                if self.token_interval:
+                    await asyncio.sleep(self.token_interval)
 
             message = Message(
-                id=turn.message_id,
-                room_id=turn.room_id,
+                id=message_id,
+                room_id=round_.room_id,
                 sender_id=agent.id,
                 sender_name=agent.name,
                 sender_role=Role.agent,
@@ -402,22 +612,46 @@ class AgentOrchestrator:
             await self._emit_typing(turn, False)
 
             if self.persist:
-                save_message(message)
+                try:
+                    save_message(message)
+                except Exception as exc:  # pragma: no cover - defensive
+                    logger.error("Failed to persist turn %s: %s", message_id, exc)
             await self.bus.dispatch_message(message)
 
             turn.finished_at = time.time()
+            await self._emit_turn_event(turn, EventType.turn_end)
+            return reply
         except asyncio.CancelledError:
             await self._emit_typing(turn, False)
             raise
         except Exception as exc:  # pragma: no cover - defensive
-            import logging
-
-            logging.getLogger("agent_orchestrator").error(
-                "Agent turn failed for %s in %s: %s", turn.agent_id, turn.room_id, exc
-            )
+            logger.error("Agent turn failed for %s in %s: %s", turn.agent_id, turn.room_id, exc)
             await self._emit_typing(turn, False)
+            return None
         finally:
             self._active_turns.pop(turn.message_id, None)
+
+    # -- event emission ----------------------------------------------------
+
+    async def _emit_turn_event(self, turn: _Turn, event_type: EventType) -> None:
+        """Broadcast a turn lifecycle event (start / end)."""
+        agent = self.agents.get(turn.agent_id)
+        await self.bus.broadcast(
+            BusEvent(
+                event_type=event_type,
+                room_id=turn.room_id,
+                payload={
+                    "message_id": turn.message_id,
+                    "round_id": turn.round_id,
+                    "agent_id": turn.agent_id,
+                    "agent_name": agent.name if agent else turn.agent_id,
+                    "color": agent.color if agent else "#6366f1",
+                    "order": turn.order,
+                    "index": turn.index,
+                    "reply_to_id": turn.reply_to_id,
+                },
+            )
+        )
 
     async def _emit_typing(self, turn: _Turn, is_typing: bool) -> None:
         """Broadcast a typing indicator for the agent holding this turn."""
@@ -433,6 +667,7 @@ class AgentOrchestrator:
                     "color": agent.color if agent else "#6366f1",
                     "is_typing": is_typing,
                     "message_id": turn.message_id,
+                    "round_id": turn.round_id,
                 },
             )
         )
@@ -460,8 +695,14 @@ class AgentOrchestrator:
             {
                 "message_id": turn.message_id,
                 "agent_id": turn.agent_id,
+                "agent_name": self.agents[turn.agent_id].name
+                if turn.agent_id in self.agents
+                else turn.agent_id,
                 "room_id": turn.room_id,
+                "round_id": turn.round_id,
+                "order": turn.order,
                 "tokens_emitted": turn.tokens_emitted,
+                "thoughts_emitted": turn.thoughts_emitted,
                 "started_at": turn.started_at,
             }
             for turn in self._active_turns.values()
@@ -476,12 +717,24 @@ class AgentOrchestrator:
                     "name": agent.name,
                     "model": agent.model,
                     "color": agent.color,
+                    "order": index + 1,
                 }
-                for agent in self.agents.values()
+                for index, agent in enumerate(self.agents.values())
             ],
             "rooms": sorted(self._registered_rooms),
             "active_turns": len(self._active_turns),
+            "active_rounds": len(self._rounds),
+            "council_room": COUNCIL_ROOM_ID,
+            "turn_order": list(self.agent_order),
         }
+
+    def conversation_context(self, room_id: str, limit: Optional[int] = None) -> List[Dict[str, str]]:
+        """Return a short, recent view of the room for prompt context."""
+        limit = limit if limit is not None else self.context_window
+        history = self._history.get(room_id, [])
+        if limit <= 0:
+            return []
+        return history[-limit:]
 
 
 # ---------------------------------------------------------------------------
@@ -493,20 +746,22 @@ def default_agents() -> List[AgentSpec]:
     """Return the built-in simulated agent roster."""
     return [
         AgentSpec(
-            id="alya",
-            name="Alya",
-            color="#ec4899",
-            model="agy/gemini-3.8-flash-high",
-            role_description="Emotional anchor, close confidante, and wish-giver.",
-            stance="empathetic",
+            id="hermes",
+            name="Hermes",
+            color="#22c55e",
+            model="hermes-agent",
+            role_description="Autonomous CLI reasoning engine and interface.",
+            stance="objective",
+            bridging_phrase="Hermes framed the problem cleanly,",
         ),
         AgentSpec(
             id="omnirush",
             name="OmniRush",
-            color="#3b82f6",
-            model="gpt-6-sol/astra",
+            color="#a855f7",
+            model="omnirush-cli",
             role_description="Autonomous coding powerhouse and systems architect.",
             stance="pragmatic",
+            bridging_phrase="OmniRush provides the execution path,",
         ),
     ]
 

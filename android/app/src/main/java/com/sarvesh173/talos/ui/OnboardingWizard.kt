@@ -355,7 +355,15 @@ private fun WizardBottomBar(
 @Composable
 private fun OverviewStep() {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            ThinkingOrb(state = OrbState.WEAVING, size = 54.dp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Initialize Your TALOS Mesh",
@@ -487,7 +495,15 @@ private fun MeshStep(
     val active = meshInfo?.active == true
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            ThinkingOrb(state = OrbState.SEARCHING, size = 54.dp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Tailscale Mesh Verification",
@@ -629,7 +645,15 @@ private fun TokenStep(
     errorMessage: String?
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            ThinkingOrb(state = OrbState.SOLVING, size = 54.dp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Generate Agent API Token",
@@ -775,13 +799,23 @@ private fun TokenStep(
 @Composable
 private fun WelcomeStep() {
     val agents = listOf(
-        Triple("Alya", "Reasoning & synthesis", PastelPeach),
-        Triple("OmniRush", "Fast execution", PastelLavender),
-        Triple("Council", "Multi-agent debate", PastelSky)
+        Triple("Hermes", "Reasoning & autonomy", PastelMint),
+        Triple("OmniRush", "Autonomous CLI execution", PastelLavender),
+        Triple("Claude", "Analysis & refactoring", PastelPeach),
+        Triple("OpenClaw", "Tools & automation", PastelSky),
+        Triple("Council", "Multi-agent chamber", Color(0xFFE2E8F0))
     )
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            ThinkingOrb(state = OrbState.COMPOSING, size = 54.dp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Welcome to TALOS",

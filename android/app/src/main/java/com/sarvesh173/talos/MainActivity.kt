@@ -14,8 +14,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
@@ -46,33 +48,31 @@ class MainActivity : ComponentActivity() {
         client = TalosClient(this, lifecycleScope)
         if (client.isPaired.value) {
             client.refreshRooms()
-            client.switchRoom("alya-dm")
+            client.switchRoom("the-council")
         }
 
         setContent {
-            TalosTheme {
-                val isPaired by client.isPaired.collectAsState()
-                var showWizard by remember { mutableStateOf(false) }
+            var themeMode by remember { mutableStateOf(AppThemeMode.DARK) }
 
-                when {
-                    showWizard -> {
-                        OnboardingWizard(
-                            client = client,
-                            onComplete = { showWizard = false }
-                        )
-                    }
-                    !isPaired -> {
-                        LandingScreen(
-                            client = client,
-                            onConnect = { url, token ->
-                                client.updateConfig(url, token)
-                            },
-                            onOpenWizard = { showWizard = true }
-                        )
-                    }
-                    else -> {
-                        MainScreen(client = client)
-                    }
+            TalosTheme(themeMode = themeMode) {
+                val isPaired by client.isPaired.collectAsState()
+
+                if (!isPaired) {
+                    OnboardingWizard(
+                        client = client,
+                        onComplete = {
+                            client.refreshRooms()
+                            client.switchRoom("the-council")
+                        }
+                    )
+                } else {
+                    MainScreen(
+                        client = client,
+                        isDark = themeMode == AppThemeMode.DARK,
+                        onToggleTheme = {
+                            themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                        }
+                    )
                 }
             }
         }
@@ -81,7 +81,11 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(client: TalosClient) {
+fun MainScreen(
+    client: TalosClient,
+    isDark: Boolean = true,
+    onToggleTheme: () -> Unit = {}
+) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -194,6 +198,13 @@ fun MainScreen(client: TalosClient) {
                         }
                     },
                     actions = {
+                        IconButton(onClick = onToggleTheme) {
+                            Icon(
+                                imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Toggle Dark/Light Mode",
+                                tint = TextMuted
+                            )
+                        }
                         IconButton(onClick = { showSettingsDialog = true }) {
                             Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = TextMuted)
                         }
@@ -210,12 +221,18 @@ fun MainScreen(client: TalosClient) {
                 ) {
                     Column {
                         if (isTyping) {
-                            Text(
-                                text = "Alya is deliberating...",
-                                color = PrimaryAccent,
-                                fontSize = 12.sp,
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                            )
+                            ) {
+                                ThinkingOrb(state = OrbState.THINKING, size = 16.dp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Agent fleet is deliberating...",
+                                    color = PrimaryAccent,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
 
                         Row(

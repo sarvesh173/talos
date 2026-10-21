@@ -110,21 +110,51 @@ class RoomEventBus:
         except Exception as e:
             logger.error("Agent listener exception in room %s: %s", room_id, e, exc_info=True)
 
-    async def stream_token(self, room_id: str, message_id: str, delta: str) -> None:
+    async def stream_token(
+        self,
+        room_id: str,
+        message_id: str,
+        delta: str,
+        agent_id: Optional[str] = None,
+        agent_name: Optional[str] = None,
+        color: Optional[str] = None,
+    ) -> None:
         """Stream a partial text token delta to UI clients."""
+        payload: Dict[str, Any] = {"message_id": message_id, "delta": delta}
+        if agent_id is not None:
+            payload["agent_id"] = agent_id
+        if agent_name is not None:
+            payload["agent_name"] = agent_name
+        if color is not None:
+            payload["color"] = color
         event = BusEvent(
             event_type=EventType.token_delta,
             room_id=room_id,
-            payload={"message_id": message_id, "delta": delta}
+            payload=payload
         )
         await self.broadcast(event)
 
-    async def stream_thought(self, room_id: str, message_id: str, delta: str) -> None:
+    async def stream_thought(
+        self,
+        room_id: str,
+        message_id: str,
+        delta: str,
+        agent_id: Optional[str] = None,
+        agent_name: Optional[str] = None,
+        color: Optional[str] = None,
+    ) -> None:
         """Stream an internal thought/reasoning token delta to UI clients."""
+        payload: Dict[str, Any] = {"message_id": message_id, "delta": delta}
+        if agent_id is not None:
+            payload["agent_id"] = agent_id
+        if agent_name is not None:
+            payload["agent_name"] = agent_name
+        if color is not None:
+            payload["color"] = color
         event = BusEvent(
             event_type=EventType.thought_delta,
             room_id=room_id,
-            payload={"message_id": message_id, "delta": delta}
+            payload=payload
         )
         await self.broadcast(event)
 

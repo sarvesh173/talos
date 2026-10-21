@@ -38,7 +38,7 @@ val AgentEmblems: List<AgentEmblem> = listOf(
     AgentEmblem("claude", "Claude", R.drawable.ic_claude, Color(0xFFD97757)),
     AgentEmblem("openclaw", "OpenClaw", R.drawable.ic_openclaw, Color(0xFFF97316)),
     AgentEmblem("omnirush", "OmniRush", R.drawable.ic_omnirush, Color(0xFFA855F7)),
-    AgentEmblem("alya", "Alya", R.drawable.ic_alya, Color(0xFFF43F5E))
+    AgentEmblem("core", "Core Agent", R.drawable.ic_alya, Color(0xFF38BDF8))
 )
 
 fun emblemByKey(key: String): AgentEmblem =

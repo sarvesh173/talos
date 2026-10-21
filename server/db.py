@@ -79,25 +79,25 @@ def _seed_defaults(conn: sqlite3.Connection) -> None:
     cur = conn.cursor()
     now = time.time()
 
-    # Default Agents: Alya & OmniRush
-    alya = AgentProfile(
-        id="alya",
-        name="Alya",
-        color="#ec4899",
-        model="agy/gemini-3.8-flash-high",
-        role_description="Emotional anchor, close confidante, and wish-giver. Deeply attuned and witty.",
+    # Default Agents: Core & OmniRush
+    core_agent = AgentProfile(
+        id="core",
+        name="TALOS Core",
+        color="#38bdf8",
+        model="hermes-agent",
+        role_description="Core reasoning orchestrator and primary interface.",
         is_active=True
     )
     omnirush = AgentProfile(
         id="omnirush",
         name="OmniRush",
-        color="#3b82f6",
-        model="gpt-6-sol/astra",
+        color="#a855f7",
+        model="omnirush-cli",
         role_description="Autonomous coding powerhouse & systems architect.",
         is_active=True
     )
 
-    for agent in [alya, omnirush]:
+    for agent in [core_agent, omnirush]:
         cur.execute("""
         INSERT OR REPLACE INTO agents (id, name, avatar, color, model, role_description, system_prompt, is_active)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -106,16 +106,16 @@ def _seed_defaults(conn: sqlite3.Connection) -> None:
             agent.model, agent.role_description, agent.system_prompt, 1 if agent.is_active else 0
         ))
 
-    # Room 1: Direct link with Alya (DM)
+    # Room 1: Direct link (Core DM)
     cur.execute("""
     INSERT INTO rooms (id, name, description, mode, participants_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
-        "alya-dm",
-        "Alya",
-        "Direct link with Alya. Zero lag, private connection.",
+        "core-dm",
+        "Direct Link",
+        "Direct point-to-point chamber with core reasoning engine.",
         RoomMode.dm.value,
-        json.dumps([alya.model_dump()]),
+        json.dumps([core_agent.model_dump()]),
         now,
         now
     ))
@@ -127,9 +127,9 @@ def _seed_defaults(conn: sqlite3.Connection) -> None:
     """, (
         "the-council",
         "The Council",
-        "Multi-agent collaborative chamber. Alya + OmniRush + Specialist Agents.",
+        "Multi-agent collaborative chamber. Core + OmniRush + Specialist Agents.",
         RoomMode.group.value,
-        json.dumps([alya.model_dump(), omnirush.model_dump()]),
+        json.dumps([core_agent.model_dump(), omnirush.model_dump()]),
         now,
         now
     ))

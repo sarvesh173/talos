@@ -13,8 +13,8 @@ android {
         applicationId = "com.sarvesh173.talos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -28,7 +28,6 @@ android {
             )
         }
         debug {
-            applicationIdSuffix = ".debug"
             isDebuggable = true
         }
     }
@@ -65,6 +64,11 @@ dependencies {
 
     // Networking (OkHttp for WebSockets & Tailscale REST)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Media3 (Native Audio & Video Playback)
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-ui:1.4.1")
+    implementation("androidx.media3:media3-common:1.4.1")
 
     // Serialization & Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")

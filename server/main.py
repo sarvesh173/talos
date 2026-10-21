@@ -1,4 +1,5 @@
 """Main FastAPI Application & WebSocket Gateway for TALOS.
+Includes Bot Token Authentication & Tailscale Mesh Access Security.
 """
 
 from contextlib import asynccontextmanager
@@ -10,7 +11,7 @@ import time
 from typing import Any, Dict, List, Optional
 import uuid
 
-from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -18,6 +19,13 @@ from pydantic import BaseModel
 from core.brand import BRAND
 from core.models import BusEvent, EventType, Message, Role, Room, RoomMode
 from core.room_bus import bus
+from server.auth import (
+    create_new_token,
+    get_active_tokens,
+    get_master_token,
+    init_auth_db,
+    verify_token,
+)
 from server.db import (
     get_room,
     get_room_messages,
@@ -37,9 +45,11 @@ _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Initializing SQLite database...")
+    logger.info("Initializing SQLite database & Auth Gate...")
     init_db()
-    logger.info("TALOS Core Server ready.")
+    init_auth_db()
+    master_token = get_master_token()
+    logger.info("TALOS Core Server ready. Master token loaded.")
     yield
     # Shutdown
     logger.info("Shutting down TALOS Core Server.")
@@ -65,6 +75,17 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory=str(_UPLOADS_DIR)), name="uploads")
 
 
+async def require_auth(authorization: Optional[str] = Header(None)) -> str:
+    """Verify Bearer token on protected REST routes."""
+    if not authorization or not verify_token(authorization):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing TALOS API Token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return authorization.replace("Bearer ", "").strip()
+
+
 @app.get("/health")
 async def health_check():
     return {
@@ -80,13 +101,33 @@ async def get_brand():
     return BRAND
 
 
+@app.get("/api/auth/verify")
+async def verify_auth_token(token: str = Depends(require_auth)):
+    return {"valid": True, "app": BRAND.get("name", "TALOS")}
+
+
+class CreateTokenRequest(BaseModel):
+    label: str
+
+
+@app.post("/api/auth/tokens")
+async def create_token_endpoint(req: CreateTokenRequest, token: str = Depends(require_auth)):
+    new_token = create_new_token(req.label)
+    return {"token": new_token, "label": req.label}
+
+
+@app.get("/api/auth/tokens")
+async def list_tokens_endpoint(token: str = Depends(require_auth)):
+    return get_active_tokens()
+
+
 @app.get("/api/rooms", response_model=List[Room])
-async def get_rooms():
+async def get_rooms(token: str = Depends(require_auth)):
     return list_rooms()
 
 
 @app.get("/api/rooms/{room_id}", response_model=Room)
-async def get_room_by_id(room_id: str):
+async def get_room_by_id(room_id: str, token: str = Depends(require_auth)):
     room = get_room(room_id)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -94,17 +135,17 @@ async def get_room_by_id(room_id: str):
 
 
 @app.get("/api/rooms/{room_id}/messages", response_model=List[Message])
-async def get_messages(room_id: str, limit: int = 100):
+async def get_messages(room_id: str, limit: int = 100, token: str = Depends(require_auth)):
     return get_room_messages(room_id, limit=limit)
 
 
 @app.get("/api/agents")
-async def get_agents():
+async def get_agents(token: str = Depends(require_auth)):
     return list_agents()
 
 
 @app.post("/api/upload")
-async def upload_media(file: UploadFile = File(...)):
+async def upload_media(file: UploadFile = File(...), token: str = Depends(require_auth)):
     ext = Path(file.filename or "").suffix.lower() or ".bin"
     unique_filename = f"{uuid.uuid4().hex[:12]}{ext}"
     dest_path = _UPLOADS_DIR / unique_filename
@@ -132,7 +173,7 @@ class SendMessageRequest(BaseModel):
 
 
 @app.post("/api/messages", response_model=Message)
-async def post_message(req: SendMessageRequest):
+async def post_message(req: SendMessageRequest, token: str = Depends(require_auth)):
     msg = Message(
         room_id=req.room_id,
         sender_id=req.sender_id,
@@ -150,7 +191,18 @@ async def post_message(req: SendMessageRequest):
 
 
 @app.websocket("/ws/{room_id}/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, room_id: str, client_id: str):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    room_id: str,
+    client_id: str,
+    token: Optional[str] = Query(None)
+):
+    # Verify token on connection handshake
+    if not token or not verify_token(token):
+        logger.warning("Unauthorized WebSocket connection rejected from client: %s in room: %s", client_id, room_id)
+        await websocket.close(code=4401, reason="Unauthorized")
+        return
+
     await websocket.accept()
     await bus.subscribe(room_id, websocket)
 
@@ -159,7 +211,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str, client_id: str)
         BusEvent(
             event_type=EventType.room_sync,
             room_id=room_id,
-            payload={"client_id": client_id, "status": "connected"},
+            payload={"client_id": client_id, "status": "authenticated"},
         ).model_dump_json()
     )
 
@@ -168,7 +220,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str, client_id: str)
             data_text = await websocket.receive_text()
             try:
                 data = json.loads(data_text)
-                # Handle client inbound message
                 if data.get("type") == "message":
                     msg = Message(
                         room_id=room_id,

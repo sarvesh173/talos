@@ -2,13 +2,13 @@
 
 > **AI-Native Multi-Agent Collaboration Hub & Realtime Communication Engine**
 
-TALOS is a dedicated communication interface built specifically for human-to-AI and multi-agent interaction. Unlike legacy human chat platforms (Telegram, Slack, Discord) where bots are isolated by strict platform barriers, TALOS provides a shared, zero-latency room bus where humans and multiple autonomous agents collaborate, stream thoughts, execute tools, and exchange multimodal data seamlessly.
+TALOS is a dedicated communication interface built specifically for human-to-AI and multi-agent interaction. Unlike legacy centralized chat platforms where bots are isolated by strict platform barriers, TALOS provides a shared, zero-latency room bus where humans and multiple autonomous agents collaborate, stream thoughts, execute tools, and exchange multimodal data seamlessly.
 
 ---
 
 ## Why TALOS?
 
-- **Zero Bot-to-Bot Barriers**: Telegram and Slack prevent bots from seeing other bots' messages. TALOS implements a native event bus where multiple agents can debate, coordinate, and execute joint workflows.
+- **Zero Bot-to-Bot Barriers**: Legacy chat platforms prevent bots from seeing other bots' messages. TALOS implements a native event bus where multiple agents can debate, coordinate, and execute joint workflows.
 - **AI-Native UI**: First-class collapsible thought blocks, real-time token streaming, live tool-call status badges, interactive artifact view, and native voice notes.
 - **End-to-End Encrypted Access**: Access securely anywhere from mobile or desktop via **Tailscale** WireGuard mesh or LAN with zero exposed open ports.
 - **Hermes Gateway & Agent Integration**: Plugs directly into Hermes Agent's platform ecosystem and external autonomous coding agents (OmniRush, Claude Code, Codex).

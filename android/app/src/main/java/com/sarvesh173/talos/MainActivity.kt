@@ -3,6 +3,7 @@ package com.sarvesh173.talos
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -52,7 +53,7 @@ class MainActivity : ComponentActivity() {
                 val isPaired by client.isPaired.collectAsState()
                 if (!isPaired) {
                     OnboardingScreen(
-                        defaultUrl = client.baseUrl,
+                        client = client,
                         onConnect = { url, token ->
                             client.updateConfig(url, token)
                         }
@@ -67,11 +68,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun OnboardingScreen(
-    defaultUrl: String,
+    client: TalosClient,
     onConnect: (String, String) -> Unit
 ) {
-    var urlText by remember { mutableStateOf(defaultUrl) }
+    var urlText by remember { mutableStateOf(client.baseUrl) }
     var tokenText by remember { mutableStateOf("") }
+    var isGenerating by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -149,7 +152,42 @@ fun OnboardingScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = {
+                    scope.launch {
+                        isGenerating = true
+                        client.updateConfig(urlText, "")
+                        val genToken = client.generateQuickToken()
+                        if (genToken != null) {
+                            tokenText = genToken
+                        }
+                        isGenerating = false
+                    }
+                },
+                border = BorderStroke(1.dp, PrimaryAccent),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Key,
+                    contentDescription = null,
+                    tint = PrimaryAccent,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isGenerating) "Generating Token..." else "⚡ Generate Bot API Token",
+                    color = PrimaryAccent,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
@@ -371,8 +409,7 @@ fun MainScreen(client: TalosClient) {
 
     if (showSettingsDialog) {
         SettingsDialog(
-            currentUrl = client.baseUrl,
-            currentToken = client.apiToken,
+            client = client,
             onDismiss = { showSettingsDialog = false },
             onSave = { newUrl, newToken ->
                 client.updateConfig(newUrl, newToken)
@@ -384,13 +421,14 @@ fun MainScreen(client: TalosClient) {
 
 @Composable
 fun SettingsDialog(
-    currentUrl: String,
-    currentToken: String,
+    client: TalosClient,
     onDismiss: () -> Unit,
     onSave: (String, String) -> Unit
 ) {
-    var urlText by remember { mutableStateOf(currentUrl) }
-    var tokenText by remember { mutableStateOf(currentToken) }
+    var urlText by remember { mutableStateOf(client.baseUrl) }
+    var tokenText by remember { mutableStateOf(client.apiToken) }
+    var isGenerating by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -442,10 +480,45 @@ fun SettingsDialog(
                     ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            isGenerating = true
+                            client.updateConfig(urlText, "")
+                            val genToken = client.generateQuickToken()
+                            if (genToken != null) {
+                                tokenText = genToken
+                            }
+                            isGenerating = false
+                        }
+                    },
+                    border = BorderStroke(1.dp, PrimaryAccent),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                    ) {
+                    Icon(
+                        imageVector = Icons.Default.Key,
+                        contentDescription = null,
+                        tint = PrimaryAccent,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (isGenerating) "Generating..." else "⚡ Generate New Token",
+                        color = PrimaryAccent,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    }
+                    }
+                    },
+                    confirmButton = {
             Button(
                 onClick = { onSave(urlText, tokenText) },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)

@@ -17,9 +17,12 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
@@ -222,6 +225,27 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             val old = currentList[index]
             currentList[index] = old.copy(thought = (old.thought ?: "") + delta)
             _messages.value = currentList
+        }
+    }
+
+    suspend fun generateQuickToken(): String? {
+        return kotlinx.coroutines.withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/auth/generate-quick")
+                    .post(ByteArray(0).toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: "{}"
+                        val element = json.parseToJsonElement(body)
+                        element.jsonObject["token"]?.jsonPrimitive?.content
+                    } else null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Quick token error: ${e.message}")
+                null
+            }
         }
     }
 

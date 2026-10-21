@@ -106,6 +106,14 @@ async def verify_auth_token(token: str = Depends(require_auth)):
     return {"valid": True, "app": BRAND.get("name", "TALOS")}
 
 
+@app.post("/api/auth/generate-quick")
+async def generate_quick_token():
+    """Direct button action: generate and register an authentic API token."""
+    label = f"Auto-Paired Client ({time.strftime('%b %d %H:%M')})"
+    token = create_new_token(label)
+    return {"token": token, "label": label, "status": "created"}
+
+
 class CreateTokenRequest(BaseModel):
     label: str
 

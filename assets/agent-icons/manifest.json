@@ -1,0 +1,32 @@
+{
+  "hermes": {
+    "label": "Hermes Agent",
+    "accent": "#22C55E",
+    "svg": "assets/agent-icons/hermes.svg",
+    "drawable": "res/drawable/ic_hermes.xml"
+  },
+  "claude": {
+    "label": "Claude Code",
+    "accent": "#D97757",
+    "svg": "assets/agent-icons/claude.svg",
+    "drawable": "res/drawable/ic_claude.xml"
+  },
+  "openclaw": {
+    "label": "OpenClaw",
+    "accent": "#F97316",
+    "svg": "assets/agent-icons/openclaw.svg",
+    "drawable": "res/drawable/ic_openclaw.xml"
+  },
+  "omnirush": {
+    "label": "OmniRush",
+    "accent": "#A855F7",
+    "svg": "assets/agent-icons/omnirush.svg",
+    "drawable": "res/drawable/ic_omnirush.xml"
+  },
+  "alya": {
+    "label": "Alya",
+    "accent": "#F43F5E",
+    "svg": "assets/agent-icons/alya.svg",
+    "drawable": "res/drawable/ic_alya.xml"
+  }
+}

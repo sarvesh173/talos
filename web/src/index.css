@@ -42,3 +42,15 @@
 .animate-pulse-subtle {
   animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Onboarding wizard step transition (mirrors the Android slide-in) */
+@keyframes wizardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(6%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

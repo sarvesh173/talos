@@ -19,6 +19,8 @@ class RoomEventBus:
         # room_id -> List of registered agent listener callbacks
         # callback signature: async def listener(msg: Message, room_id: str)
         self._agent_listeners: Dict[str, List[Callable[[Message, str], Coroutine[Any, Any, None]]]] = {}
+        # Global listeners receive every message dispatched on any room.
+        self._global_listeners: List[Callable[[Message, str], Coroutine[Any, Any, None]]] = []
         self._lock = asyncio.Lock()
 
     async def subscribe(self, room_id: str, ws: Any) -> None:
@@ -47,6 +49,13 @@ class RoomEventBus:
         if room_id not in self._agent_listeners:
             self._agent_listeners[room_id] = []
         self._agent_listeners[room_id].append(callback)
+
+    def register_global_listener(
+        self,
+        callback: Callable[[Message, str], Coroutine[Any, Any, None]]
+    ) -> None:
+        """Register a listener that observes messages from every room."""
+        self._global_listeners.append(callback)
 
     async def broadcast(self, event: BusEvent) -> None:
         """Fan out a BusEvent to all connected WebSockets in the target room."""
@@ -85,7 +94,8 @@ class RoomEventBus:
         await self.broadcast(event)
 
         # Trigger registered agent listeners asynchronously
-        listeners = self._agent_listeners.get(message.room_id, [])
+        listeners = list(self._agent_listeners.get(message.room_id, []))
+        listeners.extend(self._global_listeners)
         for listener in listeners:
             asyncio.create_task(self._safe_invoke_listener(listener, message, message.room_id))
 

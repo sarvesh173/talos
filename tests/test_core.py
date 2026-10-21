@@ -59,7 +59,7 @@ class TestTalosCore(unittest.IsolatedAsyncioTestCase):
         )
         save_message(msg)
 
-        history = get_room_messages("the-council", limit=10)
+        history = get_room_messages("the-council", limit=100)
         saved_msg = next((m for m in history if m.id == msg.id), None)
         self.assertIsNotNone(saved_msg)
         self.assertEqual(saved_msg.content, "Testing the multi-agent room bus.")

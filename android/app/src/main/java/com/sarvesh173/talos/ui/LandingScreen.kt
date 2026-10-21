@@ -29,7 +29,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LandingScreen(
     client: TalosClient,
-    onConnect: (String, String) -> Unit
+    onConnect: (String, String) -> Unit,
+    onOpenWizard: (() -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     var isChecking by remember { mutableStateOf(true) }
@@ -82,50 +83,85 @@ fun LandingScreen(
     ) {
         // --- FLOATING AGENT BLOBS (Inspired by Grok Bot, Vector/Canvas only) ---
 
-        // 1. Top-Left: Green Cloud Agent (Hermes/OpenClaw vibe)
-        CloudAgentBlob(
+        // 1. Top-Left: Green Cloud Agent (Hermes) with winged-H emblem badge
+        Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .offset(x = 36.dp, y = (70 + floatOffset1).dp)
-                .size(width = 92.dp, height = 76.dp),
-            color = Color(0xFF22C55E)
-        )
+        ) {
+            CloudAgentBlob(
+                modifier = Modifier.size(width = 92.dp, height = 76.dp),
+                color = Color(0xFF22C55E)
+            )
+            AgentEmblemBadge(
+                emblem = emblemByKey("hermes"),
+                modifier = Modifier.align(Alignment.BottomEnd)
+            )
+        }
 
-        // 2. Top-Right: Hot Pink Sphere Agent (Alya vibe)
-        PinkAgentBlob(
+        // 2. Top-Right: Hot Pink Sphere Agent (Alya) with rose emblem badge
+        Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .offset(x = (-42).dp, y = (85 + floatOffset2).dp)
-                .size(68.dp),
-            color = Color(0xFFF43F5E)
-        )
+        ) {
+            PinkAgentBlob(
+                modifier = Modifier.size(68.dp),
+                color = Color(0xFFF43F5E)
+            )
+            AgentEmblemBadge(
+                emblem = emblemByKey("alya"),
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+        }
 
-        // 3. Mid-Left: Purple Droplet Agent (OmniRush / Deep Reasoning)
-        PurpleAgentBlob(
+        // 3. Mid-Left: Purple Droplet Agent (OmniRush) with bolt emblem badge
+        Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .offset(x = (-16).dp, y = (-120 + floatOffset3).dp)
-                .size(width = 54.dp, height = 62.dp),
-            color = Color(0xFFA855F7)
-        )
+        ) {
+            PurpleAgentBlob(
+                modifier = Modifier.size(width = 54.dp, height = 62.dp),
+                color = Color(0xFFA855F7)
+            )
+            AgentEmblemBadge(
+                emblem = emblemByKey("omnirush"),
+                modifier = Modifier.align(Alignment.BottomEnd)
+            )
+        }
 
-        // 4. Mid-Right: Brown / Terracotta Sphere peeking (Claude Code)
-        TerracottaAgentBlob(
+        // 4. Mid-Right: Terracotta Sphere peeking (Claude Code) with spark emblem
+        Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .offset(x = 24.dp, y = (-90 + floatOffset1).dp)
-                .size(80.dp),
-            color = Color(0xFFB45309)
-        )
+        ) {
+            TerracottaAgentBlob(
+                modifier = Modifier.size(80.dp),
+                color = Color(0xFFB45309)
+            )
+            AgentEmblemBadge(
+                emblem = emblemByKey("claude"),
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+        }
 
-        // 5. Lower-Left: Large Orange Curved Arc peeking (Codex)
-        OrangeArcAgentBlob(
+        // 5. Lower-Left: Large Orange Curved Arc peeking (OpenClaw) with claw emblem
+        Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .offset(x = (-30).dp, y = (40 + floatOffset2).dp)
-                .size(width = 84.dp, height = 96.dp),
-            color = Color(0xFFF97316)
-        )
+        ) {
+            OrangeArcAgentBlob(
+                modifier = Modifier.size(width = 84.dp, height = 96.dp),
+                color = Color(0xFFF97316)
+            )
+            AgentEmblemBadge(
+                emblem = emblemByKey("openclaw"),
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
+        }
 
         // 6. Lower-Right: Red Sphere peeking
         RedAgentBlob(
@@ -283,11 +319,28 @@ fun LandingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            if (onOpenWizard != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                TextButton(onClick = { onOpenWizard() }) {
+                    Text(
+                        text = "Guided Setup",
+                        color = Color(0xFFCBD5E1),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Vector emblem roster (no emoji, no text glyphs)
+            AgentRoster()
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Subtitle / Disclaimer line
             Text(
-                text = "Autonomous Multi-Agent Mesh • Hermes, Claude, OpenClaw & OmniRush",
+                text = "Autonomous Multi-Agent Mesh \u00B7 Hermes, Claude, OpenClaw & OmniRush",
                 color = Color(0xFF64748B),
                 fontSize = 11.sp,
                 textAlign = TextAlign.Center

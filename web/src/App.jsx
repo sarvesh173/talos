@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Terminal, Code, ChevronDown, ChevronUp, Bot, User, Radio, Settings, MessageSquare, Users } from 'lucide-react';
+import OnboardingWizard from './components/OnboardingWizard.jsx';
 
 const DEFAULT_SERVER = 'http://100.75.107.79:8000';
+const ONBOARDED_KEY = 'talos.onboarded';
 
 export default function App() {
   const [rooms, setRooms] = useState([]);
@@ -11,23 +13,46 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [serverUrl, setServerUrl] = useState(DEFAULT_SERVER);
+  const [apiToken, setApiToken] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem('talos.apiToken') || ''
+  );
+  const [onboarded, setOnboarded] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem(ONBOARDED_KEY) === '1'
+  );
   const wsRef = useRef(null);
   const messagesEndRef = useRef(null);
 
+  const authHeaders = () => (apiToken ? { Authorization: `Bearer ${apiToken}` } : {});
+
+  const handleOnboardingComplete = ({ token, serverUrl: url }) => {
+    if (token) setApiToken(token);
+    if (url) setServerUrl(url);
+    try {
+      localStorage.setItem(ONBOARDED_KEY, '1');
+      if (token) localStorage.setItem('talos.apiToken', token);
+    } catch (e) {
+      console.error('Could not persist onboarding state:', e);
+    }
+    setOnboarded(true);
+  };
+
   useEffect(() => {
-    fetch(`${serverUrl}/api/rooms`)
+    if (!onboarded) return;
+    fetch(`${serverUrl}/api/rooms`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => setRooms(data))
       .catch(err => console.error("Error fetching rooms:", err));
-  }, [serverUrl]);
+  }, [serverUrl, onboarded]);
 
   useEffect(() => {
-    fetch(`${serverUrl}/api/rooms/${activeRoomId}/messages`)
+    if (!onboarded) return;
+    fetch(`${serverUrl}/api/rooms/${activeRoomId}/messages`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => setMessages(data))
       .catch(err => console.error("Error fetching messages:", err));
 
-    const wsUrl = serverUrl.replace(/^http/, 'ws') + `/ws/${activeRoomId}/web-client`;
+    const wsBase = serverUrl.replace(/^http/, 'ws') + `/ws/${activeRoomId}/web-client`;
+    const wsUrl = apiToken ? `${wsBase}?token=${encodeURIComponent(apiToken)}` : wsBase;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -50,7 +75,7 @@ export default function App() {
     };
 
     return () => ws.close();
-  }, [activeRoomId, serverUrl]);
+  }, [activeRoomId, serverUrl, apiToken, onboarded]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -70,6 +95,15 @@ export default function App() {
   };
 
   const activeRoom = rooms.find(r => r.id === activeRoomId);
+
+  if (!onboarded) {
+    return (
+      <OnboardingWizard
+        serverUrl={serverUrl}
+        onComplete={handleOnboardingComplete}
+      />
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#080c14] text-slate-100 font-sans">

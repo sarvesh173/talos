@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from core.brand import BRAND
 from core.models import BusEvent, EventType, Message, Role, Room, RoomMode
 from core.room_bus import bus
+from server.agent_orchestrator import orchestrator
 from server.auth import (
     create_new_token,
     get_active_tokens,
@@ -50,9 +51,15 @@ async def lifespan(app: FastAPI):
     init_auth_db()
     master_token = get_master_token()
     logger.info("TALOS Core Server ready. Master token loaded.")
+
+    # Start the multi-agent turn coordinator. It listens on the room bus for
+    # council traffic and mentions, then schedules staggered agent turns.
+    await orchestrator.start()
+    logger.info("Agent orchestrator active. Agents: %s", [a for a in orchestrator.agent_order])
     yield
     # Shutdown
     logger.info("Shutting down TALOS Core Server.")
+    await orchestrator.stop()
 
 
 app = FastAPI(
@@ -220,6 +227,12 @@ async def get_messages(room_id: str, limit: int = 100, token: str = Depends(requ
 @app.get("/api/agents")
 async def get_agents(token: str = Depends(require_auth)):
     return list_agents()
+
+
+@app.get("/api/orchestrator/status")
+async def get_orchestrator_status(token: str = Depends(require_auth)):
+    """Live status of the multi-agent turn coordinator."""
+    return orchestrator.status()
 
 
 @app.post("/api/upload")

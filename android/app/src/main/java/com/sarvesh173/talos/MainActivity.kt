@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,7 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.sarvesh173.talos.data.MeshInfo
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.Room
 import com.sarvesh173.talos.network.TalosClient
@@ -54,15 +52,27 @@ class MainActivity : ComponentActivity() {
         setContent {
             TalosTheme {
                 val isPaired by client.isPaired.collectAsState()
-                if (!isPaired) {
-                    LandingScreen(
-                        client = client,
-                        onConnect = { url, token ->
-                            client.updateConfig(url, token)
-                        }
-                    )
-                } else {
-                    MainScreen(client = client)
+                var showWizard by remember { mutableStateOf(false) }
+
+                when {
+                    showWizard -> {
+                        OnboardingWizard(
+                            client = client,
+                            onComplete = { showWizard = false }
+                        )
+                    }
+                    !isPaired -> {
+                        LandingScreen(
+                            client = client,
+                            onConnect = { url, token ->
+                                client.updateConfig(url, token)
+                            },
+                            onOpenWizard = { showWizard = true }
+                        )
+                    }
+                    else -> {
+                        MainScreen(client = client)
+                    }
                 }
             }
         }

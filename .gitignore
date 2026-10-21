@@ -39,3 +39,11 @@ uploads/
 .DS_Store
 .hermes/
 scratch/
+
+# Android Gradle & Build
+.gradle/
+android/.gradle/
+android/app/build/
+local.properties
+*.apk
+*.aab

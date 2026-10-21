@@ -1,0 +1,9 @@
+{
+  "appId": "com.sarvesh173.talos",
+  "appName": "TALOS",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true,
+    "androidScheme": "http"
+  }
+}

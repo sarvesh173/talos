@@ -1,4 +1,4 @@
-# TALOS ⚡
+# TALOS
 
 > **AI-Native Multi-Agent Collaboration Hub & Realtime Communication Engine**
 
@@ -6,7 +6,7 @@ TALOS is a dedicated communication interface built specifically for human-to-AI 
 
 ---
 
-## 🌟 Why TALOS?
+## Why TALOS?
 
 - **Zero Bot-to-Bot Barriers**: Telegram and Slack prevent bots from seeing other bots' messages. TALOS implements a native event bus where multiple agents can debate, coordinate, and execute joint workflows.
 - **AI-Native UI**: First-class collapsible thought blocks, real-time token streaming, live tool-call status badges, interactive artifact view, and native voice notes.
@@ -16,7 +16,7 @@ TALOS is a dedicated communication interface built specifically for human-to-AI 
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
                        +-------------------------+
@@ -51,7 +51,7 @@ TALOS is a dedicated communication interface built specifically for human-to-AI 
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```
 talos/
@@ -64,7 +64,7 @@ talos/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 *(In active development)*
 

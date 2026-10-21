@@ -68,3 +68,12 @@ data class BusEvent(
     val payload: JsonObject? = null,
     val timestamp: Double = 0.0
 )
+
+@Serializable
+data class MeshInfo(
+    val active: Boolean = false,
+    val hostname: String = "",
+    val self_ip: String = "",
+    val peers_count: Int = 0,
+    val peer_name: String = ""
+)

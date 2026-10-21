@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.sarvesh173.talos.data.BusEvent
 import com.sarvesh173.talos.data.Message
+import com.sarvesh173.talos.data.MeshInfo
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.data.Room
 import kotlinx.coroutines.CoroutineScope
@@ -13,10 +14,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -225,6 +228,59 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             val old = currentList[index]
             currentList[index] = old.copy(thought = (old.thought ?: "") + delta)
             _messages.value = currentList
+        }
+    }
+
+    suspend fun checkMeshStatus(): MeshInfo? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/mesh/status")
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: "{}"
+                        val obj = json.parseToJsonElement(body).jsonObject
+                        val active = obj["active"]?.jsonPrimitive?.content?.toBoolean() ?: false
+                        val host = obj["hostname"]?.jsonPrimitive?.content ?: ""
+                        val ip = obj["self_ip"]?.jsonPrimitive?.content ?: ""
+                        val peers = obj["peers_count"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+                        val peersArr = obj["peers"]?.jsonArray
+                        val pName = if (peersArr != null && peersArr.isNotEmpty()) {
+                            peersArr[0].jsonObject["hostname"]?.jsonPrimitive?.content ?: ""
+                        } else ""
+                        MeshInfo(active, host, ip, peers, pName)
+                    } else null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Mesh check error: ${e.message}")
+                null
+            }
+        }
+    }
+
+    suspend fun pairDevice(): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/auth/pair")
+                    .post(ByteArray(0).toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: "{}"
+                        val obj = json.parseToJsonElement(body).jsonObject
+                        val token = obj["token"]?.jsonPrimitive?.content
+                        if (!token.isNullOrBlank()) {
+                            updateConfig(baseUrl, token)
+                        }
+                        token
+                    } else null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Pair device error: ${e.message}")
+                null
+            }
         }
     }
 

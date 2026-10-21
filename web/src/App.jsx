@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Terminal, Code, ChevronDown, ChevronUp, Bot, User, Radio, Settings } from 'lucide-react';
+import { Send, Terminal, Code, ChevronDown, ChevronUp, Bot, User, Radio, Settings, MessageSquare, Users } from 'lucide-react';
 
 const DEFAULT_SERVER = 'http://100.75.107.79:8000';
 
@@ -95,7 +95,9 @@ export default function App() {
                   : 'hover:bg-slate-800/60 text-slate-300'
               }`}
             >
-              <span className="text-xl">{room.mode === 'dm' ? '💬' : '🏛️'}</span>
+              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                {room.mode === 'dm' ? <MessageSquare className="w-4 h-4 text-pink-400" /> : <Users className="w-4 h-4 text-indigo-400" />}
+              </div>
               <div className="overflow-hidden">
                 <div className="font-medium text-sm truncate">{room.name}</div>
                 <div className="text-xs text-slate-500 truncate">{room.description}</div>

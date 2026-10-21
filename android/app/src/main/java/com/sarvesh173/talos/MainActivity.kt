@@ -496,9 +496,8 @@ fun ChamberHero(
         ThinkingOrb(
             state = OrbState.WEAVING,
             size = 64.dp,
-            dotCount = 48,
-            primaryColor = PrimaryAccent,
-            accentColor = Color(0xFFA855F7)
+            dotColor = PrimaryAccent,
+            secondaryColor = Color(0xFFA855F7)
         )
         Spacer(modifier = Modifier.height(20.dp))
         Text(

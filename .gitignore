@@ -34,8 +34,10 @@ pnpm-debug.log*
 *.db
 *.sqlite
 *.sqlite3
-data/
-uploads/
+/server/data/
+/data/
+/server/uploads/
+/uploads/
 .DS_Store
 .hermes/
 scratch/

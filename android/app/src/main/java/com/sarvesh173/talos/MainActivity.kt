@@ -13,9 +13,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.sarvesh173.talos.data.Message
+import com.sarvesh173.talos.data.Room
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.*
 import kotlinx.coroutines.launch
@@ -37,13 +41,130 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        client = TalosClient(lifecycleScope)
-        client.refreshRooms()
-        client.switchRoom("alya-dm")
+        client = TalosClient(this, lifecycleScope)
+        if (client.isPaired.value) {
+            client.refreshRooms()
+            client.switchRoom("alya-dm")
+        }
 
         setContent {
             TalosTheme {
-                MainScreen(client = client)
+                val isPaired by client.isPaired.collectAsState()
+                if (!isPaired) {
+                    OnboardingScreen(
+                        defaultUrl = client.baseUrl,
+                        onConnect = { url, token ->
+                            client.updateConfig(url, token)
+                        }
+                    )
+                } else {
+                    MainScreen(client = client)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OnboardingScreen(
+    defaultUrl: String,
+    onConnect: (String, String) -> Unit
+) {
+    var urlText by remember { mutableStateOf(defaultUrl) }
+    var tokenText by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BgDark)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(SurfaceDark)
+                .border(1.dp, SurfaceBorder, RoundedCornerShape(20.dp))
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.Shield,
+                contentDescription = null,
+                tint = PrimaryAccent,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "TALOS Security Gate",
+                color = TextPrimary,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Pair your device with an authorized Bot API Token to communicate over Tailscale WireGuard.",
+                color = TextMuted,
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = urlText,
+                onValueChange = { urlText = it },
+                label = { Text("Tailscale Endpoint", color = TextMuted) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF090D15),
+                    unfocusedContainerColor = Color(0xFF090D15),
+                    focusedBorderColor = PrimaryAccent,
+                    unfocusedBorderColor = SurfaceBorder,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = tokenText,
+                onValueChange = { tokenText = it },
+                label = { Text("Bot API Token", color = TextMuted) },
+                placeholder = { Text("talos_sk_...", color = TextMuted) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Key, contentDescription = null, tint = TextMuted)
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF090D15),
+                    unfocusedContainerColor = Color(0xFF090D15),
+                    focusedBorderColor = PrimaryAccent,
+                    unfocusedBorderColor = SurfaceBorder,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = {
+                    if (tokenText.isNotBlank()) {
+                        onConnect(urlText, tokenText)
+                    }
+                },
+                enabled = tokenText.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text(text = "Authorize & Connect", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         }
     }
@@ -64,12 +185,11 @@ fun MainScreen(client: TalosClient) {
     var inputText by remember { mutableStateOf("") }
     var showSettingsDialog by remember { mutableStateOf(false) }
 
-    val activeRoom = rooms.find { it.id == currentRoomId }
+    val activeRoom = rooms.firstOrNull { it.id == currentRoomId }
     val roomTitle = activeRoom?.name ?: "TALOS"
 
     val listState = rememberLazyListState()
 
-    // Auto-scroll to bottom on new message
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
@@ -94,7 +214,7 @@ fun MainScreen(client: TalosClient) {
                 HorizontalDivider(color = SurfaceBorder)
 
                 LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
-                    items(rooms) { room ->
+                    items(rooms) { room: Room ->
                         val isSelected = room.id == currentRoomId
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -149,7 +269,6 @@ fun MainScreen(client: TalosClient) {
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            // Tailscale online status badge
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
@@ -243,7 +362,7 @@ fun MainScreen(client: TalosClient) {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                items(messages) { msg ->
+                items(messages) { msg: Message ->
                     MessageBubble(msg = msg)
                 }
             }
@@ -253,9 +372,10 @@ fun MainScreen(client: TalosClient) {
     if (showSettingsDialog) {
         SettingsDialog(
             currentUrl = client.baseUrl,
+            currentToken = client.apiToken,
             onDismiss = { showSettingsDialog = false },
-            onSave = { newUrl ->
-                client.updateBaseUrl(newUrl)
+            onSave = { newUrl, newToken ->
+                client.updateConfig(newUrl, newToken)
                 showSettingsDialog = false
             }
         )
@@ -265,24 +385,26 @@ fun MainScreen(client: TalosClient) {
 @Composable
 fun SettingsDialog(
     currentUrl: String,
+    currentToken: String,
     onDismiss: () -> Unit,
-    onSave: (String) -> Unit
+    onSave: (String, String) -> Unit
 ) {
     var urlText by remember { mutableStateOf(currentUrl) }
+    var tokenText by remember { mutableStateOf(currentToken) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = SurfaceDark,
         title = {
-            Text(text = "Tailscale Endpoint", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = "Endpoint & Token Settings", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         },
         text = {
             Column {
                 Text(
-                    text = "Encrypted WireGuard endpoint on your local machine:",
+                    text = "Tailscale Host URL:",
                     color = TextMuted,
                     fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
                 OutlinedTextField(
                     value = urlText,
@@ -298,14 +420,37 @@ fun SettingsDialog(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Bot API Token:",
+                    color = TextMuted,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                OutlinedTextField(
+                    value = tokenText,
+                    onValueChange = { tokenText = it },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF090D15),
+                        unfocusedContainerColor = Color(0xFF090D15),
+                        focusedBorderColor = PrimaryAccent,
+                        unfocusedBorderColor = SurfaceBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onSave(urlText) },
+                onClick = { onSave(urlText, tokenText) },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
             ) {
-                Text(text = "Connect")
+                Text(text = "Save")
             }
         },
         dismissButton = {

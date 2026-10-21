@@ -1,5 +1,7 @@
 package com.sarvesh173.talos.network
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.sarvesh173.talos.data.BusEvent
 import com.sarvesh173.talos.data.Message
@@ -11,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
@@ -21,11 +25,16 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import java.util.concurrent.TimeUnit
 
-class TalosClient(private val scope: CoroutineScope) {
+class TalosClient(private val context: Context, private val scope: CoroutineScope) {
     companion object {
         const val DEFAULT_BASE_URL = "http://100.75.107.79:8000"
+        private const val PREFS_NAME = "talos_prefs"
+        private const val KEY_BASE_URL = "base_url"
+        private const val KEY_API_TOKEN = "api_token"
         private const val TAG = "TalosClient"
     }
+
+    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -35,16 +44,22 @@ class TalosClient(private val scope: CoroutineScope) {
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(0, TimeUnit.MILLISECONDS) // infinite for websockets
+        .readTimeout(0, TimeUnit.MILLISECONDS)
         .build()
 
-    var baseUrl: String = DEFAULT_BASE_URL
+    var baseUrl: String = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
+        private set
+
+    var apiToken: String = prefs.getString(KEY_API_TOKEN, "") ?: ""
         private set
 
     private var activeWebSocket: WebSocket? = null
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
+
+    private val _isPaired = MutableStateFlow(apiToken.isNotBlank())
+    val isPaired: StateFlow<Boolean> = _isPaired.asStateFlow()
 
     private val _rooms = MutableStateFlow<List<Room>>(emptyList())
     val rooms: StateFlow<List<Room>> = _rooms.asStateFlow()
@@ -58,13 +73,20 @@ class TalosClient(private val scope: CoroutineScope) {
     private val _isAgentTyping = MutableStateFlow(false)
     val isAgentTyping: StateFlow<Boolean> = _isAgentTyping.asStateFlow()
 
-    fun updateBaseUrl(newUrl: String) {
+    fun updateConfig(newUrl: String, newToken: String) {
         baseUrl = newUrl.trimEnd('/')
+        apiToken = newToken.trim()
+        prefs.edit()
+            .putString(KEY_BASE_URL, baseUrl)
+            .putString(KEY_API_TOKEN, apiToken)
+            .apply()
+        _isPaired.value = apiToken.isNotBlank()
         refreshRooms()
+        switchRoom(_currentRoomId.value)
     }
 
     fun switchRoom(roomId: String) {
-        if (_currentRoomId.value == roomId && activeWebSocket != null) return
+        if (!isPaired.value) return
         _currentRoomId.value = roomId
         _messages.value = emptyList()
         fetchHistory(roomId)
@@ -72,10 +94,12 @@ class TalosClient(private val scope: CoroutineScope) {
     }
 
     fun refreshRooms() {
+        if (!isPaired.value) return
         scope.launch(Dispatchers.IO) {
             try {
                 val req = Request.Builder()
                     .url("$baseUrl/api/rooms")
+                    .addHeader("Authorization", "Bearer $apiToken")
                     .build()
                 httpClient.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
@@ -95,6 +119,7 @@ class TalosClient(private val scope: CoroutineScope) {
             try {
                 val req = Request.Builder()
                     .url("$baseUrl/api/rooms/$roomId/messages")
+                    .addHeader("Authorization", "Bearer $apiToken")
                     .build()
                 httpClient.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
@@ -114,7 +139,7 @@ class TalosClient(private val scope: CoroutineScope) {
         _isConnected.value = false
 
         val wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://") +
-                "/ws/$roomId/android-client"
+                "/ws/$roomId/android-client?token=$apiToken"
 
         val req = Request.Builder().url(wsUrl).build()
         activeWebSocket = httpClient.newWebSocket(req, object : WebSocketListener() {
@@ -177,7 +202,6 @@ class TalosClient(private val scope: CoroutineScope) {
             currentList[index] = old.copy(content = old.content + delta)
             _messages.value = currentList
         } else {
-            // New streaming message placeholder
             val newMsg = Message(
                 id = messageId,
                 room_id = _currentRoomId.value,
@@ -204,12 +228,13 @@ class TalosClient(private val scope: CoroutineScope) {
     fun sendMessage(text: String) {
         if (text.isBlank()) return
         val currentRoom = _currentRoomId.value
+        val escaped = json.encodeToString(text)
         val payload = """
             {
                 "type": "message",
                 "room_id": "$currentRoom",
                 "sender_name": "Sarvesh",
-                "content": ${json.encodeToString(text)}
+                "content": $escaped
             }
         """.trimIndent()
         activeWebSocket?.send(payload)

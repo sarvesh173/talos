@@ -31,6 +31,11 @@ pnpm-debug.log*
 
 # System & Cache
 *.log
+*.db
+*.sqlite
+*.sqlite3
+data/
+uploads/
 .DS_Store
 .hermes/
 scratch/

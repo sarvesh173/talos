@@ -16,6 +16,11 @@ val StatusGreen = Color(0xFF10B981)
 val TextPrimaryDark = Color(0xFFF1F5F9)
 val TextMutedDark = Color(0xFF94A3B8)
 
+// Default / Legacy Aliases for existing components
+val SurfaceBorder = SurfaceBorderDark
+val TextPrimary = TextPrimaryDark
+val TextMuted = TextMutedDark
+
 // Light Palette
 val BgLight = Color(0xFFF8FAFC)
 val SurfaceLight = Color(0xFFFFFFFF)

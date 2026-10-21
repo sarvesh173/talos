@@ -50,7 +50,13 @@ fun MessageBubble(msg: Message) {
     ) {
         if (!isHuman) {
             // Agent Avatar Badge
-            val avatarColor = if (msg.sender_name.contains("Alya", ignoreCase = true)) AlyaPink else OmniBlue
+            val avatarColor = when {
+                msg.sender_name.contains("Omni", ignoreCase = true) -> Color(0xFFA855F7)
+                msg.sender_name.contains("Claude", ignoreCase = true) -> Color(0xFFD97757)
+                msg.sender_name.contains("Hermes", ignoreCase = true) -> Color(0xFF22C55E)
+                msg.sender_name.contains("OpenClaw", ignoreCase = true) -> Color(0xFFF97316)
+                else -> Color(0xFF38BDF8)
+            }
             Box(
                 modifier = Modifier
                     .size(36.dp)

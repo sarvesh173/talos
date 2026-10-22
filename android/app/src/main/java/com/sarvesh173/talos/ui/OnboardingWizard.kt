@@ -112,7 +112,7 @@ fun OnboardingWizard(
     var meshInfo by remember { mutableStateOf<MeshInfo?>(null) }
     var isChecking by remember { mutableStateOf(false) }
     var token by remember {
-        mutableStateOf(
+        mutableStateOf<String?>(
             client.apiToken.takeIf { it.isNotBlank() }
                 ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
         )

@@ -3,16 +3,17 @@ package com.sarvesh173.talos.ui
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -22,393 +23,327 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sarvesh173.talos.data.MeshInfo
 import com.sarvesh173.talos.network.TalosClient
-import kotlinx.coroutines.launch
 
 @Composable
 fun LandingScreen(
     client: TalosClient,
-    onConnect: (String, String) -> Unit,
+    onGetStarted: () -> Unit,
+    onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null
 ) {
-    val scope = rememberCoroutineScope()
-    var isChecking by remember { mutableStateOf(true) }
-    var meshInfo by remember { mutableStateOf<MeshInfo?>(null) }
-    var isPairing by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var showEndpointEdit by remember { mutableStateOf(false) }
-    var customUrl by remember { mutableStateOf(client.baseUrl) }
+    // Independent floating animation clocks with varied periods
+    val infiniteTransition = rememberInfiniteTransition(label = "agent_float_loop")
 
-    // Floating animation loops with staggered periods
-    val infiniteTransition = rememberInfiniteTransition(label = "floating_agents")
-    val floatOffset1 by infiniteTransition.animateFloat(
-        initialValue = -12f,
-        targetValue = 12f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float1"
+    val floatTopLeft by infiniteTransition.animateFloat(
+        initialValue = -10f, targetValue = 10f,
+        animationSpec = infiniteRepeatable(tween(3400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "tl_float"
     )
-    val floatOffset2 by infiniteTransition.animateFloat(
-        initialValue = 10f,
-        targetValue = -10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2700, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float2"
+    val floatTopRight by infiniteTransition.animateFloat(
+        initialValue = 8f, targetValue = -8f,
+        animationSpec = infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "tr_float"
     )
-    val floatOffset3 by infiniteTransition.animateFloat(
-        initialValue = -8f,
-        targetValue = 8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3600, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float3"
+    val floatMidLeft by infiniteTransition.animateFloat(
+        initialValue = -7f, targetValue = 7f,
+        animationSpec = infiniteRepeatable(tween(3600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "ml_float"
+    )
+    val floatMidRight by infiniteTransition.animateFloat(
+        initialValue = 9f, targetValue = -9f,
+        animationSpec = infiniteRepeatable(tween(3100, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "mr_float"
+    )
+    val floatLowerLeft by infiniteTransition.animateFloat(
+        initialValue = -8f, targetValue = 8f,
+        animationSpec = infiniteRepeatable(tween(3300, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "ll_float"
+    )
+    val floatLowerMid by infiniteTransition.animateFloat(
+        initialValue = 6f, targetValue = -6f,
+        animationSpec = infiniteRepeatable(tween(2900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "lm_float"
+    )
+    val floatLowerRight by infiniteTransition.animateFloat(
+        initialValue = -7f, targetValue = 7f,
+        animationSpec = infiniteRepeatable(tween(3500, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "lr_float"
     )
 
-    LaunchedEffect(Unit) {
-        isChecking = true
-        meshInfo = client.checkMeshStatus()
-        isChecking = false
-    }
+    // Pulse animation for the beacon above Get Started
+    val beaconPulse by infiniteTransition.animateFloat(
+        initialValue = 0.85f, targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "beacon_pulse"
+    )
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F1117))
+            .background(Color(0xFF0D0E12))
     ) {
-        // --- FLOATING AGENT BLOBS (Inspired by Grok Bot, Vector/Canvas only) ---
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
 
-        // 1. Top-Left: Green Cloud Agent (Hermes) with winged-H emblem badge
+        // ==============================================================
+        // FLOATING AGENT CREATURES (PIXEL-PERFECT REPLICA OF SCREENSHOT)
+        // ==============================================================
+
+        // 1. Top-Left: Green Cloud Creature (Hermes)
         Box(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = 36.dp, y = (70 + floatOffset1).dp)
+                .offset(
+                    x = screenWidth * 0.12f,
+                    y = screenHeight * 0.08f + floatTopLeft.dp
+                )
         ) {
-            CloudAgentBlob(
-                modifier = Modifier.size(width = 92.dp, height = 76.dp),
-                color = Color(0xFF22C55E)
-            )
-            AgentEmblemBadge(
-                emblem = emblemByKey("hermes"),
-                modifier = Modifier.align(Alignment.BottomEnd)
+            GreenCloudCreature(
+                modifier = Modifier.size(width = 86.dp, height = 72.dp),
+                color = Color(0xFF00D26A)
             )
         }
 
-        // 2. Top-Right: Warm Coral Agent (Claude Code) with spark emblem badge
+        // 2. Top-Right: Magenta/Pink Sphere Creature (Hot Pink)
         Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = (-42).dp, y = (85 + floatOffset2).dp)
+                .offset(
+                    x = screenWidth * 0.62f,
+                    y = screenHeight * 0.09f + floatTopRight.dp
+                )
         ) {
-            PinkAgentBlob(
+            PinkSphereCreature(
+                modifier = Modifier.size(72.dp),
+                color = Color(0xFFF43F5E)
+            )
+        }
+
+        // 3. Mid-Left (Upper): Purple Sphere Creature peeking from border
+        Box(
+            modifier = Modifier
+                .offset(
+                    x = (-20).dp,
+                    y = screenHeight * 0.27f + floatMidLeft.dp
+                )
+        ) {
+            PurplePeekingCreature(
                 modifier = Modifier.size(68.dp),
-                color = Color(0xFFD97757)
-            )
-            AgentEmblemBadge(
-                emblem = emblemByKey("claude"),
-                modifier = Modifier.align(Alignment.BottomStart)
+                color = Color(0xFF8B5CF6)
             )
         }
 
-        // 3. Mid-Left: Purple Droplet Agent (OmniRush) with bolt emblem badge
+        // 4. Mid-Right (Upper): Tan/Golden Creature peeking from right border
         Box(
             modifier = Modifier
-                .align(Alignment.CenterStart)
-                .offset(x = (-16).dp, y = (-120 + floatOffset3).dp)
+                .offset(
+                    x = screenWidth - 46.dp,
+                    y = screenHeight * 0.25f + floatMidRight.dp
+                )
         ) {
-            PurpleAgentBlob(
-                modifier = Modifier.size(width = 54.dp, height = 62.dp),
-                color = Color(0xFFA855F7)
-            )
-            AgentEmblemBadge(
-                emblem = emblemByKey("omnirush"),
-                modifier = Modifier.align(Alignment.BottomEnd)
-            )
-        }
-
-        // 4. Mid-Right: Terracotta Sphere peeking (Claude Code) with spark emblem
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .offset(x = 24.dp, y = (-90 + floatOffset1).dp)
-        ) {
-            TerracottaAgentBlob(
+            TanPeekingCreature(
                 modifier = Modifier.size(80.dp),
-                color = Color(0xFFB45309)
-            )
-            AgentEmblemBadge(
-                emblem = emblemByKey("claude"),
-                modifier = Modifier.align(Alignment.BottomStart)
+                color = Color(0xFFD97706)
             )
         }
 
-        // 5. Lower-Left: Large Orange Curved Arc peeking (OpenClaw) with claw emblem
+        // 5. Mid-Left (Lower): Orange Arc Creature peeking
         Box(
             modifier = Modifier
-                .align(Alignment.CenterStart)
-                .offset(x = (-30).dp, y = (40 + floatOffset2).dp)
+                .offset(
+                    x = (-32).dp,
+                    y = screenHeight * 0.44f + floatLowerLeft.dp
+                )
         ) {
-            OrangeArcAgentBlob(
+            OrangeArcCreature(
                 modifier = Modifier.size(width = 84.dp, height = 96.dp),
-                color = Color(0xFFF97316)
-            )
-            AgentEmblemBadge(
-                emblem = emblemByKey("openclaw"),
-                modifier = Modifier.align(Alignment.TopEnd)
+                color = Color(0xFFFF6B00)
             )
         }
 
-        // 6. Lower-Right: Red Sphere peeking
-        RedAgentBlob(
+        // 6. Mid-Right (Lower): Red Semi-Sphere Creature peeking
+        Box(
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .offset(x = 28.dp, y = (30 + floatOffset3).dp)
-                .size(84.dp),
-            color = Color(0xFFEF4444)
-        )
+                .offset(
+                    x = screenWidth - 36.dp,
+                    y = screenHeight * 0.43f + floatLowerRight.dp
+                )
+        ) {
+            RedPeekingCreature(
+                modifier = Modifier.size(84.dp),
+                color = Color(0xFFFF2D55)
+            )
+        }
 
-        // 7. Bottom-Left: Sky Blue Squircle Agent (Local AI / Companion)
-        BlueSquircleAgentBlob(
+        // 7. Bottom-Left: Electric Blue Squircle Creature
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .offset(x = 36.dp, y = (-230 + floatOffset1).dp)
-                .size(62.dp),
-            color = Color(0xFF0EA5E9)
-        )
+                .offset(
+                    x = screenWidth * 0.10f,
+                    y = screenHeight * 0.64f + floatLowerLeft.dp
+                )
+        ) {
+            BlueSquircleCreature(
+                modifier = Modifier.size(64.dp),
+                color = Color(0xFF0084FF)
+            )
+        }
 
-        // 8. Bottom-Center: Orange Hexagon Agent with vertical pill eyes (The Council)
-        HexagonAgentBlob(
+        // 8. Bottom-Center: Bright Orange Hexagon Creature (The Council)
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(x = 0.dp, y = (-220 + floatOffset2).dp)
-                .size(width = 80.dp, height = 88.dp),
-            color = Color(0xFFEA580C)
-        )
+                .offset(
+                    x = screenWidth * 0.42f - 40.dp,
+                    y = screenHeight * 0.65f + floatLowerMid.dp
+                )
+        ) {
+            OrangeHexagonCreature(
+                modifier = Modifier.size(width = 80.dp, height = 88.dp),
+                color = Color(0xFFFF5722)
+            )
+        }
 
-        // 9. Bottom-Right: Teal Capsule Agent
-        TealAgentBlob(
+        // 9. Bottom-Right: Cyan / Mint Green Creature
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .offset(x = (-40).dp, y = (-240 + floatOffset3).dp)
-                .size(64.dp),
-            color = Color(0xFF14B8A6)
-        )
+                .offset(
+                    x = screenWidth * 0.78f,
+                    y = screenHeight * 0.62f + floatLowerRight.dp
+                )
+        ) {
+            CyanCircleCreature(
+                modifier = Modifier.size(66.dp),
+                color = Color(0xFF00D1B2)
+            )
+        }
 
-        // --- CENTER BRAND & HERO SECTION ---
+        // ==============================================================
+        // CENTER HERO TYPOGRAPHY (CRISP, BOLD, FAITHFUL TO SCREENSHOT)
+        // ==============================================================
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = (-30).dp)
+                .offset(y = (-20).dp)
                 .padding(horizontal = 32.dp)
         ) {
             Text(
                 text = "TALOS",
                 color = Color.White,
-                fontSize = 38.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "Your team of always-on agents that finish the work",
+                text = "Your team of always-on Bots that\nfinish the work",
                 color = Color(0xFF94A3B8),
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp
             )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // Dynamic Mesh Status Pill
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFF1E2433).copy(alpha = 0.8f))
-                    .border(1.dp, Color(0xFF2E384D), RoundedCornerShape(20.dp))
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(if (meshInfo?.active == true) StatusGreen else if (isChecking) PrimaryAccent else Color(0xFFEF4444))
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (meshInfo?.active == true) "Tailscale Verified (${meshInfo?.self_ip ?: "100.75.107.79"})"
-                           else if (isChecking) "Checking Tailscale Mesh..."
-                           else "Mesh Standby",
-                    color = Color(0xFFCBD5E1),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
         }
 
-        // --- BOTTOM ACTION SECTION (Clean White Pill Button) ---
+        // ==============================================================
+        // BOTTOM ACTION AREA (ANIMATION ABOVE GET STARTED + WHITE PILL)
+        // ==============================================================
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 24.dp, vertical = 36.dp)
                 .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 28.dp)
         ) {
-            if (errorMessage != null) {
+            // Pulse animation / Thinking Orb above "Get Started"
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(bottom = 14.dp)
+            ) {
+                ThinkingOrb(
+                    state = OrbState.WEAVING,
+                    size = 32.dp,
+                    dotColor = Color.White,
+                    secondaryColor = Color(0xFF38BDF8),
+                    speedMultiplier = 1.3f
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .scale(beaconPulse)
+                        .clip(CircleShape)
+                        .background(Color(0xFF00D26A))
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = errorMessage ?: "",
-                    color = Color(0xFFEF4444),
+                    text = "Mesh Online · Always-on",
+                    color = Color(0xFF94A3B8),
                     fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    fontWeight = FontWeight.Medium
                 )
             }
 
-            // High-Contrast Grok-Style White Pill Button
+            // High-Contrast Pure-White Pill Button: "Get Started"
             Button(
-                onClick = {
-                    scope.launch {
-                        isPairing = true
-                        errorMessage = null
-                        val token = client.pairDevice()
-                        if (token != null) {
-                            onConnect(client.baseUrl, token)
-                        } else {
-                            errorMessage = "Could not link with agent. Verify Tailscale network."
-                        }
-                        isPairing = false
-                    }
-                },
-                enabled = !isPairing,
+                onClick = onGetStarted,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
-                    contentColor = Color(0xFF0F1117),
-                    disabledContainerColor = Color.White.copy(alpha = 0.6f)
+                    contentColor = Color(0xFF0D0E12)
                 ),
-                shape = RoundedCornerShape(28.dp),
+                shape = RoundedCornerShape(32.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
-                if (isPairing) {
-                    CircularProgressIndicator(
-                        color = Color(0xFF0F1117),
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Linking Agent...",
-                        color = Color(0xFF0F1117),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                } else {
-                    Text(
-                        text = "Connect & Enter Chamber",
-                        color = Color(0xFF0F1117),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
+                Text(
+                    text = "Get Started",
+                    color = Color(0xFF0D0E12),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp
+                )
             }
 
-            if (onOpenWizard != null) {
-                Spacer(modifier = Modifier.height(10.dp))
-                TextButton(onClick = { onOpenWizard() }) {
-                    Text(
-                        text = "Guided Setup",
-                        color = Color(0xFFCBD5E1),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Vector emblem roster (no emoji, no text glyphs)
-            AgentRoster()
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Subtitle / Disclaimer line
+            // Subtitle Terms notice
             Text(
-                text = "Autonomous Multi-Agent Mesh \u00B7 Hermes, Claude, OpenClaw & OmniRush",
+                text = "By using TALOS, you additionally agree to these Terms.",
                 color = Color(0xFF64748B),
                 fontSize = 11.sp,
                 textAlign = TextAlign.Center
             )
-
-            // Subtle Custom Endpoint Toggle
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (showEndpointEdit) "Hide Custom Endpoint" else "Custom Endpoint",
-                color = Color(0xFF475569),
-                fontSize = 10.sp,
-                modifier = Modifier
-                    .clickable { showEndpointEdit = !showEndpointEdit }
-                    .padding(4.dp)
-            )
-
-            if (showEndpointEdit) {
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = customUrl,
-                    onValueChange = {
-                        customUrl = it
-                        client.updateConfig(it, client.apiToken)
-                    },
-                    label = { Text("Endpoint URL", color = TextMuted, fontSize = 11.sp) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF1E2433),
-                        unfocusedContainerColor = Color(0xFF1E2433),
-                        focusedBorderColor = PrimaryAccent,
-                        unfocusedBorderColor = SurfaceBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
         }
     }
 }
 
-// ==========================================
-// CANVASES FOR ORGANIC AGENT BLOBS (NO EMOJIS)
-// ==========================================
+// =====================================================================
+// VECTOR CANVASES FOR ORGANIC BOT CREATURES (EXACT SCREENSHOT DETAILS)
+// =====================================================================
 
 @Composable
-fun CloudAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun GreenCloudCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        // Draw cloud body using overlapping circles
-        drawCircle(color, radius = w * 0.30f, center = Offset(w * 0.32f, h * 0.52f))
-        drawCircle(color, radius = w * 0.34f, center = Offset(w * 0.54f, h * 0.40f))
-        drawCircle(color, radius = w * 0.28f, center = Offset(w * 0.72f, h * 0.58f))
-        drawCircle(color, radius = w * 0.26f, center = Offset(w * 0.42f, h * 0.66f))
+
+        // Overlapping cloud circles
+        drawCircle(color, radius = w * 0.32f, center = Offset(w * 0.30f, h * 0.52f))
+        drawCircle(color, radius = w * 0.36f, center = Offset(w * 0.52f, h * 0.40f))
+        drawCircle(color, radius = w * 0.30f, center = Offset(w * 0.72f, h * 0.54f))
+        drawCircle(color, radius = w * 0.28f, center = Offset(w * 0.44f, h * 0.66f))
 
         // Two vertical pill eyes
         val eyeW = w * 0.08f
-        val eyeH = h * 0.25f
-        val eyeY = h * 0.40f
+        val eyeH = h * 0.26f
+        val eyeY = h * 0.38f
         drawRoundRect(
-            color = Color(0xFF0F1117),
-            topLeft = Offset(w * 0.38f, eyeY),
+            color = Color(0xFF0D0E12),
+            topLeft = Offset(w * 0.36f, eyeY),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
         )
         drawRoundRect(
-            color = Color(0xFF0F1117),
+            color = Color(0xFF0D0E12),
             topLeft = Offset(w * 0.56f, eyeY),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
@@ -417,24 +352,24 @@ fun CloudAgentBlob(modifier: Modifier = Modifier, color: Color) {
 }
 
 @Composable
-fun PinkAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun PinkSphereCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
         drawCircle(color, radius = w * 0.48f, center = Offset(w * 0.5f, h * 0.5f))
 
-        // Two pill eyes looking down-left
+        // Slanted pill eyes looking down-left
         val eyeW = w * 0.11f
         val eyeH = h * 0.28f
         drawRoundRect(
-            color = Color(0xFF0F1117),
-            topLeft = Offset(w * 0.46f, h * 0.36f),
+            color = Color(0xFF0D0E12),
+            topLeft = Offset(w * 0.48f, h * 0.34f),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
         )
         drawRoundRect(
-            color = Color(0xFF0F1117),
-            topLeft = Offset(w * 0.68f, h * 0.42f),
+            color = Color(0xFF0D0E12),
+            topLeft = Offset(w * 0.70f, h * 0.40f),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
         )
@@ -442,60 +377,59 @@ fun PinkAgentBlob(modifier: Modifier = Modifier, color: Color) {
 }
 
 @Composable
-fun PurpleAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun PurplePeekingCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        drawOval(color, topLeft = Offset(0f, 0f), size = Size(w, h))
+        drawCircle(color, radius = w * 0.48f, center = Offset(w * 0.4f, h * 0.5f))
 
-        // Eyes peeking right
-        val eyeR = w * 0.15f
-        drawCircle(Color(0xFF0F1117), radius = eyeR, center = Offset(w * 0.70f, h * 0.48f))
-        drawCircle(Color.White, radius = eyeR * 0.35f, center = Offset(w * 0.73f, h * 0.45f))
+        // Eye peeking rightward
+        val eyeR = w * 0.16f
+        drawCircle(Color(0xFF0D0E12), radius = eyeR, center = Offset(w * 0.68f, h * 0.48f))
     }
 }
 
 @Composable
-fun TerracottaAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun TanPeekingCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        drawCircle(color, radius = w * 0.48f, center = Offset(w * 0.5f, h * 0.5f))
+        drawCircle(color, radius = w * 0.48f, center = Offset(w * 0.6f, h * 0.5f))
 
-        // Two arched eyes
+        // Two arched eyes peeking leftwards
         val eyeR = w * 0.12f
-        drawCircle(Color(0xFF0F1117), radius = eyeR, center = Offset(w * 0.28f, h * 0.44f))
-        drawCircle(Color(0xFF0F1117), radius = eyeR, center = Offset(w * 0.52f, h * 0.44f))
+        drawCircle(Color(0xFF0D0E12), radius = eyeR, center = Offset(w * 0.28f, h * 0.42f))
+        drawCircle(Color(0xFF0D0E12), radius = eyeR, center = Offset(w * 0.50f, h * 0.42f))
     }
 }
 
 @Composable
-fun OrangeArcAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun OrangeArcCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        drawOval(color, topLeft = Offset(-w * 0.3f, 0f), size = Size(w * 1.3f, h))
+        drawOval(color, topLeft = Offset(-w * 0.35f, 0f), size = Size(w * 1.35f, h))
 
-        // Eyes peeking from left arc
+        // Two curved eyes peeking inwards
         val eyeR = w * 0.12f
-        drawCircle(Color(0xFF0F1117), radius = eyeR, center = Offset(w * 0.50f, h * 0.45f))
-        drawCircle(Color(0xFF0F1117), radius = eyeR, center = Offset(w * 0.74f, h * 0.50f))
+        drawCircle(Color(0xFF0D0E12), radius = eyeR, center = Offset(w * 0.48f, h * 0.42f))
+        drawCircle(Color(0xFF0D0E12), radius = eyeR, center = Offset(w * 0.72f, h * 0.48f))
     }
 }
 
 @Composable
-fun RedAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun RedPeekingCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        drawCircle(color, radius = w * 0.48f, center = Offset(w * 0.5f, h * 0.5f))
+        drawCircle(color, radius = w * 0.48f, center = Offset(w * 0.65f, h * 0.5f))
 
-        // Subtle eyes peeking from edge
-        val eyeW = w * 0.10f
-        val eyeH = h * 0.26f
+        // Eye peeking from edge
+        val eyeW = w * 0.11f
+        val eyeH = h * 0.28f
         drawRoundRect(
-            color = Color(0xFF0F1117),
-            topLeft = Offset(w * 0.25f, h * 0.40f),
+            color = Color(0xFF0D0E12),
+            topLeft = Offset(w * 0.25f, h * 0.38f),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
         )
@@ -503,7 +437,7 @@ fun RedAgentBlob(modifier: Modifier = Modifier, color: Color) {
 }
 
 @Composable
-fun BlueSquircleAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun BlueSquircleCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
@@ -513,13 +447,13 @@ fun BlueSquircleAgentBlob(modifier: Modifier = Modifier, color: Color) {
         )
         // Two round dot eyes
         val eyeR = w * 0.08f
-        drawCircle(Color(0xFF0F1117), radius = eyeR, center = Offset(w * 0.40f, h * 0.50f))
-        drawCircle(Color(0xFF0F1117), radius = eyeR, center = Offset(w * 0.65f, h * 0.50f))
+        drawCircle(Color(0xFF0D0E12), radius = eyeR, center = Offset(w * 0.38f, h * 0.48f))
+        drawCircle(Color(0xFF0D0E12), radius = eyeR, center = Offset(w * 0.64f, h * 0.48f))
     }
 }
 
 @Composable
-fun HexagonAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun OrangeHexagonCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
@@ -537,17 +471,17 @@ fun HexagonAgentBlob(modifier: Modifier = Modifier, color: Color) {
         }
         drawPath(path, color)
 
-        // Two vertical pill eyes (Grok bot signature)
+        // Two vertical pill eyes (signature Grok bot hexagon)
         val eyeW = w * 0.11f
         val eyeH = h * 0.34f
         drawRoundRect(
-            color = Color(0xFF0F1117),
+            color = Color(0xFF0D0E12),
             topLeft = Offset(cx - eyeW * 1.5f, cy - eyeH / 2),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
         )
         drawRoundRect(
-            color = Color(0xFF0F1117),
+            color = Color(0xFF0D0E12),
             topLeft = Offset(cx + eyeW * 0.5f, cy - eyeH / 2),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
@@ -556,7 +490,7 @@ fun HexagonAgentBlob(modifier: Modifier = Modifier, color: Color) {
 }
 
 @Composable
-fun TealAgentBlob(modifier: Modifier = Modifier, color: Color) {
+fun CyanCircleCreature(modifier: Modifier = Modifier, color: Color) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
@@ -566,13 +500,13 @@ fun TealAgentBlob(modifier: Modifier = Modifier, color: Color) {
         val eyeW = w * 0.10f
         val eyeH = h * 0.28f
         drawRoundRect(
-            color = Color(0xFF0F1117),
+            color = Color(0xFF0D0E12),
             topLeft = Offset(w * 0.36f, h * 0.36f),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)
         )
         drawRoundRect(
-            color = Color(0xFF0F1117),
+            color = Color(0xFF0D0E12),
             topLeft = Offset(w * 0.56f, h * 0.36f),
             size = Size(eyeW, eyeH),
             cornerRadius = CornerRadius(eyeW / 2, eyeW / 2)

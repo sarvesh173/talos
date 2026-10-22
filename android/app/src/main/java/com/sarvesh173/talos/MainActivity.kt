@@ -56,26 +56,46 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var themeMode by remember { mutableStateOf(AppThemeMode.DARK) }
+            var appScreen by remember { mutableStateOf(if (client.isPaired.value) "main" else "landing") }
 
             TalosTheme(themeMode = themeMode) {
                 val isPaired by client.isPaired.collectAsState()
 
-                if (!isPaired) {
-                    OnboardingWizard(
-                        client = client,
-                        onComplete = {
-                            client.refreshRooms()
-                            client.switchRoom("the-council")
-                        }
-                    )
-                } else {
-                    MainScreen(
-                        client = client,
-                        isDark = themeMode == AppThemeMode.DARK,
-                        onToggleTheme = {
-                            themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
-                        }
-                    )
+                when {
+                    isPaired -> {
+                        MainScreen(
+                            client = client,
+                            isDark = themeMode == AppThemeMode.DARK,
+                            onToggleTheme = {
+                                themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                            }
+                        )
+                    }
+                    appScreen == "wizard" -> {
+                        OnboardingWizard(
+                            client = client,
+                            onComplete = {
+                                client.refreshRooms()
+                                client.switchRoom("the-council")
+                                appScreen = "main"
+                            }
+                        )
+                    }
+                    else -> {
+                        LandingScreen(
+                            client = client,
+                            onGetStarted = {
+                                appScreen = "wizard"
+                            },
+                            onConnect = { url, token ->
+                                client.setCustomBaseUrl(url)
+                                client.setToken(token)
+                                client.refreshRooms()
+                                client.switchRoom("the-council")
+                                appScreen = "main"
+                            }
+                        )
+                    }
                 }
             }
         }

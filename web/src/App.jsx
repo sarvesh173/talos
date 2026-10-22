@@ -7,7 +7,7 @@ const ONBOARDED_KEY = 'talos.onboarded';
 
 export default function App() {
   const [rooms, setRooms] = useState([]);
-  const [activeRoomId, setActiveRoomId] = useState('alya-dm');
+  const [activeRoomId, setActiveRoomId] = useState('the-council');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);

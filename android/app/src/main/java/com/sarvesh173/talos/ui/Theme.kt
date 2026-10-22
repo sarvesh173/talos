@@ -20,7 +20,7 @@ val TextMutedDark = Color(0xFF94A3B8)
 val SurfaceBorder = SurfaceBorderDark
 val TextPrimary = TextPrimaryDark
 val TextMuted = TextMutedDark
-val AlyaPink = Color(0xFFEC4899)
+val CoralPink = Color(0xFFEC4899)
 val OmniBlue = Color(0xFF3B82F6)
 
 // Light Palette

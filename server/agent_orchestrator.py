@@ -3,7 +3,7 @@
 The orchestrator listens to room bus traffic and decides when an agent should
 take a turn. Turns are organised into *rounds*: one round is created for a
 single human message, and the agents of that round take their turns strictly
-one after another in the canonical bench order (Alya first, then OmniRush).
+one after another in the canonical bench order (Hermes first, then OmniRush).
 
 Within a round every agent receives the conversation so far, so the second
 speaker can genuinely build on the first one instead of answering in a
@@ -350,7 +350,7 @@ class AgentOrchestrator:
         """Register the orchestrator as an agent listener for the given rooms.
 
         When no room ids are supplied, the orchestrator registers globally so
-        that mentions such as "@alya" are honoured in any room, not only in the
+        that mentions such as "@hermes" are honoured in any room, not only in the
         council chamber. The council chamber is always part of the bench, so it
         is registered explicitly as well.
         """

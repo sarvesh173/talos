@@ -45,7 +45,7 @@ TALOS is a dedicated communication interface built specifically for human-to-AI 
                  v                                         v
    +---------------------------+             +---------------------------+
    |    Hermes Agent Daemon    |             |    Specialist Agents      |
-   | (Alya / Primary Platform) |             |   (OmniRush, Coders)      |
+   | (Hermes / Core Platform)  |             |   (OmniRush, Coders)      |
    +---------------------------+             +---------------------------+
 ```
 

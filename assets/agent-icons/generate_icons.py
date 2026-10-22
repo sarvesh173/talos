@@ -198,10 +198,10 @@ def omnirush():
     ]
 
 
-def alya():
-    """Alya - rose spiral (rose pink)."""
+def core():
+    """Core Agent - nucleus rings (cyan)."""
     shapes = [
-        {"d": poly(spiral_points(12.0, 12.0, 1.0, 8.4, 1.85, 64, rot=math.radians(-90)), close=False), "fill": False, "w": 1.7},
+        {"d": poly([(12.0, 9.5), (14.5, 12.0), (12.0, 14.5), (9.5, 12.0)], close=True), "fill": False, "w": 1.7},
         {"d": poly([(12.0, 3.2), (15.4, 6.2), (18.6, 12.0), (15.4, 17.8), (12.0, 20.8),
                     (8.6, 17.8), (5.4, 12.0), (8.6, 6.2)], close=True), "fill": False, "w": 1.3},
     ]
@@ -213,7 +213,7 @@ EMBLEMS = [
     ("claude", "Claude Code", "#D97757", claude),
     ("openclaw", "OpenClaw", "#F97316", openclaw),
     ("omnirush", "OmniRush", "#A855F7", omnirush),
-    ("alya", "Alya", "#F43F5E", alya),
+    ("core", "Core Agent", "#38BDF8", core),
 ]
 
 

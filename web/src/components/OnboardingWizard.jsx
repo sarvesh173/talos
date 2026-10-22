@@ -347,7 +347,7 @@ function TokenStep({ token, isPairing, errorMessage }) {
 /* ------------------------------------------------------------------ */
 
 const CONNECTED_AGENTS = [
-  { name: 'Alya', role: 'Reasoning & synthesis', tint: PASTEL_PEACH },
+  { name: 'Hermes', role: 'Reasoning & synthesis', tint: PASTEL_PEACH },
   { name: 'OmniRush', role: 'Fast execution', tint: PASTEL_LAVENDER },
   { name: 'Council', role: 'Multi-agent debate', tint: PASTEL_SKY },
 ];

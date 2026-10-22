@@ -23,10 +23,10 @@
     "svg": "assets/agent-icons/omnirush.svg",
     "drawable": "res/drawable/ic_omnirush.xml"
   },
-  "alya": {
-    "label": "Alya",
-    "accent": "#F43F5E",
-    "svg": "assets/agent-icons/alya.svg",
-    "drawable": "res/drawable/ic_alya.xml"
+  "core": {
+    "label": "Core Agent",
+    "accent": "#38BDF8",
+    "svg": "assets/agent-icons/core.svg",
+    "drawable": "res/drawable/ic_core.xml"
   }
 }

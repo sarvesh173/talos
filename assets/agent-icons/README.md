@@ -11,7 +11,7 @@ art, no font glyphs - everything is hand-authored path data.
 | `claude` | Claude Code (Anthropic) | `#D97757` | `claude.svg` | `res/drawable/ic_claude.xml` |
 | `openclaw` | OpenClaw | `#F97316` | `openclaw.svg` | `res/drawable/ic_openclaw.xml` |
 | `omnirush` | OmniRush | `#A855F7` | `omnirush.svg` | `res/drawable/ic_omnirush.xml` |
-| `alya` | Alya | `#F43F5E` | `alya.svg` | `res/drawable/ic_alya.xml` |
+| `core` | Core Agent | `#38BDF8` | `core.svg` | `res/drawable/ic_core.xml` |
 
 `manifest.json` maps slug -> label / accent / file locations.
 
@@ -26,7 +26,7 @@ All emblems share a `24 x 24` viewBox and are built from the same primitives:
 * **OpenClaw** - three hooked talons, each a tapered ribbon curving down to a
   sharp point.
 * **OmniRush** - a single speed bolt polygon.
-* **Alya** - a rose: an Archimedean spiral core inside a soft petal outline.
+* **Core** - core nucleus: concentric rings around an energy core.
 
 ## Regenerating
 

@@ -210,7 +210,9 @@ def get_room_messages(room_id: str, limit: int = 100) -> List[Message]:
     conn = _get_connection()
     cur = conn.cursor()
     cur.execute("""
-    SELECT * FROM messages WHERE room_id = ? ORDER BY created_at ASC LIMIT ?
+    SELECT * FROM (
+        SELECT * FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT ?
+    ) ORDER BY created_at ASC
     """, (room_id, limit))
     rows = cur.fetchall()
     messages = []

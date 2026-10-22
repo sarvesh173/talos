@@ -88,11 +88,11 @@ private val WizardText = Color(0xFFF1F5F9)
 private val WizardMuted = Color(0xFF8A94A6)
 private val WizardDanger = Color(0xFFEF4444)
 
-// Pastel illustration badge colors
-private val PastelMint = Color(0xFFA7F3D0)
-private val PastelLavender = Color(0xFFDDD6FE)
-private val PastelSky = Color(0xFFBAE6FD)
-private val PastelPeach = Color(0xFFFED7AA)
+// Dark theme illustration badge colors
+private val CyberCyan = Color(0xFF38BDF8)
+private val CyberGreen = Color(0xFF22C55E)
+private val CyberViolet = Color(0xFF818CF8)
+private val CyberOrange = Color(0xFFF97316)
 
 private const val MESH_IP = "100.75.107.79"
 private const val PEER_LABEL = "V2158"
@@ -254,18 +254,30 @@ fun OnboardingWizard(
             }
 
             // ---------- BOTTOM ACTION ----------
+            val isMeshActive = meshInfo?.active == true
+            val hasToken = !token.isNullOrBlank()
+
             WizardBottomBar(
                 step = step,
                 isBusy = isChecking || isPairing,
+                isMeshActive = isMeshActive,
+                hasToken = hasToken,
                 onPrimary = {
                     when (step) {
                         0 -> step = 1
-                        1 -> step = 2
+                        1 -> {
+                            if (isMeshActive) {
+                                step = 2
+                            }
+                        }
                         2 -> {
-                            val t = token.takeIf { !it.isNullOrBlank() }
-                                ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
-                            client.updateConfig(client.baseUrl, t)
-                            step = 3
+                            if (!hasToken) {
+                                generateOrPairToken()
+                            } else {
+                                val t = token ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
+                                client.updateConfig(client.baseUrl, t)
+                                step = 3
+                            }
                         }
                         3 -> onComplete()
                     }
@@ -357,13 +369,21 @@ private fun WizardTopBar(
 private fun WizardBottomBar(
     step: Int,
     isBusy: Boolean,
+    isMeshActive: Boolean,
+    hasToken: Boolean,
     onPrimary: () -> Unit,
     onSkip: (() -> Unit)? = null
 ) {
+    val canProceed = when (step) {
+        1 -> isMeshActive
+        2 -> true // Can always click to either generate or link
+        else -> true
+    }
+
     val label = when (step) {
         0 -> "Get started"
-        1 -> "Confirm Mesh & Continue"
-        2 -> "Activate Token & Link"
+        1 -> if (isMeshActive) "Confirm Mesh & Continue" else "Tailscale Required to Continue"
+        2 -> if (hasToken) "Link Device & Enter Chamber" else "Generate Device Token"
         else -> "Enter Chamber"
     }
 
@@ -371,19 +391,21 @@ private fun WizardBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(WizardBg)
-            .padding(horizontal = 22.dp, vertical = 14.dp)
+            .padding(horizontal = 22.dp, vertical = 10.dp)
     ) {
         Button(
             onClick = onPrimary,
-            enabled = true,
+            enabled = canProceed && !isBusy,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
-                contentColor = WizardBg
+                contentColor = WizardBg,
+                disabledContainerColor = Color.White.copy(alpha = 0.30f),
+                disabledContentColor = WizardBg.copy(alpha = 0.50f)
             ),
             shape = RoundedCornerShape(28.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(54.dp)
         ) {
             Text(
                 text = label,
@@ -393,18 +415,27 @@ private fun WizardBottomBar(
             )
         }
 
-        if (step > 0 && onSkip != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            androidx.compose.material3.TextButton(
-                onClick = onSkip,
-                modifier = Modifier.fillMaxWidth()
+        // Tiny discrete test button in corner for safety / UI test bypass
+        if (onSkip != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "I've set up my agent · Enter Chamber Directly",
-                    color = Color(0xFF94A3B8),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                androidx.compose.material3.TextButton(
+                    onClick = onSkip,
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                    modifier = Modifier.height(22.dp)
+                ) {
+                    Text(
+                        text = "test",
+                        color = Color(0xFF334155),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
             }
         }
     }
@@ -458,21 +489,21 @@ private fun OverviewStep() {
                 index = 1,
                 title = "Connect over Tailscale WireGuard",
                 body = "Private overlay network. No public ports, no exposed surface.",
-                badgeTint = PastelMint,
+                badgeTint = CyberGreen,
                 badge = { ShieldLanBadge(tint = WizardBg) }
             )
             OverviewCard(
                 index = 2,
                 title = "Pair with Autonomous Agent Fleet",
                 body = "One handshake brings every always-on agent into the mesh.",
-                badgeTint = PastelLavender,
+                badgeTint = CyberViolet,
                 badge = { AgentFleetBadge(tint = WizardBg) }
             )
             OverviewCard(
                 index = 3,
                 title = "Real-Time Collaboration & Tool Bus",
                 body = "Shared event bus, tool calls and presence in a single stream.",
-                badgeTint = PastelSky,
+                badgeTint = CyberCyan,
                 badge = { TerminalBusBadge(tint = WizardBg) }
             )
         }
@@ -847,10 +878,11 @@ private fun TokenStep(
                     modifier = Modifier
                         .size(46.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(PastelPeach),
+                        .background(CyberCyan.copy(alpha = 0.20f))
+                        .border(1.dp, CyberCyan.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    KeyBadge(tint = WizardBg)
+                    KeyBadge(tint = CyberCyan)
                 }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -1048,10 +1080,10 @@ private fun TokenStep(
 @Composable
 private fun WelcomeStep() {
     val agents = listOf(
-        Triple("Hermes", "Reasoning & autonomy", PastelMint),
-        Triple("OmniRush", "Autonomous CLI execution", PastelLavender),
-        Triple("Claude", "Analysis & refactoring", PastelPeach),
-        Triple("OpenClaw", "Tools & automation", PastelSky),
+        Triple("Hermes", "Reasoning & autonomy", CyberGreen),
+        Triple("OmniRush", "Autonomous CLI execution", CyberViolet),
+        Triple("Claude", "Analysis & refactoring", CyberOrange),
+        Triple("OpenClaw", "Tools & automation", CyberCyan),
         Triple("Council", "Multi-agent chamber", Color(0xFFE2E8F0))
     )
 

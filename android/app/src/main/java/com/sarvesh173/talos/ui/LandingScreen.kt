@@ -288,7 +288,7 @@ fun LandingScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "WireGuard Mesh · Direct Peer-to-Peer",
-                    color = Color(0xFFA7F3D0),
+                    color = PrimaryAccent,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
                 )

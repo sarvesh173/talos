@@ -514,7 +514,7 @@ fun ChamberHero(
             state = OrbState.WEAVING,
             size = 64.dp,
             dotColor = PrimaryAccent,
-            secondaryColor = Color(0xFFA855F7)
+            secondaryColor = PrimaryAccent.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.height(20.dp))
         Text(

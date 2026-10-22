@@ -8,10 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 // Dark & OLED Palette
-val BgDark = Color(0xFF090D15)
+val BgDark = Color(0xFF090D14)
 val SurfaceDark = Color(0xFF131926)
 val SurfaceBorderDark = Color(0xFF222B3D)
-val PrimaryAccent = Color(0xFF6366F1)
+val PrimaryAccent = Color(0xFF38BDF8)
 val StatusGreen = Color(0xFF10B981)
 val TextPrimaryDark = Color(0xFFF1F5F9)
 val TextMutedDark = Color(0xFF94A3B8)

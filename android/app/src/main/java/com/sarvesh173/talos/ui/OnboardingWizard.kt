@@ -231,19 +231,20 @@ fun OnboardingWizard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF064E3B))
+                                .background(StatusGreen.copy(alpha = 0.15f))
+                                .border(1.dp, StatusGreen.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = Color(0xFFA7F3D0),
+                                tint = StatusGreen,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = copiedNotice ?: "",
-                                color = Color(0xFFA7F3D0),
+                                color = StatusGreen,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -353,7 +354,7 @@ private fun WizardTopBar(
                         .height(3.dp)
                         .clip(RoundedCornerShape(2.dp))
                         .background(
-                            if (i <= step) Color(0xFF6366F1) else WizardBorder
+                            if (i <= step) PrimaryAccent else WizardBorder
                         )
                 )
             }
@@ -532,7 +533,8 @@ private fun OverviewCard(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF6366F1)),
+                        .background(PrimaryAccent.copy(alpha = 0.20f))
+                        .border(1.dp, PrimaryAccent.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -653,7 +655,7 @@ private fun MeshStep(
             ) {
                 Text(
                     text = hostSetupPrompt,
-                    color = Color(0xFFA7F3D0),
+                    color = PrimaryAccent,
                     fontSize = 11.sp,
                     lineHeight = 16.sp
                 )
@@ -916,7 +918,7 @@ private fun TokenStep(
                     isPairing -> {
                         Column {
                             LinearProgressIndicator(
-                                color = Color(0xFF6366F1),
+                                color = PrimaryAccent,
                                 trackColor = WizardBorder,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -934,7 +936,7 @@ private fun TokenStep(
                         Column {
                             Text(
                                 text = token.chunked(8).joinToString(" "),
-                                color = Color(0xFFA7F3D0),
+                                color = PrimaryAccent,
                                 fontSize = 13.sp,
                                 lineHeight = 20.sp,
                                 fontWeight = FontWeight.Medium

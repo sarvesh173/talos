@@ -2,15 +2,21 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Official Nous Research / Hermes Agent Winged Mark -->
+    <path
+        android:fillColor="#FF22C55E"
+        android:strokeColor="#FF86EFAC"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:pathData="M50,18C44,32 30,42 18,44C34,50 44,62 48,78C52,62 62,50 78,44C66,42 52,32 50,18Z" />
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M9.0 5.2 L11.0 5.2 L11.0 11.0 L13.0 11.0 L13.0 5.2 L15.0 5.2 L15.0 18.8 L13.0 18.8 L13.0 13.4 L11.0 13.4 L11.0 18.8 L9.0 18.8 Z" />
+        android:pathData="M48,46m-7,0a7,7 0 1,1 14,0a7,7 0 1,1 -14,0" />
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M9.0 6.2 C6.2 4.3 3.4 3.0 0.8 2.6 C1.5 4.3 2.5 5.5 3.8 6.7 C2.5 7.1 1.5 7.5 0.5 7.8 C1.8 9.1 2.9 10.1 4.1 10.9 C3.3 11.5 2.5 11.9 1.7 12.2 C3.1 13.1 4.5 13.8 5.9 14.1 C7.1 14.3 8.2 14.0 9.0 13.5 Z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M 15 6.2 C 17.8 4.3 20.6 3 23.2 2.6 C 22.5 4.3 21.5 5.5 20.2 6.7 C 21.5 7.1 22.5 7.5 23.5 7.8 C 22.2 9.1 21.1 10.1 19.9 10.9 C 20.7 11.5 21.5 11.9 22.3 12.2 C 20.9 13.1 19.5 13.8 18.1 14.1 C 16.9 14.3 15.8 14 15 13.5 Z" />
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M48,28L54,44L70,50" />
 </vector>

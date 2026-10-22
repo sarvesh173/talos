@@ -29,16 +29,17 @@ import com.sarvesh173.talos.R
 data class AgentEmblem(
     val key: String,
     val label: String,
+    val role: String,
     val drawableRes: Int,
     val accent: Color
 )
 
 val AgentEmblems: List<AgentEmblem> = listOf(
-    AgentEmblem("hermes", "Hermes", R.drawable.ic_hermes, Color(0xFF22C55E)),
-    AgentEmblem("claude", "Claude", R.drawable.ic_claude, Color(0xFFD97757)),
-    AgentEmblem("openclaw", "OpenClaw", R.drawable.ic_openclaw, Color(0xFFF97316)),
-    AgentEmblem("omnirush", "OmniRush", R.drawable.ic_omnirush, Color(0xFFA855F7)),
-    AgentEmblem("core", "Core Agent", R.drawable.ic_core, Color(0xFF38BDF8))
+    AgentEmblem("hermes", "Hermes Agent", "Nous Research · Autonomy", R.drawable.ic_hermes, Color(0xFF22C55E)),
+    AgentEmblem("claude", "Claude Code", "Anthropic · Architecture", R.drawable.ic_claude, Color(0xFFD97757)),
+    AgentEmblem("codex", "Codex", "OpenAI · Code & Synthesis", R.drawable.ic_codex, Color(0xFF10A37F)),
+    AgentEmblem("openclaw", "OpenClaw", "Tools & Automation", R.drawable.ic_openclaw, Color(0xFFF97316)),
+    AgentEmblem("omnirush", "OmniRush", "High-Throughput Runner", R.drawable.ic_omnirush, Color(0xFFA855F7))
 )
 
 fun emblemByKey(key: String): AgentEmblem =

@@ -2,6 +2,7 @@ package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -110,7 +111,12 @@ fun OnboardingWizard(
     var step by remember { mutableStateOf(0) }
     var meshInfo by remember { mutableStateOf<MeshInfo?>(null) }
     var isChecking by remember { mutableStateOf(false) }
-    var token by remember { mutableStateOf<String?>(null) }
+    var token by remember {
+        mutableStateOf(
+            client.apiToken.takeIf { it.isNotBlank() }
+                ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
+        )
+    }
     var isPairing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var copiedNotice by remember { mutableStateOf<String?>(null) }
@@ -132,7 +138,6 @@ fun OnboardingWizard(
             if (!generated.isNullOrBlank()) {
                 token = generated
             } else {
-                // Fallback to offline cryptographic device token so user can pair with host agent
                 token = "talos_" + UUID.randomUUID().toString().replace("-", "").take(24)
             }
             isPairing = false
@@ -252,21 +257,21 @@ fun OnboardingWizard(
                 onPrimary = {
                     when (step) {
                         0 -> step = 1
-                        1 -> {
-                            // Proceed to token generation regardless of mesh check so user is never blocked
-                            step = 2
-                        }
+                        1 -> step = 2
                         2 -> {
-                            val t = token
-                            if (!t.isNullOrBlank()) {
-                                client.updateConfig(client.baseUrl, t)
-                                step = 3
-                            } else {
-                                generateOrPairToken()
-                            }
+                            val t = token.takeIf { !it.isNullOrBlank() }
+                                ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
+                            client.updateConfig(client.baseUrl, t)
+                            step = 3
                         }
                         3 -> onComplete()
                     }
+                },
+                onSkip = {
+                    val t = token.takeIf { !it.isNullOrBlank() }
+                        ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
+                    client.updateConfig(client.baseUrl, t)
+                    onComplete()
                 }
             )
         }
@@ -349,7 +354,8 @@ private fun WizardTopBar(
 private fun WizardBottomBar(
     step: Int,
     isBusy: Boolean,
-    onPrimary: () -> Unit
+    onPrimary: () -> Unit,
+    onSkip: (() -> Unit)? = null
 ) {
     val label = when (step) {
         0 -> "Get started"
@@ -357,51 +363,44 @@ private fun WizardBottomBar(
         2 -> "Activate Token & Link"
         else -> "Enter Chamber"
     }
-    val busyLabel = when (step) {
-        1 -> "Verifying Mesh..."
-        2 -> "Minting Token..."
-        else -> label
-    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(WizardBg)
-            .padding(horizontal = 22.dp, vertical = 18.dp)
+            .padding(horizontal = 22.dp, vertical = 14.dp)
     ) {
         Button(
             onClick = onPrimary,
-            enabled = !isBusy,
+            enabled = true,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
-                contentColor = WizardBg,
-                disabledContainerColor = Color.White.copy(alpha = 0.45f),
-                disabledContentColor = WizardBg.copy(alpha = 0.7f)
+                contentColor = WizardBg
             ),
             shape = RoundedCornerShape(28.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            if (isBusy) {
-                CircularProgressIndicator(
-                    color = WizardBg,
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp
-                )
-                Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = label,
+                color = WizardBg,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
+        }
+
+        if (step > 0 && onSkip != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.material3.TextButton(
+                onClick = onSkip,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
-                    text = busyLabel,
-                    color = WizardBg,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-            } else {
-                Text(
-                    text = label,
-                    color = WizardBg,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    text = "I've set up my agent · Enter Chamber Directly",
+                    color = Color(0xFF94A3B8),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -1347,7 +1346,7 @@ private fun AgentFaceBadge(tint: Color) {
 }
 
 // ==========================================
-// MESH STATUS RING
+// MESH STATUS RING (ORBITAL RADAR MESH NODE)
 // ==========================================
 
 @Composable
@@ -1356,51 +1355,97 @@ private fun MeshStatusRing(
     checking: Boolean,
     label: String
 ) {
-    val transition = rememberInfiniteTransition(label = "mesh_pulse")
-    val pulse by transition.animateFloat(
+    val transition = rememberInfiniteTransition(label = "mesh_orbital_physics")
+
+    // Rotation angle for satellite nodes
+    val orbitAngle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "orbit_rot"
+    )
+
+    // Signal wave ripple expansion
+    val ripple1 by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
         ),
-        label = "pulse"
+        label = "ripple1"
+    )
+    val ripple2 by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, delayMillis = 1100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "ripple2"
     )
 
     val ringColor = when {
-        checking -> Color(0xFF6366F1)
-        active -> StatusGreen
-        else -> WizardDanger
+        checking -> Color(0xFF38BDF8)
+        active -> Color(0xFF22C55E)
+        else -> Color(0xFFF59E0B)
     }
 
-    Box(modifier = Modifier.size(110.dp), contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier.size(130.dp), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val d = size.minDimension
             val c = Offset(size.width / 2f, size.height / 2f)
-            val base = d * 0.38f
+            val baseR = d * 0.32f
 
-            // Soft halo
+            // 1. Expanding Pulse Ripples
             drawCircle(
-                color = ringColor.copy(alpha = 0.10f + 0.08f * pulse),
-                radius = base * (1.18f + 0.08f * pulse),
-                center = c
+                color = ringColor.copy(alpha = (1f - ripple1) * 0.25f),
+                radius = baseR + (d * 0.22f * ripple1),
+                center = c,
+                style = Stroke(width = 2.dp.toPx())
             )
-            // Main ring
+            drawCircle(
+                color = ringColor.copy(alpha = (1f - ripple2) * 0.25f),
+                radius = baseR + (d * 0.22f * ripple2),
+                center = c,
+                style = Stroke(width = 2.dp.toPx())
+            )
+
+            // 2. Base Mesh Orbit Ring
+            drawCircle(
+                color = ringColor.copy(alpha = 0.20f),
+                radius = baseR,
+                center = c,
+                style = Stroke(width = 1.5.dp.toPx())
+            )
+
+            // 3. Rotating Satellite Peer Nodes (Phone <-> Host)
+            val rad1 = Math.toRadians(orbitAngle.toDouble()).toFloat()
+            val sat1X = c.x + baseR * kotlin.math.cos(rad1)
+            val sat1Y = c.y + baseR * kotlin.math.sin(rad1)
             drawCircle(
                 color = ringColor,
-                radius = base,
-                center = c,
-                style = Stroke(width = d * 0.045f)
+                radius = 4.dp.toPx(),
+                center = Offset(sat1X, sat1Y)
             )
-            // Progress arc
-            drawArc(
-                color = ringColor.copy(alpha = 0.75f),
-                startAngle = -90f,
-                sweepAngle = if (checking) 360f * pulse else if (active) 360f else 120f,
-                useCenter = false,
-                topLeft = Offset(c.x - base, c.y - base),
-                size = Size(base * 2, base * 2),
-                style = Stroke(width = d * 0.075f, cap = StrokeCap.Round)
+
+            val rad2 = Math.toRadians((orbitAngle + 180f).toDouble()).toFloat()
+            val sat2X = c.x + baseR * kotlin.math.cos(rad2)
+            val sat2Y = c.y + baseR * kotlin.math.sin(rad2)
+            drawCircle(
+                color = Color.White,
+                radius = 3.dp.toPx(),
+                center = Offset(sat2X, sat2Y)
+            )
+
+            // 4. Center Glowing Hub
+            drawCircle(
+                color = ringColor.copy(alpha = 0.15f),
+                radius = baseR * 0.65f,
+                center = c
             )
         }
 
@@ -1411,13 +1456,22 @@ private fun MeshStatusRing(
                 tint = ringColor,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = label,
-                color = WizardText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(ringColor)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = label,
+                    color = WizardText,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

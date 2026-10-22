@@ -182,9 +182,12 @@ fun OnboardingWizard(
                 }
             )
 
-            // ---------- STEP CONTENT ----------
+            // ---------- STEP CONTENT (WEIGHTED TO KEEP BOTTOM BAR PINNED) ----------
             AnimatedContent(
                 targetState = step,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 transitionSpec = {
                     (slideInHorizontally { it / 4 } + fadeIn(tween(220))) togetherWith
                             (slideOutHorizontally { -it / 4 } + fadeOut(tween(180)))
@@ -193,9 +196,9 @@ fun OnboardingWizard(
             ) { current ->
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 22.dp)
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
                 ) {
                     when (current) {
                         0 -> OverviewStep()
@@ -246,7 +249,7 @@ fun OnboardingWizard(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
 
@@ -329,7 +332,7 @@ private fun WizardTopBar(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, start = 6.dp, end = 6.dp)
+                .padding(top = 10.dp, bottom = 12.dp, start = 6.dp, end = 6.dp)
         ) {
             for (i in 0 until 4) {
                 Box(

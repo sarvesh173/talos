@@ -10,8 +10,13 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +40,8 @@ import com.sarvesh173.talos.network.TalosClient
 @Composable
 fun LandingScreen(
     client: TalosClient,
+    isDark: Boolean = true,
+    onToggleTheme: () -> Unit = {},
     onGetStarted: () -> Unit,
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null
@@ -92,7 +99,7 @@ fun LandingScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF090D14))
+            .background(talosBg)
     ) {
         val screenW = maxWidth
         val screenH = maxHeight
@@ -101,11 +108,28 @@ fun LandingScreen(
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color(0xFF1E293B).copy(alpha = 0.40f), Color.Transparent),
+                    colors = listOf(talosBorder.copy(alpha = 0.40f), Color.Transparent),
                     center = Offset(size.width / 2, size.height * 0.42f),
                     radius = size.width * 0.75f
                 )
             )
+        }
+
+        // Top Right Theme Mode Toggle Button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = onToggleTheme) {
+                Icon(
+                    imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = "Toggle Dark/Light Mode",
+                    tint = talosTextMuted
+                )
+            }
         }
 
         // ==============================================================
@@ -215,7 +239,7 @@ fun LandingScreen(
 
             Text(
                 text = "TALOS",
-                color = Color.White,
+                color = talosTextPrimary,
                 fontSize = 40.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 2.sp
@@ -228,20 +252,20 @@ fun LandingScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF0F172A))
-                    .border(1.dp, Color(0xFF38BDF8).copy(alpha = 0.45f), RoundedCornerShape(16.dp))
+                    .background(talosSurface)
+                    .border(1.dp, PrimaryAccent.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 5.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF38BDF8))
+                        .background(PrimaryAccent)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Autonomous Multi-Agent Mesh",
-                    color = Color(0xFF38BDF8),
+                    color = PrimaryAccent,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -251,7 +275,7 @@ fun LandingScreen(
 
             Text(
                 text = "Your private mesh of always-on CLI agents\nthat execute, reason, and build together",
-                color = Color(0xFF94A3B8),
+                color = talosTextMuted,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 21.sp
@@ -274,8 +298,8 @@ fun LandingScreen(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFF131A26))
-                    .border(1.dp, Color(0xFF232E42), RoundedCornerShape(20.dp))
+                    .background(talosSurface)
+                    .border(1.dp, talosBorder, RoundedCornerShape(20.dp))
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 Box(
@@ -351,14 +375,14 @@ private fun AgentCardNode(
             modifier = Modifier
                 .size(72.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(Color(0xFF131A26).copy(alpha = 0.88f))
+                .background(talosSurface.copy(alpha = 0.90f))
                 .border(
                     BorderStroke(
                         1.2.dp,
                         Brush.verticalGradient(
                             listOf(
                                 accentColor.copy(alpha = 0.80f),
-                                Color(0xFF1E293B).copy(alpha = 0.35f)
+                                talosBorder.copy(alpha = 0.35f)
                             )
                         )
                     ),
@@ -376,8 +400,8 @@ private fun AgentCardNode(
                     )
                 )
             }
-            // Official Brand Vector Emblem
-            AgentEmblemIcon(emblem = emblem, size = 32.dp, tint = accentColor)
+            // Official Brand Vector Emblem (Full Multi-Color Official Artwork)
+            AgentEmblemIcon(emblem = emblem, size = 32.dp, tint = null)
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -386,13 +410,13 @@ private fun AgentCardNode(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF0F172A).copy(alpha = 0.92f))
+                .background(talosSurface.copy(alpha = 0.92f))
                 .border(1.dp, accentColor.copy(alpha = 0.40f), RoundedCornerShape(10.dp))
                 .padding(horizontal = 8.dp, vertical = 3.dp)
         ) {
             Text(
                 text = name,
-                color = Color.White,
+                color = talosTextPrimary,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.2.sp

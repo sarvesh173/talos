@@ -80,12 +80,12 @@ import java.util.UUID
 // PALETTE (Grok-style dark onboarding)
 // ==========================================
 
-private val WizardBg = Color(0xFF0F1117)
-private val WizardSurface = Color(0xFF171B24)
-private val WizardSurfaceAlt = Color(0xFF1E2433)
-private val WizardBorder = Color(0xFF2A3242)
-private val WizardText = Color(0xFFF1F5F9)
-private val WizardMuted = Color(0xFF8A94A6)
+private val WizardBg: Color @Composable get() = talosBg
+private val WizardSurface: Color @Composable get() = talosSurface
+private val WizardSurfaceAlt: Color @Composable get() = talosSurface
+private val WizardBorder: Color @Composable get() = talosBorder
+private val WizardText: Color @Composable get() = talosTextPrimary
+private val WizardMuted: Color @Composable get() = talosTextMuted
 private val WizardDanger = Color(0xFFEF4444)
 
 // Dark theme illustration badge colors
@@ -104,6 +104,7 @@ private const val PEER_LABEL = "V2158"
 @Composable
 fun OnboardingWizard(
     client: TalosClient,
+    onToggleTheme: (() -> Unit)? = null,
     onComplete: () -> Unit
 ) {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
@@ -179,7 +180,8 @@ fun OnboardingWizard(
                         }
                     }
                     if (step > 0) step -= 1
-                }
+                },
+                onToggleTheme = onToggleTheme
             )
 
             // ---------- STEP CONTENT (WEIGHTED TO KEEP BOTTOM BAR PINNED) ----------
@@ -302,7 +304,8 @@ fun OnboardingWizard(
 private fun WizardTopBar(
     step: Int,
     canGoBack: Boolean,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onToggleTheme: (() -> Unit)? = null
 ) {
     Column(
         modifier = Modifier
@@ -337,7 +340,17 @@ private fun WizardTopBar(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Box(modifier = Modifier.size(40.dp))
+            Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                if (onToggleTheme != null) {
+                    IconButton(onClick = onToggleTheme) {
+                        Icon(
+                            imageVector = if (LocalIsDark.current) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = "Toggle Dark/Light Mode",
+                            tint = WizardMuted
+                        )
+                    }
+                }
+            }
         }
 
         // Segmented progress rail

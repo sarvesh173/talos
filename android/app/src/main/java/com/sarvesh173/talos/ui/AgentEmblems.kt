@@ -50,13 +50,13 @@ fun AgentEmblemIcon(
     emblem: AgentEmblem,
     modifier: Modifier = Modifier,
     size: Dp = 20.dp,
-    tint: Color = emblem.accent
+    tint: Color? = null
 ) {
     Image(
         painter = painterResource(emblem.drawableRes),
         contentDescription = emblem.label,
         modifier = modifier.size(size),
-        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(tint)
+        colorFilter = tint?.let { androidx.compose.ui.graphics.ColorFilter.tint(it) }
     )
 }
 
@@ -75,11 +75,11 @@ fun AgentEmblemBadge(
         modifier = modifier
             .size(size + 8.dp)
             .clip(CircleShape)
-            .background(Color(0xFF0F1117).copy(alpha = 0.75f))
+            .background(talosSurface)
             .border(1.dp, emblem.accent.copy(alpha = 0.55f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        AgentEmblemIcon(emblem = emblem, size = size)
+        AgentEmblemIcon(emblem = emblem, size = size, tint = null)
     }
 }
 

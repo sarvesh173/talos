@@ -74,6 +74,9 @@ class MainActivity : ComponentActivity() {
                     appScreen == "wizard" -> {
                         OnboardingWizard(
                             client = client,
+                            onToggleTheme = {
+                                themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                            },
                             onComplete = {
                                 client.refreshRooms()
                                 client.switchRoom("the-council")
@@ -84,6 +87,10 @@ class MainActivity : ComponentActivity() {
                     else -> {
                         LandingScreen(
                             client = client,
+                            isDark = themeMode == AppThemeMode.DARK,
+                            onToggleTheme = {
+                                themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                            },
                             onGetStarted = {
                                 appScreen = "wizard"
                             },
@@ -133,7 +140,7 @@ fun MainScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = SurfaceDark,
+                drawerContainerColor = talosSurface,
                 modifier = Modifier.width(300.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -191,10 +198,10 @@ fun MainScreen(
     ) {
         Scaffold(
             topBar = {
-                Column(modifier = Modifier.background(BgDark)) {
+                Column(modifier = Modifier.background(talosBg)) {
                     TopAppBar(
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = BgDark,
+                            containerColor = talosBg,
                             titleContentColor = TextPrimary
                         ),
                         title = {
@@ -246,7 +253,7 @@ fun MainScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(20.dp))
-                                        .background(if (isSelected) PrimaryAccent.copy(alpha = 0.2f) else SurfaceDark)
+                                        .background(if (isSelected) PrimaryAccent.copy(alpha = 0.2f) else talosSurface)
                                         .border(
                                             1.dp,
                                             if (isSelected) PrimaryAccent else SurfaceBorder,
@@ -276,7 +283,7 @@ fun MainScreen(
             },
             bottomBar = {
                 Surface(
-                    color = BgDark,
+                    color = talosBg,
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
@@ -309,8 +316,8 @@ fun MainScreen(
                                 onValueChange = { inputText = it },
                                 placeholder = { Text(text = "Message $roomTitle...", color = TextMuted, fontSize = 14.sp) },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = SurfaceDark,
-                                    unfocusedContainerColor = SurfaceDark,
+                                    focusedContainerColor = talosSurface,
+                                    unfocusedContainerColor = talosSurface,
                                     focusedBorderColor = PrimaryAccent,
                                     unfocusedBorderColor = SurfaceBorder,
                                     focusedTextColor = TextPrimary,
@@ -345,7 +352,7 @@ fun MainScreen(
                     }
                 }
             },
-            containerColor = BgDark
+            containerColor = talosBg
         ) { paddingValues ->
             if (messages.isEmpty()) {
                 ChamberHero(
@@ -395,7 +402,7 @@ fun SettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
+        containerColor = talosSurface,
         title = {
             Text(text = "Endpoint & Token Settings", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         },
@@ -411,8 +418,8 @@ fun SettingsDialog(
                     value = urlText,
                     onValueChange = { urlText = it },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF090D15),
-                        unfocusedContainerColor = Color(0xFF090D15),
+                        focusedContainerColor = talosBg,
+                        unfocusedContainerColor = talosBg,
                         focusedBorderColor = PrimaryAccent,
                         unfocusedBorderColor = SurfaceBorder,
                         focusedTextColor = TextPrimary,
@@ -434,8 +441,8 @@ fun SettingsDialog(
                     value = tokenText,
                     onValueChange = { tokenText = it },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF090D15),
-                        unfocusedContainerColor = Color(0xFF090D15),
+                        focusedContainerColor = talosBg,
+                        unfocusedContainerColor = talosBg,
                         focusedBorderColor = PrimaryAccent,
                         unfocusedBorderColor = SurfaceBorder,
                         focusedTextColor = TextPrimary,
@@ -548,7 +555,7 @@ fun ChamberHero(
         ) {
             for (suggestion in suggestions) {
                 Surface(
-                    color = SurfaceDark,
+                    color = talosSurface,
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, SurfaceBorder),
                     modifier = Modifier

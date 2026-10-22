@@ -128,13 +128,13 @@ fun MessageBubble(msg: Message) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isHuman) PrimaryAccent else SurfaceDark)
+                            .background(if (isHuman) PrimaryAccent else talosSurface)
                             .border(1.dp, if (isHuman) PrimaryAccent else SurfaceBorder, RoundedCornerShape(16.dp))
                             .padding(horizontal = 14.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = msg.content,
-                            color = TextPrimary,
+                            color = if (isHuman) Color.White else TextPrimary,
                             fontSize = 15.sp,
                             lineHeight = 21.sp
                         )
@@ -157,7 +157,7 @@ fun NativeAudioPlayerBubble(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isHuman) PrimaryAccent else SurfaceDark)
+            .background(if (isHuman) PrimaryAccent else talosSurface)
             .border(1.dp, if (isHuman) PrimaryAccent else SurfaceBorder, RoundedCornerShape(16.dp))
             .padding(12.dp)
     ) {
@@ -235,7 +235,7 @@ fun NativeVideoPreviewBubble(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(SurfaceDark)
+            .background(talosSurface)
             .border(1.dp, SurfaceBorder, RoundedCornerShape(16.dp))
             .padding(10.dp)
     ) {
@@ -244,7 +244,7 @@ fun NativeVideoPreviewBubble(
                 .fillMaxWidth()
                 .height(160.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFF090D15)),
+                .background(talosBg),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

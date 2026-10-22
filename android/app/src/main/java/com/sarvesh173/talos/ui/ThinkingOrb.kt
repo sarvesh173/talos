@@ -7,7 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.*
@@ -24,199 +28,252 @@ enum class OrbState {
 }
 
 /**
- * Monochrome Thinking Orb indicator inspired by Jakub Antalik & Yogesh Raut.
- * Renders state-driven procedural dotted particles on Jetpack Compose Canvas.
+ * Apple Intelligence & Material 3 Expressive Luminous AI Orb.
+ * Renders iridescent multi-layer chromatic fluid energy waves,
+ * soft radial bloom, and organic particle photons on Jetpack Compose Canvas.
  */
 @Composable
 fun ThinkingOrb(
     state: OrbState = OrbState.THINKING,
     size: Dp = 64.dp,
     dotColor: Color = Color.White,
-    secondaryColor: Color = Color(0xFF64748B),
+    secondaryColor: Color = Color(0xFF38BDF8),
     speedMultiplier: Float = 1.0f,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "ThinkingOrbLoop")
-    val time by infiniteTransition.animateFloat(
+    val infiniteTransition = rememberInfiniteTransition(label = "LuminousOrbEngine")
+
+    // Continuous rotational and wave phase clocks
+    val phase by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 2f * PI.toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = (2800 / speedMultiplier).toInt(), easing = LinearEasing),
+            animation = tween(durationMillis = (3200 / speedMultiplier).toInt(), easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
-        label = "OrbPhase"
+        label = "OrbWavePhase"
     )
+
+    // Breathing pulse for radial chromatic aura
+    val breath by infiniteTransition.animateFloat(
+        initialValue = 0.88f,
+        targetValue = 1.12f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "OrbBreath"
+    )
+
+    // Chromatic palette inspired by Apple Intelligence & M3 Expressive
+    val chromaticCyan = Color(0xFF38BDF8)
+    val chromaticViolet = Color(0xFF818CF8)
+    val chromaticRose = Color(0xFFF43F5E)
+    val chromaticEmerald = Color(0xFF10B981)
 
     Canvas(modifier = modifier.size(size)) {
         val center = Offset(this.size.width / 2f, this.size.height / 2f)
-        val radius = this.size.minDimension / 2f * 0.85f
+        val radius = this.size.minDimension / 2f * 0.82f
+
+        // 1. AMBIENT SOFT CHROMATIC BLOOM (LAYER 0)
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    secondaryColor.copy(alpha = 0.35f * breath),
+                    chromaticViolet.copy(alpha = 0.20f * breath),
+                    Color.Transparent
+                ),
+                center = center,
+                radius = radius * 1.5f * breath
+            ),
+            radius = radius * 1.5f * breath,
+            center = center
+        )
 
         when (state) {
             OrbState.IDLE -> {
-                // Calm breathing ring of 18 dots
-                val dotCount = 18
-                val breath = 1f + 0.08f * sin(time)
-                for (i in 0 until dotCount) {
-                    val angle = (i.toFloat() / dotCount) * 2f * PI.toFloat()
-                    val r = radius * 0.7f * breath
-                    val x = center.x + r * cos(angle)
-                    val y = center.y + r * sin(angle)
-                    val alpha = 0.4f + 0.35f * ((sin(angle + time) + 1f) / 2f)
-                    drawCircle(
-                        color = dotColor.copy(alpha = alpha),
-                        radius = 2.2f,
-                        center = Offset(x, y)
-                    )
-                }
-                // Center calm core
+                // Calm glowing sphere with gentle shimmering outer rim
                 drawCircle(
-                    color = dotColor.copy(alpha = 0.85f),
-                    radius = 3.5f,
+                    color = secondaryColor.copy(alpha = 0.12f),
+                    radius = radius * 0.75f * breath,
+                    center = center
+                )
+                drawCircle(
+                    brush = Brush.sweepGradient(
+                        colors = listOf(chromaticCyan, chromaticViolet, chromaticCyan),
+                        center = center
+                    ),
+                    radius = radius * 0.75f * breath,
+                    center = center,
+                    style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
+                )
+                drawCircle(
+                    color = dotColor.copy(alpha = 0.90f),
+                    radius = radius * 0.25f,
                     center = center
                 )
             }
 
-            OrbState.THINKING -> {
-                // Multi-ring harmonic particle orbits with phase shifts
-                val rings = 3
-                val dotsPerRing = 12
-                for (ring in 1..rings) {
-                    val r = radius * (ring / 3f)
-                    val dir = if (ring % 2 == 0) 1f else -1f
-                    for (i in 0 until dotsPerRing) {
-                        val baseAngle = (i.toFloat() / dotsPerRing) * 2f * PI.toFloat()
-                        val angle = baseAngle + (time * dir * (0.8f + ring * 0.2f))
-                        val pulse = 1f + 0.12f * sin(angle * 3f + time * 2f)
-                        val x = center.x + (r * pulse) * cos(angle)
-                        val y = center.y + (r * pulse) * sin(angle)
-                        val alpha = if (ring == rings) 0.9f else 0.5f + (ring * 0.15f)
-                        drawCircle(
-                            color = if (ring % 2 == 0) dotColor.copy(alpha = alpha) else secondaryColor.copy(alpha = alpha),
-                            radius = if (ring == 3) 2.5f else 1.8f,
-                            center = Offset(x, y)
-                        )
-                    }
+            OrbState.THINKING, OrbState.WEAVING -> {
+                // Dual undulating sinusoidal energy ribbons (Apple Intelligence Siri Wave)
+                val points = 60
+                val path1 = Path()
+                val path2 = Path()
+
+                for (i in 0..points) {
+                    val angle = (i.toFloat() / points) * 2f * PI.toFloat()
+                    val wave1 = sin(angle * 3f + phase) * (radius * 0.16f)
+                    val r1 = (radius * 0.72f * breath) + wave1
+                    val x1 = center.x + r1 * cos(angle)
+                    val y1 = center.y + r1 * sin(angle)
+                    if (i == 0) path1.moveTo(x1, y1) else path1.lineTo(x1, y1)
+
+                    val wave2 = cos(angle * 3f - phase * 1.2f) * (radius * 0.14f)
+                    val r2 = (radius * 0.60f * breath) + wave2
+                    val x2 = center.x + r2 * cos(angle)
+                    val y2 = center.y + r2 * sin(angle)
+                    if (i == 0) path2.moveTo(x2, y2) else path2.lineTo(x2, y2)
                 }
+                path1.close()
+                path2.close()
+
+                // Primary chromatic fluid sweep ribbon
+                drawPath(
+                    path = path1,
+                    brush = Brush.sweepGradient(
+                        colors = listOf(
+                            chromaticCyan,
+                            chromaticViolet,
+                            chromaticRose,
+                            chromaticEmerald,
+                            chromaticCyan
+                        ),
+                        center = center
+                    ),
+                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                )
+
+                // Secondary inner energy ribbon
+                drawPath(
+                    path = path2,
+                    brush = Brush.sweepGradient(
+                        colors = listOf(
+                            chromaticRose.copy(alpha = 0.8f),
+                            chromaticCyan.copy(alpha = 0.8f),
+                            chromaticViolet.copy(alpha = 0.8f),
+                            chromaticRose.copy(alpha = 0.8f)
+                        ),
+                        center = center
+                    ),
+                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+                )
+
+                // Luminous central nucleus core
+                drawCircle(
+                    color = dotColor.copy(alpha = 0.95f),
+                    radius = radius * 0.22f,
+                    center = center
+                )
             }
 
-            OrbState.SEARCHING -> {
-                // Sweeping radar scan wave with trailing decay
-                val scanAngle = time
-                val rings = 4
-                for (ring in 1..rings) {
-                    val r = radius * (ring / 4f)
-                    val count = ring * 8
-                    for (i in 0 until count) {
-                        val angle = (i.toFloat() / count) * 2f * PI.toFloat()
-                        val diff = (angle - scanAngle).let { d ->
-                            val norm = (d % (2f * PI.toFloat()) + 2f * PI.toFloat()) % (2f * PI.toFloat())
-                            norm
-                        }
-                        // Bright if near sweep line, fading behind
-                        val intensity = (1f - (diff / (2f * PI.toFloat()))).coerceIn(0.15f, 1f)
-                        val x = center.x + r * cos(angle)
-                        val y = center.y + r * sin(angle)
-                        drawCircle(
-                            color = dotColor.copy(alpha = intensity.pow(2f)),
-                            radius = 1.6f + intensity * 1.5f,
-                            center = Offset(x, y)
-                        )
-                    }
-                }
-            }
+            OrbState.SEARCHING, OrbState.CONNECTING -> {
+                // Expanding orbital radar rings with rotating satellite nodes
+                val sweepAngle = Math.toDegrees(phase.toDouble()).toFloat()
 
-            OrbState.SOLVING -> {
-                // Crystalline geometric matrix alignment
-                val count = 24
-                for (i in 0 until count) {
-                    val baseAngle = (i.toFloat() / count) * 2f * PI.toFloat()
-                    val morph = sin(time * 2f + baseAngle * 4f)
-                    val r = radius * (0.4f + 0.45f * abs(morph))
-                    val x = center.x + r * cos(baseAngle + (time * 0.3f))
-                    val y = center.y + r * sin(baseAngle + (time * 0.3f))
+                // Rotating sweep beam
+                drawArc(
+                    brush = Brush.sweepGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            secondaryColor.copy(alpha = 0.75f),
+                            Color.Transparent
+                        ),
+                        center = center
+                    ),
+                    startAngle = sweepAngle - 60f,
+                    sweepAngle = 120f,
+                    useCenter = true,
+                    topLeft = Offset(center.x - radius, center.y - radius),
+                    size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+                )
+
+                // Outer guide ring
+                drawCircle(
+                    color = secondaryColor.copy(alpha = 0.35f),
+                    radius = radius * 0.85f,
+                    center = center,
+                    style = Stroke(width = 1.5.dp.toPx())
+                )
+
+                // Orbiting satellite photon nodes
+                val satCount = 4
+                for (s in 0 until satCount) {
+                    val satAngle = phase + (s * PI.toFloat() / 2f)
+                    val sx = center.x + (radius * 0.85f) * cos(satAngle)
+                    val sy = center.y + (radius * 0.85f) * sin(satAngle)
                     drawCircle(
-                        color = if (i % 2 == 0) dotColor else secondaryColor,
-                        radius = 2.4f,
-                        center = Offset(x, y)
+                        color = Color.White,
+                        radius = 3.5.dp.toPx(),
+                        center = Offset(sx, sy)
                     )
                 }
+
+                // Center glowing beacon
+                drawCircle(
+                    color = Color.White,
+                    radius = radius * 0.28f,
+                    center = center
+                )
+            }
+
+            OrbState.SOLVING, OrbState.COMPOSING -> {
+                // Multi-harmonic crystalline alignment
+                val facets = 8
+                val path = Path()
+                for (i in 0..facets) {
+                    val angle = (i.toFloat() / facets) * 2f * PI.toFloat() + phase * 0.5f
+                    val pulse = 1f + 0.15f * sin(angle * 2f + phase * 2f)
+                    val r = radius * 0.75f * pulse
+                    val x = center.x + r * cos(angle)
+                    val y = center.y + r * sin(angle)
+                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                path.close()
+
+                drawPath(
+                    path = path,
+                    brush = Brush.sweepGradient(
+                        colors = listOf(chromaticViolet, chromaticCyan, chromaticRose, chromaticViolet),
+                        center = center
+                    ),
+                    style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
+                )
+
+                drawCircle(
+                    color = Color.White,
+                    radius = radius * 0.30f * breath,
+                    center = center
+                )
             }
 
             OrbState.LISTENING -> {
-                // Concentric soundwave ripples
-                val rippleCount = 4
-                for (i in 0 until rippleCount) {
-                    val phase = (time + i * (PI.toFloat() / 2f)) % (2f * PI.toFloat())
-                    val progress = phase / (2f * PI.toFloat())
-                    val r = radius * progress
-                    val alpha = (1f - progress).coerceIn(0f, 0.9f)
-                    val dotCount = 16
-                    for (j in 0 until dotCount) {
-                        val angle = (j.toFloat() / dotCount) * 2f * PI.toFloat()
-                        val x = center.x + r * cos(angle)
-                        val y = center.y + r * sin(angle)
-                        drawCircle(
-                            color = dotColor.copy(alpha = alpha),
-                            radius = 2f,
-                            center = Offset(x, y)
-                        )
-                    }
-                }
-            }
-
-            OrbState.CONNECTING -> {
-                // Dual intertwined helix pattern
-                val dots = 20
-                for (i in 0 until dots) {
-                    val t = (i.toFloat() / dots) * 2f * PI.toFloat()
-                    val r1 = radius * 0.75f * sin(t + time)
-                    val r2 = radius * 0.75f * cos(t + time)
-                    val x1 = center.x + r1 * cos(t)
-                    val y1 = center.y + r1 * sin(t)
-                    val x2 = center.x + r2 * cos(t + PI.toFloat() / 2f)
-                    val y2 = center.y + r2 * sin(t + PI.toFloat() / 2f)
-
-                    drawCircle(color = dotColor.copy(alpha = 0.85f), radius = 2.2f, center = Offset(x1, y1))
-                    drawCircle(color = secondaryColor.copy(alpha = 0.7f), radius = 2f, center = Offset(x2, y2))
-                }
-            }
-
-            OrbState.WEAVING -> {
-                // Sinusoidal wave rings that weave in and out
-                val dots = 32
-                for (i in 0 until dots) {
-                    val angle = (i.toFloat() / dots) * 2f * PI.toFloat()
-                    val wave = sin(angle * 5f + time * 2f) * (radius * 0.25f)
-                    val r = (radius * 0.65f) + wave
-                    val x = center.x + r * cos(angle)
-                    val y = center.y + r * sin(angle)
+                // Multi-ripple soundwave pulse
+                for (rIdx in 1..3) {
+                    val rProgress = ((phase / (2f * PI.toFloat()) + (rIdx * 0.33f)) % 1f)
+                    val r = radius * (0.3f + 0.7f * rProgress)
+                    val alpha = (1f - rProgress).coerceIn(0f, 0.85f)
                     drawCircle(
-                        color = dotColor.copy(alpha = 0.5f + 0.45f * abs(wave / (radius * 0.25f))),
-                        radius = 2.2f,
-                        center = Offset(x, y)
+                        color = secondaryColor.copy(alpha = alpha),
+                        radius = r,
+                        center = center,
+                        style = Stroke(width = 2.dp.toPx())
                     )
                 }
-            }
-
-            OrbState.COMPOSING -> {
-                // Inward-flowing particle matrix
-                val streams = 8
-                val dotsPerStream = 4
-                for (s in 0 until streams) {
-                    val angle = (s.toFloat() / streams) * 2f * PI.toFloat()
-                    for (d in 0 until dotsPerStream) {
-                        val progress = ((time / (2f * PI.toFloat()) + d.toFloat() / dotsPerStream) % 1f)
-                        val r = radius * (1f - progress)
-                        val x = center.x + r * cos(angle + progress * 0.5f)
-                        val y = center.y + r * sin(angle + progress * 0.5f)
-                        val alpha = progress.coerceIn(0.2f, 1f)
-                        drawCircle(
-                            color = dotColor.copy(alpha = alpha),
-                            radius = 1.8f + (1f - progress) * 1.5f,
-                            center = Offset(x, y)
-                        )
-                    }
-                }
+                drawCircle(
+                    color = Color.White,
+                    radius = radius * 0.25f,
+                    center = center
+                )
             }
         }
     }

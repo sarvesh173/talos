@@ -88,10 +88,7 @@ class MainActivity : ComponentActivity() {
                                 appScreen = "wizard"
                             },
                             onConnect = { url, token ->
-                                client.setCustomBaseUrl(url)
-                                client.setToken(token)
-                                client.refreshRooms()
-                                client.switchRoom("the-council")
+                                client.updateConfig(url, token)
                                 appScreen = "main"
                             }
                         )

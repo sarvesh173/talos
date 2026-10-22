@@ -103,12 +103,13 @@ fun LandingScreen(
     ) {
         val screenW = maxWidth
         val screenH = maxHeight
+        val glowBorder = talosBorder
 
         // Ambient radial background glow behind center hero
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(talosBorder.copy(alpha = 0.40f), Color.Transparent),
+                    colors = listOf(glowBorder.copy(alpha = 0.40f), Color.Transparent),
                     center = Offset(size.width / 2, size.height * 0.42f),
                     radius = size.width * 0.75f
                 )

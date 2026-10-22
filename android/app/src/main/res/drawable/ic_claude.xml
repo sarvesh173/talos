@@ -1,11 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <!-- Official Anthropic Company Mark -->
-    <path
-        android:fillColor="#FFD97757"
-        android:pathData="M17.3041,3.541h-3.6718l6.696,16.918H24Zm-10.6082,0L0,20.459h3.7442l1.3693,-3.5527h7.0052l1.3693,3.5528h3.7442L10.5363,3.5409Zm-0.3712,10.2232 2.2914,-5.9456 2.2914,5.9456Z" />
-</vector>
+<android:vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <android:path android:pathData="M 4.7144 15.9555 L 4.4837 15.9555 L 3.6944 15.9069 L 4.083 15.9069 L 4.1376 15.749 L 6.973 9.8356 L 4.423 8.1477 C 4.3623 7.8927 4.3198 7.6803 4.3198 7.4192 L 6.287 0.1335 L 7.2827 0.2671 L 7.4406 0.2671 L 7.4406 0.1214 L 7.5681 -1.5846 L 7.7806 -1.5846 L 8.0235 -1.8275 L 9.0556 -1.8275 L 9.8146 -0.6982 L 11.4356 -0.6982 L 14.4531 -0.4735 L 14.2709 -0.4735 L 14.2709 -0.3642 L 15.3638 0.7044 L 15.2363 0.7044 L 15.2363 0.8744 L 15.6795 1.524 L 14.38 17.959 L 13.2386 16.0162 L 13.184 16.0162 L 6.8455 20.1326 Z" android:fillColor="#FF000000" />
+</android:vector>

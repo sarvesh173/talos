@@ -8,19 +8,55 @@
   "claude": {
     "label": "Claude Code",
     "accent": "#D97757",
-    "svg": "assets/agent-icons/claude.svg",
+    "svg": "assets/agent-icons/svg/claude.svg",
     "drawable": "res/drawable/ic_claude.xml"
+  },
+  "codex": {
+    "label": "Codex",
+    "accent": "#10A37F",
+    "svg": "assets/agent-icons/svg/openai.svg",
+    "drawable": "res/drawable/ic_codex.xml"
+  },
+  "gemini": {
+    "label": "Gemini",
+    "accent": "#3186FF",
+    "svg": "assets/agent-icons/svg/gemini.svg",
+    "drawable": "res/drawable/ic_gemini.xml"
+  },
+  "meta": {
+    "label": "Meta AI",
+    "accent": "#1877F2",
+    "svg": "assets/agent-icons/svg/meta.svg",
+    "drawable": "res/drawable/ic_meta.xml"
+  },
+  "mistral": {
+    "label": "Mistral AI",
+    "accent": "#F24E1E",
+    "svg": "assets/agent-icons/svg/mistral.svg",
+    "drawable": "res/drawable/ic_mistral.xml"
+  },
+  "deepseek": {
+    "label": "DeepSeek",
+    "accent": "#0066FF",
+    "svg": "assets/agent-icons/svg/deepseek.svg",
+    "drawable": "res/drawable/ic_deepseek.xml"
+  },
+  "qwen": {
+    "label": "Qwen",
+    "accent": "#2563EB",
+    "svg": "assets/agent-icons/svg/qwen.svg",
+    "drawable": "res/drawable/ic_qwen.xml"
   },
   "openclaw": {
     "label": "OpenClaw",
     "accent": "#F97316",
-    "svg": "assets/agent-icons/openclaw.svg",
+    "svg": "assets/agent-icons/svg/openclaw.svg",
     "drawable": "res/drawable/ic_openclaw.xml"
   },
   "omnirush": {
     "label": "OmniRush",
     "accent": "#A855F7",
-    "svg": "assets/agent-icons/omnirush.svg",
+    "svg": "assets/agent-icons/svg/omnirush.svg",
     "drawable": "res/drawable/ic_omnirush.xml"
   },
   "core": {

@@ -1,12 +1,6 @@
 package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,14 +34,13 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Lan
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -593,7 +586,7 @@ private fun OverviewCard(
 }
 
 // ==========================================
-// STEP 2 — TAILSCALE MESH VERIFICATION
+// STEP 2 — TAILSCALE MESH VERIFICATION (M3)
 // ==========================================
 
 @Composable
@@ -607,16 +600,19 @@ private fun MeshStep(
     val active = meshInfo?.active == true
     val hostSetupPrompt = "Set up TALOS mesh node: git clone https://github.com/sarvesh173/talos.git && cd talos && pip install -r requirements.txt && uvicorn server.main:app --host 0.0.0.0 --port 8000"
 
+    val statusLabel = when {
+        isChecking -> "Scanning"
+        active -> "Linked"
+        else -> "Offline"
+    }
+    val statusColor = when {
+        isChecking -> PrimaryAccent
+        active -> StatusGreen
+        else -> Color(0xFFF59E0B)
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
-
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            ThinkingOrb(state = OrbState.SEARCHING, size = 54.dp)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Tailscale Mesh Verification",
@@ -635,145 +631,180 @@ private fun MeshStep(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // --- STEP-BY-STEP SETUP GUIDE ---
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(WizardSurfaceAlt)
-                .border(1.dp, WizardBorder, RoundedCornerShape(18.dp))
-                .padding(16.dp)
+        // --- TAILSCALE SETUP & HOST GUIDE (M3 ELEVATED CARD) ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt)
         ) {
-            Text(
-                text = "Tailscale Setup & Host Guide",
-                color = WizardText,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "1. Install Tailscale on this phone and on your agent host machine (Linux/Mac/PC).\n2. Sign in to the same Tailscale account on both devices.\n3. Run TALOS backend on your host or give this prompt to your CLI agent:",
-                color = WizardMuted,
-                fontSize = 12.sp,
-                lineHeight = 18.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Copy setup prompt box
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF0B0E15))
-                    .border(1.dp, WizardBorder, RoundedCornerShape(10.dp))
-                    .padding(10.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = hostSetupPrompt,
-                    color = PrimaryAccent,
-                    fontSize = 11.sp,
-                    lineHeight = 16.sp
+                    text = "Tailscale Setup & Host Guide",
+                    color = WizardText,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "1. Install Tailscale on this phone and on your agent host machine (Linux/Mac/PC).\n2. Sign in to the same Tailscale account on both devices.\n3. Run TALOS backend on your host or give this prompt to your CLI agent:",
+                    color = WizardMuted,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(
-                    onClick = { onCopyPrompt(hostSetupPrompt) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E293B),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                // Copy setup prompt box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(talosBg)
+                        .border(1.dp, WizardBorder, RoundedCornerShape(10.dp))
+                        .padding(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
+                    Text(
+                        text = hostSetupPrompt,
+                        color = PrimaryAccent,
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Copy Setup Prompt", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = { onCopyPrompt(hostSetupPrompt) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1E293B),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = "Copy Setup Prompt", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
-                .background(WizardSurface)
-                .border(1.dp, WizardBorder, RoundedCornerShape(22.dp))
-                .padding(18.dp)
+        // --- MESH STATUS (M3 ELEVATED CARD + LINEAR PROGRESS + STATUS CHIP) ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = WizardSurface)
         ) {
-            // Big status ring
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp),
-                contentAlignment = Alignment.Center
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                MeshStatusRing(
-                    active = active,
-                    checking = isChecking,
-                    label = when {
-                        isChecking -> "Scanning"
-                        active -> "Linked"
-                        else -> "Offline"
+                // Linear progress: indeterminate while scanning, complete when linked, empty when offline.
+                if (isChecking) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().height(4.dp),
+                        color = statusColor,
+                        trackColor = WizardBorder
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        progress = { if (active) 1f else 0f },
+                        modifier = Modifier.fillMaxWidth().height(4.dp),
+                        color = statusColor,
+                        trackColor = WizardBorder
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = statusColor.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.35f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(statusColor)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = statusLabel,
+                                color = statusColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
+                }
+
+                MeshRow(
+                    key = "Node",
+                    value = meshInfo?.hostname?.takeIf { it.isNotBlank() } ?: "talos-node"
                 )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            MeshRow(
-                key = "Node",
-                value = meshInfo?.hostname?.takeIf { it.isNotBlank() } ?: "talos-node"
-            )
-            MeshRow(
-                key = "Overlay IP",
-                value = meshInfo?.self_ip?.takeIf { it.isNotBlank() } ?: MESH_IP
-            )
-            MeshRow(
-                key = "Peer",
-                value = meshInfo?.peer_name?.takeIf { it.isNotBlank() } ?: PEER_LABEL
-            )
-            MeshRow(
-                key = "Peers online",
-                value = meshInfo?.peers_count?.takeIf { it > 0 }?.toString() ?: "1"
-            )
-            MeshRow(key = "Transport", value = "WireGuard (UDP)", last = true)
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Scan Again Action
-            Button(
-                onClick = onRefresh,
-                enabled = !isChecking,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1E293B),
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                MeshRow(
+                    key = "Overlay IP",
+                    value = meshInfo?.self_ip?.takeIf { it.isNotBlank() } ?: MESH_IP
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isChecking) "Scanning Tailscale Mesh..." else "Scan Mesh Again",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
+                MeshRow(
+                    key = "Peer",
+                    value = meshInfo?.peer_name?.takeIf { it.isNotBlank() } ?: PEER_LABEL
                 )
+                MeshRow(
+                    key = "Peers online",
+                    value = meshInfo?.peers_count?.takeIf { it > 0 }?.toString() ?: "1"
+                )
+                MeshRow(key = "Transport", value = "WireGuard (UDP)", last = true)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Scan Again Action
+                Button(
+                    onClick = onRefresh,
+                    enabled = !isChecking,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1E293B),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isChecking) "Scanning Tailscale Mesh..." else "Scan Mesh Again",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
 
@@ -1397,133 +1428,4 @@ private fun AgentFaceBadge(tint: Color) {
     }
 }
 
-// ==========================================
-// MESH STATUS RING (ORBITAL RADAR MESH NODE)
-// ==========================================
 
-@Composable
-private fun MeshStatusRing(
-    active: Boolean,
-    checking: Boolean,
-    label: String
-) {
-    val transition = rememberInfiniteTransition(label = "mesh_orbital_physics")
-
-    // Rotation angle for satellite nodes
-    val orbitAngle by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "orbit_rot"
-    )
-
-    // Signal wave ripple expansion
-    val ripple1 by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "ripple1"
-    )
-    val ripple2 by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, delayMillis = 1100, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "ripple2"
-    )
-
-    val ringColor = when {
-        checking -> Color(0xFF38BDF8)
-        active -> Color(0xFF22C55E)
-        else -> Color(0xFFF59E0B)
-    }
-
-    Box(modifier = Modifier.size(130.dp), contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val d = size.minDimension
-            val c = Offset(size.width / 2f, size.height / 2f)
-            val baseR = d * 0.32f
-
-            // 1. Expanding Pulse Ripples
-            drawCircle(
-                color = ringColor.copy(alpha = (1f - ripple1) * 0.25f),
-                radius = baseR + (d * 0.22f * ripple1),
-                center = c,
-                style = Stroke(width = 2.dp.toPx())
-            )
-            drawCircle(
-                color = ringColor.copy(alpha = (1f - ripple2) * 0.25f),
-                radius = baseR + (d * 0.22f * ripple2),
-                center = c,
-                style = Stroke(width = 2.dp.toPx())
-            )
-
-            // 2. Base Mesh Orbit Ring
-            drawCircle(
-                color = ringColor.copy(alpha = 0.20f),
-                radius = baseR,
-                center = c,
-                style = Stroke(width = 1.5.dp.toPx())
-            )
-
-            // 3. Rotating Satellite Peer Nodes (Phone <-> Host)
-            val rad1 = Math.toRadians(orbitAngle.toDouble()).toFloat()
-            val sat1X = c.x + baseR * kotlin.math.cos(rad1)
-            val sat1Y = c.y + baseR * kotlin.math.sin(rad1)
-            drawCircle(
-                color = ringColor,
-                radius = 4.dp.toPx(),
-                center = Offset(sat1X, sat1Y)
-            )
-
-            val rad2 = Math.toRadians((orbitAngle + 180f).toDouble()).toFloat()
-            val sat2X = c.x + baseR * kotlin.math.cos(rad2)
-            val sat2Y = c.y + baseR * kotlin.math.sin(rad2)
-            drawCircle(
-                color = Color.White,
-                radius = 3.dp.toPx(),
-                center = Offset(sat2X, sat2Y)
-            )
-
-            // 4. Center Glowing Hub
-            drawCircle(
-                color = ringColor.copy(alpha = 0.15f),
-                radius = baseR * 0.65f,
-                center = c
-            )
-        }
-
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = if (active) Icons.Default.Lan else Icons.Default.Shield,
-                contentDescription = null,
-                tint = ringColor,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(ringColor)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = label,
-                    color = WizardText,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}

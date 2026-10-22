@@ -46,6 +46,8 @@ scratch/
 .gradle/
 android/.gradle/
 android/app/build/
+android/.kotlin/
+.kotlin/
 local.properties
 *.apk
 *.aab

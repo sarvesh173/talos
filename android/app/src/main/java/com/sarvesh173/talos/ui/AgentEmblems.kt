@@ -38,6 +38,11 @@ val AgentEmblems: List<AgentEmblem> = listOf(
     AgentEmblem("hermes", "Hermes Agent", "Nous Research · Autonomy", R.drawable.ic_hermes, Color(0xFF22C55E)),
     AgentEmblem("claude", "Claude Code", "Anthropic · Architecture", R.drawable.ic_claude, Color(0xFFD97757)),
     AgentEmblem("codex", "Codex", "OpenAI · Code & Synthesis", R.drawable.ic_codex, Color(0xFF10A37F)),
+    AgentEmblem("gemini", "Gemini", "Google · Multimodal Reasoning", R.drawable.ic_gemini, Color(0xFF3186FF)),
+    AgentEmblem("meta", "Meta AI", "Meta · Llama Family", R.drawable.ic_meta, Color(0xFF1877F2)),
+    AgentEmblem("mistral", "Mistral AI", "Mistral AI · Open Weights", R.drawable.ic_mistral, Color(0xFFF24E1E)),
+    AgentEmblem("deepseek", "DeepSeek", "DeepSeek · Reasoning", R.drawable.ic_deepseek, Color(0xFF0066FF)),
+    AgentEmblem("qwen", "Qwen", "Alibaba · Qwen Series", R.drawable.ic_qwen, Color(0xFF2563EB)),
     AgentEmblem("openclaw", "OpenClaw", "Tools & Automation", R.drawable.ic_openclaw, Color(0xFFF97316)),
     AgentEmblem("omnirush", "OmniRush", "High-Throughput Runner", R.drawable.ic_omnirush, Color(0xFFA855F7))
 )

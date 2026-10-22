@@ -17,7 +17,19 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from core.brand import BRAND
-from core.models import BusEvent, EventType, Message, Role, Room, RoomMode
+from core.models import (
+    AgentProfile,
+    BusEvent,
+    EventType,
+    Message,
+    ProviderInfo,
+    ProviderSummary,
+    Role,
+    Room,
+    RoomMode,
+    TokenInfo,
+    TokenSummary,
+)
 from core.room_bus import bus
 from server.agent_orchestrator import orchestrator
 from server.auth import (
@@ -25,16 +37,25 @@ from server.auth import (
     get_active_tokens,
     get_master_token,
     init_auth_db,
+    list_tokens,
+    revoke_token,
+    token_summary,
     verify_token,
 )
 from server.db import (
+    create_room,
+    delete_room,
+    get_agent,
     get_room,
     get_room_messages,
     init_db,
     list_agents,
     list_rooms,
     save_message,
+    set_room_agents,
+    update_room,
 )
+from server.provider_service import provider_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("talos_server")
@@ -201,9 +222,29 @@ async def create_token_endpoint(req: CreateTokenRequest, token: str = Depends(re
     return {"token": new_token, "label": req.label}
 
 
-@app.get("/api/auth/tokens")
+@app.get("/api/auth/tokens", response_model=List[TokenInfo])
 async def list_tokens_endpoint(token: str = Depends(require_auth)):
-    return get_active_tokens()
+    return list_tokens()
+
+
+class RevokeTokenRequest(BaseModel):
+    token_id: str
+
+
+@app.post("/api/auth/tokens/revoke")
+async def revoke_token_endpoint(req: RevokeTokenRequest, token: str = Depends(require_auth)):
+    ok = revoke_token(req.token_id)
+    if not ok:
+        raise HTTPException(
+            status_code=404,
+            detail="Token not found, already revoked, or is the protected master token",
+        )
+    return {"status": "revoked", "token_id": req.token_id}
+
+
+@app.get("/api/auth/tokens/summary", response_model=TokenSummary)
+async def token_summary_endpoint(token: str = Depends(require_auth)):
+    return token_summary()
 
 
 @app.get("/api/rooms", response_model=List[Room])
@@ -224,6 +265,72 @@ async def get_messages(room_id: str, limit: int = 100, token: str = Depends(requ
     return get_room_messages(room_id, limit=limit)
 
 
+class RoomCreateRequest(BaseModel):
+    name: str
+    description: str = ""
+    mode: RoomMode = RoomMode.group
+    agent_ids: List[str] = []
+
+
+class RoomUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    mode: Optional[RoomMode] = None
+
+
+class SetRoomAgentsRequest(BaseModel):
+    agent_ids: List[str]
+
+
+@app.post("/api/rooms", response_model=Room)
+async def create_room_endpoint(req: RoomCreateRequest, token: str = Depends(require_auth)):
+    """Create a new room and initialize its multi-agent orchestration bench."""
+    return create_room(req.name, req.description, req.mode, agent_ids=req.agent_ids)
+
+
+@app.put("/api/rooms/{room_id}", response_model=Room)
+async def update_room_endpoint(
+    room_id: str, req: RoomUpdateRequest, token: str = Depends(require_auth)
+):
+    room = update_room(room_id, name=req.name, description=req.description, mode=req.mode)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return room
+
+
+@app.delete("/api/rooms/{room_id}")
+async def delete_room_endpoint(room_id: str, token: str = Depends(require_auth)):
+    deleted = delete_room(room_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return {"status": "deleted", "room_id": room_id}
+
+
+@app.get("/api/rooms/{room_id}/agents", response_model=List[AgentProfile])
+async def list_room_agents(room_id: str, token: str = Depends(require_auth)):
+    """Return the agents on this room's orchestration bench, in bench order."""
+    room = get_room(room_id)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+    agents = []
+    for agent_id in room.agent_ids:
+        agent = get_agent(agent_id)
+        if agent is not None:
+            agents.append(agent)
+    return agents
+
+
+@app.put("/api/rooms/{room_id}/agents", response_model=Room)
+async def set_room_agents_endpoint(
+    room_id: str, req: SetRoomAgentsRequest, token: str = Depends(require_auth)
+):
+    """Replace the orchestration bench of a room (multi-agent turn targets)."""
+    room = set_room_agents(room_id, req.agent_ids)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return room
+
+
 @app.get("/api/agents")
 async def get_agents(token: str = Depends(require_auth)):
     return list_agents()
@@ -233,6 +340,32 @@ async def get_agents(token: str = Depends(require_auth)):
 async def get_orchestrator_status(token: str = Depends(require_auth)):
     """Live status of the multi-agent turn coordinator."""
     return orchestrator.status()
+
+
+@app.get("/api/providers", response_model=List[ProviderInfo])
+async def list_providers(token: str = Depends(require_auth), force: bool = Query(False)):
+    """Live health snapshot of every configured model provider (latency, status, context length)."""
+    return await provider_service.snapshot(force=force)
+
+
+@app.get("/api/providers/summary", response_model=ProviderSummary)
+async def providers_summary(token: str = Depends(require_auth)):
+    """Aggregate provider health for the dashboard."""
+    infos = await provider_service.snapshot()
+    return provider_service.summarize(infos)
+
+
+@app.get("/api/providers/{provider_id}", response_model=ProviderInfo)
+async def get_provider(
+    provider_id: str,
+    token: str = Depends(require_auth),
+    force: bool = Query(False),
+):
+    """Health snapshot for a single provider."""
+    info = await provider_service.get(provider_id, force=force)
+    if info is None:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    return info
 
 
 @app.post("/api/upload")

@@ -265,7 +265,7 @@ fun LandingScreen(
                     letterSpacing = 1.sp
                 )
                 Text(
-                    text = "5 Connected",
+                    text = "${AgentEmblems.size} Connected",
                     color = StatusGreen,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium

@@ -29,6 +29,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import okio.ByteString
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 class TalosClient(private val context: Context, private val scope: CoroutineScope) {
@@ -178,6 +180,10 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 handleInboundMessage(text)
             }
 
+            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+                handleInboundBinaryAudio(bytes)
+            }
+
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.i(TAG, "WebSocket closed: $reason")
                 _isConnected.value = false
@@ -219,6 +225,29 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing event: ${e.message}")
+        }
+    }
+
+    private fun handleInboundBinaryAudio(bytes: ByteString) {
+        try {
+            val audioDir = File(context.cacheDir, "audio_cache").apply { mkdirs() }
+            val audioFile = File(audioDir, "memo_${System.currentTimeMillis()}.opus")
+            audioFile.writeBytes(bytes.toByteArray())
+            val msg = Message(
+                id = "audio_${System.currentTimeMillis()}",
+                room_id = _currentRoomId.value,
+                sender_id = "agent",
+                sender_name = "Agent Voice",
+                sender_role = Role.agent,
+                content = "[Voice Note]",
+                audio_url = audioFile.absolutePath,
+                created_at = System.currentTimeMillis() / 1000.0
+            )
+            val updated = _messages.value + msg
+            _messages.value = updated
+            saveCachedMessages(_currentRoomId.value, updated)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to handle inbound binary audio: ${e.message}")
         }
     }
 

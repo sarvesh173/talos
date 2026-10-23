@@ -3,6 +3,15 @@ package com.sarvesh173.talos
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,44 +71,78 @@ class MainActivity : ComponentActivity() {
             TalosTheme(themeMode = themeMode) {
                 val isPaired by client.isPaired.collectAsState()
 
-                when {
-                    isPaired -> {
-                        MainScreen(
-                            client = client,
-                            isDark = themeMode == AppThemeMode.DARK,
-                            onToggleTheme = {
-                                themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
-                            }
-                        )
-                    }
-                    appScreen == "wizard" -> {
-                        OnboardingWizard(
-                            client = client,
-                            onToggleTheme = {
-                                themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
-                            },
-                            onComplete = {
-                                client.refreshRooms()
-                                client.switchRoom("the-council")
-                                appScreen = "main"
-                            }
-                        )
-                    }
-                    else -> {
-                        LandingScreen(
-                            client = client,
-                            isDark = themeMode == AppThemeMode.DARK,
-                            onToggleTheme = {
-                                themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
-                            },
-                            onGetStarted = {
-                                appScreen = "wizard"
-                            },
-                            onConnect = { url, token ->
-                                client.updateConfig(url, token)
-                                appScreen = "main"
-                            }
-                        )
+                val activeTarget = when {
+                    isPaired -> "main"
+                    appScreen == "wizard" -> "wizard"
+                    else -> "landing"
+                }
+
+                AnimatedContent(
+                    targetState = activeTarget,
+                    transitionSpec = {
+                        if (targetState == "main" || targetState == "wizard") {
+                            (fadeIn(animationSpec = tween(280)) + slideInHorizontally(
+                                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                                initialOffsetX = { it / 4 }
+                            )).togetherWith(
+                                fadeOut(animationSpec = tween(180)) + slideOutHorizontally(
+                                    animationSpec = tween(180),
+                                    targetOffsetX = { -it / 4 }
+                                )
+                            )
+                        } else {
+                            (fadeIn(animationSpec = tween(220)) + slideInHorizontally(
+                                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                                initialOffsetX = { -it / 4 }
+                            )).togetherWith(
+                                fadeOut(animationSpec = tween(180)) + slideOutHorizontally(
+                                    animationSpec = tween(180),
+                                    targetOffsetX = { it / 4 }
+                                )
+                            )
+                        }
+                    },
+                    label = "AppScreenTransition"
+                ) { screenKey ->
+                    when (screenKey) {
+                        "main" -> {
+                            MainScreen(
+                                client = client,
+                                isDark = themeMode == AppThemeMode.DARK,
+                                onToggleTheme = {
+                                    themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                                }
+                            )
+                        }
+                        "wizard" -> {
+                            OnboardingWizard(
+                                client = client,
+                                onToggleTheme = {
+                                    themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                                },
+                                onComplete = {
+                                    client.refreshRooms()
+                                    client.switchRoom("the-council")
+                                    appScreen = "main"
+                                }
+                            )
+                        }
+                        else -> {
+                            LandingScreen(
+                                client = client,
+                                isDark = themeMode == AppThemeMode.DARK,
+                                onToggleTheme = {
+                                    themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                                },
+                                onGetStarted = {
+                                    appScreen = "wizard"
+                                },
+                                onConnect = { url, token ->
+                                    client.updateConfig(url, token)
+                                    appScreen = "main"
+                                }
+                            )
+                        }
                     }
                 }
             }

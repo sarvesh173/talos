@@ -519,11 +519,11 @@ fun LandingScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Surface(
-                        color = Color(0xFF0F172A),
+                        color = talosSurface,
                         shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, Color(0xFF334155)),
+                        border = BorderStroke(1.dp, talosBorder),
                         modifier = Modifier
-                            .size(82.dp)
+                            .size(84.dp)
                             .shadow(6.dp, RoundedCornerShape(20.dp), spotColor = Color.Black)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -734,13 +734,13 @@ private fun AgentNodeWithBubble(
                 exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { -10 }
             ) {
                 Surface(
-                    color = Color(0xFF0F172A),
+                    color = talosSurface,
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, node.accent.copy(alpha = 0.55f)),
                     modifier = Modifier
                         .padding(bottom = 6.dp)
                         .widthIn(max = 160.dp)
-                        .shadow(8.dp, RoundedCornerShape(12.dp), )
+                        .shadow(4.dp, RoundedCornerShape(12.dp))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
@@ -834,13 +834,13 @@ private fun AgentNodeWithBubble(
                 exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { 10 }
             ) {
                 Surface(
-                    color = Color(0xFF0F172A),
+                    color = talosSurface,
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, node.accent.copy(alpha = 0.55f)),
                     modifier = Modifier
                         .padding(top = 6.dp)
                         .widthIn(max = 160.dp)
-                        .shadow(8.dp, RoundedCornerShape(12.dp), )
+                        .shadow(4.dp, RoundedCornerShape(12.dp))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),

@@ -136,28 +136,17 @@ fun MessageBubble(msg: Message) {
         horizontalArrangement = if (isHuman) Arrangement.End else Arrangement.Start
     ) {
         if (!isHuman) {
-            // Agent Avatar Badge
-            val avatarColor = when {
-                msg.sender_name.contains("Omni", ignoreCase = true) -> Color(0xFFA855F7)
-                msg.sender_name.contains("Claude", ignoreCase = true) -> Color(0xFFD97757)
-                msg.sender_name.contains("Hermes", ignoreCase = true) -> Color(0xFF22C55E)
-                msg.sender_name.contains("OpenClaw", ignoreCase = true) -> Color(0xFFF97316)
-                else -> Color(0xFF38BDF8)
-            }
+            // Official CLI Agent SVG Emblem Avatar
+            val emblem = emblemBySender(msg.sender_name)
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(avatarColor.copy(alpha = 0.2f))
-                    .border(1.dp, avatarColor.copy(alpha = 0.5f), CircleShape),
+                    .background(emblem.accent.copy(alpha = 0.15f))
+                    .border(1.dp, emblem.accent.copy(alpha = 0.45f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = msg.sender_name.take(1).uppercase(),
-                    color = avatarColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+                AgentEmblemIcon(emblem = emblem, size = 20.dp, tint = null)
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -166,13 +155,14 @@ fun MessageBubble(msg: Message) {
             modifier = Modifier.widthIn(max = 320.dp),
             horizontalAlignment = if (isHuman) Alignment.End else Alignment.Start
         ) {
-            // Sender name header for multi-agent clarity
+            // Sender name header with matching brand accent
             if (!isHuman) {
+                val emblem = emblemBySender(msg.sender_name)
                 Text(
                     text = msg.sender_name,
-                    color = talosTextMuted,
+                    color = emblem.accent,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 2.dp)
                 )
             }

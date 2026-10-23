@@ -267,11 +267,15 @@ fun MainScreen(
                                 }
                                 .padding(12.dp)
                         ) {
-                            Icon(
-                                imageVector = if (room.mode == "dm") Icons.Default.Person else Icons.Default.Groups,
-                                contentDescription = null,
-                                tint = if (isSelected) PrimaryAccent else TextMuted,
-                                modifier = Modifier.size(20.dp)
+                            val roomEmblem = when {
+                                room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
+                                room.id == "the-council" -> emblemByKey("omnirush")
+                                else -> emblemBySender(room.name)
+                            }
+                            AgentEmblemIcon(
+                                emblem = roomEmblem,
+                                size = 20.dp,
+                                tint = null
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
@@ -383,11 +387,15 @@ fun MainScreen(
                                         .clickable { client.switchRoom(room.id) }
                                         .padding(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = if (room.mode == "dm") Icons.Default.Person else Icons.Default.Groups,
-                                        contentDescription = null,
-                                        tint = if (isSelected) PrimaryAccent else TextMuted,
-                                        modifier = Modifier.size(14.dp)
+                                    val quickEmblem = when {
+                                        room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
+                                        room.id == "the-council" -> emblemByKey("omnirush")
+                                        else -> emblemBySender(room.name)
+                                    }
+                                    AgentEmblemIcon(
+                                        emblem = quickEmblem,
+                                        size = 14.dp,
+                                        tint = null
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(

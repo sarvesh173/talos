@@ -50,6 +50,31 @@ val AgentEmblems: List<AgentEmblem> = listOf(
 fun emblemByKey(key: String): AgentEmblem =
     AgentEmblems.firstOrNull { it.key == key } ?: AgentEmblems.first()
 
+/**
+ * Resolve an agent emblem dynamically by sender name, handling agent handles,
+ * vendor prefixes, and role descriptors.
+ */
+fun emblemBySender(name: String): AgentEmblem {
+    val clean = name.lowercase().trim()
+    return AgentEmblems.firstOrNull { emblem ->
+        clean == emblem.key || clean == emblem.label.lowercase()
+    } ?: AgentEmblems.firstOrNull { emblem ->
+        clean.contains(emblem.key) || clean.contains(emblem.label.lowercase())
+    } ?: when {
+        clean.contains("omni") || clean.contains("rush") -> emblemByKey("omnirush")
+        clean.contains("claude") || clean.contains("anthropic") -> emblemByKey("claude")
+        clean.contains("codex") || clean.contains("openai") -> emblemByKey("codex")
+        clean.contains("hermes") || clean.contains("nous") || clean.contains("core") -> emblemByKey("hermes")
+        clean.contains("claw") || clean.contains("openclaw") || clean.contains("opencode") -> emblemByKey("openclaw")
+        clean.contains("deepseek") -> emblemByKey("deepseek")
+        clean.contains("gemini") || clean.contains("google") -> emblemByKey("gemini")
+        clean.contains("qwen") || clean.contains("alibaba") -> emblemByKey("qwen")
+        clean.contains("mistral") -> emblemByKey("mistral")
+        clean.contains("meta") || clean.contains("llama") -> emblemByKey("meta")
+        else -> emblemByKey("hermes")
+    }
+}
+
 /** A single agent emblem rendered straight from its vector drawable. */
 @Composable
 fun AgentEmblemIcon(

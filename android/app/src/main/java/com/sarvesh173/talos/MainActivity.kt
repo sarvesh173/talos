@@ -40,6 +40,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -265,20 +268,31 @@ fun MainScreen(
                             }
                         },
                         navigationIcon = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu", tint = TextPrimary)
+                            IconButton(
+                                onClick = { scope.launch { drawerState.open() } },
+                                modifier = Modifier.semantics { contentDescription = "Open chamber navigation menu" }
+                            ) {
+                                Icon(imageVector = Icons.Default.Menu, contentDescription = null, tint = TextPrimary)
                             }
                         },
                         actions = {
-                            IconButton(onClick = onToggleTheme) {
+                            IconButton(
+                                onClick = onToggleTheme,
+                                modifier = Modifier.semantics {
+                                    contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode"
+                                }
+                            ) {
                                 Icon(
                                     imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                    contentDescription = "Toggle Dark/Light Mode",
+                                    contentDescription = null,
                                     tint = TextMuted
                                 )
                             }
-                            IconButton(onClick = { showSettingsDialog = true }) {
-                                Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = TextMuted)
+                            IconButton(
+                                onClick = { showSettingsDialog = true },
+                                modifier = Modifier.semantics { contentDescription = "Open server connection settings" }
+                            ) {
+                                Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = TextMuted)
                             }
                         }
                     )
@@ -372,7 +386,11 @@ fun MainScreen(
                                     unfocusedTextColor = TextPrimary
                                 ),
                                 shape = RoundedCornerShape(24.dp),
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics {
+                                        contentDescription = "Message composition input field for $roomTitle"
+                                    }
                             )
 
                             Spacer(modifier = Modifier.width(8.dp))
@@ -385,13 +403,16 @@ fun MainScreen(
                                     }
                                 },
                                 modifier = Modifier
-                                    .size(46.dp)
+                                    .size(48.dp)
                                     .clip(CircleShape)
                                     .background(PrimaryAccent)
+                                    .semantics {
+                                        contentDescription = "Send message to chamber"
+                                    }
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = "Send",
+                                    contentDescription = null,
                                     tint = Color.White,
                                     modifier = Modifier.size(20.dp)
                                 )

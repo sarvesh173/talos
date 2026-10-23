@@ -27,6 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
@@ -126,10 +129,13 @@ fun LandingScreen(
                         .clip(CircleShape)
                         .background(talosSurface)
                         .border(1.dp, talosBorder, CircleShape)
+                        .semantics {
+                            contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode"
+                        }
                 ) {
                     Icon(
                         imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                        contentDescription = "Toggle Theme",
+                        contentDescription = null,
                         tint = talosTextMuted,
                         modifier = Modifier.size(18.dp)
                     )
@@ -187,6 +193,9 @@ fun LandingScreen(
                         .fillMaxWidth()
                         .height(52.dp)
                         .scale(buttonScale)
+                        .semantics {
+                            contentDescription = "Get Started with Talos onboarding wizard"
+                        }
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -261,7 +270,8 @@ fun LandingScreen(
                 fontSize = 38.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.5).sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { heading() }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -525,6 +535,9 @@ private fun M3AgentCard(
         modifier = modifier
             .width(172.dp)
             .height(154.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "${emblem.name}: ${emblem.roleDescription}. Status: Online"
+            }
     ) {
         Column(
             modifier = Modifier

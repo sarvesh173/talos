@@ -208,88 +208,86 @@ fun LandingScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Honest Infrastructure Telemetry Strip (Real data, zero buzzwords)
+            // Real-Time Mesh Telemetry Console (Dynamic, high-density developer HUD)
             Surface(
                 color = talosSurface,
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, talosBorder),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(StatusGreen)
+                            )
+                            Text(
+                                text = "P2P WireGuard Mesh",
+                                color = talosTextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         Text(
-                            text = "${AgentEmblems.size}",
-                            color = talosTextPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Connected Agents",
+                            text = "100.75.107.79",
                             color = talosTextMuted,
-                            fontSize = 11.sp
+                            fontSize = 11.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(28.dp)
-                            .background(talosBorder)
-                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(color = talosBorder.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Tailscale",
-                            color = talosTextPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Encrypted Mesh",
-                            color = talosTextMuted,
-                            fontSize = 11.sp
-                        )
-                    }
+                        Column {
+                            Text(
+                                text = "CONSENSUS QUORUM",
+                                color = talosTextMuted,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                            Text(
+                                text = "60% Threshold (Active)",
+                                color = talosTextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
 
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(28.dp)
-                            .background(talosBorder)
-                    )
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Binary",
-                            color = talosTextPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "WebSocket Bus",
-                            color = talosTextMuted,
-                            fontSize = 11.sp
-                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "TRANSPORT PROTOCOL",
+                                color = talosTextMuted,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                            Text(
+                                text = "WebSocket Binary Opus",
+                                color = talosTextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }

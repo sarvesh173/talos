@@ -29,13 +29,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -73,23 +76,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var themeMode by remember { mutableStateOf(AppThemeMode.DARK) }
-            var appScreen by remember { mutableStateOf(if (client.isPaired.value) "main" else "landing") }
+            var appScreen by remember { mutableStateOf("landing") }
 
             TalosTheme(themeMode = themeMode) {
                 val isPaired by client.isPaired.collectAsState()
 
-                val activeTarget = when {
-                    isPaired -> "main"
-                    appScreen == "wizard" -> "wizard"
-                    else -> "landing"
+                val activeTarget = when (appScreen) {
+                    "landing" -> "landing"
+                    "wizard" -> "wizard"
+                    else -> if (isPaired) "main" else "landing"
                 }
 
                 AnimatedContent(
                     targetState = activeTarget,
                     transitionSpec = {
                         if (targetState == "main" || targetState == "wizard") {
-                            (fadeIn(animationSpec = tween(280)) + slideInHorizontally(
-                                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                            (fadeIn(animationSpec = tween(240)) + slideInHorizontally(
+                                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
                                 initialOffsetX = { it / 4 }
                             )).togetherWith(
                                 fadeOut(animationSpec = tween(180)) + slideOutHorizontally(
@@ -99,7 +102,7 @@ class MainActivity : ComponentActivity() {
                             )
                         } else {
                             (fadeIn(animationSpec = tween(220)) + slideInHorizontally(
-                                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
                                 initialOffsetX = { -it / 4 }
                             )).togetherWith(
                                 fadeOut(animationSpec = tween(180)) + slideOutHorizontally(
@@ -118,6 +121,9 @@ class MainActivity : ComponentActivity() {
                                 isDark = themeMode == AppThemeMode.DARK,
                                 onToggleTheme = {
                                     themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
+                                },
+                                onOpenLanding = {
+                                    appScreen = "landing"
                                 }
                             )
                         }
@@ -142,6 +148,9 @@ class MainActivity : ComponentActivity() {
                                     themeMode = if (themeMode == AppThemeMode.DARK) AppThemeMode.LIGHT else AppThemeMode.DARK
                                 },
                                 onGetStarted = {
+                                    appScreen = if (client.isPaired.value) "main" else "wizard"
+                                },
+                                onOpenWizard = {
                                     appScreen = "wizard"
                                 },
                                 onConnect = { url, token ->
@@ -162,7 +171,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     client: TalosClient,
     isDark: Boolean = true,
-    onToggleTheme: () -> Unit = {}
+    onToggleTheme: () -> Unit = {},
+    onOpenLanding: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -195,14 +205,51 @@ fun MainScreen(
                 modifier = Modifier.width(300.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "TALOS Chambers",
-                    color = TextPrimary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-                )
-                HorizontalDivider(color = SurfaceBorder)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "TALOS Chambers",
+                        color = talosTextPrimary,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Quick Navigation back to Developer Console & Fleet Hub
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PrimaryAccent.copy(alpha = 0.10f))
+                        .clickable {
+                            scope.launch { drawerState.close() }
+                            onOpenLanding()
+                        }
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Dashboard,
+                        contentDescription = null,
+                        tint = PrimaryAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Fleet Hub & Agent Bench",
+                        color = talosTextPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
+                }
+
+                HorizontalDivider(color = talosBorder, modifier = Modifier.padding(top = 8.dp))
 
                 LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
                     items(rooms) { room: Room ->
@@ -276,10 +323,22 @@ fun MainScreen(
                                 onClick = { scope.launch { drawerState.open() } },
                                 modifier = Modifier.semantics { contentDescription = "Open chamber navigation menu" }
                             ) {
-                                Icon(imageVector = Icons.Default.Menu, contentDescription = null, tint = TextPrimary)
+                                Icon(imageVector = Icons.Default.Menu, contentDescription = null, tint = talosTextPrimary)
                             }
                         },
                         actions = {
+                            IconButton(
+                                onClick = onOpenLanding,
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Switch to Developer Fleet Hub"
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Dashboard,
+                                    contentDescription = null,
+                                    tint = talosTextMuted
+                                )
+                            }
                             IconButton(
                                 onClick = onToggleTheme,
                                 modifier = Modifier.semantics {
@@ -289,14 +348,14 @@ fun MainScreen(
                                 Icon(
                                     imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                                     contentDescription = null,
-                                    tint = TextMuted
+                                    tint = talosTextMuted
                                 )
                             }
                             IconButton(
                                 onClick = { showSettingsDialog = true },
                                 modifier = Modifier.semantics { contentDescription = "Open server connection settings" }
                             ) {
-                                Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = TextMuted)
+                                Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = talosTextMuted)
                             }
                         }
                     )
@@ -593,89 +652,160 @@ fun ChamberHero(
     onPromptClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalIsDark.current
+    val boxBg = if (isDark) Color(0xFF161F2E) else Color(0xFFF1F5F9)
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Surface(
-            modifier = Modifier.size(64.dp),
-            shape = RoundedCornerShape(18.dp),
-            color = talosSurface,
-            border = BorderStroke(1.dp, talosBorder),
-            shadowElevation = 2.dp
+        // Active Chamber Title with Live Mesh Indicator
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Forum,
-                    contentDescription = null,
-                    tint = PrimaryAccent,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(StatusGreen)
+            )
+            Text(
+                text = room?.name ?: "TALOS Chamber",
+                color = talosTextPrimary,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.3).sp
+            )
         }
-        Spacer(modifier = Modifier.height(20.dp))
+
+        Spacer(modifier = Modifier.height(4.dp))
+
         Text(
-            text = room?.name ?: "Chamber Initialized",
-            color = talosTextPrimary,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = room?.description ?: "Multi-agent autonomous collaborative mesh. Zero latency, peer-to-peer verification.",
+            text = room?.description ?: "Multi-agent autonomous collaborative bus via Tailscale encrypted subnet.",
             color = talosTextMuted,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             textAlign = TextAlign.Center,
-            lineHeight = 18.sp,
+            lineHeight = 16.sp,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        Spacer(modifier = Modifier.height(24.dp))
 
-        // Suggested Action Chips
-        val suggestions = listOf(
-            "Deconstruct system architecture",
-            "Simulate multi-agent consensus",
-            "Verify Tailscale mesh telemetry"
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Participating Agent Roster Dock
+        Surface(
+            color = talosSurface,
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, talosBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Participating Fleet",
+                        color = talosTextPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "${AgentEmblems.size} Registered",
+                        color = talosTextMuted,
+                        fontSize = 11.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(AgentEmblems, key = { it.key }) { emblem ->
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(boxBg)
+                                .border(1.dp, talosBorder, RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AgentEmblemIcon(emblem = emblem, size = 18.dp, tint = null)
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Slash Command Action Grid (Raycast Mobile Style)
+        val commands = listOf(
+            Triple("/consensus", "Propose democratic vote across registered agents", Icons.Default.Groups),
+            Triple("/benchmark", "Ping AI providers and recalculate latency route", Icons.Default.Speed),
+            Triple("/mesh", "Scan Tailscale peers on 100.75.107.79 subnet", Icons.Default.Hub)
         )
+
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            for (suggestion in suggestions) {
+            for ((cmd, desc, icon) in commands) {
                 Surface(
                     color = talosSurface,
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, talosBorder),
-                    shadowElevation = 1.dp,
                     modifier = Modifier
-                        .fillMaxWidth(0.92f)
-                        .clickable { onPromptClick(suggestion) }
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .clickable { onPromptClick(cmd) }
+                        .semantics { contentDescription = "Execute command $cmd: $desc" }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Terminal,
-                            contentDescription = null,
-                            tint = PrimaryAccent,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = suggestion,
-                            color = talosTextPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(PrimaryAccent.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = PrimaryAccent,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = cmd,
+                                color = talosTextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                            Text(
+                                text = desc,
+                                color = talosTextMuted,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }

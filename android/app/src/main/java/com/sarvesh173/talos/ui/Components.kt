@@ -194,7 +194,8 @@ fun MessageBubble(msg: Message) {
             val isAudio = content.contains(".mp3", ignoreCase = true) ||
                           content.contains(".ogg", ignoreCase = true) ||
                           content.contains(".wav", ignoreCase = true) ||
-                          content.startsWith("MEDIA:") && (content.endsWith(".ogg") || content.endsWith(".mp3"))
+                          content.contains(".opus", ignoreCase = true) ||
+                          content.startsWith("MEDIA:") && (content.endsWith(".ogg") || content.endsWith(".mp3") || content.endsWith(".opus"))
             val isVideo = content.contains(".mp4", ignoreCase = true) ||
                           content.contains(".webm", ignoreCase = true)
 

@@ -239,8 +239,8 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 sender_id = "agent",
                 sender_name = "Agent Voice",
                 sender_role = Role.agent,
-                content = "[Voice Note]",
-                audio_url = audioFile.absolutePath,
+                content = "MEDIA:${audioFile.absolutePath}",
+                attachments = listOf(audioFile.absolutePath),
                 created_at = System.currentTimeMillis() / 1000.0
             )
             val updated = _messages.value + msg

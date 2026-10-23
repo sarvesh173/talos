@@ -14,7 +14,7 @@
   "codex": {
     "label": "Codex",
     "accent": "#10A37F",
-    "svg": "assets/agent-icons/svg/openai.svg",
+    "svg": "assets/agent-icons/svg/codex.svg",
     "drawable": "res/drawable/ic_codex.xml"
   },
   "gemini": {
@@ -64,5 +64,23 @@
     "accent": "#38BDF8",
     "svg": "assets/agent-icons/core.svg",
     "drawable": "res/drawable/ic_core.xml"
+  },
+  "anthropic": {
+    "label": "Anthropic",
+    "accent": "#D97757",
+    "svg": "assets/agent-icons/svg/anthropic.svg",
+    "drawable": "res/drawable/ic_anthropic.xml"
+  },
+  "openai": {
+    "label": "OpenAI",
+    "accent": "#10A37F",
+    "svg": "assets/agent-icons/svg/openai.svg",
+    "drawable": "res/drawable/ic_openai.xml"
+  },
+  "opencode": {
+    "label": "OpenCode",
+    "accent": "#3B82F6",
+    "svg": "assets/agent-icons/svg/opencode.svg",
+    "drawable": "res/drawable/ic_opencode.xml"
   }
 }

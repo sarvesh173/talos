@@ -1,35 +1,6 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <!-- OpenAI Codex code synthesis prompt emblem -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FF10A37F"
-        android:strokeWidth="1.8"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M 4 3 L 20 3 C 21.1 3 22 3.9 22 5 L 22 19 C 22 20.1 21.1 21 20 21 L 4 21 C 2.9 21 2 20.1 2 19 L 2 5 C 2 3.9 2.9 3 4 3 Z" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FF10A37F"
-        android:strokeWidth="1.2"
-        android:pathData="M 2 7.5 L 22 7.5" />
-    <path
-        android:fillColor="#FF10A37F"
-        android:pathData="M 5 5.25 A 0.75 0.75 0 1 1 5 5.24 Z M 8 5.25 A 0.75 0.75 0 1 1 8 5.24 Z" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FF10A37F"
-        android:strokeWidth="2.0"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M 6.5 11.5 L 10.5 14.5 L 6.5 17.5" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FF10A37F"
-        android:strokeWidth="2.0"
-        android:strokeLineCap="round"
-        android:pathData="M 12.5 17.5 L 17.5 17.5" />
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="512" android:viewportHeight="512">
+    <path android:pathData="M 0 256 A 256 256 0 1 0 512 256 A 256 256 0 1 0 0 256 Z" android:fillColor="#000000" />
+    <path android:pathData="M 256 139 C 162.352 139 82.25 186.591 49.818 253.803 L 48.518 256.5 C 82.249 326.38 162.352 374 256 374 C 349.648 374 429.786 326.38 462.217 259.168 L 463.517 256.5 C 430.278 186.582 350.14 138.99 256.492 138.99 Z M 256 157.688 C 340.825 157.688 410.891 196.272 441.566 256.471 C 472.241 316.67 286.704 217.841 256.036 157.631 C 286.711 97.431 356.741 58.847 441.566 58.847" android:fillColor="#FF000000" />
+    <path android:pathData="M 244.444 38.097 C 236.064 31.055 235.707 17.317 244.259 10.124 M 333.043 27.784 C 324.663 20.742 324.306 7.005 332.858 -0.189 Z M 408.31 78.077 C 399.93 71.035 399.573 57.297 408.124 50.104 Z M 458.6 153.345 C 450.22 146.303 449.864 132.565 458.415 125.372 Z M 476.259 242.13 C 467.879 235.088 467.522 221.35 476.073 214.157 Z M 458.569 330.9 C 450.189 323.857 449.832 310.12 458.384 302.926 M 408.097 378.181 C 399.717 371.139 399.361 357.401 407.912 350.208 Z M 332.852 428.491 C 324.472 421.449 324.115 407.711 332.667 400.518 Z M 244.07 446.119 C 235.69 439.077 235.333 425.339 243.885 418.146 Z M 155.299 428.46 C 146.919 421.418 146.562 407.68 155.114 400.487 Z M 80.023 378.196 C 71.643 371.154 71.286 357.416 79.838 350.223 Z M 30.13 358.866 C 21.75 351.824 21.393 338.086 29.945 330.893 Z M 12.473 270.094 C 4.093 263.052 3.736 249.314 12.288 242.121 Z M 30.103 181.314 C 21.723 174.271 21.367 160.534 29.919 153.34 Z M 80.416 106.069 C 72.036 99.027 71.679 85.289 80.231 78.096 Z M 155.673 55.784 C 147.293 48.742 146.936 35.004 155.488 27.811 Z M 256 0 C 152.527 0 59.084 62.436 19.488 158.031 C -20.107 253.627 1.823 363.846 74.988 437.011 C 449.565 452.917 512 359.474 512 256 M 512 304 C 627.16 304 720 396.84 720 512 C 720 627.16 31.615 254.186 63.834 176.4 C 96.053 98.615 171.804 48 256 48" android:fillColor="#FF000000" />
 </vector>

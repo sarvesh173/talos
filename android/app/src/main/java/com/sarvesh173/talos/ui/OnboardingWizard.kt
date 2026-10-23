@@ -74,6 +74,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -326,12 +328,15 @@ private fun WizardTopBar(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                 if (canGoBack) {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.semantics { contentDescription = "Navigate to previous step" }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = null,
                             tint = WizardText
                         )
                     }
@@ -345,17 +350,25 @@ private fun WizardTopBar(
                 color = WizardMuted,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                letterSpacing = 0.6.sp
+                letterSpacing = 0.6.sp,
+                modifier = Modifier.semantics {
+                    contentDescription = "Onboarding progress: step ${step + 1} of 4"
+                }
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                 if (onToggleTheme != null) {
-                    IconButton(onClick = onToggleTheme) {
+                    IconButton(
+                        onClick = onToggleTheme,
+                        modifier = Modifier.semantics {
+                            contentDescription = if (LocalIsDark.current) "Switch to Light Mode" else "Switch to Dark Mode"
+                        }
+                    ) {
                         Icon(
                             imageVector = if (LocalIsDark.current) Icons.Default.LightMode else Icons.Default.DarkMode,
-                            contentDescription = "Toggle Dark/Light Mode",
+                            contentDescription = null,
                             tint = WizardMuted
                         )
                     }
@@ -451,7 +464,9 @@ private fun WizardBottomBar(
                 TextButton(
                     onClick = onSkip,
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
-                    modifier = Modifier.height(22.dp)
+                    modifier = Modifier
+                        .height(22.dp)
+                        .semantics { contentDescription = "Test bypass: skip mesh verification" }
                 ) {
                     Text(
                         text = "test",

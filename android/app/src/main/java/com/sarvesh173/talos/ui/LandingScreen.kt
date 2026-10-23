@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,19 +38,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 import kotlinx.coroutines.delay
-import kotlin.random.Random
 
 /**
- * TALOS Interactive Multi-Agent Synapse Landing Screen.
+ * High-Craft Multi-Agent Synapse Constellation Screen (Emil Kowalski / GSAP Quality Standards)
  *
- * Implements Sarvesh's orbital multi-agent architecture:
- * - Center: TALOS core hub with breathing resonance aura & dynamic audio equalizer capsule.
- * - 4 Corner Nodes: OpenClaw, Claude Code, Hermes Agent, Codex.
- * - Organic curved cubic bezier synapse beams with streaming energy pulses.
- * - Live agent-to-agent task delegation simulation: agents dynamically emit messages ("Hi",
- *   "Refactoring AST...", "Audit PR #28", "Running tests...") which travel through Talos
- *   to other agents as luminous data packets.
- * - Interactive: Tapping any agent initiates an instant task delegation burst.
+ * Visual Architecture:
+ * - Center: High-dimensional TALOS core with concentric orbital resonance rings and live audio equalizer capsule.
+ * - 4 Corner Nodes: OpenClaw, Claude Code, Hermes Agent, Codex in zero-gravity float.
+ * - Fiber-Optic Synapse Streams: Multi-layer luminous bezier ribbons with gradient comet-tail pulses.
+ * - Conversational Banter: Floating glass speech bubbles anchored in the interior quadrant canvas (zero screen clipping).
+ * - Tactile feedback: 0.97f press springs, custom easings, and authentic vector emblems from Dashboard Icons.
  */
 data class AgentNode(
     val key: String,
@@ -82,8 +78,8 @@ fun LandingScreen(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val buttonScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1.0f,
-        animationSpec = tween(durationMillis = 100, easing = FastOutSlowInEasing),
+        targetValue = if (isPressed) 0.97f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 800f),
         label = "ButtonScale"
     )
 
@@ -91,29 +87,29 @@ fun LandingScreen(
         onOpenWizard?.invoke() ?: onGetStarted()
     }
 
-    // Agent Nodes Setup (4 corner agents from Sarvesh's design)
+    // 4 Corner CLI Agents
     val nodes = remember {
         listOf(
             AgentNode("openclaw", "OpenClaw", "Tools & Automation", emblemByKey("openclaw"), Color(0xFFF97316)),
-            AgentNode("claude", "Claude Code", "Anthropic · Architecture", emblemByKey("claude"), Color(0xFFD97757)),
-            AgentNode("hermes", "Hermes Agent", "Nous Research · Autonomy", emblemByKey("hermes"), Color(0xFF22C55E)),
-            AgentNode("codex", "Codex", "OpenAI · Synthesis", emblemByKey("codex"), Color(0xFF10A37F))
+            AgentNode("claude", "Claude Code", "Anthropic · Arch", emblemByKey("claude"), Color(0xFFD97757)),
+            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", emblemByKey("hermes"), Color(0xFF22C55E)),
+            AgentNode("codex", "Codex", "OpenAI · Code", emblemByKey("codex"), Color(0xFF10A37F))
         )
     }
 
-    // Dynamic Delegation Scenarios pool
+    // Dynamic Multi-Agent Banter Scenarios
     val scenarios = remember {
         listOf(
             DelegationEvent("hermes", "codex", "Hi @codex, synthesize unit test suite", "Tests generated: 60/60 passing"),
             DelegationEvent("codex", "claude", "Hi @claude, review AST parser refactor", "System design verified: clean"),
             DelegationEvent("claude", "openclaw", "Hi @openclaw, verify browser endpoints", "Endpoints audited: 100% green"),
             DelegationEvent("openclaw", "hermes", "Hi @hermes, consensus quorum proposal", "Quorum approved (4/4 threshold)"),
-            DelegationEvent("hermes", "claude", "Hi! Syncing WireGuard peer mesh", "Mesh peer handshaked"),
+            DelegationEvent("hermes", "claude", "Hi! Syncing WireGuard peer mesh", "Mesh peer handshaked: 0.8ms"),
             DelegationEvent("codex", "hermes", "Hi @hermes, delegate code review", "Review complete: 0 warnings")
         )
     }
 
-    // Active delegation animation state
+    // Live Scenario State
     var currentScenarioIndex by remember { mutableStateOf(0) }
     var activeSender by remember { mutableStateOf("hermes") }
     var activeReceiver by remember { mutableStateOf("codex") }
@@ -121,7 +117,7 @@ fun LandingScreen(
     var receiverReply by remember { mutableStateOf<String?>(null) }
     var isReceiverSpeaking by remember { mutableStateOf(false) }
 
-    // Periodic simulation loop
+    // Banter simulation loop
     LaunchedEffect(Unit) {
         while (true) {
             val scenario = scenarios[currentScenarioIndex]
@@ -131,61 +127,95 @@ fun LandingScreen(
             receiverReply = null
             isReceiverSpeaking = false
 
-            // Wait for packet to travel from sender -> center -> receiver
-            delay(2200)
+            // Packet travels from sender to center (1.8s)
+            delay(1800)
 
-            // Receiver responds
+            // Receiver responds with reply
             isReceiverSpeaking = true
             receiverReply = scenario.replyText
 
             delay(2800)
-
             currentScenarioIndex = (currentScenarioIndex + 1) % scenarios.size
         }
     }
 
-    // Beam packet animation
+    // Continuous Animation Drivers
     val infiniteTransition = rememberInfiniteTransition(label = "synapse_engine")
+
+    // Traveling comet packet progress (0 to 1)
     val packetProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = LinearEasing),
+            animation = tween(1800, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "packet_pulse"
     )
 
-    // Center Core Aura breathing pulse
-    val auraPulse by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
+    // Orbital ring slow rotation
+    val orbitalRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            animation = tween(32000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
         ),
-        label = "aura_pulse"
+        label = "orbital_spin"
     )
 
-    // EQ bars oscillation
+    // Core breathing glow aura
+    val auraPulse by infiniteTransition.animateFloat(
+        initialValue = 0.96f,
+        targetValue = 1.04f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "core_aura_pulse"
+    )
+
+    // Independent Zero-Gravity Floating Oscillators for 4 Corner Cards
+    val floatTL by infiniteTransition.animateFloat(
+        initialValue = -5f, targetValue = 5f,
+        animationSpec = infiniteRepeatable(tween(3100, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "float_tl"
+    )
+    val floatTR by infiniteTransition.animateFloat(
+        initialValue = 4f, targetValue = -4f,
+        animationSpec = infiniteRepeatable(tween(2700, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "float_tr"
+    )
+    val floatBL by infiniteTransition.animateFloat(
+        initialValue = -4f, targetValue = 4f,
+        animationSpec = infiniteRepeatable(tween(3600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "float_bl"
+    )
+    val floatBR by infiniteTransition.animateFloat(
+        initialValue = 5f, targetValue = -5f,
+        animationSpec = infiniteRepeatable(tween(3300, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "float_br"
+    )
+
+    // EQ waveform animated bars
     val eq1 by infiniteTransition.animateFloat(
-        initialValue = 6f, targetValue = 20f,
-        animationSpec = infiniteRepeatable(tween(420, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        initialValue = 5f, targetValue = 18f,
+        animationSpec = infiniteRepeatable(tween(380, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq1"
     )
     val eq2 by infiniteTransition.animateFloat(
-        initialValue = 18f, targetValue = 8f,
-        animationSpec = infiniteRepeatable(tween(350, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        initialValue = 16f, targetValue = 6f,
+        animationSpec = infiniteRepeatable(tween(440, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq2"
     )
     val eq3 by infiniteTransition.animateFloat(
-        initialValue = 10f, targetValue = 24f,
-        animationSpec = infiniteRepeatable(tween(510, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        initialValue = 8f, targetValue = 22f,
+        animationSpec = infiniteRepeatable(tween(320, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq3"
     )
     val eq4 by infiniteTransition.animateFloat(
-        initialValue = 22f, targetValue = 12f,
-        animationSpec = infiniteRepeatable(tween(380, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        initialValue = 20f, targetValue = 9f,
+        animationSpec = infiniteRepeatable(tween(480, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq4"
     )
 
@@ -200,7 +230,7 @@ fun LandingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Brand wordmark + dynamic live badge
+                // Wordmark + Live Beacon
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -230,7 +260,7 @@ fun LandingScreen(
                 IconButton(
                     onClick = onToggleTheme,
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .background(talosSurface)
                         .border(1.dp, talosBorder, CircleShape)
@@ -253,10 +283,10 @@ fun LandingScreen(
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .background(talosBg)
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Tactile, premium action button
+                // Solid, high-contrast action CTA
                 Button(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
@@ -267,7 +297,7 @@ fun LandingScreen(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .height(50.dp)
                         .scale(buttonScale)
                         .semantics {
                             contentDescription = "Enter Chamber and begin multi-agent session"
@@ -277,7 +307,7 @@ fun LandingScreen(
                         text = "Enter Chamber",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        letterSpacing = 0.4.sp
+                        letterSpacing = 0.3.sp
                     )
                 }
 
@@ -300,146 +330,203 @@ fun LandingScreen(
             val widthPx = constraints.maxWidth.toFloat()
             val heightPx = constraints.maxHeight.toFloat()
 
-            // Calculate anchor positions for Center and 4 Corner Nodes
-            val centerOffset = Offset(widthPx * 0.50f, heightPx * 0.40f)
-            val tlOffset = Offset(widthPx * 0.22f, heightPx * 0.16f)
-            val trOffset = Offset(widthPx * 0.78f, heightPx * 0.16f)
-            val blOffset = Offset(widthPx * 0.22f, heightPx * 0.64f)
-            val brOffset = Offset(widthPx * 0.78f, heightPx * 0.64f)
+            // Synchronized Core Center and 4 Quadrant Anchors
+            val centerPos = Offset(widthPx * 0.50f, heightPx * 0.44f)
+            val tlPos = Offset(widthPx * 0.22f, heightPx * 0.16f)
+            val trPos = Offset(widthPx * 0.78f, heightPx * 0.16f)
+            val blPos = Offset(widthPx * 0.22f, heightPx * 0.72f)
+            val brPos = Offset(widthPx * 0.78f, heightPx * 0.72f)
 
-            val nodeMap = mapOf(
-                "openclaw" to tlOffset,
-                "claude" to trOffset,
-                "hermes" to blOffset,
-                "codex" to brOffset
+            val anchorMap = mapOf(
+                "openclaw" to tlPos,
+                "claude" to trPos,
+                "hermes" to blPos,
+                "codex" to brPos
             )
 
-            // Dynamic Synapse Canvas: Draws organic curved streams & flowing energy particles
+            // Canvas Layer: Ambient Glow, Orbital Rings, Fiber-Optic Beams, and Travelling Packets
             Canvas(modifier = Modifier.fillMaxSize()) {
-                // Radial center background glow
+                // 1. Deep Galactic Ambient Radial Glow
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF6366F1).copy(alpha = 0.15f),
+                            Color(0xFF6366F1).copy(alpha = 0.16f),
+                            Color(0xFF4F46E5).copy(alpha = 0.05f),
                             Color.Transparent
                         ),
-                        center = centerOffset,
-                        radius = size.width * 0.55f
+                        center = centerPos,
+                        radius = size.width * 0.65f
                     )
                 )
 
-                // Draw 4 organic curved bezier beams
-                for ((key, pos) in nodeMap) {
+                // 2. Concentric Orbital Resonance Rings
+                // Inner dashed orbital ring
+                drawCircle(
+                    color = Color(0xFF6366F1).copy(alpha = 0.22f),
+                    radius = 82.dp.toPx(),
+                    center = centerPos,
+                    style = Stroke(
+                        width = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 14f), orbitalRotation * 2f)
+                    )
+                )
+                // Outer subtle orbital ring
+                drawCircle(
+                    color = Color(0xFF334155).copy(alpha = 0.25f),
+                    radius = 120.dp.toPx(),
+                    center = centerPos,
+                    style = Stroke(width = 0.8.dp.toPx())
+                )
+
+                // 3. Smooth Fiber-Optic Bezier Synapse Beams
+                for ((key, nodePos) in anchorMap) {
                     val isBeamActive = (key == activeSender || key == activeReceiver)
-                    val beamColor = if (isBeamActive) {
-                        nodes.firstOrNull { it.key == key }?.accent?.copy(alpha = 0.55f) ?: Color(0xFF6366F1)
-                    } else {
-                        Color(0xFF334155).copy(alpha = 0.25f)
-                    }
+                    val nodeAccent = nodes.firstOrNull { it.key == key }?.accent ?: Color(0xFF6366F1)
 
-                    val path = Path().apply {
-                        moveTo(pos.x, pos.y)
-                        // Smooth cubic bezier with organic sway
-                        val ctrl1 = Offset(
-                            pos.x + (centerOffset.x - pos.x) * 0.5f,
-                            pos.y
-                        )
-                        val ctrl2 = Offset(
-                            centerOffset.x,
-                            pos.y + (centerOffset.y - pos.y) * 0.5f
-                        )
-                        cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, centerOffset.x, centerOffset.y)
-                    }
+                    // Calculate graceful inward control points per quadrant
+                    val isTop = nodePos.y < centerPos.y
+                    val isLeft = nodePos.x < centerPos.x
 
-                    // Base synapse beam
-                    drawPath(
-                        path = path,
-                        color = beamColor,
-                        style = Stroke(
-                            width = if (isBeamActive) 2.4.dp.toPx() else 1.2.dp.toPx(),
-                            pathEffect = if (isBeamActive) PathEffect.dashPathEffect(floatArrayOf(16f, 10f), packetProgress * 26f) else null
-                        )
+                    // Control point 1 sweeps horizontally from card
+                    val ctrl1 = Offset(
+                        nodePos.x + (if (isLeft) 65.dp.toPx() else -65.dp.toPx()),
+                        nodePos.y + (if (isTop) 30.dp.toPx() else -30.dp.toPx())
+                    )
+                    // Control point 2 enters smoothly toward center quadrant
+                    val ctrl2 = Offset(
+                        centerPos.x + (if (isLeft) -45.dp.toPx() else 45.dp.toPx()),
+                        centerPos.y + (if (isTop) -55.dp.toPx() else 55.dp.toPx())
                     )
 
-                    // Active luminous traveling data packet
+                    val beamPath = Path().apply {
+                        moveTo(nodePos.x, nodePos.y)
+                        cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, centerPos.x, centerPos.y)
+                    }
+
+                    // Ambient soft beam glow
+                    if (isBeamActive) {
+                        drawPath(
+                            path = beamPath,
+                            color = nodeAccent.copy(alpha = 0.18f),
+                            style = Stroke(width = 5.dp.toPx())
+                        )
+                    }
+
+                    // Core crisp stream line
+                    drawPath(
+                        path = beamPath,
+                        brush = Brush.linearGradient(
+                            colors = if (isBeamActive) {
+                                listOf(nodeAccent.copy(alpha = 0.75f), Color(0xFF818CF8).copy(alpha = 0.85f))
+                            } else {
+                                listOf(Color(0xFF334155).copy(alpha = 0.28f), Color(0xFF1E293B).copy(alpha = 0.20f))
+                            },
+                            start = nodePos,
+                            end = centerPos
+                        ),
+                        style = Stroke(width = if (isBeamActive) 1.8.dp.toPx() else 1.0.dp.toPx())
+                    )
+
+                    // 4. Luminous Traveling Comet-Tail Packet
                     if (key == activeSender) {
                         val t = packetProgress
                         val u = 1.0f - t
-                        val ctrl1 = Offset(pos.x + (centerOffset.x - pos.x) * 0.5f, pos.y)
-                        val ctrl2 = Offset(centerOffset.x, pos.y + (centerOffset.y - pos.y) * 0.5f)
 
-                        // Cubic Bezier interpolation: B(t) = (1-t)^3 P0 + 3(1-t)^2 t P1 + 3(1-t) t^2 P2 + t^3 P3
-                        val packetX = u * u * u * pos.x + 3 * u * u * t * ctrl1.x + 3 * u * t * t * ctrl2.x + t * t * t * centerOffset.x
-                        val packetY = u * u * u * pos.y + 3 * u * u * t * ctrl1.y + 3 * u * t * t * ctrl2.y + t * t * t * centerOffset.y
+                        // Position on cubic bezier
+                        val px = u * u * u * nodePos.x + 3 * u * u * t * ctrl1.x + 3 * u * t * t * ctrl2.x + t * t * t * centerPos.x
+                        val py = u * u * u * nodePos.y + 3 * u * u * t * ctrl1.y + 3 * u * t * t * ctrl2.y + t * t * t * centerPos.y
 
-                        // Outer halo
+                        // Soft comet glow halo
                         drawCircle(
-                            color = beamColor.copy(alpha = 0.35f),
-                            radius = 9.dp.toPx(),
-                            center = Offset(packetX, packetY)
+                            brush = Brush.radialGradient(
+                                colors = listOf(nodeAccent.copy(alpha = 0.8f), nodeAccent.copy(alpha = 0.2f), Color.Transparent),
+                                center = Offset(px, py),
+                                radius = 14.dp.toPx()
+                            ),
+                            radius = 14.dp.toPx(),
+                            center = Offset(px, py)
                         )
-                        // Inner bright core
+                        // Brilliant white energy nucleus
                         drawCircle(
                             color = Color.White,
                             radius = 3.5.dp.toPx(),
-                            center = Offset(packetX, packetY)
+                            center = Offset(px, py)
                         )
                     }
                 }
             }
 
             // ==============================================================
-            // 1. CENTER HUB: TALOS Core Engine & Waveform Capsule
+            // 1. CENTER TALOS CORE ENGINE & AUDIO EQUALIZER CAPSULE
             // ==============================================================
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (heightPx * 0.40f).dp / 2.75f)
+                    .align(Alignment.Center)
+                    .offset(y = (-30).dp)
                     .scale(auraPulse),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Pulsing Core Glyph Box
+                    // Central Frosted Core Hub
                     Surface(
-                        color = talosSurface,
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.5.dp, Color(0xFF6366F1).copy(alpha = 0.5f)),
+                        color = Color(0xFF131826),
+                        shape = RoundedCornerShape(22.dp),
+                        border = BorderStroke(1.5.dp, Color(0xFF6366F1).copy(alpha = 0.55f)),
                         modifier = Modifier
-                            .size(76.dp)
-                            .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = Color(0xFF6366F1))
+                            .size(80.dp)
+                            .shadow(18.dp, RoundedCornerShape(22.dp), spotColor = Color(0xFF6366F1))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = "TALOS",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 2.sp
-                            )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "TALOS",
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.8.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(5.dp)
+                                            .clip(CircleShape)
+                                            .background(StatusGreen)
+                                    )
+                                    Text(
+                                        text = "CORE",
+                                        color = Color(0xFF818CF8),
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 0.8.sp
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    // Audio Waveform Equalizer Capsule (From Sarvesh's sketch)
+                    // Audio Waveform Equalizer Capsule
                     Surface(
                         color = talosSurface,
                         shape = RoundedCornerShape(20.dp),
                         border = BorderStroke(1.dp, talosBorder),
-                        modifier = Modifier
-                            .height(26.dp)
-                            .padding(horizontal = 4.dp)
+                        modifier = Modifier.height(28.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Box(modifier = Modifier.width(3.dp).height(eq1.dp).clip(CircleShape).background(Color(0xFF818CF8)))
-                            Box(modifier = Modifier.width(3.dp).height(eq2.dp).clip(CircleShape).background(Color(0xFF818CF8)))
-                            Box(modifier = Modifier.width(3.dp).height(eq3.dp).clip(CircleShape).background(Color(0xFF34D399)))
-                            Box(modifier = Modifier.width(3.dp).height(eq4.dp).clip(CircleShape).background(Color(0xFF38BDF8)))
-                            Spacer(modifier = Modifier.width(2.dp))
+                            Box(modifier = Modifier.width(3.dp).height(eq2.dp).clip(CircleShape).background(Color(0xFF34D399)))
+                            Box(modifier = Modifier.width(3.dp).height(eq3.dp).clip(CircleShape).background(Color(0xFF38BDF8)))
+                            Box(modifier = Modifier.width(3.dp).height(eq4.dp).clip(CircleShape).background(Color(0xFFF472B6)))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Mesh Bus",
                                 color = talosTextMuted,
@@ -452,18 +539,20 @@ fun LandingScreen(
             }
 
             // ==============================================================
-            // 2. CORNER AGENT NODES + LIVE FLOATING TASK SPEECH CHIPS
+            // 2. CORNER AGENT NODES (ZERO-GRAVITY OSCILLATION & NON-CLIPPING BUBBLES)
             // ==============================================================
 
             // TOP-LEFT: OpenClaw
             AgentNodeWithBubble(
                 node = nodes[0],
+                floatOffset = floatTL,
                 isActiveSender = activeSender == "openclaw",
                 isActiveReceiver = activeReceiver == "openclaw" && isReceiverSpeaking,
-                bubbleText = if (activeSender == "openclaw") senderTask else receiverReply,
+                bubbleText = if (activeSender == "openclaw") senderTask else (if (activeReceiver == "openclaw" && isReceiverSpeaking) receiverReply else null),
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 16.dp, top = 20.dp),
+                    .padding(start = 18.dp, top = 22.dp),
+                bubblePlacement = BubblePlacement.BELOW,
                 onTap = {
                     activeSender = "openclaw"
                     activeReceiver = "hermes"
@@ -476,12 +565,14 @@ fun LandingScreen(
             // TOP-RIGHT: Claude Code
             AgentNodeWithBubble(
                 node = nodes[1],
+                floatOffset = floatTR,
                 isActiveSender = activeSender == "claude",
                 isActiveReceiver = activeReceiver == "claude" && isReceiverSpeaking,
-                bubbleText = if (activeSender == "claude") senderTask else receiverReply,
+                bubbleText = if (activeSender == "claude") senderTask else (if (activeReceiver == "claude" && isReceiverSpeaking) receiverReply else null),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = 20.dp),
+                    .padding(end = 18.dp, top = 22.dp),
+                bubblePlacement = BubblePlacement.BELOW,
                 alignRight = true,
                 onTap = {
                     activeSender = "claude"
@@ -495,12 +586,14 @@ fun LandingScreen(
             // BOTTOM-LEFT: Hermes Agent
             AgentNodeWithBubble(
                 node = nodes[2],
+                floatOffset = floatBL,
                 isActiveSender = activeSender == "hermes",
                 isActiveReceiver = activeReceiver == "hermes" && isReceiverSpeaking,
-                bubbleText = if (activeSender == "hermes") senderTask else receiverReply,
+                bubbleText = if (activeSender == "hermes") senderTask else (if (activeReceiver == "hermes" && isReceiverSpeaking) receiverReply else null),
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 16.dp, bottom = 24.dp),
+                    .padding(start = 18.dp, bottom = 28.dp),
+                bubblePlacement = BubblePlacement.ABOVE,
                 onTap = {
                     activeSender = "hermes"
                     activeReceiver = "claude"
@@ -513,12 +606,14 @@ fun LandingScreen(
             // BOTTOM-RIGHT: Codex
             AgentNodeWithBubble(
                 node = nodes[3],
+                floatOffset = floatBR,
                 isActiveSender = activeSender == "codex",
                 isActiveReceiver = activeReceiver == "codex" && isReceiverSpeaking,
-                bubbleText = if (activeSender == "codex") senderTask else receiverReply,
+                bubbleText = if (activeSender == "codex") senderTask else (if (activeReceiver == "codex" && isReceiverSpeaking) receiverReply else null),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 24.dp),
+                    .padding(end = 18.dp, bottom = 28.dp),
+                bubblePlacement = BubblePlacement.ABOVE,
                 alignRight = true,
                 onTap = {
                     activeSender = "codex"
@@ -532,71 +627,58 @@ fun LandingScreen(
     }
 }
 
+enum class BubblePlacement {
+    ABOVE,
+    BELOW
+}
+
 /**
- * Corner Agent Node Squircle with Live Floating Speech Bubble.
+ * Tactile Corner Agent Squircle with In-Quadrant Conversational Speech Bubble.
  */
 @Composable
 private fun AgentNodeWithBubble(
     node: AgentNode,
+    floatOffset: Float,
     isActiveSender: Boolean,
     isActiveReceiver: Boolean,
     bubbleText: String?,
     modifier: Modifier = Modifier,
+    bubblePlacement: BubblePlacement = BubblePlacement.BELOW,
     alignRight: Boolean = false,
     onTap: () -> Unit
 ) {
     val isEngaged = isActiveSender || isActiveReceiver
 
-    val glowScale by animateFloatAsState(
-        targetValue = if (isEngaged) 1.08f else 1.0f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f),
-        label = "node_glow_scale"
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val cardScale by animateFloatAsState(
+        targetValue = when {
+            isPressed -> 0.95f
+            isEngaged -> 1.05f
+            else -> 1.0f
+        },
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 600f),
+        label = "node_card_scale"
     )
 
     Column(
-        modifier = modifier.scale(glowScale),
+        modifier = modifier
+            .offset(y = floatOffset.dp)
+            .scale(cardScale),
         horizontalAlignment = if (alignRight) Alignment.End else Alignment.Start
     ) {
-        // Floating animated speech bubble / task capsule
-        AnimatedVisibility(
-            visible = !bubbleText.isNullOrBlank() && isEngaged,
-            enter = fadeIn(tween(180)) + slideInVertically(tween(240)) { -20 },
-            exit = fadeOut(tween(150)) + slideOutVertically(tween(200)) { -15 }
-        ) {
-            Surface(
-                color = talosSurface,
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, node.accent.copy(alpha = 0.6f)),
-                modifier = Modifier
-                    .padding(bottom = 6.dp)
-                    .widthIn(max = 160.dp)
-                    .shadow(8.dp, RoundedCornerShape(12.dp), spotColor = node.accent)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(node.accent)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = bubbleText ?: "",
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = 14.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
+        // Speech Bubble Placed ABOVE the card (for bottom agents)
+        if (bubblePlacement == BubblePlacement.ABOVE) {
+            ConversationBubble(
+                bubbleText = bubbleText,
+                node = node,
+                alignRight = alignRight
+            )
+            Spacer(modifier = Modifier.height(6.dp))
         }
 
-        // Agent Squircle Card (Clickable to trigger manual delegation)
+        // Tactile Agent Squircle Card
         Surface(
             color = talosSurface,
             shape = RoundedCornerShape(16.dp),
@@ -605,11 +687,14 @@ private fun AgentNodeWithBubble(
                 color = if (isEngaged) node.accent else talosBorder
             ),
             modifier = Modifier
-                .size(width = 110.dp, height = 94.dp)
+                .size(width = 112.dp, height = 96.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .clickable { onTap() }
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onTap() }
                 .shadow(
-                    elevation = if (isEngaged) 14.dp else 0.dp,
+                    elevation = if (isEngaged) 16.dp else 0.dp,
                     shape = RoundedCornerShape(16.dp),
                     spotColor = node.accent
                 )
@@ -649,6 +734,60 @@ private fun AgentNodeWithBubble(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+        }
+
+        // Speech Bubble Placed BELOW the card (for top agents - zero screen edge clipping)
+        if (bubblePlacement == BubblePlacement.BELOW) {
+            Spacer(modifier = Modifier.height(6.dp))
+            ConversationBubble(
+                bubbleText = bubbleText,
+                node = node,
+                alignRight = alignRight
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConversationBubble(
+    bubbleText: String?,
+    node: AgentNode,
+    alignRight: Boolean
+) {
+    AnimatedVisibility(
+        visible = !bubbleText.isNullOrBlank(),
+        enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { 15 },
+        exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { -10 }
+    ) {
+        Surface(
+            color = Color(0xFF161E2E),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, node.accent.copy(alpha = 0.55f)),
+            modifier = Modifier
+                .widthIn(max = 165.dp)
+                .shadow(10.dp, RoundedCornerShape(12.dp), spotColor = node.accent)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(node.accent)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = bubbleText ?: "",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

@@ -9,10 +9,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-// Dark & OLED Palette
-val BgDark = Color(0xFF090D14)
-val SurfaceDark = Color(0xFF131926)
-val SurfaceBorderDark = Color(0xFF222B3D)
+// Dark & True OLED Black Palette
+val BgDark = Color(0xFF000000)
+val SurfaceDark = Color(0xFF0C1017)
+val SurfaceBorderDark = Color(0xFF1E2430)
 val PrimaryAccent = Color(0xFF6366F1)
 val StatusGreen = Color(0xFF10B981)
 val TextPrimaryDark = Color(0xFFF1F5F9)

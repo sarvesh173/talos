@@ -20,6 +20,7 @@ from core.brand import BRAND
 from core.models import (
     AgentProfile,
     BusEvent,
+    ConsensusProposal,
     EventType,
     Message,
     ProviderHealth,
@@ -32,6 +33,7 @@ from core.models import (
     TokenSummary,
 )
 from core.room_bus import bus
+from core.consensus import deliberate_proposal, list_room_proposals
 from server.agent_orchestrator import orchestrator
 from server.auth import (
     create_new_token,
@@ -354,6 +356,56 @@ async def set_room_agents_endpoint(
     if room is None:
         raise HTTPException(status_code=404, detail="Room not found")
     return room
+
+
+class ProposeConsensusRequest(BaseModel):
+    question: str
+
+
+@app.post("/api/rooms/{room_id}/consensus/propose", response_model=ConsensusProposal)
+async def propose_room_consensus(
+    room_id: str,
+    req: ProposeConsensusRequest,
+    token: str = Depends(require_auth),
+):
+    """Initiate a democratic multi-agent consensus voting round in a room."""
+    room = get_room(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    participants = room.participants or list_agents()
+    proposal = await deliberate_proposal(room_id, req.question, participants)
+
+    votes_summary = "\n".join(
+        [f"• **{v.agent_name}**: {v.vote.value.upper()} — *{v.rationale}*" for v in proposal.votes]
+    )
+    verdict_text = (
+        f"Consensus Deliberation: '{req.question}'\n\n"
+        f"Outcome: {proposal.outcome.upper()} (Approval: {int(proposal.consensus_ratio * 100)}%)\n\n"
+        f"{votes_summary}"
+    )
+
+    deliberation_msg = Message(
+        room_id=room_id,
+        sender_id="consensus-engine",
+        sender_name="Consensus Engine",
+        sender_role=Role.agent,
+        content=verdict_text,
+        thought=f"Quorum reached across {len(proposal.votes)} agent participants.",
+        created_at=time.time(),
+    )
+    save_message(deliberation_msg)
+    await bus.dispatch_message(deliberation_msg)
+    return proposal
+
+
+@app.get("/api/rooms/{room_id}/consensus", response_model=List[ConsensusProposal])
+async def get_room_consensus_history(
+    room_id: str,
+    token: str = Depends(require_auth),
+):
+    """Retrieve recorded consensus proposals for a room."""
+    return list_room_proposals(room_id)
 
 
 @app.get("/api/agents")

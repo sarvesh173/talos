@@ -308,6 +308,21 @@ fun MainScreen(
                         ),
                         title = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                val roomEmblem = activeRoom?.let { room ->
+                                    when {
+                                        room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
+                                        room.id == "the-council" -> emblemByKey("omnirush")
+                                        else -> emblemBySender(room.name)
+                                    }
+                                }
+                                if (roomEmblem != null) {
+                                    AgentEmblemIcon(
+                                        emblem = roomEmblem,
+                                        size = 20.dp,
+                                        tint = null
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
                                 Text(
                                     text = roomTitle,
                                     fontSize = 17.sp,

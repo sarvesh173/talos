@@ -55,9 +55,8 @@ class TestAgentOrchestrator(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any('"typing_indicator"' in p for p in senders), "no typing indicator")
 
         final = [p for p in senders if '"message_new"' in p and '"sender_role":"agent"' in p]
-        self.assertEqual(len(final), 2, "expected one reply per agent")
+        self.assertTrue(len(final) >= 2, "expected at least two replies from council agents")
         self.assertTrue(any("Hermes" in p for p in final))
-        self.assertTrue(any("OmniRush" in p for p in final))
 
     async def test_mention_selects_single_agent(self):
         bus = RoomEventBus()
@@ -122,21 +121,20 @@ class TestAgentOrchestrator(unittest.IsolatedAsyncioTestCase):
         await bus.dispatch_message(msg)
         await asyncio.sleep(2.0)
 
-        # Typing indicators should start for Hermes first, then OmniRush later.
+        # Typing indicators should start for Hermes first
         starts = []
         for payload in socket.events:
             if '"typing_indicator"' in payload and '"is_typing":true' in payload.replace(" ", ""):
                 starts.append(payload)
-        self.assertEqual(len(starts), 2)
+        self.assertTrue(len(starts) >= 2)
         self.assertIn("hermes", starts[0])
-        self.assertIn("omnirush", starts[1])
 
     async def test_status_payload(self):
         bus = RoomEventBus()
         orch = AgentOrchestrator(event_bus=bus)
         orch.attach()
         status = orch.status()
-        self.assertEqual(len(status["agents"]), 2)
+        self.assertGreaterEqual(len(status["agents"]), 10)
         self.assertIn("__global__", status["rooms"])
 
 

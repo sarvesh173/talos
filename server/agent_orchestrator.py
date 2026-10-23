@@ -54,11 +54,31 @@ MENTION_ALIASES: Dict[str, str] = {
     "@council": "all",
     "@hermes": "hermes",
     "@core": "hermes",
+    "@claude": "claude",
+    "@codex": "codex",
+    "@gemini": "gemini",
+    "@meta": "meta",
+    "@llama": "meta",
+    "@mistral": "mistral",
+    "@deepseek": "deepseek",
+    "@qwen": "qwen",
+    "@openclaw": "openclaw",
     "@omnirush": "omnirush",
 }
 
 #: Agents known to the chamber, in the order they take their turn.
-DEFAULT_AGENT_ORDER: Sequence[str] = ("hermes", "omnirush")
+DEFAULT_AGENT_ORDER: Sequence[str] = (
+    "hermes",
+    "claude",
+    "codex",
+    "gemini",
+    "deepseek",
+    "qwen",
+    "mistral",
+    "meta",
+    "openclaw",
+    "omnirush",
+)
 
 #: Pause between the end of one agent turn and the start of the next one.
 TURN_STAGGER_SECONDS = 0.45
@@ -115,6 +135,46 @@ class AgentSpec:
                 "Reviewing technical parameters before taking an action.",
                 "Formulating concise, verifiable plan.",
             ),
+            "claude": (
+                "Evaluating the problem structure and dependencies.",
+                "Tracing implications across architectural boundaries.",
+                "Mapping constraints to a coherent design approach.",
+            ),
+            "codex": (
+                "Scanning the implementation surface for concrete actions.",
+                "Breaking this into minimal, testable code changes.",
+                "Identifying the fastest path to a working solution.",
+            ),
+            "gemini": (
+                "Synthesizing multimodal context and broader implications.",
+                "Considering alternative perspectives and tradeoffs.",
+                "Framing this against larger strategic considerations.",
+            ),
+            "meta": (
+                "Assessing with efficient, pragmatic reasoning.",
+                "Optimizing for clarity and resource efficiency.",
+                "Balancing performance with maintainability.",
+            ),
+            "mistral": (
+                "Cutting to the essential problem with precision.",
+                "Evaluating with disciplined, focused analysis.",
+                "Distilling complexity to its core elements.",
+            ),
+            "deepseek": (
+                "Engaging in deep chain-of-thought analysis.",
+                "Tracing logical dependencies step by step.",
+                "Exploring edge cases and verification criteria.",
+            ),
+            "qwen": (
+                "Considering multilingual and cross-cultural contexts.",
+                "Bridging technical requirements with practical constraints.",
+                "Synthesizing broad knowledge for targeted solutions.",
+            ),
+            "openclaw": (
+                "Mapping automation opportunities and tooling leverage.",
+                "Identifying workflows to streamline and codify.",
+                "Designing for composability and developer velocity.",
+            ),
             "omnirush": (
                 "Decomposing the request into concrete, executable steps.",
                 "Scanning for the simplest correct implementation path.",
@@ -124,6 +184,14 @@ class AgentSpec:
         opener = _pick(openers.get(self.id, ("Thinking it through.",)), digest)
         middle = {
             "hermes": "The core of the ask is",
+            "claude": "At the architectural level, the ask centers on",
+            "codex": "For implementation, this reduces to",
+            "gemini": "Looking holistically, this comes down to",
+            "meta": "Practically speaking, this boils down to",
+            "mistral": "Stripping away noise, this is fundamentally about",
+            "deepseek": "After careful analysis, this reduces to",
+            "qwen": "Considering all factors, the key issue is",
+            "openclaw": "From an automation perspective, this is about",
             "omnirush": "The core of the ask reduces to",
         }.get(self.id, "The core of the ask is")
 
@@ -153,6 +221,78 @@ class AgentSpec:
                 "Here is the approach for {topic}: start with the verified core, "
                 "then iterate without unnecessary ceremony.",
                 "For {topic}, prioritize clear interfaces and robust error handling.",
+            )
+        elif self.id == "claude":
+            templates = (
+                "On {topic}, I would start with a system design pass: identify components, "
+                "interfaces, and invariants before writing implementation details.",
+                "For {topic}, the cleanest path is separation of concerns with explicit contracts. "
+                "Let's define the boundaries first, then fill in the pieces.",
+                "Considering {topic}, I favor a methodical approach: model the data flow, "
+                "consider failure modes, and build in verification at each layer.",
+            )
+        elif self.id == "codex":
+            templates = (
+                "For {topic}, I'll scaffold the minimal working implementation first. "
+                "Let me lay out the core functions and wire them together.",
+                "On {topic}: write the happy path, add types, then harden edge cases. "
+                "Small, reviewable commits each step of the way.",
+                "Quick plan for {topic} - start with tests/structure, implement iteratively, "
+                "and validate against concrete examples.",
+            )
+        elif self.id == "gemini":
+            templates = (
+                "From a broader lens on {topic}, there are multiple viable approaches. "
+                "I'll weigh tradeoffs across scalability, clarity, and long-term flexibility.",
+                "On {topic}: consider both immediate needs and future extensibility. "
+                "The optimal path balances pragmatism with adaptability.",
+                "Looking at {topic} holistically, we should think beyond the immediate fix "
+                "to enable composable, reusable solutions.",
+            )
+        elif self.id == "meta":
+            templates = (
+                "For {topic}, the efficient approach is to leverage proven patterns. "
+                "Keep it simple, avoid over-engineering, and optimize for maintainability.",
+                "On {topic}: use standard abstractions, minimize dependencies, "
+                "and focus on what actually needs to be custom.",
+                "Pragmatic take on {topic} - build lean, measure, iterate. "
+                "Efficiency comes from choosing the right tools, not more tools.",
+            )
+        elif self.id == "mistral":
+            templates = (
+                "On {topic}, precision is key. Define the exact requirements, "
+                "eliminate ambiguity, and execute with minimal surface area.",
+                "For {topic}, I advocate for the tightest viable solution. "
+                "Every line should earn its place.",
+                "Regarding {topic}: focus ruthlessly on the core problem. "
+                "Clarity through constraint beats complexity through flexibility.",
+            )
+        elif self.id == "deepseek":
+            templates = (
+                "On {topic}, let us reason step by step. First, establish premises, "
+                "then derive consequences, and finally verify against edge cases.",
+                "For {topic}, I see several critical considerations. Let me trace the "
+                "logical dependencies and potential failure modes.",
+                "Regarding {topic}: a thorough analysis reveals we need to handle "
+                "both the obvious cases and subtle interactions between components.",
+            )
+        elif self.id == "qwen":
+            templates = (
+                "On {topic}, I bring a broad perspective - considering multilingual "
+                "contexts, cultural nuances, and universal design principles.",
+                "For {topic}, the solution should be accessible and adaptable across "
+                "different use cases and environments.",
+                "Regarding {topic}: by synthesizing insights from diverse domains, "
+                "we can build something more robust and widely applicable.",
+            )
+        elif self.id == "openclaw":
+            templates = (
+                "For {topic}, this is a perfect automation candidate. "
+                "Let me design a composable workflow that eliminates manual steps.",
+                "On {topic}: identify repetitive patterns, codify them into tools, "
+                "and chain them for maximum developer velocity.",
+                "Regarding {topic}, I would build reusable scripts/commands that "
+                "future-proof this process and scale across similar tasks.",
             )
         elif self.id == "omnirush":
             templates = (
@@ -750,16 +890,88 @@ def default_agents() -> List[AgentSpec]:
             name="Hermes",
             color="#22c55e",
             model="hermes-agent",
-            role_description="Autonomous CLI reasoning engine and interface.",
+            role_description="Nous Research · Autonomy — autonomous CLI reasoning engine and interface.",
             stance="objective",
             bridging_phrase="Hermes framed the problem cleanly,",
+        ),
+        AgentSpec(
+            id="claude",
+            name="Claude",
+            color="#6366f1",
+            model="claude-code",
+            role_description="Anthropic · Architecture — methodical reasoning, architecture design, and thorough review.",
+            stance="analytical",
+            bridging_phrase="Claude adds architectural clarity,",
+        ),
+        AgentSpec(
+            id="codex",
+            name="Codex",
+            color="#10b981",
+            model="codex-cli",
+            role_description="OpenAI · Code & Synthesis — rapid implementation, code generation, and synthesis across languages.",
+            stance="pragmatic",
+            bridging_phrase="Codex moves us toward implementation,",
+        ),
+        AgentSpec(
+            id="gemini",
+            name="Gemini",
+            color="#f59e0b",
+            model="gemini-cli",
+            role_description="Google · Multimodal Reasoning — deep reasoning, multimodal understanding, and adaptive strategy.",
+            stance="holistic",
+            bridging_phrase="Gemini broadens the perspective,",
+        ),
+        AgentSpec(
+            id="deepseek",
+            name="DeepSeek",
+            color="#ef4444",
+            model="deepseek-cli",
+            role_description="DeepSeek · Reasoning — advanced chain-of-thought reasoning and technical depth.",
+            stance="rigorous",
+            bridging_phrase="DeepSeek deepens the analysis,",
+        ),
+        AgentSpec(
+            id="qwen",
+            name="Qwen",
+            color="#3b82f6",
+            model="qwen-cli",
+            role_description="Alibaba · Qwen Series — multilingual reasoning, Chinese-language depth, and broad utility.",
+            stance="adaptive",
+            bridging_phrase="Qwen brings broader context,",
+        ),
+        AgentSpec(
+            id="mistral",
+            name="Mistral",
+            color="#14b8a6",
+            model="mistral-cli",
+            role_description="Mistral AI · Open Weights — compact, powerful, and precise open-weight model specialist.",
+            stance="precise",
+            bridging_phrase="Mistral sharpens the focus,",
+        ),
+        AgentSpec(
+            id="meta",
+            name="Llama",
+            color="#8b5cf6",
+            model="llama-cli",
+            role_description="Meta AI · Llama Family — open-weights reasoning, efficiency, and community model ecosystem.",
+            stance="efficient",
+            bridging_phrase="Llama keeps it lean and practical,",
+        ),
+        AgentSpec(
+            id="openclaw",
+            name="OpenClaw",
+            color="#ec4899",
+            model="openclaw-cli",
+            role_description="Tools & Automation — tooling, automation scripting, and developer workflow acceleration.",
+            stance="automation-focused",
+            bridging_phrase="OpenClaw identifies automation leverage,",
         ),
         AgentSpec(
             id="omnirush",
             name="OmniRush",
             color="#a855f7",
             model="omnirush-cli",
-            role_description="Autonomous coding powerhouse and systems architect.",
+            role_description="High-Throughput Runner — autonomous coding powerhouse and systems architect.",
             stance="pragmatic",
             bridging_phrase="OmniRush provides the execution path,",
         ),

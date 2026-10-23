@@ -1,34 +1,34 @@
 package com.sarvesh173.talos.ui
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -38,16 +38,36 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 /**
- * TALOS Landing Screen (Clean, Authentic, Anti-Slop Interface)
+ * TALOS Interactive Multi-Agent Synapse Landing Screen.
  *
- * Designed with calm simplicity:
- * - Pure, deep dark surfaces without fake techno-jargon or neon glows.
- * - Hero CLI agent cards with crisp, authentic, high-contrast SVG vector emblems.
- * - Actionable Chamber selectors.
- * - Tactile, solid typography and controls.
+ * Implements Sarvesh's orbital multi-agent architecture:
+ * - Center: TALOS core hub with breathing resonance aura & dynamic audio equalizer capsule.
+ * - 4 Corner Nodes: OpenClaw, Claude Code, Hermes Agent, Codex.
+ * - Organic curved cubic bezier synapse beams with streaming energy pulses.
+ * - Live agent-to-agent task delegation simulation: agents dynamically emit messages ("Hi",
+ *   "Refactoring AST...", "Audit PR #28", "Running tests...") which travel through Talos
+ *   to other agents as luminous data packets.
+ * - Interactive: Tapping any agent initiates an instant task delegation burst.
  */
+data class AgentNode(
+    val key: String,
+    val name: String,
+    val role: String,
+    val emblem: AgentEmblem,
+    val accent: Color
+)
+
+data class DelegationEvent(
+    val fromKey: String,
+    val toKey: String,
+    val taskText: String,
+    val replyText: String
+)
+
 @Composable
 fun LandingScreen(
     client: TalosClient,
@@ -57,7 +77,6 @@ fun LandingScreen(
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null
 ) {
-    val scrollState = rememberScrollState()
     val isCurrentDark = LocalIsDark.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -72,6 +91,104 @@ fun LandingScreen(
         onOpenWizard?.invoke() ?: onGetStarted()
     }
 
+    // Agent Nodes Setup (4 corner agents from Sarvesh's design)
+    val nodes = remember {
+        listOf(
+            AgentNode("openclaw", "OpenClaw", "Tools & Automation", emblemByKey("openclaw"), Color(0xFFF97316)),
+            AgentNode("claude", "Claude Code", "Anthropic · Architecture", emblemByKey("claude"), Color(0xFFD97757)),
+            AgentNode("hermes", "Hermes Agent", "Nous Research · Autonomy", emblemByKey("hermes"), Color(0xFF22C55E)),
+            AgentNode("codex", "Codex", "OpenAI · Synthesis", emblemByKey("codex"), Color(0xFF10A37F))
+        )
+    }
+
+    // Dynamic Delegation Scenarios pool
+    val scenarios = remember {
+        listOf(
+            DelegationEvent("hermes", "codex", "Hi @codex, synthesize unit test suite", "Tests generated: 60/60 passing"),
+            DelegationEvent("codex", "claude", "Hi @claude, review AST parser refactor", "System design verified: clean"),
+            DelegationEvent("claude", "openclaw", "Hi @openclaw, verify browser endpoints", "Endpoints audited: 100% green"),
+            DelegationEvent("openclaw", "hermes", "Hi @hermes, consensus quorum proposal", "Quorum approved (4/4 threshold)"),
+            DelegationEvent("hermes", "claude", "Hi! Syncing WireGuard peer mesh", "Mesh peer handshaked"),
+            DelegationEvent("codex", "hermes", "Hi @hermes, delegate code review", "Review complete: 0 warnings")
+        )
+    }
+
+    // Active delegation animation state
+    var currentScenarioIndex by remember { mutableStateOf(0) }
+    var activeSender by remember { mutableStateOf("hermes") }
+    var activeReceiver by remember { mutableStateOf("codex") }
+    var senderTask by remember { mutableStateOf("Hi @codex, synthesize test suite") }
+    var receiverReply by remember { mutableStateOf<String?>(null) }
+    var isReceiverSpeaking by remember { mutableStateOf(false) }
+
+    // Periodic simulation loop
+    LaunchedEffect(Unit) {
+        while (true) {
+            val scenario = scenarios[currentScenarioIndex]
+            activeSender = scenario.fromKey
+            activeReceiver = scenario.toKey
+            senderTask = scenario.taskText
+            receiverReply = null
+            isReceiverSpeaking = false
+
+            // Wait for packet to travel from sender -> center -> receiver
+            delay(2200)
+
+            // Receiver responds
+            isReceiverSpeaking = true
+            receiverReply = scenario.replyText
+
+            delay(2800)
+
+            currentScenarioIndex = (currentScenarioIndex + 1) % scenarios.size
+        }
+    }
+
+    // Beam packet animation
+    val infiniteTransition = rememberInfiniteTransition(label = "synapse_engine")
+    val packetProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "packet_pulse"
+    )
+
+    // Center Core Aura breathing pulse
+    val auraPulse by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "aura_pulse"
+    )
+
+    // EQ bars oscillation
+    val eq1 by infiniteTransition.animateFloat(
+        initialValue = 6f, targetValue = 20f,
+        animationSpec = infiniteRepeatable(tween(420, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "eq1"
+    )
+    val eq2 by infiniteTransition.animateFloat(
+        initialValue = 18f, targetValue = 8f,
+        animationSpec = infiniteRepeatable(tween(350, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "eq2"
+    )
+    val eq3 by infiniteTransition.animateFloat(
+        initialValue = 10f, targetValue = 24f,
+        animationSpec = infiniteRepeatable(tween(510, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "eq3"
+    )
+    val eq4 by infiniteTransition.animateFloat(
+        initialValue = 22f, targetValue = 12f,
+        animationSpec = infiniteRepeatable(tween(380, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "eq4"
+    )
+
     Scaffold(
         containerColor = talosBg,
         topBar = {
@@ -79,11 +196,11 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Wordmark + Clean Status
+                // Brand wordmark + dynamic live badge
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -93,7 +210,7 @@ fun LandingScreen(
                         color = talosTextPrimary,
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.2.sp
                     )
                     Box(
                         modifier = Modifier
@@ -102,7 +219,7 @@ fun LandingScreen(
                             .background(StatusGreen)
                     )
                     Text(
-                        text = "Online",
+                        text = "Mesh Online",
                         color = talosTextMuted,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -139,7 +256,7 @@ fun LandingScreen(
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Solid, dignified Action Button (No radioactive neon cyan)
+                // Tactile, premium action button
                 Button(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
@@ -150,7 +267,7 @@ fun LandingScreen(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(52.dp)
                         .scale(buttonScale)
                         .semantics {
                             contentDescription = "Enter Chamber and begin multi-agent session"
@@ -160,14 +277,14 @@ fun LandingScreen(
                         text = "Enter Chamber",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        letterSpacing = 0.3.sp
+                        letterSpacing = 0.4.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Local mesh ready · Zero cloud telemetry",
+                    text = "Tap any agent to trigger instant task delegation",
                     color = talosTextMuted,
                     fontSize = 11.sp,
                     textAlign = TextAlign.Center
@@ -175,268 +292,363 @@ fun LandingScreen(
             }
         }
     ) { paddingValues ->
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.Start
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            val widthPx = constraints.maxWidth.toFloat()
+            val heightPx = constraints.maxHeight.toFloat()
 
-            // Main Header
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Text(
-                    text = "Autonomous Workspace",
-                    color = talosTextPrimary,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.3).sp,
-                    modifier = Modifier.semantics { heading() }
+            // Calculate anchor positions for Center and 4 Corner Nodes
+            val centerOffset = Offset(widthPx * 0.50f, heightPx * 0.40f)
+            val tlOffset = Offset(widthPx * 0.22f, heightPx * 0.16f)
+            val trOffset = Offset(widthPx * 0.78f, heightPx * 0.16f)
+            val blOffset = Offset(widthPx * 0.22f, heightPx * 0.64f)
+            val brOffset = Offset(widthPx * 0.78f, heightPx * 0.64f)
+
+            val nodeMap = mapOf(
+                "openclaw" to tlOffset,
+                "claude" to trOffset,
+                "hermes" to blOffset,
+                "codex" to brOffset
+            )
+
+            // Dynamic Synapse Canvas: Draws organic curved streams & flowing energy particles
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                // Radial center background glow
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF6366F1).copy(alpha = 0.15f),
+                            Color.Transparent
+                        ),
+                        center = centerOffset,
+                        radius = size.width * 0.55f
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = "Private multi-agent mesh for your CLI agents to deliberate, reason, and build together.",
-                    color = talosTextMuted,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Section 1: Active Chambers (Real actionable workspaces)
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Text(
-                    text = "Chambers",
-                    color = talosTextPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.3.sp
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // The Council Chamber Card
-                Surface(
-                    color = talosSurface,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, talosBorder),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { handlePrimaryAction() }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF6366F1).copy(alpha = 0.14f))
-                                .border(1.dp, Color(0xFF6366F1).copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Groups,
-                                contentDescription = null,
-                                tint = Color(0xFF818CF8),
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(14.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "The Council",
-                                color = talosTextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Multi-agent consensus with Hermes, OmniRush, Claude & Codex",
-                                color = talosTextMuted,
-                                fontSize = 12.sp,
-                                lineHeight = 16.sp
-                            )
-                        }
-
-                        Icon(
-                            imageVector = Icons.Default.ArrowForward,
-                            contentDescription = null,
-                            tint = talosTextMuted,
-                            modifier = Modifier.size(16.dp)
-                        )
+                // Draw 4 organic curved bezier beams
+                for ((key, pos) in nodeMap) {
+                    val isBeamActive = (key == activeSender || key == activeReceiver)
+                    val beamColor = if (isBeamActive) {
+                        nodes.firstOrNull { it.key == key }?.accent?.copy(alpha = 0.55f) ?: Color(0xFF6366F1)
+                    } else {
+                        Color(0xFF334155).copy(alpha = 0.25f)
                     }
-                }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    val path = Path().apply {
+                        moveTo(pos.x, pos.y)
+                        // Smooth cubic bezier with organic sway
+                        val ctrl1 = Offset(
+                            pos.x + (centerOffset.x - pos.x) * 0.5f,
+                            pos.y
+                        )
+                        val ctrl2 = Offset(
+                            centerOffset.x,
+                            pos.y + (centerOffset.y - pos.y) * 0.5f
+                        )
+                        cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, centerOffset.x, centerOffset.y)
+                    }
 
-                // Direct Link Chamber Card
-                Surface(
-                    color = talosSurface,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, talosBorder),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { handlePrimaryAction() }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF10B981).copy(alpha = 0.14f))
-                                .border(1.dp, Color(0xFF10B981).copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.QuestionAnswer,
-                                contentDescription = null,
-                                tint = Color(0xFF34D399),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                    // Base synapse beam
+                    drawPath(
+                        path = path,
+                        color = beamColor,
+                        style = Stroke(
+                            width = if (isBeamActive) 2.4.dp.toPx() else 1.2.dp.toPx(),
+                            pathEffect = if (isBeamActive) PathEffect.dashPathEffect(floatArrayOf(16f, 10f), packetProgress * 26f) else null
+                        )
+                    )
 
-                        Spacer(modifier = Modifier.width(14.dp))
+                    // Active luminous traveling data packet
+                    if (key == activeSender) {
+                        val t = packetProgress
+                        val u = 1.0f - t
+                        val ctrl1 = Offset(pos.x + (centerOffset.x - pos.x) * 0.5f, pos.y)
+                        val ctrl2 = Offset(centerOffset.x, pos.y + (centerOffset.y - pos.y) * 0.5f)
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Direct Link",
-                                color = talosTextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Dedicated 1-on-1 session with Core Reasoning Engine",
-                                color = talosTextMuted,
-                                fontSize = 12.sp,
-                                lineHeight = 16.sp
-                            )
-                        }
+                        // Cubic Bezier interpolation: B(t) = (1-t)^3 P0 + 3(1-t)^2 t P1 + 3(1-t) t^2 P2 + t^3 P3
+                        val packetX = u * u * u * pos.x + 3 * u * u * t * ctrl1.x + 3 * u * t * t * ctrl2.x + t * t * t * centerOffset.x
+                        val packetY = u * u * u * pos.y + 3 * u * u * t * ctrl1.y + 3 * u * t * t * ctrl2.y + t * t * t * centerOffset.y
 
-                        Icon(
-                            imageVector = Icons.Default.ArrowForward,
-                            contentDescription = null,
-                            tint = talosTextMuted,
-                            modifier = Modifier.size(16.dp)
+                        // Outer halo
+                        drawCircle(
+                            color = beamColor.copy(alpha = 0.35f),
+                            radius = 9.dp.toPx(),
+                            center = Offset(packetX, packetY)
+                        )
+                        // Inner bright core
+                        drawCircle(
+                            color = Color.White,
+                            radius = 3.5.dp.toPx(),
+                            center = Offset(packetX, packetY)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Section 2: Agent Bench (The Hero Vector Emblems)
-            Row(
+            // ==============================================================
+            // 1. CENTER HUB: TALOS Core Engine & Waveform Capsule
+            // ==============================================================
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .align(Alignment.TopCenter)
+                    .offset(y = (heightPx * 0.40f).dp / 2.75f)
+                    .scale(auraPulse),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Registered Agents",
-                    color = talosTextPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.3.sp
-                )
-                Text(
-                    text = "${AgentEmblems.size} Available",
-                    color = talosTextMuted,
-                    fontSize = 12.sp
-                )
-            }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Pulsing Core Glyph Box
+                    Surface(
+                        color = talosSurface,
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.5.dp, Color(0xFF6366F1).copy(alpha = 0.5f)),
+                        modifier = Modifier
+                            .size(76.dp)
+                            .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = Color(0xFF6366F1))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "TALOS",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
+                        }
+                    }
 
-            Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-            // Agent Cards Horizontal Rail (Clean, high-contrast, perfectly visible)
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(AgentEmblems, key = { it.key }) { emblem ->
-                    CleanAgentCard(emblem = emblem)
+                    // Audio Waveform Equalizer Capsule (From Sarvesh's sketch)
+                    Surface(
+                        color = talosSurface,
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, talosBorder),
+                        modifier = Modifier
+                            .height(26.dp)
+                            .padding(horizontal = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(modifier = Modifier.width(3.dp).height(eq1.dp).clip(CircleShape).background(Color(0xFF818CF8)))
+                            Box(modifier = Modifier.width(3.dp).height(eq2.dp).clip(CircleShape).background(Color(0xFF818CF8)))
+                            Box(modifier = Modifier.width(3.dp).height(eq3.dp).clip(CircleShape).background(Color(0xFF34D399)))
+                            Box(modifier = Modifier.width(3.dp).height(eq4.dp).clip(CircleShape).background(Color(0xFF38BDF8)))
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = "Mesh Bus",
+                                color = talosTextMuted,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            // ==============================================================
+            // 2. CORNER AGENT NODES + LIVE FLOATING TASK SPEECH CHIPS
+            // ==============================================================
+
+            // TOP-LEFT: OpenClaw
+            AgentNodeWithBubble(
+                node = nodes[0],
+                isActiveSender = activeSender == "openclaw",
+                isActiveReceiver = activeReceiver == "openclaw" && isReceiverSpeaking,
+                bubbleText = if (activeSender == "openclaw") senderTask else receiverReply,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 16.dp, top = 20.dp),
+                onTap = {
+                    activeSender = "openclaw"
+                    activeReceiver = "hermes"
+                    senderTask = "Hi @hermes, delegate automated task!"
+                    receiverReply = null
+                    isReceiverSpeaking = false
+                }
+            )
+
+            // TOP-RIGHT: Claude Code
+            AgentNodeWithBubble(
+                node = nodes[1],
+                isActiveSender = activeSender == "claude",
+                isActiveReceiver = activeReceiver == "claude" && isReceiverSpeaking,
+                bubbleText = if (activeSender == "claude") senderTask else receiverReply,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 16.dp, top = 20.dp),
+                alignRight = true,
+                onTap = {
+                    activeSender = "claude"
+                    activeReceiver = "codex"
+                    senderTask = "Hi @codex, synthesize code module!"
+                    receiverReply = null
+                    isReceiverSpeaking = false
+                }
+            )
+
+            // BOTTOM-LEFT: Hermes Agent
+            AgentNodeWithBubble(
+                node = nodes[2],
+                isActiveSender = activeSender == "hermes",
+                isActiveReceiver = activeReceiver == "hermes" && isReceiverSpeaking,
+                bubbleText = if (activeSender == "hermes") senderTask else receiverReply,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 16.dp, bottom = 24.dp),
+                onTap = {
+                    activeSender = "hermes"
+                    activeReceiver = "claude"
+                    senderTask = "Hi @claude, start architecture pass!"
+                    receiverReply = null
+                    isReceiverSpeaking = false
+                }
+            )
+
+            // BOTTOM-RIGHT: Codex
+            AgentNodeWithBubble(
+                node = nodes[3],
+                isActiveSender = activeSender == "codex",
+                isActiveReceiver = activeReceiver == "codex" && isReceiverSpeaking,
+                bubbleText = if (activeSender == "codex") senderTask else receiverReply,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 24.dp),
+                alignRight = true,
+                onTap = {
+                    activeSender = "codex"
+                    activeReceiver = "openclaw"
+                    senderTask = "Hi @openclaw, verify automation tests!"
+                    receiverReply = null
+                    isReceiverSpeaking = false
+                }
+            )
         }
     }
 }
 
 /**
- * High-Contrast, Clean Agent Card displaying authentic vector emblems.
+ * Corner Agent Node Squircle with Live Floating Speech Bubble.
  */
 @Composable
-private fun CleanAgentCard(
-    emblem: AgentEmblem,
-    modifier: Modifier = Modifier
+private fun AgentNodeWithBubble(
+    node: AgentNode,
+    isActiveSender: Boolean,
+    isActiveReceiver: Boolean,
+    bubbleText: String?,
+    modifier: Modifier = Modifier,
+    alignRight: Boolean = false,
+    onTap: () -> Unit
 ) {
-    Surface(
-        color = talosSurface,
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, talosBorder),
-        modifier = modifier
-            .width(160.dp)
-            .height(130.dp)
-            .semantics(mergeDescendants = true) {
-                contentDescription = "${emblem.label}: ${emblem.role}"
-            }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Prominent, beautifully colored Emblem Icon Box
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(emblem.accent.copy(alpha = 0.14f))
-                    .border(1.dp, emblem.accent.copy(alpha = 0.40f), RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                AgentEmblemIcon(emblem = emblem, size = 24.dp, tint = null)
-            }
+    val isEngaged = isActiveSender || isActiveReceiver
 
-            Column {
-                Text(
-                    text = emblem.label,
-                    color = talosTextPrimary,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+    val glowScale by animateFloatAsState(
+        targetValue = if (isEngaged) 1.08f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f),
+        label = "node_glow_scale"
+    )
+
+    Column(
+        modifier = modifier.scale(glowScale),
+        horizontalAlignment = if (alignRight) Alignment.End else Alignment.Start
+    ) {
+        // Floating animated speech bubble / task capsule
+        AnimatedVisibility(
+            visible = !bubbleText.isNullOrBlank() && isEngaged,
+            enter = fadeIn(tween(180)) + slideInVertically(tween(240)) { -20 },
+            exit = fadeOut(tween(150)) + slideOutVertically(tween(200)) { -15 }
+        ) {
+            Surface(
+                color = talosSurface,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, node.accent.copy(alpha = 0.6f)),
+                modifier = Modifier
+                    .padding(bottom = 6.dp)
+                    .widthIn(max = 160.dp)
+                    .shadow(8.dp, RoundedCornerShape(12.dp), spotColor = node.accent)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(node.accent)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = bubbleText ?: "",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 14.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+
+        // Agent Squircle Card (Clickable to trigger manual delegation)
+        Surface(
+            color = talosSurface,
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(
+                width = if (isEngaged) 1.8.dp else 1.dp,
+                color = if (isEngaged) node.accent else talosBorder
+            ),
+            modifier = Modifier
+                .size(width = 110.dp, height = 94.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onTap() }
+                .shadow(
+                    elevation = if (isEngaged) 14.dp else 0.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    spotColor = node.accent
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = emblem.role,
-                    color = talosTextMuted,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Official Emblem Icon inside soft brand-tinted well
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(node.accent.copy(alpha = 0.14f))
+                        .border(1.dp, node.accent.copy(alpha = 0.40f), RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AgentEmblemIcon(emblem = node.emblem, size = 22.dp, tint = null)
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = node.name,
+                        color = talosTextPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (isEngaged) "Active" else node.key.uppercase(),
+                        color = if (isEngaged) node.accent else talosTextMuted,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }

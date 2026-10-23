@@ -107,7 +107,6 @@ private val WizardMuted: Color @Composable get() = talosTextMuted
 private val WizardDanger = Color(0xFFEF4444)
 
 // Dark theme illustration badge colors
-private val CyberCyan = Color(0xFF38BDF8)
 private val CyberGreen = Color(0xFF22C55E)
 private val CyberViolet = Color(0xFF818CF8)
 private val CyberOrange = Color(0xFFF97316)
@@ -590,7 +589,7 @@ private fun OverviewStep() {
                 index = 3,
                 title = "Real-Time Collaboration & Tool Bus",
                 body = "Shared event bus, tool calls and presence in a single stream.",
-                badgeTint = CyberCyan,
+                badgeTint = PrimaryAccent,
                 badge = { TerminalBusBadge(tint = WizardBg) }
             )
         }
@@ -1041,11 +1040,11 @@ private fun TokenStep(
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(CyberCyan.copy(alpha = 0.20f))
-                            .border(1.dp, CyberCyan.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
+                            .background(PrimaryAccent.copy(alpha = 0.20f))
+                            .border(1.dp, PrimaryAccent.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        KeyBadge(tint = CyberCyan)
+                        KeyBadge(tint = PrimaryAccent)
                     }
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {

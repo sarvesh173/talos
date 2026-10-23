@@ -2,6 +2,9 @@ package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -12,6 +15,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -203,8 +209,27 @@ fun OnboardingWizard(
                     .weight(1f)
                     .fillMaxWidth(),
                 transitionSpec = {
-                    (slideInHorizontally { it / 4 } + fadeIn(tween(220))) togetherWith
-                            (slideOutHorizontally { -it / 4 } + fadeOut(tween(180)))
+                    if (targetState > initialState) {
+                        (slideInHorizontally(
+                            animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
+                            initialOffsetX = { it / 3 }
+                        ) + fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing))).togetherWith(
+                            slideOutHorizontally(
+                                animationSpec = tween(180),
+                                targetOffsetX = { -it / 3 }
+                            ) + fadeOut(animationSpec = tween(180))
+                        )
+                    } else {
+                        (slideInHorizontally(
+                            animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
+                            initialOffsetX = { -it / 3 }
+                        ) + fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing))).togetherWith(
+                            slideOutHorizontally(
+                                animationSpec = tween(180),
+                                targetOffsetX = { it / 3 }
+                            ) + fadeOut(animationSpec = tween(180))
+                        )
+                    }
                 },
                 label = "wizard_step"
             ) { current ->
@@ -425,6 +450,14 @@ private fun WizardBottomBar(
         else -> "Enter Chamber"
     }
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val buttonScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 800f),
+        label = "wizard_btn_scale"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -434,16 +467,18 @@ private fun WizardBottomBar(
         Button(
             onClick = onPrimary,
             enabled = canProceed && !isBusy,
+            interactionSource = interactionSource,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
                 contentColor = WizardBg,
                 disabledContainerColor = Color.White.copy(alpha = 0.30f),
                 disabledContentColor = WizardBg.copy(alpha = 0.50f)
             ),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp)
+                .height(52.dp)
+                .scale(buttonScale)
         ) {
             Text(
                 text = label,

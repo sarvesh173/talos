@@ -230,11 +230,12 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private fun handleInboundBinaryAudio(bytes: ByteString) {
         try {
+            val nanoSalt = (1000..9999).random()
             val audioDir = File(context.cacheDir, "audio_cache").apply { mkdirs() }
-            val audioFile = File(audioDir, "memo_${System.currentTimeMillis()}.opus")
+            val audioFile = File(audioDir, "memo_${System.currentTimeMillis()}_$nanoSalt.opus")
             audioFile.writeBytes(bytes.toByteArray())
             val msg = Message(
-                id = "audio_${System.currentTimeMillis()}",
+                id = "audio_${System.currentTimeMillis()}_$nanoSalt",
                 room_id = _currentRoomId.value,
                 sender_id = "agent",
                 sender_name = "Agent Voice",
@@ -401,8 +402,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         val sent = activeWebSocket?.send(payload) == true
         if (!sent) {
             enqueueOfflineMessage(currentRoom, text)
+            val nanoSalt = (1000..9999).random()
             val optimistic = Message(
-                id = "temp_${System.currentTimeMillis()}",
+                id = "temp_${System.currentTimeMillis()}_$nanoSalt",
                 room_id = currentRoom,
                 sender_id = "sarvesh",
                 sender_name = "Sarvesh",

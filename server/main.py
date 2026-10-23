@@ -22,6 +22,7 @@ from core.models import (
     BusEvent,
     EventType,
     Message,
+    ProviderHealth,
     ProviderInfo,
     ProviderSummary,
     Role,
@@ -355,6 +356,25 @@ async def providers_summary(token: str = Depends(require_auth)):
     return provider_service.summarize(infos)
 
 
+@app.get("/api/providers/health", response_model=List[ProviderHealth])
+async def providers_health(token: str = Depends(require_auth), force: bool = Query(False)):
+    """Real-time latency, status (healthy/degraded), and context length for registered providers."""
+    return await provider_service.health(force=force)
+
+
+@app.get("/api/providers/{provider_id}/health", response_model=ProviderHealth)
+async def single_provider_health(
+    provider_id: str,
+    token: str = Depends(require_auth),
+    force: bool = Query(False),
+):
+    """Real-time latency, status (healthy/degraded), and context length for a single provider."""
+    health_info = await provider_service.single_health(provider_id, force=force)
+    if health_info is None:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    return health_info
+
+
 @app.get("/api/providers/{provider_id}", response_model=ProviderInfo)
 async def get_provider(
     provider_id: str,
@@ -441,32 +461,38 @@ async def websocket_endpoint(
 
     try:
         while True:
-            data_text = await websocket.receive_text()
-            try:
-                data = json.loads(data_text)
-                if data.get("type") == "message":
-                    msg = Message(
-                        room_id=room_id,
-                        sender_id=client_id,
-                        sender_name=data.get("sender_name", "User"),
-                        sender_role=Role.human,
-                        content=data.get("content", ""),
-                        attachments=data.get("attachments", []),
-                        reply_to_id=data.get("reply_to_id"),
-                        created_at=time.time(),
-                    )
-                    save_message(msg)
-                    await bus.dispatch_message(msg)
-                elif data.get("type") == "typing":
-                    await bus.broadcast(
-                        BusEvent(
-                            event_type=EventType.typing_indicator,
+            raw_msg = await websocket.receive()
+            if raw_msg.get("type") == "websocket.disconnect":
+                break
+            if "bytes" in raw_msg and raw_msg["bytes"] is not None:
+                await bus.handle_binary_frame(room_id, raw_msg["bytes"], sender=websocket)
+            elif "text" in raw_msg and raw_msg["text"] is not None:
+                data_text = raw_msg["text"]
+                try:
+                    data = json.loads(data_text)
+                    if data.get("type") == "message":
+                        msg = Message(
                             room_id=room_id,
-                            payload={"client_id": client_id, "is_typing": data.get("is_typing", True)},
+                            sender_id=client_id,
+                            sender_name=data.get("sender_name", "User"),
+                            sender_role=Role.human,
+                            content=data.get("content", ""),
+                            attachments=data.get("attachments", []),
+                            reply_to_id=data.get("reply_to_id"),
+                            created_at=time.time(),
                         )
-                    )
-            except json.JSONDecodeError:
-                logger.warning("Invalid JSON received from %s", client_id)
+                        save_message(msg)
+                        await bus.dispatch_message(msg)
+                    elif data.get("type") == "typing":
+                        await bus.broadcast(
+                            BusEvent(
+                                event_type=EventType.typing_indicator,
+                                room_id=room_id,
+                                payload={"client_id": client_id, "is_typing": data.get("is_typing", True)},
+                            )
+                        )
+                except json.JSONDecodeError:
+                    logger.warning("Invalid JSON received from %s", client_id)
     except WebSocketDisconnect:
         await bus.unsubscribe(room_id, websocket)
     except Exception as e:

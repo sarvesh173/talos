@@ -19,7 +19,7 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from core.models import ProviderInfo, ProviderModel, ProviderStatus, ProviderSummary
+from core.models import ProviderHealth, ProviderInfo, ProviderModel, ProviderStatus, ProviderSummary
 from core.providers import (
     ProviderSpec,
     get_spec,
@@ -307,6 +307,49 @@ class ProviderService:
         info = await self.probe(spec)
         self._cache[spec.id] = info
         return info
+
+    async def health(self, force: bool = False) -> List[ProviderHealth]:
+        """Return real-time latency, status (healthy/degraded), and context length for registered providers."""
+        infos = await self.snapshot(force=force)
+        out: List[ProviderHealth] = []
+        for info in infos:
+            is_healthy = (
+                info.status == ProviderStatus.operational
+                and not info.error
+            )
+            out.append(
+                ProviderHealth(
+                    id=info.id,
+                    name=info.name,
+                    status="healthy" if is_healthy else "degraded",
+                    latency_ms=info.latency_ms,
+                    context_length=info.context_length,
+                    vendor=info.vendor,
+                )
+            )
+        return out
+
+    async def get_health(self, force: bool = False) -> List[ProviderHealth]:
+        """Alias for health()."""
+        return await self.health(force=force)
+
+    async def single_health(self, provider_id: str, force: bool = False) -> Optional[ProviderHealth]:
+        """Return real-time latency, status (healthy/degraded), and context length for a single provider."""
+        info = await self.get(provider_id, force=force)
+        if info is None:
+            return None
+        is_healthy = (
+            info.status == ProviderStatus.operational
+            and not info.error
+        )
+        return ProviderHealth(
+            id=info.id,
+            name=info.name,
+            status="healthy" if is_healthy else "degraded",
+            latency_ms=info.latency_ms,
+            context_length=info.context_length,
+            vendor=info.vendor,
+        )
 
     @staticmethod
     def summarize(providers: List[ProviderInfo]) -> ProviderSummary:

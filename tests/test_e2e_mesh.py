@@ -43,9 +43,13 @@ class RecordingSocket:
     def __init__(self, room_id: str):
         self.room_id = room_id
         self.events = []
+        self.binary_events = []
 
     async def send_text(self, payload: str) -> None:
         self.events.append(payload)
+
+    async def send_bytes(self, payload: bytes) -> None:
+        self.binary_events.append(payload)
 
     def decoded(self):
         out = []
@@ -313,6 +317,32 @@ class TestCouncilOrchestration(MeshE2ETestCase):
             },
         )
         self.assertEqual(resp.status_code, 401)
+
+
+class TestWebSocketBinary(unittest.TestCase):
+    def test_websocket_binary_frame_handling(self):
+        from starlette.testclient import TestClient
+
+        init_db()
+        init_auth_db()
+        token = create_new_token("e2e-ws-binary-client")
+
+        received_frames = []
+
+        async def on_binary(data: bytes, r_id: str):
+            received_frames.append((data, r_id))
+
+        bus.register_binary_listener("the-council", on_binary)
+
+        test_client = TestClient(app)
+        with test_client.websocket_connect(f"/ws/the-council/client-audio?token={token}") as ws:
+            sync_data = ws.receive_text()
+            self.assertIn("room_sync", sync_data)
+            voice_payload = b"\x00\xff\xee\xdd\x01\x02VOICE_MEMO_CHUNK"
+            ws.send_bytes(voice_payload)
+
+        self.assertEqual(len(received_frames), 1)
+        self.assertEqual(received_frames[0], (b"\x00\xff\xee\xdd\x01\x02VOICE_MEMO_CHUNK", "the-council"))
 
 
 if __name__ == "__main__":

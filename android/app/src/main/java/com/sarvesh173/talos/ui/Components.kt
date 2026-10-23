@@ -1,6 +1,13 @@
 package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,25 +25,105 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.data.ToolCall
+
+@Composable
+fun ThreeDotTypingIndicator(
+    modifier: Modifier = Modifier,
+    dotColor: Color = PrimaryAccent,
+    dotSize: Dp = 6.dp,
+    dotSpacing: Dp = 4.dp
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "TypingIndicatorTransition")
+
+    val dot1Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1200
+                0.3f at 0 using FastOutSlowInEasing
+                1.0f at 300 using FastOutSlowInEasing
+                0.3f at 600 using FastOutSlowInEasing
+                0.3f at 1200 using FastOutSlowInEasing
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "Dot1Alpha"
+    )
+
+    val dot2Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1200
+                0.3f at 200 using FastOutSlowInEasing
+                1.0f at 500 using FastOutSlowInEasing
+                0.3f at 800 using FastOutSlowInEasing
+                0.3f at 1200 using FastOutSlowInEasing
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "Dot2Alpha"
+    )
+
+    val dot3Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1200
+                0.3f at 400 using FastOutSlowInEasing
+                1.0f at 700 using FastOutSlowInEasing
+                0.3f at 1000 using FastOutSlowInEasing
+                0.3f at 1200 using FastOutSlowInEasing
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "Dot3Alpha"
+    )
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dotSpacing)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(dotSize)
+                .graphicsLayer { alpha = dot1Alpha }
+                .background(dotColor, CircleShape)
+        )
+        Box(
+            modifier = Modifier
+                .size(dotSize)
+                .graphicsLayer { alpha = dot2Alpha }
+                .background(dotColor, CircleShape)
+        )
+        Box(
+            modifier = Modifier
+                .size(dotSize)
+                .graphicsLayer { alpha = dot3Alpha }
+                .background(dotColor, CircleShape)
+        )
+    }
+}
 
 @Composable
 fun MessageBubble(msg: Message) {
@@ -83,7 +170,7 @@ fun MessageBubble(msg: Message) {
             if (!isHuman) {
                 Text(
                     text = msg.sender_name,
-                    color = TextMuted,
+                    color = talosTextMuted,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 2.dp)
@@ -125,19 +212,22 @@ fun MessageBubble(msg: Message) {
                     )
                 }
                 else -> {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isHuman) PrimaryAccent else talosSurface)
-                            .border(1.dp, if (isHuman) PrimaryAccent else SurfaceBorder, RoundedCornerShape(16.dp))
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    Surface(
+                        color = if (isHuman) PrimaryAccent else talosSurface,
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, if (isHuman) PrimaryAccent else talosBorder),
+                        shadowElevation = 1.dp
                     ) {
-                        Text(
-                            text = msg.content,
-                            color = if (isHuman) Color.White else TextPrimary,
-                            fontSize = 15.sp,
-                            lineHeight = 21.sp
-                        )
+                        Box(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Text(
+                                text = msg.content,
+                                color = if (isHuman) Color.White else talosTextPrimary,
+                                fontSize = 15.sp,
+                                lineHeight = 21.sp
+                            )
+                        }
                     }
                 }
             }
@@ -153,74 +243,84 @@ fun NativeAudioPlayerBubble(
     var isPlaying by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0.35f) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (isHuman) PrimaryAccent else talosSurface)
-            .border(1.dp, if (isHuman) PrimaryAccent else SurfaceBorder, RoundedCornerShape(16.dp))
-            .padding(12.dp)
+    val contentColor = if (isHuman) Color.White else talosTextPrimary
+    val mutedColor = if (isHuman) Color.White.copy(alpha = 0.8f) else talosTextMuted
+    val trackActive = if (isHuman) Color.White else PrimaryAccent
+    val trackInactive = if (isHuman) Color.White.copy(alpha = 0.3f) else talosBorder
+    val buttonBg = if (isHuman) Color.White.copy(alpha = 0.2f) else PrimaryAccent.copy(alpha = 0.15f)
+    val iconTint = if (isHuman) Color.White else PrimaryAccent
+
+    Surface(
+        color = if (isHuman) PrimaryAccent else talosSurface,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, if (isHuman) PrimaryAccent else talosBorder),
+        shadowElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(12.dp)
         ) {
-            IconButton(
-                onClick = { isPlaying = !isPlaying },
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = { isPlaying = !isPlaying },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(buttonBg)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.VolumeUp,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = audioUrl.substringAfterLast("/").ifBlank { "Audio Note" },
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        tint = iconTint,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                Slider(
-                    value = progress,
-                    onValueChange = { progress = it },
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White,
-                        inactiveTrackColor = Color.White.copy(alpha = 0.3f)
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(6.dp))
-            IconButton(
-                onClick = { /* local save */ },
-                modifier = Modifier.size(28.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Download,
-                    contentDescription = "Save to cache",
-                    tint = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.size(16.dp)
-                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = null,
+                            tint = mutedColor,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = audioUrl.substringAfterLast("/").ifBlank { "Audio Note" },
+                            color = contentColor,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1
+                        )
+                    }
+                    Slider(
+                        value = progress,
+                        onValueChange = { progress = it },
+                        colors = SliderDefaults.colors(
+                            thumbColor = trackActive,
+                            activeTrackColor = trackActive,
+                            inactiveTrackColor = trackInactive
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                IconButton(
+                    onClick = { /* local save */ },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Save to cache",
+                        tint = mutedColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -231,51 +331,55 @@ fun NativeVideoPreviewBubble(
     videoUrl: String,
     isHuman: Boolean
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(talosSurface)
-            .border(1.dp, SurfaceBorder, RoundedCornerShape(16.dp))
-            .padding(10.dp)
+    Surface(
+        color = talosSurface,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, talosBorder),
+        shadowElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(talosBg),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.padding(10.dp)
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(
-                    onClick = { /* launch native video playback */ },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryAccent)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Play Video",
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Videocam,
-                        contentDescription = null,
-                        tint = TextMuted,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = videoUrl.substringAfterLast("/").ifBlank { "Video Stream" },
-                        color = TextMuted,
-                        fontSize = 12.sp
-                    )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(talosBg)
+                    .border(1.dp, talosBorder, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(
+                        onClick = { /* launch native video playback */ },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryAccent)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Play Video",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Videocam,
+                            contentDescription = null,
+                            tint = talosTextMuted,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = videoUrl.substringAfterLast("/").ifBlank { "Video Stream" },
+                            color = talosTextMuted,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         }
@@ -286,49 +390,53 @@ fun NativeVideoPreviewBubble(
 fun CollapsibleThoughtBlock(thoughtText: String) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    Column(
+    Surface(
+        color = talosSurface,
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, talosBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF131722))
-            .border(1.dp, Color(0xFF283145), RoundedCornerShape(10.dp))
             .clickable { isExpanded = !isExpanded }
-            .padding(8.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(10.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Psychology,
-                contentDescription = null,
-                tint = Color(0xFFA855F7),
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Reasoning Process",
-                color = Color(0xFFA855F7),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = null,
-                tint = TextMuted,
-                modifier = Modifier.size(16.dp)
-            )
-        }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Psychology,
+                    contentDescription = null,
+                    tint = Color(0xFFA855F7),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Reasoning Process",
+                    color = Color(0xFFA855F7),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = talosTextMuted,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
 
-        AnimatedVisibility(visible = isExpanded) {
-            Text(
-                text = thoughtText,
-                color = TextMuted,
-                fontSize = 12.sp,
-                lineHeight = 17.sp,
-                modifier = Modifier.padding(top = 6.dp)
-            )
+            AnimatedVisibility(visible = isExpanded) {
+                Text(
+                    text = thoughtText,
+                    color = talosTextMuted,
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
     }
 }
@@ -337,54 +445,61 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
 fun ToolCallItem(tool: ToolCall) {
     var showOutput by remember { mutableStateOf(false) }
 
-    Column(
+    Surface(
+        color = talosSurface,
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, talosBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF0F1523))
-            .border(1.dp, Color(0xFF222B3D), RoundedCornerShape(8.dp))
             .clickable { if (!tool.output.isNullOrBlank()) showOutput = !showOutput }
-            .padding(horizontal = 8.dp, vertical = 6.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
-            Icon(
-                imageVector = if (tool.tool_name.contains("code", ignoreCase = true)) Icons.Default.Code else Icons.Default.Terminal,
-                contentDescription = null,
-                tint = PrimaryAccent,
-                modifier = Modifier.size(14.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = tool.tool_name,
-                color = TextPrimary,
-                fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = StatusGreen,
-                modifier = Modifier.size(14.dp)
-            )
-        }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (tool.tool_name.contains("code", ignoreCase = true)) Icons.Default.Code else Icons.Default.Terminal,
+                    contentDescription = null,
+                    tint = PrimaryAccent,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = tool.tool_name,
+                    color = talosTextPrimary,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = StatusGreen,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
 
-        if (showOutput && !tool.output.isNullOrBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = tool.output,
-                color = TextMuted,
-                fontSize = 11.sp,
-                fontFamily = FontFamily.Monospace,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFF090D15))
-                    .padding(6.dp)
-                    .fillMaxWidth()
-            )
+            if (showOutput && !tool.output.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Surface(
+                    color = talosBg,
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(1.dp, talosBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = tool.output,
+                        color = talosTextMuted,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(6.dp)
+                    )
+                }
+            }
         }
     }
 }

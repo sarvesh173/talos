@@ -15,13 +15,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
@@ -295,7 +296,11 @@ fun MainScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                             ) {
-                                ThinkingOrb(state = OrbState.THINKING, size = 16.dp)
+                                ThreeDotTypingIndicator(
+                                    dotColor = PrimaryAccent,
+                                    dotSize = 6.dp,
+                                    dotSpacing = 4.dp
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Agent fleet is deliberating...",
@@ -342,7 +347,7 @@ fun MainScreen(
                                     .background(PrimaryAccent)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Send,
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
                                     contentDescription = "Send",
                                     tint = Color.White,
                                     modifier = Modifier.size(20.dp)
@@ -517,16 +522,29 @@ fun ChamberHero(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        ThinkingOrb(
-            state = OrbState.WEAVING,
-            size = 64.dp,
-            dotColor = PrimaryAccent,
-            secondaryColor = PrimaryAccent.copy(alpha = 0.6f)
-        )
+        Surface(
+            modifier = Modifier.size(64.dp),
+            shape = RoundedCornerShape(18.dp),
+            color = talosSurface,
+            border = BorderStroke(1.dp, talosBorder),
+            shadowElevation = 2.dp
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Forum,
+                    contentDescription = null,
+                    tint = PrimaryAccent,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = room?.name ?: "Chamber Initialized",
-            color = TextPrimary,
+            color = talosTextPrimary,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -534,7 +552,7 @@ fun ChamberHero(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = room?.description ?: "Multi-agent autonomous collaborative mesh. Zero latency, peer-to-peer verification.",
-            color = TextMuted,
+            color = talosTextMuted,
             fontSize = 13.sp,
             textAlign = TextAlign.Center,
             lineHeight = 18.sp,
@@ -557,13 +575,14 @@ fun ChamberHero(
                 Surface(
                     color = talosSurface,
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, SurfaceBorder),
+                    border = BorderStroke(1.dp, talosBorder),
+                    shadowElevation = 1.dp,
                     modifier = Modifier
                         .fillMaxWidth(0.92f)
                         .clickable { onPromptClick(suggestion) }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -575,7 +594,7 @@ fun ChamberHero(
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = suggestion,
-                            color = TextPrimary,
+                            color = talosTextPrimary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )

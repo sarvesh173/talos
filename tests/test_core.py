@@ -92,6 +92,78 @@ class TestTalosCore(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(received_messages[0][0].content, "Hello agents!")
         self.assertEqual(received_messages[0][1], "test-room")
 
+    async def test_room_bus_binary_listener(self):
+        bus = RoomEventBus()
+        received_payloads = []
+
+        async def binary_callback(payload: bytes, r_id: str):
+            received_payloads.append((payload, r_id))
+
+        bus.register_binary_listener("voice-room", binary_callback)
+
+        test_bytes = b"\x00\x01\x02\x03\x04voice_memo_test"
+        await bus.handle_binary_frame("voice-room", test_bytes)
+        await asyncio.sleep(0.05)
+
+        self.assertEqual(len(received_payloads), 1)
+        self.assertEqual(received_payloads[0][0], test_bytes)
+        self.assertEqual(received_payloads[0][1], "voice-room")
+
+    async def test_room_bus_global_binary_listener(self):
+        bus = RoomEventBus()
+        global_payloads = []
+
+        async def global_callback(payload: bytes, r_id: str):
+            global_payloads.append((payload, r_id))
+
+        bus.register_global_binary_listener(global_callback)
+
+        chunk1 = b"\xaa\xbb\xcc"
+        chunk2 = b"\xdd\xee\xff"
+        await bus.dispatch_binary("room-a", chunk1)
+        await bus.stream_voice_memo_chunk("room-b", chunk2)
+        await asyncio.sleep(0.05)
+
+        self.assertEqual(len(global_payloads), 2)
+        self.assertEqual(global_payloads[0], (chunk1, "room-a"))
+        self.assertEqual(global_payloads[1], (chunk2, "room-b"))
+
+    async def test_room_bus_broadcast_bytes_excluding_sender(self):
+        bus = RoomEventBus()
+
+        class MockWs:
+            def __init__(self):
+                self.received = []
+
+            async def send_bytes(self, data: bytes):
+                self.received.append(data)
+
+        sender_ws = MockWs()
+        receiver_ws = MockWs()
+
+        await bus.subscribe("room-memo", sender_ws)
+        await bus.subscribe("room-memo", receiver_ws)
+
+        voice_data = b"AUDIO_STREAM_CHUNK"
+        await bus.handle_binary_frame("room-memo", voice_data, sender=sender_ws)
+
+        self.assertEqual(sender_ws.received, [])
+        self.assertEqual(receiver_ws.received, [voice_data])
+
+    async def test_room_bus_binary_dead_socket_cleanup(self):
+        bus = RoomEventBus()
+
+        class DeadWs:
+            async def send_bytes(self, data: bytes):
+                raise ConnectionResetError("client disconnected abruptly")
+
+        dead_ws = DeadWs()
+        await bus.subscribe("dead-room", dead_ws)
+        self.assertIn("dead-room", bus._subscribers)
+
+        await bus.broadcast_bytes("dead-room", b"test")
+        self.assertNotIn("dead-room", bus._subscribers)
+
 
 if __name__ == "__main__":
     unittest.main()

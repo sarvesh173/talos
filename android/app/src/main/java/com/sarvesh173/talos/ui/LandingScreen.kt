@@ -26,15 +26,20 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 
 /**
  * Enterprise Multi-Agent Mesh Landing Screen.
- * Rebuilt using pure Material Design 3 (M3) architecture.
- * Features official vendor brand marks (Nous Research Hermes, Anthropic Claude,
- * OpenAI Codex, OpenClaw, OmniRush) in structured M3 elevated cards.
+ *
+ * Rebuilt using pure Material Design 3 and taste-skill principles:
+ * - "Colour goes on data, not chrome" — eliminated all neon cyan outlines on non-interactive containers.
+ * - Quiet 1px talosBorder and talosSurface tonal surfaces throughout.
+ * - Comprehensive showcase of all 10 connected agents with authentic vector drawables (tint = null),
+ *   clear role labels, and active status indicators.
+ * - Crisp M3 typography hierarchy with balanced negative space and flawless Dark/Light reactivity.
  */
 @Composable
 fun LandingScreen(
@@ -46,6 +51,9 @@ fun LandingScreen(
     onOpenWizard: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
+    val isCurrentDark = LocalIsDark.current
+
+    // Subtle beacon pulse for live network telemetry
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val beaconPulse by infiniteTransition.animateFloat(
         initialValue = 0.85f,
@@ -54,13 +62,22 @@ fun LandingScreen(
         label = "beacon_pulse"
     )
 
+    // Tactile button interaction
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1.0f,
+        targetValue = if (isPressed) 0.98f else 1.0f,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 800f),
         label = "btn_press_spring"
     )
+
+    // Accessible, high-contrast button styling per mode
+    val buttonContainerColor = if (isCurrentDark) PrimaryAccent else Color(0xFF0284C7)
+    val buttonContentColor = if (isCurrentDark) Color(0xFF090D14) else Color.White
+
+    val handleGetStarted = {
+        onOpenWizard?.invoke() ?: onGetStarted()
+    }
 
     Scaffold(
         containerColor = talosBg,
@@ -73,7 +90,7 @@ fun LandingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // M3 Mini Brand Capsule
+                // Tonal Brand Capsule
                 Surface(
                     color = talosSurface,
                     shape = RoundedCornerShape(20.dp),
@@ -85,7 +102,7 @@ fun LandingScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
+                                .size(7.dp)
                                 .scale(beaconPulse)
                                 .clip(CircleShape)
                                 .background(StatusGreen)
@@ -114,7 +131,7 @@ fun LandingScreen(
                         imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                         contentDescription = "Toggle Theme",
                         tint = talosTextMuted,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -125,10 +142,10 @@ fun LandingScreen(
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .background(talosBg)
-                    .padding(horizontal = 22.dp, vertical = 14.dp),
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // M3 Live Status Pill
+                // Quiet Mesh Connectivity Pill (Colour on data dot, neutral on chrome text)
                 Surface(
                     color = talosSurface,
                     shape = RoundedCornerShape(20.dp),
@@ -140,7 +157,7 @@ fun LandingScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(7.dp)
+                                .size(6.dp)
                                 .scale(beaconPulse)
                                 .clip(CircleShape)
                                 .background(StatusGreen)
@@ -148,41 +165,41 @@ fun LandingScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "WireGuard Mesh · Direct Peer-to-Peer",
-                            color = PrimaryAccent,
+                            color = talosTextPrimary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // M3 Primary Action Button
                 Button(
-                    onClick = onGetStarted,
+                    onClick = handleGetStarted,
                     interactionSource = interactionSource,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryAccent,
-                        contentColor = Color.White
+                        containerColor = buttonContainerColor,
+                        contentColor = buttonContentColor
                     ),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(26.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(54.dp)
+                        .height(52.dp)
                         .scale(buttonScale)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "Get Started",
-                            color = Color.White,
+                            color = buttonContentColor,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontSize = 15.sp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = buttonContentColor,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -203,110 +220,284 @@ fun LandingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp),
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // M3 Category Label
+            // Quiet Overline Pill (No heavy neon cyan border)
             Surface(
-                color = PrimaryAccent.copy(alpha = 0.12f),
+                color = talosSurface,
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, PrimaryAccent.copy(alpha = 0.35f))
+                border = BorderStroke(1.dp, talosBorder)
             ) {
-                Text(
-                    text = "AUTONOMOUS MULTI-AGENT MESH",
-                    color = PrimaryAccent,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.sp,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(StatusGreen)
+                    )
+                    Spacer(modifier = Modifier.width(7.dp))
+                    Text(
+                        text = "AUTONOMOUS MULTI-AGENT MESH",
+                        color = talosTextMuted,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 1.1.sp
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Display Title (Clean M3, NO spinning rainbow orb)
+            // Display Title (Clean M3 Grotesk)
             Text(
                 text = "TALOS",
                 color = talosTextPrimary,
-                fontSize = 44.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 2.sp,
+                fontSize = 38.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.5).sp,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Subtitle Description (Crystal clear, zero overlap)
+            // Subtitle Description
             Text(
                 text = "Your private mesh of always-on CLI agents\nthat execute, reason, and build together",
                 color = talosTextMuted,
                 fontSize = 15.sp,
                 lineHeight = 22.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Fleet Section Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Architectural Spec Strip (Taste-skill: KPIs are type, not tiles)
+            Surface(
+                color = talosSurface,
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, talosBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
             ) {
-                Text(
-                    text = "AGENT FLEET",
-                    color = talosTextMuted,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                Text(
-                    text = "${AgentEmblems.size} Connected",
-                    color = StatusGreen,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "${AgentEmblems.size}",
+                            color = talosTextPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Mesh Agents",
+                            color = talosTextMuted,
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(30.dp)
+                            .background(talosBorder)
+                    )
 
-            // M3 Horizontal Agent Fleet Cards (Hermes, Claude, Codex, OpenClaw, OmniRush)
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(AgentEmblems) { emblem ->
-                    M3AgentCard(emblem = emblem)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "0 ms",
+                            color = talosTextPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Bot Barrier",
+                            color = talosTextMuted,
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(30.dp)
+                            .background(talosBorder)
+                    )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "E2EE",
+                            color = talosTextPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "WireGuard",
+                            color = talosTextMuted,
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Fleet Capabilities Specs in M3 Surface Card
-            Surface(
-                color = talosSurface,
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, talosBorder),
+            // Fleet Section Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "CONNECTED FLEET",
+                        color = talosTextPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.8.sp
+                    )
+                    Surface(
+                        color = StatusGreen.copy(alpha = if (isCurrentDark) 0.14f else 0.10f),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(StatusGreen)
+                            )
+                            Text(
+                                text = "${AgentEmblems.size} ONLINE",
+                                color = StatusGreen,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    text = "P2P Mesh",
+                    color = talosTextMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Showcase of All 10 Connected Agents (Edge-to-edge scrollable carousel)
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 20.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+                items(AgentEmblems, key = { it.key }) { emblem ->
+                    M3AgentCard(emblem = emblem)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(22.dp))
+
+            // Full Mesh Capabilities Card (Encompassing all 10 agents)
+            Surface(
+                color = talosSurface,
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, talosBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
                 Column(modifier = Modifier.padding(18.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(StatusGreen)
+                        )
+                        Text(
+                            text = "Unified Agent Bus Architecture",
+                            color = talosTextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
-                        text = "Unified Agent Bus Architecture",
-                        color = talosTextPrimary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Hermes, Claude Code, OpenAI Codex, OpenClaw, and OmniRush collaborate seamlessly over private WireGuard tunnels with peer-to-peer event routing, live streaming, and zero public exposure.",
+                        text = "Hermes Agent, Claude Code, Codex, Gemini, Meta AI, Mistral AI, DeepSeek, Qwen, OpenClaw, and OmniRush collaborate seamlessly over private WireGuard tunnels with peer-to-peer event routing, live token streaming, and zero public exposure.",
                         color = talosTextMuted,
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
                     )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Architectural Pill Tags
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val pillBg = if (isCurrentDark) Color(0xFF192030) else Color(0xFFF1F5F9)
+                        listOf("Zero Open Ports", "Direct P2P", "Live Token Stream").forEach { tag ->
+                            Surface(
+                                color = pillBg,
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, talosBorder)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    color = talosTextMuted,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -316,7 +507,7 @@ fun LandingScreen(
 }
 
 // =====================================================================
-// MATERIAL 3 AGENT CARD (STRUCTURED, MULTI-COLOR OFFICIAL ARTWORK)
+// MATERIAL 3 AGENT CARD (QUIET TONAL SURFACES, AUTHENTIC VECTOR ARTWORK)
 // =====================================================================
 
 @Composable
@@ -324,13 +515,16 @@ private fun M3AgentCard(
     emblem: AgentEmblem,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalIsDark.current
+    val emblemBg = if (isDark) Color(0xFF192030) else Color(0xFFF1F5F9)
+
     Surface(
         color = talosSurface,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, talosBorder),
         modifier = modifier
-            .width(170.dp)
-            .height(160.dp)
+            .width(172.dp)
+            .height(154.dp)
     ) {
         Column(
             modifier = Modifier
@@ -338,46 +532,67 @@ private fun M3AgentCard(
                 .padding(14.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            // Header Row: Emblem Container + Online Status Indicator
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Official Multi-Color Vector Emblem
+                // Official Vector Emblem Container (Quiet neutral tonal, no neon borders)
                 Box(
                     modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(emblem.accent.copy(alpha = 0.14f))
-                        .border(1.dp, emblem.accent.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(emblemBg)
+                        .border(1.dp, talosBorder, RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    AgentEmblemIcon(emblem = emblem, size = 28.dp, tint = null)
+                    AgentEmblemIcon(emblem = emblem, size = 26.dp, tint = null)
                 }
 
-                // Active Status Indicator Dot
-                Box(
+                // Active Status Pill
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(StatusGreen)
-                )
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(StatusGreen.copy(alpha = if (isDark) 0.14f else 0.10f))
+                        .padding(horizontal = 6.dp, vertical = 3.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(StatusGreen)
+                    )
+                    Text(
+                        text = "ONLINE",
+                        color = StatusGreen,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.4.sp
+                    )
+                }
             }
 
+            // Descriptive Information (Name & Role)
             Column {
                 Text(
                     text = emblem.label,
                     color = talosTextPrimary,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = emblem.role,
                     color = talosTextMuted,
                     fontSize = 11.sp,
-                    lineHeight = 14.sp,
-                    maxLines = 2
+                    lineHeight = 15.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

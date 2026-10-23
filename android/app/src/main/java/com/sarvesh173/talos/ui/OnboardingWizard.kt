@@ -7,8 +7,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Refresh
@@ -45,13 +47,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,16 +65,24 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sarvesh173.talos.R
 import com.sarvesh173.talos.data.MeshInfo
 import com.sarvesh173.talos.network.TalosClient
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -104,7 +117,7 @@ fun OnboardingWizard(
     onToggleTheme: (() -> Unit)? = null,
     onComplete: () -> Unit
 ) {
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
     var step by remember { mutableStateOf(0) }
     var meshInfo by remember { mutableStateOf<MeshInfo?>(null) }
@@ -221,7 +234,7 @@ fun OnboardingWizard(
                                 copiedNotice = "Token copied to clipboard!"
                             }
                         )
-                        else -> WelcomeStep()
+                        else -> WelcomeStep(onEnterChamber = onComplete)
                     }
                     if (copiedNotice != null) {
                         Spacer(modifier = Modifier.height(10.dp))
@@ -435,7 +448,7 @@ private fun WizardBottomBar(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                androidx.compose.material3.TextButton(
+                TextButton(
                     onClick = onSkip,
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
                     modifier = Modifier.height(22.dp)
@@ -453,7 +466,7 @@ private fun WizardBottomBar(
 }
 
 // ==========================================
-// STEP 1 — OVERVIEW
+// STEP 1 — OVERVIEW (M3)
 // ==========================================
 
 @Composable
@@ -461,20 +474,37 @@ private fun OverviewStep() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
 
+        // M3 Surface Header with authentic TALOS mesh vector emblem
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            ThinkingOrb(state = OrbState.WEAVING, size = 54.dp)
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = WizardSurface,
+                border = BorderStroke(1.dp, talosBorder),
+                modifier = Modifier.size(64.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_core),
+                        contentDescription = "TALOS Mesh Core",
+                        modifier = Modifier.size(32.dp),
+                        colorFilter = ColorFilter.tint(PrimaryAccent)
+                    )
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(18.dp))
 
         Text(
             text = "Initialize Your TALOS Mesh",
             color = WizardText,
-            fontSize = 27.sp,
-            fontWeight = FontWeight.ExtraBold,
-            lineHeight = 33.sp
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
+            )
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -484,33 +514,28 @@ private fun OverviewStep() {
             lineHeight = 20.sp
         )
 
-        Spacer(modifier = Modifier.height(26.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Card container
+        // 3 elevated cards with 1px talosBorder
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
-                .background(WizardSurface)
-                .border(1.dp, WizardBorder, RoundedCornerShape(22.dp))
-                .padding(14.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            OverviewCard(
+            OverviewElevatedCard(
                 index = 1,
                 title = "Connect over Tailscale WireGuard",
                 body = "Private overlay network. No public ports, no exposed surface.",
                 badgeTint = CyberGreen,
                 badge = { ShieldLanBadge(tint = WizardBg) }
             )
-            OverviewCard(
+            OverviewElevatedCard(
                 index = 2,
                 title = "Pair with Autonomous Agent Fleet",
                 body = "One handshake brings every always-on agent into the mesh.",
                 badgeTint = CyberViolet,
                 badge = { AgentFleetBadge(tint = WizardBg) }
             )
-            OverviewCard(
+            OverviewElevatedCard(
                 index = 3,
                 title = "Real-Time Collaboration & Tool Bus",
                 body = "Shared event bus, tool calls and presence in a single stream.",
@@ -522,67 +547,73 @@ private fun OverviewStep() {
 }
 
 @Composable
-private fun OverviewCard(
+private fun OverviewElevatedCard(
     index: Int,
     title: String,
     body: String,
     badgeTint: Color,
     badge: @Composable () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(WizardSurfaceAlt)
-            .padding(14.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = WizardSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, talosBorder)
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryAccent.copy(alpha = 0.20f))
-                        .border(1.dp, PrimaryAccent.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryAccent.copy(alpha = 0.20f))
+                            .border(1.dp, PrimaryAccent.copy(alpha = 0.40f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = index.toString(),
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = index.toString(),
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        text = title,
+                        color = WizardText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 19.sp
                     )
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = title,
-                    color = WizardText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 19.sp
+                    text = body,
+                    color = WizardMuted,
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = body,
-                color = WizardMuted,
-                fontSize = 12.sp,
-                lineHeight = 17.sp
-            )
-        }
 
-        Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-        // Pastel illustration badge
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(badgeTint),
-            contentAlignment = Alignment.Center
-        ) {
-            badge()
+            // Pastel illustration badge
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(badgeTint),
+                contentAlignment = Alignment.Center
+            ) {
+                badge()
+            }
         }
     }
 }
@@ -637,7 +668,9 @@ private fun MeshStep(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt)
+            colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, talosBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -710,7 +743,9 @@ private fun MeshStep(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(containerColor = WizardSurface)
+            colors = CardDefaults.cardColors(containerColor = WizardSurface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, talosBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -727,7 +762,7 @@ private fun MeshStep(
                     )
                 } else {
                     LinearProgressIndicator(
-                        progress = if (active) 1f else 0f,
+                        progress = { if (active) 1f else 0f },
                         modifier = Modifier.fillMaxWidth().height(4.dp),
                         color = statusColor,
                         trackColor = WizardBorder
@@ -876,7 +911,7 @@ private fun MeshRow(key: String, value: String, last: Boolean = false) {
 }
 
 // ==========================================
-// STEP 3 — GENERATE API TOKEN
+// STEP 3 — GENERATE API TOKEN (M3)
 // ==========================================
 
 @Composable
@@ -887,23 +922,50 @@ private fun TokenStep(
     onGenerateToken: () -> Unit = {},
     onCopyToken: (String) -> Unit = {}
 ) {
+    val haptic = LocalHapticFeedback.current
+    var isCopied by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isCopied) {
+        if (isCopied) {
+            delay(2000)
+            isCopied = false
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
 
+        // M3 Key Emblem Surface Header
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            ThinkingOrb(state = OrbState.SOLVING, size = 54.dp)
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = WizardSurface,
+                border = BorderStroke(1.dp, talosBorder),
+                modifier = Modifier.size(64.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Key,
+                        contentDescription = "Device Key",
+                        tint = PrimaryAccent,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(18.dp))
 
         Text(
             text = "Generate Agent API Token",
             color = WizardText,
-            fontSize = 27.sp,
-            fontWeight = FontWeight.ExtraBold,
-            lineHeight = 33.sp
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
+            )
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -913,196 +975,209 @@ private fun TokenStep(
             lineHeight = 20.sp
         )
 
-        Spacer(modifier = Modifier.height(26.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
-                .background(WizardSurface)
-                .border(1.dp, WizardBorder, RoundedCornerShape(22.dp))
-                .padding(18.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = WizardSurface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, talosBorder)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(CyberCyan.copy(alpha = 0.20f))
-                        .border(1.dp, CyberCyan.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    KeyBadge(tint = CyberCyan)
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Device token",
-                        color = WizardText,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = if (token != null) "Ready to link with agent" else "Ready to generate",
-                        color = WizardMuted,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Token display box
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF0B0E15))
-                    .border(1.dp, WizardBorder, RoundedCornerShape(14.dp))
-                    .padding(14.dp)
-            ) {
-                when {
-                    isPairing -> {
-                        Column {
-                            LinearProgressIndicator(
-                                color = PrimaryAccent,
-                                trackColor = WizardBorder,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(3.dp)
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "Minting token on the mesh node...",
-                                color = WizardMuted,
-                                fontSize = 12.sp
-                            )
-                        }
+            Column(modifier = Modifier.padding(18.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(CyberCyan.copy(alpha = 0.20f))
+                            .border(1.dp, CyberCyan.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        KeyBadge(tint = CyberCyan)
                     }
-                    token != null -> {
-                        Column {
-                            Text(
-                                text = token.chunked(8).joinToString(" "),
-                                color = PrimaryAccent,
-                                fontSize = 13.sp,
-                                lineHeight = 20.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                    else -> {
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Token will appear here once generated.",
+                            text = "Device token",
+                            color = WizardText,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (token != null) "Ready to link with agent" else "Ready to generate",
+                            color = WizardMuted,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Clean mono token surface
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFF0B0E15),
+                    border = BorderStroke(1.dp, talosBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(modifier = Modifier.padding(14.dp)) {
+                        when {
+                            isPairing -> {
+                                Column {
+                                    LinearProgressIndicator(
+                                        color = PrimaryAccent,
+                                        trackColor = WizardBorder,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(3.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = "Minting token on the mesh node...",
+                                        color = WizardMuted,
+                                        fontSize = 12.sp,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+                            token != null -> {
+                                Text(
+                                    text = token.chunked(8).joinToString(" "),
+                                    color = PrimaryAccent,
+                                    fontSize = 13.sp,
+                                    lineHeight = 20.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+                            else -> {
+                                Text(
+                                    text = "Token will appear here once generated.",
+                                    color = WizardMuted,
+                                    fontSize = 12.sp,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Action Buttons: Copy Token and Generate
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    if (token != null) {
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isCopied = true
+                                onCopyToken(token)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isCopied) StatusGreen.copy(alpha = 0.20f) else Color(0xFF1E293B),
+                                contentColor = if (isCopied) StatusGreen else Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            border = if (isCopied) BorderStroke(1.dp, StatusGreen.copy(alpha = 0.50f)) else null,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = if (isCopied) Icons.Default.CheckCircle else Icons.Default.ContentCopy,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isCopied) "Copied!" else "Copy Token",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onGenerateToken,
+                        enabled = !isPairing,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (token == null) Color.White else Color(0xFF2A3447),
+                            contentColor = if (token == null) Color(0xFF0F1117) else Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Key,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (token == null) "Generate Token" else "Re-mint Token",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                if (token != null) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = StatusGreen,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Token ready. Give this to your agent to complete linking.",
                             color = WizardMuted,
                             fontSize = 12.sp
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Action Buttons: Copy Token and Generate
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (token != null) {
-                    Button(
-                        onClick = { onCopyToken(token) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1E293B),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Copy Token", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-
-                Button(
-                    onClick = onGenerateToken,
-                    enabled = !isPairing,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (token == null) Color.White else Color(0xFF2A3447),
-                        contentColor = if (token == null) Color(0xFF0F1117) else Color.White
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Key,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (token == null) "Generate Token" else "Re-mint Token",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            if (token != null) {
-                Spacer(modifier = Modifier.height(14.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = StatusGreen,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Token ready. Give this to your agent to complete linking.",
-                        color = WizardMuted,
-                        fontSize = 12.sp
-                    )
-                }
-            }
         }
 
         // Guide on giving token to the bot
         Spacer(modifier = Modifier.height(16.dp))
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(WizardSurfaceAlt)
-                .border(1.dp, WizardBorder, RoundedCornerShape(16.dp))
-                .padding(14.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            border = BorderStroke(1.dp, talosBorder)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Terminal,
-                    contentDescription = null,
-                    tint = Color(0xFF38BDF8),
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Terminal,
+                        contentDescription = null,
+                        tint = Color(0xFF38BDF8),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "How to link with your Bot / CLI Agent",
+                        color = WizardText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "How to link with your Bot / CLI Agent",
-                    color = WizardText,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = "Copy the token above and paste it to your agent, or set in host environment:\nexport TALOS_TOKEN=" + (token ?: "<YOUR_TOKEN>"),
+                    color = WizardMuted,
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp,
+                    fontFamily = FontFamily.Monospace
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Copy the token above and paste it to your agent, or set in host environment:\nexport TALOS_TOKEN=" + (token ?: "<YOUR_TOKEN>"),
-                color = WizardMuted,
-                fontSize = 11.sp,
-                lineHeight = 16.sp
-            )
         }
 
         if (errorMessage != null) {
@@ -1124,64 +1199,204 @@ private fun TokenStep(
 }
 
 // ==========================================
-// STEP 4 — WELCOME
+// STEP 4 — WELCOME (M3)
 // ==========================================
 
 @Composable
-private fun WelcomeStep() {
-    val agents = listOf(
-        Triple("Hermes", "Reasoning & autonomy", CyberGreen),
-        Triple("OmniRush", "Autonomous CLI execution", CyberViolet),
-        Triple("Claude", "Analysis & refactoring", CyberOrange),
-        Triple("OpenClaw", "Tools & automation", CyberCyan),
-        Triple("Council", "Multi-agent chamber", Color(0xFFE2E8F0))
-    )
-
+private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
 
+        // M3 Surface Header with Groups emblem
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            ThinkingOrb(state = OrbState.COMPOSING, size = 54.dp)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Welcome to TALOS",
-            color = WizardText,
-            fontSize = 27.sp,
-            fontWeight = FontWeight.ExtraBold,
-            lineHeight = 33.sp
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Your mesh is live. These agents are already on the bus.",
-            color = WizardMuted,
-            fontSize = 14.sp,
-            lineHeight = 20.sp
-        )
-
-        Spacer(modifier = Modifier.height(26.dp))
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
-                .background(WizardSurface)
-                .border(1.dp, WizardBorder, RoundedCornerShape(22.dp))
-                .padding(14.dp)
-        ) {
-            agents.forEach { (name, role, tint) ->
-                ConnectedAgentRow(name = name, role = role, tint = tint)
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = WizardSurface,
+                border = BorderStroke(1.dp, talosBorder),
+                modifier = Modifier.size(64.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Groups,
+                        contentDescription = "Agent Fleet",
+                        tint = PrimaryAccent,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = "Welcome to TALOS",
+            color = WizardText,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Your mesh is live. All 10 registered agents are ready on the bus.",
+            color = WizardMuted,
+            fontSize = 14.sp,
+            lineHeight = 20.sp
+        )
+
+        Spacer(modifier = Modifier.height(22.dp))
+
+        // Registered Agents Grid Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "REGISTERED AGENTS",
+                color = WizardMuted,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = StatusGreen.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, StatusGreen.copy(alpha = 0.35f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(StatusGreen)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${AgentEmblems.size} Online",
+                        color = StatusGreen,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Display all 10 registered agents using AgentEmblemIcon (tint=null) in a clean 2-column grid
+        Column(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            AgentEmblems.chunked(2).forEach { rowPair ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    rowPair.forEach { emblem ->
+                        Card(
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                            border = BorderStroke(1.dp, talosBorder),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(emblem.accent.copy(alpha = 0.14f))
+                                        .border(1.dp, emblem.accent.copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    AgentEmblemIcon(emblem = emblem, size = 22.dp, tint = null)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = emblem.label,
+                                        color = WizardText,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = emblem.role.substringBefore("·").trim(),
+                                        color = WizardMuted,
+                                        fontSize = 10.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(StatusGreen)
+                                )
+                            }
+                        }
+                    }
+                    if (rowPair.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Chamber entry button
+        Button(
+            onClick = onEnterChamber,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = PrimaryAccent,
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(28.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Groups,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Enter Agent Chamber",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Box(
                 modifier = Modifier
                     .size(8.dp)
@@ -1190,54 +1405,11 @@ private fun WelcomeStep() {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Mesh live at $MESH_IP · 3 agents connected",
+                text = "Mesh live at $MESH_IP · 10 agents registered",
                 color = WizardMuted,
                 fontSize = 12.sp
             )
         }
-    }
-}
-
-@Composable
-private fun ConnectedAgentRow(name: String, role: String, tint: Color) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(WizardSurfaceAlt)
-            .padding(14.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(46.dp)
-                .clip(CircleShape)
-                .background(tint),
-            contentAlignment = Alignment.Center
-        ) {
-            AgentFaceBadge(tint = WizardBg)
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = name,
-                color = WizardText,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = role,
-                color = WizardMuted,
-                fontSize = 12.sp
-            )
-        }
-        Icon(
-            imageVector = Icons.Default.CheckCircle,
-            contentDescription = "Connected",
-            tint = StatusGreen,
-            modifier = Modifier.size(18.dp)
-        )
     }
 }
 
@@ -1375,7 +1547,7 @@ private fun TerminalBusBadge(tint: Color) {
             cap = StrokeCap.Round
         )
         drawCircle(tint, radius = w * 0.09f, center = Offset(w * 0.20f, h * 0.87f))
-        drawCircle(tint, radius = w * 0.09f, center = Offset(w * 0.80f, h * 0.87f))
+        drawCircle(tint, radius = w * 0.80f, center = Offset(w * 0.80f, h * 0.87f))
     }
 }
 
@@ -1407,27 +1579,3 @@ private fun KeyBadge(tint: Color) {
         )
     }
 }
-
-/** Step 4 agent avatar — simple agent face. */
-@Composable
-private fun AgentFaceBadge(tint: Color) {
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val w = size.width
-        val h = size.height
-        drawCircle(color = tint, radius = w * 0.46f, center = Offset(w * 0.5f, h * 0.5f))
-        drawRoundRect(
-            color = Color.White,
-            topLeft = Offset(w * 0.30f, h * 0.38f),
-            size = Size(w * 0.11f, h * 0.20f),
-            cornerRadius = CornerRadius(w * 0.055f, w * 0.055f)
-        )
-        drawRoundRect(
-            color = Color.White,
-            topLeft = Offset(w * 0.59f, h * 0.38f),
-            size = Size(w * 0.11f, h * 0.20f),
-            cornerRadius = CornerRadius(w * 0.055f, w * 0.055f)
-        )
-    }
-}
-
-

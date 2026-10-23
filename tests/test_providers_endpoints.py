@@ -81,6 +81,84 @@ class ProviderEndpointsTest(unittest.IsolatedAsyncioTestCase):
         resp = await self.client.get("/api/providers/no-such-provider", headers=self.auth_header())
         self.assertEqual(resp.status_code, 404)
 
+    async def test_providers_health_requires_auth(self):
+        resp = await self.client.get("/api/providers/health")
+        self.assertEqual(resp.status_code, 401)
+
+    async def test_providers_health_returns_all_registered_providers(self):
+        resp = await self.client.get("/api/providers/health", headers=self.auth_header())
+        self.assertEqual(resp.status_code, 200, resp.text)
+        providers = resp.json()
+        self.assertEqual(len(providers), 7, providers)
+        ids = {p["id"] for p in providers}
+        self.assertEqual(ids, REQUIRED_IDS, ids)
+
+    async def test_providers_health_shape_and_status(self):
+        resp = await self.client.get("/api/providers/health", headers=self.auth_header())
+        self.assertEqual(resp.status_code, 200)
+        providers = resp.json()
+        for p in providers:
+            self.assertIn("id", p)
+            self.assertIn("name", p)
+            self.assertIn("status", p)
+            self.assertIn("latency_ms", p)
+            self.assertIn("context_length", p)
+            self.assertIn(p["status"], ("healthy", "degraded"))
+            self.assertIsInstance(p["context_length"], int)
+
+    async def test_providers_health_operational_mapping(self):
+        from core.models import ProviderInfo, ProviderStatus
+        from server.provider_service import provider_service
+        from unittest.mock import patch
+
+        mock_infos = [
+            ProviderInfo(
+                id="qwen",
+                name="Qwen",
+                vendor="Alibaba Cloud",
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+                api_style="openai",
+                default_model="qwen-max-latest",
+                status=ProviderStatus.operational,
+                latency_ms=42.5,
+                context_length=131072,
+            ),
+            ProviderInfo(
+                id="openai",
+                name="OpenAI",
+                vendor="OpenAI",
+                base_url="https://api.openai.com/v1",
+                api_style="openai",
+                default_model="gpt-4o",
+                status=ProviderStatus.degraded,
+                latency_ms=350.0,
+                context_length=128000,
+            ),
+        ]
+        with patch.object(provider_service, "snapshot", return_value=mock_infos):
+            health_list = await provider_service.health()
+            self.assertEqual(len(health_list), 2)
+            self.assertEqual(health_list[0].id, "qwen")
+            self.assertEqual(health_list[0].status, "healthy")
+            self.assertEqual(health_list[0].latency_ms, 42.5)
+            self.assertEqual(health_list[0].context_length, 131072)
+            self.assertEqual(health_list[1].id, "openai")
+            self.assertEqual(health_list[1].status, "degraded")
+            self.assertEqual(health_list[1].latency_ms, 350.0)
+
+    async def test_single_provider_health(self):
+        resp = await self.client.get("/api/providers/qwen/health", headers=self.auth_header())
+        self.assertEqual(resp.status_code, 200, resp.text)
+        body = resp.json()
+        self.assertEqual(body["id"], "qwen")
+        self.assertEqual(body["name"], "Qwen")
+        self.assertIn(body["status"], ("healthy", "degraded"))
+        self.assertEqual(body["context_length"], 131072)
+
+    async def test_single_provider_health_not_found(self):
+        resp = await self.client.get("/api/providers/no-such-provider/health", headers=self.auth_header())
+        self.assertEqual(resp.status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()

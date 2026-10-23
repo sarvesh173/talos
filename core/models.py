@@ -32,6 +32,8 @@ class EventType(str, Enum):
     agent_reaction = "agent_reaction"
     turn_start = "turn_start"
     turn_end = "turn_end"
+    voice_chunk = "voice_chunk"
+    binary_frame = "binary_frame"
 
 
 class ToolCall(BaseModel):
@@ -145,6 +147,17 @@ class ProviderInfo(BaseModel):
     #: Age of the measurement in milliseconds (0 when it was just taken).
     age_ms: int = 0
     error: Optional[str] = None
+
+
+class ProviderHealth(BaseModel):
+    """Health status and capabilities for a registered provider."""
+
+    id: str
+    name: str
+    status: str  # "healthy" or "degraded"
+    latency_ms: Optional[float] = None
+    context_length: Optional[int] = None
+    vendor: Optional[str] = None
 
 
 class ProviderSummary(BaseModel):

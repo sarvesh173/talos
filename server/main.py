@@ -22,6 +22,7 @@ from core.models import (
     BusEvent,
     ConsensusProposal,
     EventType,
+    FailoverRouteResponse,
     Message,
     ProviderHealth,
     ProviderInfo,
@@ -449,6 +450,18 @@ async def single_provider_health(
     if health_info is None:
         raise HTTPException(status_code=404, detail="Provider not found")
     return health_info
+
+
+@app.post("/api/providers/benchmark", response_model=FailoverRouteResponse)
+async def benchmark_providers_endpoint(token: str = Depends(require_auth)):
+    """Run concurrent round-trip latency probes across all providers and update failover routing."""
+    return await provider_service.benchmark_and_route()
+
+
+@app.get("/api/providers/failover", response_model=FailoverRouteResponse)
+async def get_failover_routing_endpoint(token: str = Depends(require_auth)):
+    """Retrieve the current active failover route order and ranked health metrics."""
+    return await provider_service.get_failover_routing()
 
 
 @app.get("/api/providers/{provider_id}", response_model=ProviderInfo)

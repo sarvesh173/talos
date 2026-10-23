@@ -280,3 +280,18 @@ class ConsensusProposal(BaseModel):
     consensus_ratio: float = 0.0
     status: str = "resolved"
     created_at: float = Field(default_factory=time.time)
+
+
+class ProviderRanking(BaseModel):
+    id: str
+    name: str
+    latency_ms: Optional[float] = None
+    status: str = "healthy"
+    tier: str = "primary"
+
+
+class FailoverRouteResponse(BaseModel):
+    primary_provider: str
+    failover_chain: List[str]
+    rankings: List[ProviderRanking]
+    benchmark_timestamp: float = Field(default_factory=time.time)

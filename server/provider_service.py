@@ -19,7 +19,15 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from core.models import ProviderHealth, ProviderInfo, ProviderModel, ProviderStatus, ProviderSummary
+from core.models import (
+    FailoverRouteResponse,
+    ProviderHealth,
+    ProviderInfo,
+    ProviderModel,
+    ProviderRanking,
+    ProviderStatus,
+    ProviderSummary,
+)
 from core.providers import (
     ProviderSpec,
     get_spec,
@@ -383,6 +391,52 @@ class ProviderService:
         if fastest:
             summary.fastest_provider = fastest[0]
         return summary
+
+    async def benchmark_and_route(self) -> FailoverRouteResponse:
+        """Concurrently probe all providers and calculate ranked failover route."""
+        infos = await self.snapshot(force=True)
+
+        def sort_key(info: ProviderInfo) -> Tuple[int, float]:
+            is_op = 0 if info.status == ProviderStatus.operational else (1 if info.status == ProviderStatus.degraded else 2)
+            lat = info.latency_ms if info.latency_ms is not None else 999999.0
+            return (is_op, lat)
+
+        ranked = sorted(infos, key=sort_key)
+        rankings: List[ProviderRanking] = []
+        failover_chain: List[str] = []
+
+        for idx, info in enumerate(ranked):
+            tier = "primary" if idx == 0 else f"fallback-{idx}"
+            status_str = "healthy" if info.status == ProviderStatus.operational and not info.error else "degraded"
+            if info.status in (ProviderStatus.unreachable, ProviderStatus.unauthorized, ProviderStatus.unconfigured):
+                status_str = "offline"
+
+            rankings.append(
+                ProviderRanking(
+                    id=info.id,
+                    name=info.name,
+                    latency_ms=info.latency_ms,
+                    status=status_str,
+                    tier=tier,
+                )
+            )
+            if status_str in ("healthy", "degraded"):
+                failover_chain.append(info.id)
+
+        primary = failover_chain[0] if failover_chain else (ranked[0].id if ranked else "hermes")
+        self._cached_failover = FailoverRouteResponse(
+            primary_provider=primary,
+            failover_chain=failover_chain,
+            rankings=rankings,
+            benchmark_timestamp=time.time(),
+        )
+        return self._cached_failover
+
+    async def get_failover_routing(self) -> FailoverRouteResponse:
+        """Return cached or active failover routing order."""
+        if hasattr(self, "_cached_failover") and self._cached_failover is not None:
+            return self._cached_failover
+        return await self.benchmark_and_route()
 
 
 #: Process-wide provider service used by the FastAPI app.

@@ -97,10 +97,10 @@ fun LandingScreen(
     // 4 Corner CLI Agents with authentic vector emblems
     val nodes = remember {
         listOf(
-            AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), Color(0xFFF97316)),
+            AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), Color(0xFFEA580C)),
             AgentNode("claude", "Claude Code", "Anthropic · Architecture", "Arch · Plan", emblemByKey("claude"), Color(0xFFD97757)),
-            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), Color(0xFF22C55E)),
-            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), Color(0xFF10A37F))
+            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), Color(0xFF16A34A)),
+            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), Color(0xFF0D9488))
         )
     }
 
@@ -169,8 +169,8 @@ fun LandingScreen(
 
     // Breathing core aura
     val auraPulse by infiniteTransition.animateFloat(
-        initialValue = 0.97f,
-        targetValue = 1.03f,
+        initialValue = 0.985f,
+        targetValue = 1.015f,
         animationSpec = infiniteRepeatable(
             animation = tween(2200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -384,34 +384,7 @@ fun LandingScreen(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 if (centerAnchor == Offset.Zero) return@Canvas
 
-                // 1. Faint Starfield / Neural Matrix Grid
-                val gridStep = 48.dp.toPx()
-                var gx = gridStep / 2f
-                while (gx < size.width) {
-                    var gy = gridStep / 2f
-                    while (gy < size.height) {
-                        drawCircle(
-                            color = Color(0xFF334155).copy(alpha = 0.18f),
-                            radius = 1.dp.toPx(),
-                            center = Offset(gx, gy)
-                        )
-                        gy += gridStep
-                    }
-                    gx += gridStep
-                }
-
-                // 2. Ambient Radial Glow from Center Core
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF6366F1).copy(alpha = 0.18f),
-                            Color(0xFF4338CA).copy(alpha = 0.06f),
-                            Color.Transparent
-                        ),
-                        center = centerAnchor,
-                        radius = size.width * 0.65f
-                    )
-                )
+                // 1. Clean Atmosphere (No Neon Bloom or Slop Grids)
 
                 // 3. Rotating Celestial Compass Rings
                 val radCompass = Math.toRadians(compassRotation.toDouble())
@@ -432,7 +405,7 @@ fun LandingScreen(
                 val satX = centerAnchor.x + (orbitRadius * cos(radCompass)).toFloat()
                 val satY = centerAnchor.y + (orbitRadius * sin(radCompass)).toFloat()
                 drawCircle(
-                    color = Color(0xFF818CF8),
+                    color = Color(0xFF94A3B8),
                     radius = 3.dp.toPx(),
                     center = Offset(satX, satY)
                 )
@@ -478,14 +451,7 @@ fun LandingScreen(
                         cubicTo(ctrl1.x + offX, ctrl1.y + offY, ctrl2.x + offX, ctrl2.y + offY, centerAnchor.x + offX, centerAnchor.y + offY)
                     }
 
-                    // Ambient soft beam glow
-                    if (isBeamActive) {
-                        drawPath(
-                            path = pathPrimary,
-                            color = nodeAccent.copy(alpha = 0.22f),
-                            style = Stroke(width = 6.dp.toPx())
-                        )
-                    }
+
 
                     // Main crisp fiber-optic stream line
                     drawPath(
@@ -520,20 +486,16 @@ fun LandingScreen(
                         val px = u * u * u * cardPos.x + 3 * u * u * t * ctrl1.x + 3 * u * t * t * ctrl2.x + t * t * t * centerAnchor.x
                         val py = u * u * u * cardPos.y + 3 * u * u * t * ctrl1.y + 3 * u * t * t * ctrl2.y + t * t * t * centerAnchor.y
 
-                        // Outer luminous aura
+                        // Clean luminous pearl
                         drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(nodeAccent.copy(alpha = 0.95f), nodeAccent.copy(alpha = 0.25f), Color.Transparent),
-                                center = Offset(px, py),
-                                radius = 14.dp.toPx()
-                            ),
-                            radius = 14.dp.toPx(),
-                            center = Offset(px, py)
+                            color = nodeAccent.copy(alpha = 0.50f),
+                            radius = 5.dp.toPx(),
+                            center = Offset(px, py),
+                            style = Stroke(width = 1.2.dp.toPx())
                         )
-                        // Radiant core nucleus
                         drawCircle(
                             color = Color.White,
-                            radius = 3.5.dp.toPx(),
+                            radius = 2.8.dp.toPx(),
                             center = Offset(px, py)
                         )
                     }
@@ -557,20 +519,20 @@ fun LandingScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Surface(
-                        color = Color(0xFF131826),
-                        shape = RoundedCornerShape(22.dp),
-                        border = BorderStroke(1.5.dp, Color(0xFF6366F1).copy(alpha = 0.65f)),
+                        color = Color(0xFF0F172A),
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, Color(0xFF334155)),
                         modifier = Modifier
-                            .size(86.dp)
-                            .shadow(20.dp, RoundedCornerShape(22.dp), spotColor = Color(0xFF6366F1))
+                            .size(82.dp)
+                            .shadow(6.dp, RoundedCornerShape(20.dp), spotColor = Color.Black)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = "TALOS",
                                     color = Color.White,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Black,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
                                     letterSpacing = 2.sp
                                 )
                                 Spacer(modifier = Modifier.height(3.dp))
@@ -586,7 +548,7 @@ fun LandingScreen(
                                     )
                                     Text(
                                         text = "MESH CORE",
-                                        color = Color(0xFF818CF8),
+                                        color = Color(0xFF94A3B8),
                                         fontSize = 8.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 0.8.sp
@@ -772,13 +734,13 @@ private fun AgentNodeWithBubble(
                 exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { -10 }
             ) {
                 Surface(
-                    color = Color(0xFF131826),
+                    color = Color(0xFF0F172A),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, node.accent.copy(alpha = 0.55f)),
                     modifier = Modifier
                         .padding(bottom = 6.dp)
                         .widthIn(max = 160.dp)
-                        .shadow(8.dp, RoundedCornerShape(12.dp), spotColor = node.accent)
+                        .shadow(8.dp, RoundedCornerShape(12.dp), )
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
@@ -822,9 +784,8 @@ private fun AgentNodeWithBubble(
                     indication = null
                 ) { onTap() }
                 .shadow(
-                    elevation = if (isActive) 16.dp else 0.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    spotColor = node.accent
+                    elevation = if (isActive) 4.dp else 0.dp,
+                    shape = RoundedCornerShape(16.dp)
                 )
         ) {
             Column(
@@ -873,13 +834,13 @@ private fun AgentNodeWithBubble(
                 exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { 10 }
             ) {
                 Surface(
-                    color = Color(0xFF131826),
+                    color = Color(0xFF0F172A),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, node.accent.copy(alpha = 0.55f)),
                     modifier = Modifier
                         .padding(top = 6.dp)
                         .widthIn(max = 160.dp)
-                        .shadow(8.dp, RoundedCornerShape(12.dp), spotColor = node.accent)
+                        .shadow(8.dp, RoundedCornerShape(12.dp), )
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),

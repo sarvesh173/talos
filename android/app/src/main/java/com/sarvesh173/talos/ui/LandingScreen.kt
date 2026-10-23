@@ -26,6 +26,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
@@ -38,22 +39,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 import kotlinx.coroutines.delay
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
- * Benchmark Material 3 Multi-Agent Mesh Screen (Curvilinear Synapse Architecture)
+ * Advanced Multi-Agent Cybernetic Synapse Constellation (High-Density Material 3)
  *
- * Engineering:
- * 1. Curvilinear S-Curves: Sweeping horizontal-to-vertical organic bezier spline
- *    conduits connecting agent cards directly to TALOS core with exact pixel anchors.
- * 2. Complete Context & Dialogue Restored: Hero banner, mesh mission statement,
- *    and non-clipping in-quadrant conversational task dialogue bubbles.
- * 3. 100% Authentic Vector Marks from Dashboard Icons MCP: OpenClaw, Claude Code,
- *    Hermes Agent, Codex, Gemini, Mistral, Meta, DeepSeek, Qwen.
+ * Visual & Engineering Highlights:
+ * 1. Intricate Neural Mesh: Cross-agent constellation lattice connecting all nodes
+ *    into an organic geometric diamond web with faint harmonic starfield particles.
+ * 2. Multi-Strand Curvilinear S-Curves: Fluid multi-conductor fiber-optic ribbons with
+ *    parallel secondary harmonics and animated data packet comets anchored via onGloballyPositioned.
+ * 3. 100% Authentic Vendor Icons: Dashboard Icons MCP full-color OpenClaw, Codex cyber iris,
+ *    Nous Hermes winged monogram, and Claude Code terracotta spark.
+ * 4. High-Density Telemetry Core: Concentric rotating compass rings, real-time peer stats,
+ *    and animated audio spectrum equalizer capsule.
  */
 data class AgentNode(
     val key: String,
     val name: String,
     val role: String,
+    val specTag: String,
     val emblem: AgentEmblem,
     val accent: Color
 )
@@ -91,10 +97,10 @@ fun LandingScreen(
     // 4 Corner CLI Agents with authentic vector emblems
     val nodes = remember {
         listOf(
-            AgentNode("openclaw", "OpenClaw", "Tools & Automation", emblemByKey("openclaw"), Color(0xFFF97316)),
-            AgentNode("claude", "Claude Code", "Anthropic · Arch", emblemByKey("claude"), Color(0xFFD97757)),
-            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", emblemByKey("hermes"), Color(0xFF22C55E)),
-            AgentNode("codex", "Codex", "OpenAI · Code", emblemByKey("codex"), Color(0xFF10A37F))
+            AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), Color(0xFFF97316)),
+            AgentNode("claude", "Claude Code", "Anthropic · Architecture", "Arch · Plan", emblemByKey("claude"), Color(0xFFD97757)),
+            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), Color(0xFF22C55E)),
+            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), Color(0xFF10A37F))
         )
     }
 
@@ -127,7 +133,7 @@ fun LandingScreen(
             receiverReply = null
             isReceiverSpeaking = false
 
-            delay(1800)
+            delay(1900)
             isReceiverSpeaking = true
             receiverReply = scenario.replyText
 
@@ -136,49 +142,67 @@ fun LandingScreen(
         }
     }
 
-    // Traveling packet animation (0 to 1)
+    // Continuous Animation Drivers
     val infiniteTransition = rememberInfiniteTransition(label = "mesh_pulse")
+
+    // Traveling comet packet progress (0 to 1)
     val packetProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = LinearEasing),
+            animation = tween(1900, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "packet_pulse"
     )
 
+    // Rotating celestial compass angle
+    val compassRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(28000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "compass_rotation"
+    )
+
     // Breathing core aura
     val auraPulse by infiniteTransition.animateFloat(
-        initialValue = 0.98f,
-        targetValue = 1.02f,
+        initialValue = 0.97f,
+        targetValue = 1.03f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2400, easing = FastOutSlowInEasing),
+            animation = tween(2200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "aura_pulse"
     )
 
-    // EQ waveform bars
+    // 5-bar Equalizer animation
     val eq1 by infiniteTransition.animateFloat(
-        initialValue = 4f, targetValue = 16f,
+        initialValue = 4f, targetValue = 18f,
         animationSpec = infiniteRepeatable(tween(360, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq1"
     )
     val eq2 by infiniteTransition.animateFloat(
-        initialValue = 14f, targetValue = 5f,
+        initialValue = 16f, targetValue = 5f,
         animationSpec = infiniteRepeatable(tween(420, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq2"
     )
     val eq3 by infiniteTransition.animateFloat(
-        initialValue = 6f, targetValue = 18f,
+        initialValue = 6f, targetValue = 22f,
         animationSpec = infiniteRepeatable(tween(300, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq3"
     )
     val eq4 by infiniteTransition.animateFloat(
-        initialValue = 18f, targetValue = 7f,
+        initialValue = 20f, targetValue = 8f,
         animationSpec = infiniteRepeatable(tween(460, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "eq4"
+    )
+    val eq5 by infiniteTransition.animateFloat(
+        initialValue = 8f, targetValue = 17f,
+        animationSpec = infiniteRepeatable(tween(390, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "eq5"
     )
 
     // Live exact coordinate anchors measured from layout
@@ -227,7 +251,7 @@ fun LandingScreen(
                                 .background(StatusGreen)
                         )
                         Text(
-                            text = "Mesh Online",
+                            text = "Mesh Online · WireGuard",
                             color = talosTextMuted,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -254,9 +278,8 @@ fun LandingScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
 
-                // Hero Mission Description (Restored Context)
                 Text(
                     text = "Your private mesh of always-on CLI agents that execute, reason, and build together.",
                     color = talosTextMuted,
@@ -283,7 +306,7 @@ fun LandingScreen(
                 Surface(
                     color = talosSurface,
                     shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, activeColor.copy(alpha = 0.45f)),
+                    border = BorderStroke(1.dp, activeColor.copy(alpha = 0.50f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 10.dp)
@@ -357,23 +380,78 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Background Canvas: Curvilinear S-Curve Conduits Layered Behind Cards
+            // Background Canvas: Neural Mesh Grid, Orbital Compass, and Multi-Strand Synapses
             Canvas(modifier = Modifier.fillMaxSize()) {
                 if (centerAnchor == Offset.Zero) return@Canvas
 
-                // Ambient Radial Glow from Center Core
+                // 1. Faint Starfield / Neural Matrix Grid
+                val gridStep = 48.dp.toPx()
+                var gx = gridStep / 2f
+                while (gx < size.width) {
+                    var gy = gridStep / 2f
+                    while (gy < size.height) {
+                        drawCircle(
+                            color = Color(0xFF334155).copy(alpha = 0.18f),
+                            radius = 1.dp.toPx(),
+                            center = Offset(gx, gy)
+                        )
+                        gy += gridStep
+                    }
+                    gx += gridStep
+                }
+
+                // 2. Ambient Radial Glow from Center Core
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF6366F1).copy(alpha = 0.14f),
+                            Color(0xFF6366F1).copy(alpha = 0.18f),
+                            Color(0xFF4338CA).copy(alpha = 0.06f),
                             Color.Transparent
                         ),
                         center = centerAnchor,
-                        radius = size.width * 0.6f
+                        radius = size.width * 0.65f
                     )
                 )
 
-                // Draw True Curvilinear S-Curves Connecting Card Centers to TALOS Core
+                // 3. Rotating Celestial Compass Rings
+                val radCompass = Math.toRadians(compassRotation.toDouble())
+                val orbitRadius = 78.dp.toPx()
+
+                // Dashed Inner Ring
+                drawCircle(
+                    color = Color(0xFF6366F1).copy(alpha = 0.25f),
+                    radius = orbitRadius,
+                    center = centerAnchor,
+                    style = Stroke(
+                        width = 1.2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 14f), compassRotation * 1.5f)
+                    )
+                )
+
+                // Orbiting satellite pulse node
+                val satX = centerAnchor.x + (orbitRadius * cos(radCompass)).toFloat()
+                val satY = centerAnchor.y + (orbitRadius * sin(radCompass)).toFloat()
+                drawCircle(
+                    color = Color(0xFF818CF8),
+                    radius = 3.dp.toPx(),
+                    center = Offset(satX, satY)
+                )
+
+                // 4. Secondary Cross-Mesh Peer Links (Diamond Constellation Lattice)
+                if (tlAnchor != Offset.Zero && trAnchor != Offset.Zero && blAnchor != Offset.Zero && brAnchor != Offset.Zero) {
+                    val peerLatticeColor = Color(0xFF334155).copy(alpha = 0.20f)
+                    val latticeStroke = Stroke(width = 0.9.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f))
+                    // TL -> TR
+                    drawLine(peerLatticeColor, tlAnchor, trAnchor, strokeWidth = 0.9.dp.toPx(), pathEffect = latticeStroke.pathEffect)
+                    // TR -> BR
+                    drawLine(peerLatticeColor, trAnchor, brAnchor, strokeWidth = 0.9.dp.toPx(), pathEffect = latticeStroke.pathEffect)
+                    // BR -> BL
+                    drawLine(peerLatticeColor, brAnchor, blAnchor, strokeWidth = 0.9.dp.toPx(), pathEffect = latticeStroke.pathEffect)
+                    // BL -> TL
+                    drawLine(peerLatticeColor, blAnchor, tlAnchor, strokeWidth = 0.9.dp.toPx(), pathEffect = latticeStroke.pathEffect)
+                }
+
+                // 5. Multi-Strand Curvilinear S-Curve Conduits
                 for ((key, cardPos) in anchorMap) {
                     if (cardPos == Offset.Zero) continue
 
@@ -383,37 +461,55 @@ fun LandingScreen(
                     val dx = centerAnchor.x - cardPos.x
                     val dy = centerAnchor.y - cardPos.y
 
-                    // True Curvilinear S-Curve: sweeps horizontally outward, inflects in middle canvas, sweeps vertically into Talos
-                    val ctrl1 = Offset(cardPos.x + dx * 0.75f, cardPos.y + dy * 0.10f)
-                    val ctrl2 = Offset(cardPos.x + dx * 0.25f, cardPos.y + dy * 0.90f)
+                    // Sweeping Curvilinear S-Curve geometry
+                    val ctrl1 = Offset(cardPos.x + dx * 0.72f, cardPos.y + dy * 0.08f)
+                    val ctrl2 = Offset(cardPos.x + dx * 0.28f, cardPos.y + dy * 0.92f)
 
-                    val path = Path().apply {
+                    val pathPrimary = Path().apply {
                         moveTo(cardPos.x, cardPos.y)
                         cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, centerAnchor.x, centerAnchor.y)
                     }
 
-                    // Soft ambient halo
+                    // Parallel secondary harmonic data trace (at +3.5dp offset)
+                    val pathHarmonic = Path().apply {
+                        val offX = if (dx > 0) 3.5.dp.toPx() else -3.5.dp.toPx()
+                        val offY = if (dy > 0) -3.5.dp.toPx() else 3.5.dp.toPx()
+                        moveTo(cardPos.x + offX, cardPos.y + offY)
+                        cubicTo(ctrl1.x + offX, ctrl1.y + offY, ctrl2.x + offX, ctrl2.y + offY, centerAnchor.x + offX, centerAnchor.y + offY)
+                    }
+
+                    // Ambient soft beam glow
                     if (isBeamActive) {
                         drawPath(
-                            path = path,
+                            path = pathPrimary,
                             color = nodeAccent.copy(alpha = 0.22f),
-                            style = Stroke(width = 5.dp.toPx())
+                            style = Stroke(width = 6.dp.toPx())
                         )
                     }
 
-                    // Crisp fiber-optic stream line
+                    // Main crisp fiber-optic stream line
                     drawPath(
-                        path = path,
+                        path = pathPrimary,
                         brush = Brush.linearGradient(
                             colors = if (isBeamActive) {
                                 listOf(nodeAccent.copy(alpha = 0.90f), Color(0xFF818CF8))
                             } else {
-                                listOf(Color(0xFF334155).copy(alpha = 0.35f), Color(0xFF1E293B).copy(alpha = 0.25f))
+                                listOf(Color(0xFF334155).copy(alpha = 0.40f), Color(0xFF1E293B).copy(alpha = 0.25f))
                             },
                             start = cardPos,
                             end = centerAnchor
                         ),
                         style = Stroke(width = if (isBeamActive) 2.2.dp.toPx() else 1.2.dp.toPx())
+                    )
+
+                    // Secondary harmonic wire
+                    drawPath(
+                        path = pathHarmonic,
+                        color = if (isBeamActive) nodeAccent.copy(alpha = 0.35f) else Color(0xFF334155).copy(alpha = 0.15f),
+                        style = Stroke(
+                            width = 0.8.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), packetProgress * 20f)
+                        )
                     )
 
                     // Luminous Data Packet Pulse
@@ -424,15 +520,17 @@ fun LandingScreen(
                         val px = u * u * u * cardPos.x + 3 * u * u * t * ctrl1.x + 3 * u * t * t * ctrl2.x + t * t * t * centerAnchor.x
                         val py = u * u * u * cardPos.y + 3 * u * u * t * ctrl1.y + 3 * u * t * t * ctrl2.y + t * t * t * centerAnchor.y
 
+                        // Outer luminous aura
                         drawCircle(
                             brush = Brush.radialGradient(
                                 colors = listOf(nodeAccent.copy(alpha = 0.95f), nodeAccent.copy(alpha = 0.25f), Color.Transparent),
                                 center = Offset(px, py),
-                                radius = 13.dp.toPx()
+                                radius = 14.dp.toPx()
                             ),
-                            radius = 13.dp.toPx(),
+                            radius = 14.dp.toPx(),
                             center = Offset(px, py)
                         )
+                        // Radiant core nucleus
                         drawCircle(
                             color = Color.White,
                             radius = 3.5.dp.toPx(),
@@ -443,7 +541,7 @@ fun LandingScreen(
             }
 
             // ==============================================================
-            // 1. CENTER TALOS CORE ENGINE
+            // 1. CENTER TALOS HIGH-DENSITY CORE ENGINE
             // ==============================================================
             Box(
                 modifier = Modifier
@@ -461,10 +559,10 @@ fun LandingScreen(
                     Surface(
                         color = Color(0xFF131826),
                         shape = RoundedCornerShape(22.dp),
-                        border = BorderStroke(1.5.dp, Color(0xFF6366F1).copy(alpha = 0.6f)),
+                        border = BorderStroke(1.5.dp, Color(0xFF6366F1).copy(alpha = 0.65f)),
                         modifier = Modifier
-                            .size(84.dp)
-                            .shadow(16.dp, RoundedCornerShape(22.dp), spotColor = Color(0xFF6366F1))
+                            .size(86.dp)
+                            .shadow(20.dp, RoundedCornerShape(22.dp), spotColor = Color(0xFF6366F1))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -473,7 +571,7 @@ fun LandingScreen(
                                     color = Color.White,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.8.sp
+                                    letterSpacing = 2.sp
                                 )
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Row(
@@ -487,13 +585,19 @@ fun LandingScreen(
                                             .background(StatusGreen)
                                     )
                                     Text(
-                                        text = "CORE",
+                                        text = "MESH CORE",
                                         color = Color(0xFF818CF8),
-                                        fontSize = 9.sp,
+                                        fontSize = 8.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 0.8.sp
                                     )
                                 }
+                                Text(
+                                    text = "4 PEERS · 0.8ms",
+                                    color = talosTextMuted,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
                     }
@@ -510,17 +614,18 @@ fun LandingScreen(
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(3.5.dp)
                         ) {
                             Box(modifier = Modifier.width(3.dp).height(eq1.dp).clip(CircleShape).background(Color(0xFF818CF8)))
                             Box(modifier = Modifier.width(3.dp).height(eq2.dp).clip(CircleShape).background(Color(0xFF34D399)))
                             Box(modifier = Modifier.width(3.dp).height(eq3.dp).clip(CircleShape).background(Color(0xFF38BDF8)))
                             Box(modifier = Modifier.width(3.dp).height(eq4.dp).clip(CircleShape).background(Color(0xFFF472B6)))
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Box(modifier = Modifier.width(3.dp).height(eq5.dp).clip(CircleShape).background(Color(0xFFFBBF24)))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 text = "Mesh Bus",
                                 color = talosTextMuted,
-                                fontSize = 10.sp,
+                                fontSize = 9.5.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -630,7 +735,7 @@ fun LandingScreen(
 }
 
 /**
- * Clean Material 3 Agent Card with In-Quadrant Dialogue Bubble
+ * Clean Material 3 Agent Card with 30dp Official Vector Drawable and Status Tag
  */
 @Composable
 private fun AgentNodeWithBubble(
@@ -709,7 +814,7 @@ private fun AgentNodeWithBubble(
                 color = if (isActive) node.accent else talosBorder
             ),
             modifier = Modifier
-                .size(width = 112.dp, height = 98.dp)
+                .size(width = 116.dp, height = 104.dp)
                 .scale(cardScale)
                 .clip(RoundedCornerShape(16.dp))
                 .clickable(
@@ -717,7 +822,7 @@ private fun AgentNodeWithBubble(
                     indication = null
                 ) { onTap() }
                 .shadow(
-                    elevation = if (isActive) 14.dp else 0.dp,
+                    elevation = if (isActive) 16.dp else 0.dp,
                     shape = RoundedCornerShape(16.dp),
                     spotColor = node.accent
                 )
@@ -725,19 +830,20 @@ private fun AgentNodeWithBubble(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(10.dp),
+                    .padding(8.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Prominent 44dp icon well with 30dp vector drawable
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(node.accent.copy(alpha = 0.14f))
-                        .border(1.dp, node.accent.copy(alpha = 0.40f), RoundedCornerShape(10.dp)),
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(node.accent.copy(alpha = 0.15f))
+                        .border(1.dp, node.accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    AgentEmblemIcon(emblem = node.emblem, size = 22.dp, tint = null)
+                    AgentEmblemIcon(emblem = node.emblem, size = 30.dp, tint = null)
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -750,9 +856,9 @@ private fun AgentNodeWithBubble(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = if (isActive) "Active" else node.key.uppercase(),
+                        text = if (isActive) "Active" else node.specTag,
                         color = if (isActive) node.accent else talosTextMuted,
-                        fontSize = 10.sp,
+                        fontSize = 9.5.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }

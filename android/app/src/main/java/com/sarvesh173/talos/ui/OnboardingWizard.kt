@@ -319,6 +319,7 @@ private fun WizardTopBar(
     onBack: () -> Unit,
     onToggleTheme: (() -> Unit)? = null
 ) {
+    val isDark = LocalIsDark.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -363,11 +364,11 @@ private fun WizardTopBar(
                     IconButton(
                         onClick = onToggleTheme,
                         modifier = Modifier.semantics {
-                            contentDescription = if (LocalIsDark.current) "Switch to Light Mode" else "Switch to Dark Mode"
+                            contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode"
                         }
                     ) {
                         Icon(
-                            imageVector = if (LocalIsDark.current) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
                             tint = WizardMuted
                         )

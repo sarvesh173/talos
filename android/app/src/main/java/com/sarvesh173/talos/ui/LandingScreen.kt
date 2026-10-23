@@ -536,7 +536,7 @@ private fun M3AgentCard(
             .width(172.dp)
             .height(154.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = "${emblem.name}: ${emblem.roleDescription}. Status: Online"
+                contentDescription = "${emblem.label}: ${emblem.role}. Status: Online"
             }
     ) {
         Column(

@@ -310,6 +310,36 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    suspend fun discoverPeers(): List<MeshPeerInfo> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/mesh/peers/discover")
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: "{}"
+                        val obj = json.parseToJsonElement(body).jsonObject
+                        val peersArr = obj["peers"]?.jsonArray ?: return@use emptyList()
+                        peersArr.map { elem ->
+                            val pObj = elem.jsonObject
+                            MeshPeerInfo(
+                                hostname = pObj["hostname"]?.jsonPrimitive?.content ?: "Unknown",
+                                ip = pObj["ip"]?.jsonPrimitive?.content ?: "",
+                                online = pObj["online"]?.jsonPrimitive?.content?.toBoolean() ?: false,
+                                os = pObj["os"]?.jsonPrimitive?.content ?: "",
+                                direct = pObj["direct"]?.jsonPrimitive?.content?.toBoolean() ?: true
+                            )
+                        }
+                    } else emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Peer discovery error: ${e.message}")
+                emptyList()
+            }
+        }
+    }
+
     suspend fun pairDevice(): String? {
         return withContext(Dispatchers.IO) {
             try {
@@ -438,4 +468,12 @@ data class QueuedMessage(
     val roomId: String,
     val content: String,
     val timestamp: Long = System.currentTimeMillis()
+)
+
+data class MeshPeerInfo(
+    val hostname: String,
+    val ip: String,
+    val online: Boolean,
+    val os: String,
+    val direct: Boolean = true
 )

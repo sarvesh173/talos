@@ -121,6 +121,19 @@ class TestMeshStatus(MeshE2ETestCase):
         resp = await self.client.get("/api/mesh/status")
         self.assertEqual(resp.status_code, 200)
 
+    async def test_mesh_peers_discovery_endpoint(self):
+        """Peers discover endpoint returns active mesh subnet peers."""
+        resp = await self.client.get("/api/mesh/peers/discover")
+        self.assertEqual(resp.status_code, 200, resp.text)
+        data = resp.json()
+        self.assertIn("status", data)
+        self.assertIn("peers", data)
+        self.assertIsInstance(data["peers"], list)
+        for p in data["peers"]:
+            self.assertIn("hostname", p)
+            self.assertIn("direct", p)
+            self.assertEqual(p["route"], "tailscale-wireguard")
+
 
 class TestPairing(MeshE2ETestCase):
 

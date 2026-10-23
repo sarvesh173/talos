@@ -255,3 +255,28 @@ class TokenSummary(BaseModel):
     by_role: Dict[str, int] = Field(default_factory=dict)
     requests_total: int = 0
     last_used_at: Optional[float] = None
+
+
+class VoteChoice(str, Enum):
+    approve = "approve"
+    reject = "reject"
+    abstain = "abstain"
+
+
+class AgentVote(BaseModel):
+    agent_id: str
+    agent_name: str
+    vote: VoteChoice
+    rationale: str
+    confidence: float = 1.0
+
+
+class ConsensusProposal(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:12])
+    room_id: str
+    question: str
+    votes: List[AgentVote] = Field(default_factory=list)
+    outcome: str = "open"
+    consensus_ratio: float = 0.0
+    status: str = "resolved"
+    created_at: float = Field(default_factory=time.time)

@@ -171,6 +171,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.i(TAG, "WebSocket connected to $roomId")
                 _isConnected.value = true
+                flushOfflineQueue(webSocket, roomId)
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -338,6 +339,74 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 "content": $escaped
             }
         """.trimIndent()
-        activeWebSocket?.send(payload)
+        val sent = activeWebSocket?.send(payload) == true
+        if (!sent) {
+            enqueueOfflineMessage(currentRoom, text)
+            val optimistic = Message(
+                id = "temp_${System.currentTimeMillis()}",
+                room_id = currentRoom,
+                sender_id = "sarvesh",
+                sender_name = "Sarvesh",
+                sender_role = Role.human,
+                content = text,
+                created_at = System.currentTimeMillis() / 1000.0
+            )
+            _messages.value = _messages.value + optimistic
+        }
+    }
+
+    private fun flushOfflineQueue(ws: WebSocket, currentRoom: String) {
+        val queued = loadOfflineQueue()
+        if (queued.isEmpty()) return
+        val remaining = mutableListOf<QueuedMessage>()
+        for (item in queued) {
+            if (item.roomId == currentRoom) {
+                val escaped = json.encodeToString(item.content)
+                val payload = """
+                    {
+                        "type": "message",
+                        "room_id": "${item.roomId}",
+                        "sender_name": "Sarvesh",
+                        "content": $escaped
+                    }
+                """.trimIndent()
+                val sent = ws.send(payload)
+                if (!sent) remaining.add(item)
+            } else {
+                remaining.add(item)
+            }
+        }
+        saveOfflineQueue(remaining)
+    }
+
+    private fun loadOfflineQueue(): List<QueuedMessage> {
+        val raw = prefs.getString("offline_msg_queue", null) ?: return emptyList()
+        return try {
+            json.decodeFromString<List<QueuedMessage>>(raw)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveOfflineQueue(items: List<QueuedMessage>) {
+        try {
+            val raw = json.encodeToString(items)
+            prefs.edit().putString("offline_msg_queue", raw).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save offline queue: ${e.message}")
+        }
+    }
+
+    private fun enqueueOfflineMessage(roomId: String, text: String) {
+        val list = loadOfflineQueue().toMutableList()
+        list.add(QueuedMessage(roomId, text))
+        saveOfflineQueue(list)
     }
 }
+
+@kotlinx.serialization.Serializable
+data class QueuedMessage(
+    val roomId: String,
+    val content: String,
+    val timestamp: Long = System.currentTimeMillis()
+)

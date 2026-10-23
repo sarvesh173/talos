@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -16,8 +17,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,15 +40,13 @@ import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 
 /**
- * TALOS Landing Screen (Anti-Slop Craftsmanship & Precision Developer Console)
+ * TALOS Landing Screen (Clean, Authentic, Anti-Slop Interface)
  *
- * Implements anti-slop rules from taste-skill v2 and NeedMCP Raycast/Alabaster patterns:
- * - R-02: Honest, human copy without em dashes or corporate puffery.
- * - R-08: Zero gratuitous decorative arrows on action buttons.
- * - R-09: No redundant pill badges, glow borders, or repetitive green dots.
- * - R-15: Context-specific CTA ("Enter Chamber" instead of generic "Get Started").
- * - R-17: Truthful infrastructure numbers (10 agents, Tailscale IPv4, WireGuard P2P).
- * - C-1..C-5: Purposeful hierarchy, high-density telemetry, and WCAG 2.2 touch targets.
+ * Designed with calm simplicity:
+ * - Pure, deep dark surfaces without fake techno-jargon or neon glows.
+ * - Hero CLI agent cards with crisp, authentic, high-contrast SVG vector emblems.
+ * - Actionable Chamber selectors.
+ * - Tactile, solid typography and controls.
  */
 @Composable
 fun LandingScreen(
@@ -62,7 +64,7 @@ fun LandingScreen(
 
     val buttonScale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1.0f,
-        animationSpec = tween(durationMillis = 120, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 100, easing = FastOutSlowInEasing),
         label = "ButtonScale"
     )
 
@@ -77,11 +79,11 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Clean Wordmark + Live Telemetry Marker
+                // Wordmark + Clean Status
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -89,9 +91,9 @@ fun LandingScreen(
                     Text(
                         text = "TALOS",
                         color = talosTextPrimary,
-                        fontSize = 18.sp,
+                        fontSize = 19.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp
+                        letterSpacing = 1.sp
                     )
                     Box(
                         modifier = Modifier
@@ -100,18 +102,18 @@ fun LandingScreen(
                             .background(StatusGreen)
                     )
                     Text(
-                        text = "Mesh Online",
+                        text = "Online",
                         color = talosTextMuted,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
-                // Theme Mode Switcher (48dp Touch Target)
+                // Theme Mode Switcher
                 IconButton(
                     onClick = onToggleTheme,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
                         .background(talosSurface)
                         .border(1.dp, talosBorder, CircleShape)
@@ -123,7 +125,7 @@ fun LandingScreen(
                         imageVector = if (isCurrentDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                         contentDescription = null,
                         tint = talosTextMuted,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -134,18 +136,18 @@ fun LandingScreen(
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .background(talosBg)
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // High-Precision Purposeful CTA (No generic "Get Started", No decorative arrow)
+                // Solid, dignified Action Button (No radioactive neon cyan)
                 Button(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isCurrentDark) Color(0xFF38BDF8) else Color(0xFF0284C7),
-                        contentColor = if (isCurrentDark) Color(0xFF090D14) else Color.White
+                        containerColor = if (isCurrentDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                        contentColor = if (isCurrentDark) Color(0xFF090D14) else Color(0xFFF8FAFC)
                     ),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -158,14 +160,14 @@ fun LandingScreen(
                         text = "Enter Chamber",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        letterSpacing = 0.4.sp
+                        letterSpacing = 0.3.sp
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Tailscale peer auto-discovery and token pairing ready",
+                    text = "Local mesh ready · Zero cloud telemetry",
                     color = talosTextMuted,
                     fontSize = 11.sp,
                     textAlign = TextAlign.Center
@@ -178,123 +180,169 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Start
         ) {
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Hero Header (Direct, honest developer title without slop eyebrows)
-            Text(
-                text = "Autonomous Multi-Agent Workspace",
-                color = talosTextPrimary,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.3).sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .semantics { heading() }
-            )
+            // Main Header
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(
+                    text = "Autonomous Workspace",
+                    color = talosTextPrimary,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp,
+                    modifier = Modifier.semantics { heading() }
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-            Text(
-                text = "Private peer-to-peer mesh for your CLI agents to deliberate, reason, and execute code together.",
-                color = talosTextMuted,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
+                Text(
+                    text = "Private multi-agent mesh for your CLI agents to deliberate, reason, and build together.",
+                    color = talosTextMuted,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Real-Time Mesh Telemetry Console (Dynamic, high-density developer HUD)
-            Surface(
-                color = talosSurface,
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, talosBorder),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+            // Section 1: Active Chambers (Real actionable workspaces)
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(
+                    text = "Chambers",
+                    color = talosTextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.3.sp
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // The Council Chamber Card
+                Surface(
+                    color = talosSurface,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, talosBorder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { handlePrimaryAction() }
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF6366F1).copy(alpha = 0.14f))
+                                .border(1.dp, Color(0xFF6366F1).copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .clip(CircleShape)
-                                    .background(StatusGreen)
+                            Icon(
+                                imageVector = Icons.Default.Groups,
+                                contentDescription = null,
+                                tint = Color(0xFF818CF8),
+                                modifier = Modifier.size(22.dp)
                             )
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "P2P WireGuard Mesh",
+                                text = "The Council",
                                 color = talosTextPrimary,
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Multi-agent consensus with Hermes, OmniRush, Claude & Codex",
+                                color = talosTextMuted,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            )
                         }
-                        Text(
-                            text = "100.75.107.79",
-                            color = talosTextMuted,
-                            fontSize = 11.sp,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            tint = talosTextMuted,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-                    HorizontalDivider(color = talosBorder.copy(alpha = 0.5f))
-                    Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
+                // Direct Link Chamber Card
+                Surface(
+                    color = talosSurface,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, talosBorder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { handlePrimaryAction() }
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "CONSENSUS QUORUM",
-                                color = talosTextMuted,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
-                            )
-                            Text(
-                                text = "60% Threshold (Active)",
-                                color = talosTextPrimary,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF10B981).copy(alpha = 0.14f))
+                                .border(1.dp, Color(0xFF10B981).copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.QuestionAnswer,
+                                contentDescription = null,
+                                tint = Color(0xFF34D399),
+                                modifier = Modifier.size(20.dp)
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "TRANSPORT PROTOCOL",
-                                color = talosTextMuted,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
-                            )
-                            Text(
-                                text = "WebSocket Binary Opus",
+                                text = "Direct Link",
                                 color = talosTextPrimary,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Dedicated 1-on-1 session with Core Reasoning Engine",
+                                color = talosTextMuted,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
+                                lineHeight = 16.sp
                             )
                         }
+
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            tint = talosTextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Agent Fleet Section (Discipline: One subtle counter, no loud badges)
+            // Section 2: Agent Bench (The Hero Vector Emblems)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -303,123 +351,52 @@ fun LandingScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Agent Bench",
+                    text = "Registered Agents",
                     color = talosTextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.3.sp
                 )
                 Text(
-                    text = "${AgentEmblems.size} Registered",
+                    text = "${AgentEmblems.size} Available",
                     color = talosTextMuted,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Normal
+                    fontSize = 12.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Agent Cards Rail (Quiet, clean cards without repetitive green pills)
+            // Agent Cards Horizontal Rail (Clean, high-contrast, perfectly visible)
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(AgentEmblems, key = { it.key }) { emblem ->
-                    CraftAgentCard(emblem = emblem)
+                    CleanAgentCard(emblem = emblem)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // System Capabilities Card (Truthful technical specs instead of marketing buzzwords)
-            Surface(
-                color = talosSurface,
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, talosBorder),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Mesh Protocol & Orchestration",
-                        color = talosTextPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    TelemetrySpecRow(
-                        label = "Peer Route",
-                        value = "100.75.107.79:8000 (Tailscale subnet)"
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    TelemetrySpecRow(
-                        label = "Consensus Engine",
-                        value = "Democratic Quorum (60% threshold)"
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    TelemetrySpecRow(
-                        label = "Voice Pipeline",
-                        value = "Binary Opus streaming over WebSocket"
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    TelemetrySpecRow(
-                        label = "Offline Reliability",
-                        value = "Persistent SharedPreferences FIFO queue"
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }
 
-@Composable
-private fun TelemetrySpecRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            color = talosTextMuted,
-            fontSize = 12.sp
-        )
-        Text(
-            text = value,
-            color = talosTextPrimary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
 /**
- * High-craft, anti-slop agent card:
- * - Authentic vector artwork in recessed tonal box.
- * - Agent title and role description.
- * - Removed redundant green status pill on every card.
+ * High-Contrast, Clean Agent Card displaying authentic vector emblems.
  */
 @Composable
-private fun CraftAgentCard(
+private fun CleanAgentCard(
     emblem: AgentEmblem,
     modifier: Modifier = Modifier
 ) {
-    val isDark = LocalIsDark.current
-    val boxBg = if (isDark) Color(0xFF161F2E) else Color(0xFFF1F5F9)
-
     Surface(
         color = talosSurface,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, talosBorder),
         modifier = modifier
-            .width(156.dp)
-            .height(126.dp)
+            .width(160.dp)
+            .height(130.dp)
             .semantics(mergeDescendants = true) {
                 contentDescription = "${emblem.label}: ${emblem.role}"
             }
@@ -427,18 +404,19 @@ private fun CraftAgentCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            // Prominent, beautifully colored Emblem Icon Box
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(42.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(boxBg)
-                    .border(1.dp, talosBorder, RoundedCornerShape(10.dp)),
+                    .background(emblem.accent.copy(alpha = 0.14f))
+                    .border(1.dp, emblem.accent.copy(alpha = 0.40f), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                AgentEmblemIcon(emblem = emblem, size = 22.dp, tint = null)
+                AgentEmblemIcon(emblem = emblem, size = 24.dp, tint = null)
             }
 
             Column {

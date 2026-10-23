@@ -99,25 +99,91 @@ def _seed_defaults(conn: sqlite3.Connection) -> None:
     cur = conn.cursor()
     now = time.time()
 
-    # Default Agents: Core & OmniRush
-    core_agent = AgentProfile(
-        id="core",
-        name="TALOS Core",
-        color="#38bdf8",
-        model="hermes-agent",
-        role_description="Core reasoning orchestrator and primary interface.",
-        is_active=True
-    )
-    omnirush = AgentProfile(
-        id="omnirush",
-        name="OmniRush",
-        color="#a855f7",
-        model="omnirush-cli",
-        role_description="Autonomous coding powerhouse & systems architect.",
-        is_active=True
-    )
+    # All 10 registered CLI agents
+    all_agents = [
+        AgentProfile(
+            id="hermes",
+            name="Hermes",
+            color="#22c55e",
+            model="hermes-agent",
+            role_description="Nous Research · Autonomy — autonomous CLI reasoning engine and primary interface.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="claude",
+            name="Claude",
+            color="#6366f1",
+            model="claude-code",
+            role_description="Anthropic · Architecture — methodical reasoning, architecture design, and thorough review.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="codex",
+            name="Codex",
+            color="#10b981",
+            model="codex-cli",
+            role_description="OpenAI · Code & Synthesis — rapid implementation, code generation, and synthesis across languages.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="gemini",
+            name="Gemini",
+            color="#f59e0b",
+            model="gemini-cli",
+            role_description="Google · Multimodal Reasoning — deep reasoning, multimodal understanding, and adaptive strategy.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="meta",
+            name="Llama",
+            color="#8b5cf6",
+            model="llama-cli",
+            role_description="Meta AI · Llama Family — open-weights reasoning, efficiency, and community model ecosystem.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="mistral",
+            name="Mistral",
+            color="#14b8a6",
+            model="mistral-cli",
+            role_description="Mistral AI · Open Weights — compact, powerful, and precise open-weight model specialist.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="deepseek",
+            name="DeepSeek",
+            color="#ef4444",
+            model="deepseek-cli",
+            role_description="DeepSeek · Reasoning — advanced chain-of-thought reasoning and technical depth.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="qwen",
+            name="Qwen",
+            color="#3b82f6",
+            model="qwen-cli",
+            role_description="Alibaba · Qwen Series — multilingual reasoning, Chinese-language depth, and broad utility.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="openclaw",
+            name="OpenClaw",
+            color="#ec4899",
+            model="openclaw-cli",
+            role_description="Tools & Automation — tooling, automation scripting, and developer workflow acceleration.",
+            is_active=True,
+        ),
+        AgentProfile(
+            id="omnirush",
+            name="OmniRush",
+            color="#a855f7",
+            model="omnirush-cli",
+            role_description="High-Throughput Runner — autonomous coding powerhouse, systems architect, parallel execution.",
+            is_active=True,
+        ),
+    ]
 
-    for agent in [core_agent, omnirush]:
+    for agent in all_agents:
         cur.execute("""
         INSERT OR REPLACE INTO agents (id, name, avatar, color, model, role_description, system_prompt, is_active)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -126,32 +192,33 @@ def _seed_defaults(conn: sqlite3.Connection) -> None:
             agent.model, agent.role_description, agent.system_prompt, 1 if agent.is_active else 0
         ))
 
-    # Room 1: Direct link (Core DM)
+    # Room 1: Direct link (Hermes DM)
+    hermes = next(a for a in all_agents if a.id == "hermes")
     cur.execute("""
     INSERT INTO rooms (id, name, description, mode, participants_json, agent_ids_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        "core-dm",
+        "hermes-dm",
         "Direct Link",
-        "Direct point-to-point chamber with core reasoning engine.",
+        "Direct point-to-point chamber with the Hermes reasoning engine.",
         RoomMode.dm.value,
-        json.dumps([core_agent.model_dump()]),
-        json.dumps([core_agent.id]),
+        json.dumps([hermes.model_dump()]),
+        json.dumps([hermes.id]),
         now,
         now
     ))
 
-    # Room 2: The Council (Multi-agent room)
+    # Room 2: The Council (all 10 agents)
     cur.execute("""
     INSERT INTO rooms (id, name, description, mode, participants_json, agent_ids_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         "the-council",
         "The Council",
-        "Multi-agent collaborative chamber. Core + OmniRush + Specialist Agents.",
+        "Multi-agent collaborative chamber. All 10 CLI agents participate in structured deliberation.",
         RoomMode.group.value,
-        json.dumps([core_agent.model_dump(), omnirush.model_dump()]),
-        json.dumps([core_agent.id, omnirush.id]),
+        json.dumps([a.model_dump() for a in all_agents]),
+        json.dumps([a.id for a in all_agents]),
         now,
         now
     ))

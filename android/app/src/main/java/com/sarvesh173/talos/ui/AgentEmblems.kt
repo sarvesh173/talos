@@ -35,9 +35,9 @@ data class AgentEmblem(
 )
 
 val AgentEmblems: List<AgentEmblem> = listOf(
-    AgentEmblem("hermes", "Hermes Agent", "Nous Research · Autonomy", R.drawable.ic_hermes, Color(0xFF22C55E)),
+    AgentEmblem("hermes", "Hermes Agent", "Nous Research · Autonomy", R.drawable.ic_hermes, Color(0xFFFFBF00)),
     AgentEmblem("claude", "Claude Code", "Anthropic · Architecture", R.drawable.ic_claude, Color(0xFFD97757)),
-    AgentEmblem("codex", "Codex", "OpenAI · Code & Synthesis", R.drawable.ic_codex, Color(0xFF10A37F)),
+    AgentEmblem("codex", "Codex", "OpenAI · Code & Synthesis", R.drawable.ic_codex, Color(0xFF7A9DFF)),
     AgentEmblem("gemini", "Gemini", "Google · Multimodal Reasoning", R.drawable.ic_gemini, Color(0xFF3186FF)),
     AgentEmblem("meta", "Meta AI", "Meta · Llama Family", R.drawable.ic_meta, Color(0xFF1877F2)),
     AgentEmblem("mistral", "Mistral AI", "Mistral AI · Open Weights", R.drawable.ic_mistral, Color(0xFFF24E1E)),

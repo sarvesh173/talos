@@ -99,8 +99,8 @@ fun LandingScreen(
         listOf(
             AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), Color(0xFFEA580C)),
             AgentNode("claude", "Claude Code", "Anthropic · Architecture", "Arch · Plan", emblemByKey("claude"), Color(0xFFD97757)),
-            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), Color(0xFF16A34A)),
-            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), Color(0xFF0D9488))
+            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), Color(0xFFFFBF00)),
+            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), Color(0xFF7A9DFF))
         )
     }
 
@@ -770,7 +770,7 @@ private fun AgentNodeWithBubble(
         // Tactile Agent Card
         Surface(
             color = talosSurface,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(18.dp),
             border = BorderStroke(
                 width = if (isActive) 1.8.dp else 1.dp,
                 color = if (isActive) node.accent else talosBorder
@@ -778,14 +778,14 @@ private fun AgentNodeWithBubble(
             modifier = Modifier
                 .size(width = 116.dp, height = 104.dp)
                 .scale(cardScale)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(18.dp))
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null
                 ) { onTap() }
                 .shadow(
                     elevation = if (isActive) 4.dp else 0.dp,
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(18.dp)
                 )
         ) {
             Column(

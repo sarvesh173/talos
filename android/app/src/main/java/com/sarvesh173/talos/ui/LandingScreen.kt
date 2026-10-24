@@ -322,11 +322,7 @@ fun LandingScreen(
                         leadingIcon = {
                             Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(12.dp))
                         },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        border = AssistChipDefaults.assistChipBorder(borderColor = MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     )
                     AssistChip(
                         onClick = {},
@@ -334,11 +330,7 @@ fun LandingScreen(
                         leadingIcon = {
                             Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(12.dp))
                         },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        border = AssistChipDefaults.assistChipBorder(borderColor = MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     )
                     AssistChip(
                         onClick = {},
@@ -346,11 +338,7 @@ fun LandingScreen(
                         leadingIcon = {
                             Icon(Icons.Default.Groups, contentDescription = null, modifier = Modifier.size(12.dp))
                         },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        border = AssistChipDefaults.assistChipBorder(borderColor = MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     )
                 }
 

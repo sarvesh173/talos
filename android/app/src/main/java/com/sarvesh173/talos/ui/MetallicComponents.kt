@@ -9,7 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
  * Reusable Material 3 Metallic UI Components
@@ -35,7 +34,6 @@ import androidx.compose.ui.unit.dp
  * 2. MachinedIconWell: Recessed socket with dark obsidian tile (#0F172A) ensuring
  *    100% vector contrast across both light and dark themes.
  * 3. MetallicButton: Tactile spring button with metallic hairline edge.
- * 4. MetallicBadge: Pill badge with specular reflection.
  */
 
 @Composable
@@ -91,13 +89,13 @@ fun MachinedIconWell(
     val wellBg = if (forceDark) {
         Color(0xFF0F172A) // Dark obsidian tile for multi-color emblems
     } else {
-        emblem.brandColor.copy(alpha = if (isDark) 0.12f else 0.10f)
+        emblem.accent.copy(alpha = if (isDark) 0.12f else 0.10f)
     }
 
     val wellBorder = if (forceDark) {
-        BorderStroke(1.dp, emblem.brandColor.copy(alpha = 0.45f))
+        BorderStroke(1.dp, Color(0xFFEA580C).copy(alpha = 0.45f))
     } else {
-        BorderStroke(1.dp, emblem.brandColor.copy(alpha = if (isDark) 0.30f else 0.40f))
+        BorderStroke(1.dp, emblem.accent.copy(alpha = if (isDark) 0.30f else 0.40f))
     }
 
     Box(
@@ -105,7 +103,7 @@ fun MachinedIconWell(
             .size(size)
             .clip(RoundedCornerShape(12.dp))
             .background(wellBg)
-            .border(wellBorder.width, wellBorder.brush, RoundedCornerShape(12.dp)),
+            .border(wellBorder, RoundedCornerShape(12.dp)),
         contentAlignment = Alignment.Center
     ) {
         AgentEmblemIcon(emblem = emblem, size = iconSize, tint = null)

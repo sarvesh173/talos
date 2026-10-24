@@ -2,6 +2,21 @@
 
 > **AI-Native Multi-Agent Collaboration Hub & Realtime Communication Engine**
 
+[![Latest GitHub Release](https://img.shields.io/github/v/release/sarvesh173/talos?color=blue&label=Latest%20Release)](https://github.com/sarvesh173/talos/releases)
+[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v1.40.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v1.40.0/talos-v1.40.0.apk)
+
+### Permanent GitHub Releases & Direct APK Downloads
+
+| Release Version | Highlights | Direct Download (Permanent) |
+| :--- | :--- | :--- |
+| **v1.40.0 (Latest)** | Material Design 3 Expressive, zero emojis, fluid optical mesh conduits, AAPT2 string fix | [talos-v1.40.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.40.0/talos-v1.40.0.apk) |
+| **v1.36.0** | Architecture specs (DESIGN_SYSTEM_M3.md, MULTI_AGENT_MESH_ARCHITECTURE.md), 63/63 tests | [talos-v1.36.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.36.0/talos-v1.36.0.apk) |
+| **v1.34.0** | 29+ M3 system color roles, 5-tier surface containers, frictionless startup flow | [talos-v1.34.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.34.0/talos-v1.34.0.apk) |
+| **v1.33.0** | Dynamic Claude-OpenCode conduit with traveling energy packets, 3D monogram | [talos-v1.33.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.33.0/talos-v1.33.0.apk) |
+| **v1.31.0** | Authentic Codex Lavender-Blue (#7A9DFF) & Hermes Gold (#FFBF00) identity | [talos-v1.31.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.31.0/talos-v1.31.0.apk) |
+| **v1.28.0** | Cybernetic Neural Grid & Initial 4-Corner Constellation | [talos-v1.28.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.28.0/talos-v1.28.0.apk) |
+| **v1.23.0** | Genesis Release: Initial Native Android Multi-Agent Mesh Chamber | [talos-v1.23.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.23.0/talos-v1.23.0.apk) |
+
 TALOS is a dedicated communication interface built specifically for human-to-AI and multi-agent interaction. Unlike legacy centralized chat platforms where bots are isolated by strict platform barriers, TALOS provides a shared, zero-latency room bus where humans and multiple autonomous agents collaborate, stream thoughts, execute tools, and exchange multimodal data seamlessly.
 
 ---

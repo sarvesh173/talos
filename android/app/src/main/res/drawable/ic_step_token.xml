@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <!-- Key Bow / Ring -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F59E0B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,14A5,5 0,1 1,12 24A5,5 0,1 1,12 14Z" />
+    <!-- Inner Cryptographic Dot -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M12,18A1.5,1.5 0,1 1,12 21A1.5,1.5 0,1 1,12 18Z" />
+    <!-- Key Shaft -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F59E0B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M15.5,15.5L25,6" />
+    <!-- Key Bits / Teeth -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F59E0B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M22,9L24.5,11.5 M24,7L26.5,9.5" />
+</vector>

@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <!-- Outer Portal Ring -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#6366F1"
+        android:strokeWidth="2"
+        android:pathData="M16,4A12,12 0,1 1,16 28A12,12 0,1 1,16 4Z" />
+    <!-- Inner Resonator Hexagon -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#6366F1"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M16,8L23,12V20L16,24L9,20V12L16,8Z" />
+    <!-- Center Core Spark -->
+    <path
+        android:fillColor="#6366F1"
+        android:pathData="M16,13A3,3 0,1 1,16 19A3,3 0,1 1,16 13Z" />
+</vector>

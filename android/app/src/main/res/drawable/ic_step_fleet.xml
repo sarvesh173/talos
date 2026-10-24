@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <!-- Center Lead Agent Core -->
+    <path
+        android:fillColor="#818CF8"
+        android:pathData="M16,5C19.3,5 22,7.7 22,11V15C22,18.3 19.3,21 16,21C12.7,21 10,18.3 10,15V11C10,7.7 12.7,5 16,5Z" />
+    <!-- Center Agent Eyes -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M14,11A1.2,1.2 0,1 1,14 13.4A1.2,1.2 0,1 1,14 11Z M18,11A1.2,1.2 0,1 1,18 13.4A1.2,1.2 0,1 1,18 11Z" />
+    <!-- Left Wing Agent -->
+    <path
+        android:fillColor="#818CF8"
+        android:fillAlpha="0.65"
+        android:pathData="M7,12C8.7,12 10,13.3 10,15V18C10,19.7 8.7,21 7,21C5.3,21 4,19.7 4,18V15C4,13.3 5.3,12 7,12Z" />
+    <!-- Right Wing Agent -->
+    <path
+        android:fillColor="#818CF8"
+        android:fillAlpha="0.65"
+        android:pathData="M25,12C26.7,12 28,13.3 28,15V18C28,19.7 26.7,21 25,21C23.3,21 22,19.7 22,18V15C22,13.3 23.3,12 25,12Z" />
+    <!-- Synchronized Bus Bar -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#818CF8"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M7,23L25,23 M16,21L16,26" />
+</vector>

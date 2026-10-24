@@ -139,7 +139,7 @@ fun LandingScreen(
         if (!isDissolving) return@LaunchedEffect
 
         val frozenFrame = captureRenderedFrame(rootView)
-        val palette = DarkDissolvePalette // Always OLED pure dark palette
+        val palette = if (isCurrentDark) DarkDissolvePalette else LightDissolvePalette
         particleField = buildDotField(frozenFrame, palette)
 
         val startNanos = withFrameNanos { it }
@@ -297,7 +297,7 @@ fun LandingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF000000))
+            .background(MaterialTheme.colorScheme.background)
     ) {
     Scaffold(
         modifier = Modifier
@@ -306,7 +306,7 @@ fun LandingScreen(
                 // Smooth initial cross-dissolve to particles
                 alpha = scaffoldAlpha.floatValue
             },
-        containerColor = Color(0xFF000000),
+        containerColor = MaterialTheme.colorScheme.background,
                 topBar = {
             Column(
                 modifier = Modifier

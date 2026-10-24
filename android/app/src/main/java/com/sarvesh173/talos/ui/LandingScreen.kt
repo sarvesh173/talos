@@ -1219,3 +1219,186 @@ private fun ParticleDissolveOverlay(
         }
     }
 }
+
+/**
+ * Material 3 ElevatedCard with Machined Dark Obsidian Sockets
+ */
+@Composable
+private fun AgentNodeWithBubble(
+    node: AgentNode,
+    isActive: Boolean,
+    bubbleText: String?,
+    bubbleBelow: Boolean,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    alignRight: Boolean = false,
+    onTap: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val cardScale by animateFloatAsState(
+        targetValue = when {
+            isPressed -> 0.96f
+            isActive -> 1.03f
+            else -> 1.0f
+        },
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 600f),
+        label = "card_scale"
+    )
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = if (alignRight) Alignment.End else Alignment.Start
+    ) {
+        // Speech Bubble Placed Above Card
+        if (!bubbleBelow) {
+            AnimatedVisibility(
+                visible = !bubbleText.isNullOrBlank() && isActive,
+                enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { 15 },
+                exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { -10 }
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
+                    modifier = Modifier
+                        .padding(bottom = 6.dp)
+                        .widthIn(max = 168.dp)
+                        .shadow(4.dp, RoundedCornerShape(12.dp), spotColor = Color.Black.copy(alpha = 0.25f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(node.accent)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = bubbleText ?: "",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+
+        // Tactile Material 3 ElevatedCard
+        ElevatedCard(
+            shape = ShapeLargeIncreased,
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            ),
+            elevation = CardDefaults.elevatedCardElevation(
+                defaultElevation = if (isActive) 6.dp else 2.dp,
+                pressedElevation = 0.dp
+            ),
+            modifier = Modifier
+                .size(width = 114.dp, height = 100.dp)
+                .scale(cardScale)
+                .border(
+                    width = if (isActive) 1.5.dp else 1.dp,
+                    brush = if (isActive) {
+                        Brush.linearGradient(
+                            colors = listOf(
+                                node.accent.copy(alpha = 0.95f),
+                                node.accent.copy(alpha = 0.40f)
+                            )
+                        )
+                    } else {
+                        metallicBorderBrush(isDark)
+                    },
+                    shape = ShapeLargeIncreased
+                )
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onTap() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(7.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Machined Dark Obsidian Socket (ensures 100% emblem contrast in all themes)
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF0F172A))
+                        .border(1.dp, node.accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AgentEmblemIcon(emblem = node.emblem, size = 28.dp, tint = null)
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = node.name,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (isActive) "Active" else node.specTag,
+                        color = if (isActive) node.accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        // Speech Bubble Placed Below Card
+        if (bubbleBelow) {
+            AnimatedVisibility(
+                visible = !bubbleText.isNullOrBlank() && isActive,
+                enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { -15 },
+                exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { 10 }
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .widthIn(max = 168.dp)
+                        .shadow(4.dp, RoundedCornerShape(12.dp), spotColor = Color.Black.copy(alpha = 0.25f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(node.accent)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = bubbleText ?: "",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

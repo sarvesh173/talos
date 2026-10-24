@@ -1,28 +1,7 @@
 package com.sarvesh173.talos.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -212,13 +191,14 @@ fun OnboardingWizard(
                 val speed = 0.5f + ((i * 17) % 50) / 100f
                 val currentY = (seedY - dustPhase * speed) % 1f
                 val y = if (currentY < 0f) (currentY + 1f) * h else currentY * h
-                val x = (seedX * w + kotlin.math.sin(dustPhase * 6.28f + i) * 14.dp.toPx())
-                val alpha = (kotlin.math.sin(((y / h) * 3.14159f).coerceIn(0f, 3.14159f)) * 0.22f).coerceIn(0f, 1f)
+                val x = seedX * w + kotlin.math.sin(dustPhase * 6.28f + i.toFloat()) * 14.dp.toPx()
+                val sinVal = kotlin.math.sin(((y / h) * 3.14159f).coerceIn(0f, 3.14159f))
+                val alpha = (sinVal * 0.22f).coerceIn(0f, 1f)
 
                 drawCircle(
                     color = if (i % 2 == 0) PrimaryAccent.copy(alpha = alpha) else Color(0xFF7A9DFF).copy(alpha = alpha * 0.85f),
-                    radius = (1.5.dp.toPx() * (1f + (i % 3) * 0.35f)),
-                    center = Offset(x, y)
+                    radius = 1.5.dp.toPx() * (1f + (i % 3) * 0.35f),
+                    center = Offset(x.toFloat(), y.toFloat())
                 )
             }
         }

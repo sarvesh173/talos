@@ -98,33 +98,50 @@ class MainActivity : ComponentActivity() {
                 AnimatedContent(
                     targetState = activeTarget,
                     transitionSpec = {
-                        // Material 3 emphasised motion: long, decelerating, no snapping.
-                        val forward = targetState == "main" || targetState == "wizard"
-                        val dir = if (forward) 1 else -1
                         val decelerate = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)
                         val accelerate = CubicBezierEasing(0.30f, 0.00f, 1.00f, 1.00f)
 
-                        (
-                            fadeIn(animationSpec = tween(durationMillis = 520, easing = decelerate)) +
+                        if (initialState == "landing" && (targetState == "wizard" || targetState == "main")) {
+                            // In-place cosmic emergence: particles dissolve in-place, new screen emerges from depth without horizontal jerk
+                            (
+                                fadeIn(animationSpec = tween(durationMillis = 950, easing = decelerate)) +
+                                scaleIn(animationSpec = tween(durationMillis = 950, easing = decelerate), initialScale = 0.95f)
+                            ).togetherWith(
+                                fadeOut(animationSpec = tween(durationMillis = 950, easing = androidx.compose.animation.core.LinearEasing))
+                            )
+                        } else if ((initialState == "wizard" || initialState == "main") && targetState == "landing") {
+                            // Return to landing: smooth fade + scale out
+                            (
+                                fadeIn(animationSpec = tween(durationMillis = 480, easing = decelerate))
+                            ).togetherWith(
+                                fadeOut(animationSpec = tween(durationMillis = 400, easing = accelerate)) +
+                                scaleOut(animationSpec = tween(durationMillis = 400, easing = accelerate), targetScale = 0.95f)
+                            )
+                        } else {
+                            val forward = targetState == "main" || targetState == "wizard"
+                            val dir = if (forward) 1 else -1
+                            (
+                                fadeIn(animationSpec = tween(durationMillis = 480, easing = decelerate)) +
                                 slideInHorizontally(
-                                    animationSpec = tween(durationMillis = 620, easing = decelerate),
+                                    animationSpec = tween(durationMillis = 540, easing = decelerate),
                                     initialOffsetX = { width -> (width / 3) * dir }
                                 ) +
                                 scaleIn(
-                                    animationSpec = tween(durationMillis = 620, easing = decelerate),
+                                    animationSpec = tween(durationMillis = 540, easing = decelerate),
                                     initialScale = 0.96f
                                 )
                             ).togetherWith(
-                            fadeOut(animationSpec = tween(durationMillis = 380, easing = accelerate)) +
+                                fadeOut(animationSpec = tween(durationMillis = 360, easing = accelerate)) +
                                 slideOutHorizontally(
-                                    animationSpec = tween(durationMillis = 520, easing = accelerate),
+                                    animationSpec = tween(durationMillis = 460, easing = accelerate),
                                     targetOffsetX = { width -> -(width / 3) * dir }
                                 ) +
                                 scaleOut(
-                                    animationSpec = tween(durationMillis = 520, easing = accelerate),
+                                    animationSpec = tween(durationMillis = 460, easing = accelerate),
                                     targetScale = 1.04f
                                 )
                             )
+                        }
                     },
                     label = "AppScreenTransition"
                 ) { screenKey ->

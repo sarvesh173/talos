@@ -191,6 +191,38 @@ fun OnboardingWizard(
             .fillMaxSize()
             .background(WizardBg)
     ) {
+        // Ambient cosmic stardust embers: continuous aesthetic matching from LandingScreen
+        val infiniteDust = rememberInfiniteTransition(label = "wizard_dust")
+        val dustPhase by infiniteDust.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(14000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "dust_phase"
+        )
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            for (i in 0 until 16) {
+                val seedX = ((i * 37 + 13) % 100) / 100f
+                val seedY = ((i * 59 + 29) % 100) / 100f
+                val speed = 0.5f + ((i * 17) % 50) / 100f
+                val currentY = (seedY - dustPhase * speed) % 1f
+                val y = if (currentY < 0f) (currentY + 1f) * h else currentY * h
+                val x = (seedX * w + kotlin.math.sin(dustPhase * 6.28f + i) * 14.dp.toPx())
+                val alpha = (kotlin.math.sin(((y / h) * 3.14159f).coerceIn(0f, 3.14159f)) * 0.22f).coerceIn(0f, 1f)
+
+                drawCircle(
+                    color = if (i % 2 == 0) PrimaryAccent.copy(alpha = alpha) else Color(0xFF7A9DFF).copy(alpha = alpha * 0.85f),
+                    radius = (1.5.dp.toPx() * (1f + (i % 3) * 0.35f)),
+                    center = Offset(x, y)
+                )
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

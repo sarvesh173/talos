@@ -43,16 +43,19 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * High-Craft Multi-Agent Constellation Canvas (Apple & Material 3 Expressive)
+ * Material 3 Metallic UI Multi-Agent Constellation Canvas
  *
- * Core Capabilities:
- * 1. 100% Light Mode & Dark Mode Text Legibility: Universal dynamic theme accessors
- *    (talosTextPrimary, talosTextMuted, talosSurface, talosBorder) prevent white-on-white text clipping.
- * 2. Purged Mesh Bus Gimmick: Equalizer and fake bus bars completely removed.
- * 3. Dynamic 5th Agent Spawning: OpenClaw and Claude dynamically recruit OpenCode into the mesh
- *    with smooth spring pop-in, auto-wired S-curve conduits, and live delegation banter.
- * 4. Authentic Vendor Vectors: Verified SVGs from Dashboard Icons MCP for Hermes Agent (#FFBF00 gold),
- *    Codex (>_ prompt #7A9DFF), Claude (#D97757 terracotta), OpenClaw (#EA580C), and OpenCode (#3B82F6).
+ * Core Engineering Upgrades:
+ * 1. Direct Peer-to-Peer Summoning Conduit: When Claude Code recruits OpenCode,
+ *    a direct sweeping curvilinear conduit connects Claude Code -> OpenCode, with
+ *    luminous traveling energy packets, followed by task completion and graceful termination.
+ * 2. Collision-Free Layout Spacing: Re-aligned center TALOS Core (y = -38dp) and OpenCode
+ *    (y = 100dp) with downward-oriented bubbles, eliminating all overlaps.
+ * 3. High-Contrast Dark Metallic Tile for OpenClaw: Dedicated dark slate container (#0F172A)
+ *    ensures white claw details pop crisply against light mode cards.
+ * 4. M3 Metallic UI Specular Design: Multi-stop metallic brushed borders (#94A3B8 -> #475569 -> #1E293B),
+ *    top-edge specular highlight shimmers, and machined chamfer sockets.
+ * 5. Authentic MCP Vectors: Pixel-perfect OpenCode 3D monogram and Nous Research Hermes Agent.
  */
 data class AgentNode(
     val key: String,
@@ -68,8 +71,14 @@ data class DelegationEvent(
     val toKey: String,
     val taskText: String,
     val replyText: String,
-    val triggersSpawn: Boolean = false
+    val actionType: DelegationAction = DelegationAction.NORMAL
 )
+
+enum class DelegationAction {
+    NORMAL,
+    SUMMON_OPENCODE,
+    TERMINATE_OPENCODE
+}
 
 @Composable
 fun LandingScreen(
@@ -94,7 +103,7 @@ fun LandingScreen(
         onOpenWizard?.invoke() ?: onGetStarted()
     }
 
-    // Agent fleet with authentic Dashboard Icons MCP vectors
+    // Agent fleet with authentic MCP vectors
     val baseNodes = remember {
         listOf(
             AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), Color(0xFFEA580C)),
@@ -107,14 +116,26 @@ fun LandingScreen(
 
     var isOpenCodeSpawned by remember { mutableStateOf(false) }
 
-    // Dynamic Multi-Agent Banter Scenarios (Includes dynamic OpenCode recruitment!)
+    // Dynamic Multi-Agent Banter & Summon/Dismiss Lifecycle
     val scenarios = remember {
         listOf(
             DelegationEvent("hermes", "codex", "Hi @codex, synthesize unit test suite", "Tests generated: 60/60 passing"),
             DelegationEvent("codex", "claude", "Hi @claude, review AST parser refactor", "System design verified: clean"),
-            DelegationEvent("claude", "openclaw", "Need another CLI agent to analyze terminal AST.", "Spawning @opencode CLI agent to mesh...", triggersSpawn = true),
-            DelegationEvent("opencode", "openclaw", "OpenCode online! AST & terminal tools ready.", "Terminal tools mapped into cluster."),
-            DelegationEvent("openclaw", "hermes", "Consensus proposal across 5 active CLI agents.", "Quorum verified (5/5 approved)")
+            DelegationEvent(
+                fromKey = "claude",
+                toKey = "opencode",
+                taskText = "Deep terminal AST analysis required. Summoning @opencode CLI agent...",
+                replyText = "OpenCode online! AST & terminal tools ready.",
+                actionType = DelegationAction.SUMMON_OPENCODE
+            ),
+            DelegationEvent(
+                fromKey = "opencode",
+                toKey = "claude",
+                taskText = "Executing deep AST pass: 0 syntax defects.",
+                replyText = "AST verified clean. Terminating @opencode session.",
+                actionType = DelegationAction.TERMINATE_OPENCODE
+            ),
+            DelegationEvent("openclaw", "hermes", "Consensus proposal across mesh cluster.", "Quorum verified (4/4 approved)")
         )
     }
 
@@ -125,7 +146,7 @@ fun LandingScreen(
     var receiverReply by remember { mutableStateOf<String?>(null) }
     var isReceiverSpeaking by remember { mutableStateOf(false) }
 
-    // Banter simulation loop with dynamic agent spawning
+    // Banter simulation loop with dynamic summon and termination
     LaunchedEffect(Unit) {
         while (true) {
             val scenario = scenarios[currentScenarioIndex]
@@ -135,50 +156,48 @@ fun LandingScreen(
             receiverReply = null
             isReceiverSpeaking = false
 
-            if (scenario.triggersSpawn) {
-                delay(1200)
+            if (scenario.actionType == DelegationAction.SUMMON_OPENCODE) {
+                delay(800)
                 isOpenCodeSpawned = true
             }
 
-            delay(1900)
+            delay(2100)
             isReceiverSpeaking = true
             receiverReply = scenario.replyText
 
-            delay(2800)
-            currentScenarioIndex = (currentScenarioIndex + 1) % scenarios.size
-            if (currentScenarioIndex == 0) {
-                // Reset spawn periodically so the user can watch the spawn animation replay!
+            if (scenario.actionType == DelegationAction.TERMINATE_OPENCODE) {
+                delay(2000)
                 isOpenCodeSpawned = false
             }
+
+            delay(2600)
+            currentScenarioIndex = (currentScenarioIndex + 1) % scenarios.size
         }
     }
 
     // Continuous Animation Drivers
     val infiniteTransition = rememberInfiniteTransition(label = "mesh_pulse")
 
-    // Traveling comet packet progress (0 to 1)
     val packetProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1900, easing = LinearEasing),
+            animation = tween(1800, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "packet_pulse"
     )
 
-    // Rotating celestial compass angle
     val compassRotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(28000, easing = LinearEasing),
+            animation = tween(30000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "compass_rotation"
     )
 
-    // Breathing core aura
     val auraPulse by infiniteTransition.animateFloat(
         initialValue = 0.985f,
         targetValue = 1.015f,
@@ -195,7 +214,7 @@ fun LandingScreen(
     var trAnchor by remember { mutableStateOf(Offset.Zero) }
     var blAnchor by remember { mutableStateOf(Offset.Zero) }
     var brAnchor by remember { mutableStateOf(Offset.Zero) }
-    var bcAnchor by remember { mutableStateOf(Offset.Zero) }
+    var opencodeAnchor by remember { mutableStateOf(Offset.Zero) }
 
     val anchorMap = mutableMapOf(
         "openclaw" to tlAnchor,
@@ -203,8 +222,8 @@ fun LandingScreen(
         "hermes" to blAnchor,
         "codex" to brAnchor
     )
-    if (isOpenCodeSpawned && bcAnchor != Offset.Zero) {
-        anchorMap["opencode"] = bcAnchor
+    if (isOpenCodeSpawned && opencodeAnchor != Offset.Zero) {
+        anchorMap["opencode"] = opencodeAnchor
     }
 
     Scaffold(
@@ -368,16 +387,16 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Precision Engineering Canvas: Minimal Compass, Diamond Lattice, and S-Curves
+            // Precision Engineering Canvas
             Canvas(modifier = Modifier.fillMaxSize()) {
                 if (centerAnchor == Offset.Zero) return@Canvas
 
                 // 1. Subtle Celestial Compass Ring
                 val radCompass = Math.toRadians(compassRotation.toDouble())
-                val orbitRadius = 70.dp.toPx()
+                val orbitRadius = 66.dp.toPx()
 
                 drawCircle(
-                    color = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.30f else 0.20f),
+                    color = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.25f else 0.18f),
                     radius = orbitRadius,
                     center = centerAnchor,
                     style = Stroke(
@@ -386,7 +405,7 @@ fun LandingScreen(
                     )
                 )
 
-                // Satellite node
+                // Orbiting satellite pulse node
                 val satX = centerAnchor.x + (orbitRadius * cos(radCompass)).toFloat()
                 val satY = centerAnchor.y + (orbitRadius * sin(radCompass)).toFloat()
                 drawCircle(
@@ -397,7 +416,7 @@ fun LandingScreen(
 
                 // 2. Secondary Cross-Mesh Peer Lattice
                 if (tlAnchor != Offset.Zero && trAnchor != Offset.Zero && blAnchor != Offset.Zero && brAnchor != Offset.Zero) {
-                    val peerLatticeColor = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.20f else 0.15f)
+                    val peerLatticeColor = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.18f else 0.14f)
                     val latticeStroke = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f))
                     drawLine(peerLatticeColor, tlAnchor, trAnchor, strokeWidth = 1.dp.toPx(), pathEffect = latticeStroke.pathEffect)
                     drawLine(peerLatticeColor, trAnchor, brAnchor, strokeWidth = 1.dp.toPx(), pathEffect = latticeStroke.pathEffect)
@@ -405,7 +424,62 @@ fun LandingScreen(
                     drawLine(peerLatticeColor, blAnchor, tlAnchor, strokeWidth = 1.dp.toPx(), pathEffect = latticeStroke.pathEffect)
                 }
 
-                // 3. Crisp Curvilinear S-Curve Conduits
+                // 3. Direct Peer-to-Peer Conduit: Claude Code -> OpenCode (When OpenCode is Summoned!)
+                if (isOpenCodeSpawned && trAnchor != Offset.Zero && opencodeAnchor != Offset.Zero) {
+                    val isDirectBeamActive = (activeSender == "claude" && activeReceiver == "opencode") ||
+                            (activeSender == "opencode" && activeReceiver == "claude")
+
+                    val dxClaude = opencodeAnchor.x - trAnchor.x
+                    val dyClaude = opencodeAnchor.y - trAnchor.y
+
+                    val ctrlClaude1 = Offset(trAnchor.x + dxClaude * 0.20f, trAnchor.y + dyClaude * 0.80f)
+                    val ctrlClaude2 = Offset(trAnchor.x + dxClaude * 0.80f, trAnchor.y + dyClaude * 0.20f)
+
+                    val directClaudePath = Path().apply {
+                        moveTo(trAnchor.x, trAnchor.y)
+                        cubicTo(ctrlClaude1.x, ctrlClaude1.y, ctrlClaude2.x, ctrlClaude2.y, opencodeAnchor.x, opencodeAnchor.y)
+                    }
+
+                    // Direct summon beam
+                    drawPath(
+                        path = directClaudePath,
+                        brush = Brush.linearGradient(
+                            colors = if (isDirectBeamActive) {
+                                listOf(Color(0xFFD97757).copy(alpha = 0.85f), Color(0xFF3B82F6).copy(alpha = 0.85f))
+                            } else {
+                                listOf(Color(0xFFD97757).copy(alpha = 0.35f), Color(0xFF3B82F6).copy(alpha = 0.35f))
+                            },
+                            start = trAnchor,
+                            end = opencodeAnchor
+                        ),
+                        style = Stroke(
+                            width = if (isDirectBeamActive) 2.2.dp.toPx() else 1.2.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f), packetProgress * 20f)
+                        )
+                    )
+
+                    // Direct packet traveling between Claude and OpenCode
+                    if (isDirectBeamActive) {
+                        val t = packetProgress
+                        val u = 1.0f - t
+                        val px = u * u * u * trAnchor.x + 3 * u * u * t * ctrlClaude1.x + 3 * u * t * t * ctrlClaude2.x + t * t * t * opencodeAnchor.x
+                        val py = u * u * u * trAnchor.y + 3 * u * u * t * ctrlClaude1.y + 3 * u * t * t * ctrlClaude2.y + t * t * t * opencodeAnchor.y
+
+                        drawCircle(
+                            color = Color(0xFF3B82F6).copy(alpha = 0.50f),
+                            radius = 5.dp.toPx(),
+                            center = Offset(px, py),
+                            style = Stroke(width = 1.2.dp.toPx())
+                        )
+                        drawCircle(
+                            color = if (isCurrentDark) Color.White else Color(0xFF0F172A),
+                            radius = 2.8.dp.toPx(),
+                            center = Offset(px, py)
+                        )
+                    }
+                }
+
+                // 4. Primary Curvilinear S-Curve Conduits to Central TALOS Core
                 for ((key, cardPos) in anchorMap) {
                     if (cardPos == Offset.Zero) continue
 
@@ -438,7 +512,7 @@ fun LandingScreen(
                         style = Stroke(width = if (isBeamActive) 1.8.dp.toPx() else 1.dp.toPx())
                     )
 
-                    // Luminous Data Packet
+                    // Luminous Data Packet to Center Hub
                     if (key == activeSender) {
                         val t = packetProgress
                         val u = 1.0f - t
@@ -462,12 +536,12 @@ fun LandingScreen(
             }
 
             // ==============================================================
-            // 1. CENTER TALOS HARDWARE INSTRUMENT (Unibody & Clean)
+            // 1. CENTER TALOS HARDWARE INSTRUMENT (M3 Metallic Finish)
             // ==============================================================
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(y = (-20).dp)
+                    .offset(y = (-38).dp)
                     .scale(auraPulse)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
@@ -479,7 +553,16 @@ fun LandingScreen(
                 Surface(
                     color = talosSurface,
                     shape = RoundedCornerShape(22.dp),
-                    border = BorderStroke(1.2.dp, talosBorder),
+                    border = BorderStroke(
+                        width = 1.2.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF94A3B8).copy(alpha = 0.60f),
+                                Color(0xFF475569).copy(alpha = 0.30f),
+                                Color(0xFF1E293B).copy(alpha = 0.60f)
+                            )
+                        )
+                    ),
                     modifier = Modifier
                         .size(width = 112.dp, height = 98.dp)
                         .shadow(8.dp, RoundedCornerShape(22.dp), spotColor = Color.Black.copy(alpha = 0.25f))
@@ -540,13 +623,14 @@ fun LandingScreen(
             // 2. CORNER & DYNAMIC AGENT CARDS
             // ==============================================================
 
-            // TOP-LEFT: OpenClaw
+            // TOP-LEFT: OpenClaw (With dark metallic squircle well for 100% lobster contrast!)
             AgentNodeWithBubble(
                 node = baseNodes[0],
                 isActive = activeSender == "openclaw" || activeReceiver == "openclaw",
                 bubbleText = if (activeSender == "openclaw") senderTask else (if (activeReceiver == "openclaw" && isReceiverSpeaking) receiverReply else null),
                 bubbleBelow = true,
                 isDark = isCurrentDark,
+                forceDarkIconWell = true,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = 18.dp, top = 16.dp)
@@ -582,38 +666,39 @@ fun LandingScreen(
                     },
                 onTap = {
                     activeSender = "claude"
-                    activeReceiver = "codex"
-                    senderTask = "Hi @codex, synthesize code module!"
+                    activeReceiver = "opencode"
+                    senderTask = "Deep terminal AST analysis required. Summoning @opencode CLI agent..."
                     receiverReply = null
                     isReceiverSpeaking = false
+                    isOpenCodeSpawned = true
                 }
             )
 
-            // DYNAMIC 5TH AGENT: OpenCode (Recruited by Claude & OpenClaw!)
+            // DYNAMIC 5TH AGENT: OpenCode (Recruited by Claude Code, positioned cleanly below center with zero overlap!)
             AnimatedVisibility(
                 visible = isOpenCodeSpawned,
                 enter = fadeIn(spring(dampingRatio = 0.75f, stiffness = 400f)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 400f)),
                 exit = fadeOut(tween(200)) + scaleOut(tween(200)),
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(y = 86.dp)
+                    .offset(y = 96.dp)
             ) {
                 AgentNodeWithBubble(
                     node = baseNodes[4],
                     isActive = activeSender == "opencode" || activeReceiver == "opencode",
                     bubbleText = if (activeSender == "opencode") senderTask else (if (activeReceiver == "opencode" && isReceiverSpeaking) receiverReply else null),
-                    bubbleBelow = false,
+                    bubbleBelow = true, // Bubble placed BELOW so it never overlaps TALOS Core!
                     isDark = isCurrentDark,
                     modifier = Modifier
                         .onGloballyPositioned { coords ->
                             val p = coords.positionInParent()
                             val s = coords.size
-                            bcAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
+                            opencodeAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
                         },
                     onTap = {
                         activeSender = "opencode"
                         activeReceiver = "claude"
-                        senderTask = "OpenCode CLI executing deep terminal pass!"
+                        senderTask = "Executing deep AST pass: 0 syntax defects."
                         receiverReply = null
                         isReceiverSpeaking = false
                     }
@@ -673,7 +758,7 @@ fun LandingScreen(
 }
 
 /**
- * Tactile Material 3 Agent Card with High-Contrast Text for Both Light and Dark Modes
+ * Material 3 Metallic Agent Card with Specular Highlights and Dark-Well Support
  */
 @Composable
 private fun AgentNodeWithBubble(
@@ -684,6 +769,7 @@ private fun AgentNodeWithBubble(
     isDark: Boolean,
     modifier: Modifier = Modifier,
     alignRight: Boolean = false,
+    forceDarkIconWell: Boolean = false,
     onTap: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -744,13 +830,28 @@ private fun AgentNodeWithBubble(
             }
         }
 
-        // Tactile Agent Card
+        // Tactile Material 3 Metallic Agent Card
         Surface(
             color = talosSurface,
             shape = RoundedCornerShape(18.dp),
             border = BorderStroke(
                 width = if (isActive) 1.5.dp else 1.dp,
-                color = if (isActive) node.accent.copy(alpha = 0.85f) else talosBorder
+                brush = if (isActive) {
+                    Brush.linearGradient(
+                        colors = listOf(
+                            node.accent.copy(alpha = 0.95f),
+                            node.accent.copy(alpha = 0.40f)
+                        )
+                    )
+                } else {
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF94A3B8).copy(alpha = if (isDark) 0.40f else 0.60f),
+                            Color(0xFF475569).copy(alpha = if (isDark) 0.20f else 0.30f),
+                            Color(0xFF1E293B).copy(alpha = if (isDark) 0.40f else 0.50f)
+                        )
+                    )
+                }
             ),
             modifier = Modifier
                 .size(width = 114.dp, height = 100.dp)
@@ -773,13 +874,25 @@ private fun AgentNodeWithBubble(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 44dp icon well with authentic vector drawable
+                // 44dp icon well with dark metallic squircle support (OpenClaw)
+                val wellBg = if (forceDarkIconWell) {
+                    Color(0xFF0F172A) // Dark obsidian tile so white/colored details pop 100% in both themes!
+                } else {
+                    node.accent.copy(alpha = if (isDark) 0.12f else 0.10f)
+                }
+
+                val wellBorder = if (forceDarkIconWell) {
+                    BorderStroke(1.dp, Color(0xFFEA580C).copy(alpha = 0.45f))
+                } else {
+                    BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.30f else 0.40f))
+                }
+
                 Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(node.accent.copy(alpha = if (isDark) 0.12f else 0.10f))
-                        .border(1.dp, node.accent.copy(alpha = if (isDark) 0.30f else 0.40f), RoundedCornerShape(12.dp)),
+                        .background(wellBg)
+                        .border(wellBorder.width, wellBorder.brush, RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     AgentEmblemIcon(emblem = node.emblem, size = 28.dp, tint = null)
@@ -804,7 +917,7 @@ private fun AgentNodeWithBubble(
             }
         }
 
-        // Speech Bubble Placed Below Card (for top agents)
+        // Speech Bubble Placed Below Card (for top agents & OpenCode)
         if (bubbleBelow) {
             AnimatedVisibility(
                 visible = !bubbleText.isNullOrBlank() && isActive,

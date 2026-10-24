@@ -59,8 +59,15 @@ talos/
 ├── core/               # Protocols, events, and data models
 ├── server/             # FastAPI + WebSocket room bus & Hermes bridge
 ├── web/                # Mobile-first React/Vite PWA interface
+├── docs/               # Architecture & design documentation
 └── README.md
 ```
+
+---
+
+## Documentation
+
+- **[Multi-Agent Mesh Architecture](docs/MULTI_AGENT_MESH_ARCHITECTURE.md)** — Full technical architecture covering the WireGuard mesh layer, Tailscale peer discovery, agent orchestration, consensus protocol, provider failover, and security model.
 
 ---
 

@@ -111,8 +111,22 @@ fun LandingScreen(
 
     var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
 
+    var isDissolving by remember { mutableStateOf(false) }
+    val dissolveProgress by animateFloatAsState(
+        targetValue = if (isDissolving) 1f else 0f,
+        animationSpec = tween(700, easing = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)),
+        finishedListener = {
+            if (isDissolving) {
+                onGetStarted()
+            }
+        },
+        label = "PixelDissolve"
+    )
+
     val handlePrimaryAction = {
-        onGetStarted()
+        if (!isDissolving) {
+            isDissolving = true
+        }
     }
 
     val baseNodes = remember {
@@ -428,6 +442,37 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Pixel Dissolve Ink Overlay
+            if (dissolveProgress > 0f) {
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(999f)
+                ) {
+                    val cols = 24
+                    val rows = 40
+                    val w = size.width / cols
+                    val h = size.height / rows
+                    
+                    val p = dissolveProgress
+                    for (r in 0 until rows) {
+                        for (c in 0 until cols) {
+                            // Staggered dissolve based on position and noise-like seed
+                            val seed = ((r * 31 + c * 17) % 100) / 100f
+                            val threshold = seed * 0.75f
+                            if (p > threshold) {
+                                val localP = ((p - threshold) / (1f - threshold)).coerceIn(0f, 1f)
+                                val alpha = (1f - localP).coerceIn(0f, 1f)
+                                drawRect(
+                                    color = Color.Black.copy(alpha = alpha * 0.95f),
+                                    topLeft = Offset(c * w, r * h),
+                                    size = androidx.compose.ui.geometry.Size(w + 1f, h + 1f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             // Fluid Material 3 Expressive Canvas
             Canvas(modifier = Modifier.fillMaxSize()) {
                 if (centerAnchor == Offset.Zero) return@Canvas

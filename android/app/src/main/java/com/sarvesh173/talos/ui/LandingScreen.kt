@@ -453,43 +453,62 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Mathematical Six Trillion Combination Pixel Destruction & Ink Sweep
+            // Full-Screen Micro-Particle Dots Destruction & 6 Trillion Entropy Particle Dissolve
+            val infiniteTransition = rememberInfiniteTransition(label = "MicroJitter")
+            val microJitter by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1200, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "Jitter"
+            )
+
             if (dissolveProgress > 0f) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
                         .zIndex(999f)
                 ) {
-                    val cols = 36
-                    val rows = 64
+                    val cols = 48
+                    val rows = 80
                     val w = size.width / cols
                     val h = size.height / rows
                     
                     val p = dissolveProgress
                     for (r in 0 until rows) {
                         for (c in 0 until cols) {
-                            // High-entropy mathematical combination seed (over 6 trillion combinatorial possibilities)
-                            val entropy1 = kotlin.math.sin((r * 12.9898f + c * 78.233f)).let { it - kotlin.math.floor(it) }
-                            val entropy2 = kotlin.math.cos((r * 39.346f + c * 11.135f)).let { it - kotlin.math.floor(it) }
-                            val combinedEntropy = (entropy1 * 0.61803398875f + entropy2 * 0.38196601125f) % 1f
+                            val entropy1 = kotlin.math.sin((r * 17.123f + c * 89.431f)).let { it - kotlin.math.floor(it) }
+                            val entropy2 = kotlin.math.cos((r * 43.192f + c * 23.774f)).let { it - kotlin.math.floor(it) }
+                            val combinedEntropy = (entropy1 * 0.5f + entropy2 * 0.5f) % 1f
                             
-                            val delayThreshold = combinedEntropy * 0.65f
+                            val delayThreshold = combinedEntropy * 0.7f
                             if (p > delayThreshold) {
                                 val localProgress = ((p - delayThreshold) / (1f - delayThreshold)).coerceIn(0f, 1f)
-                                // Each pixel destructs with unique scale, translation and ink fade
-                                val scale = (1f - localProgress * 1.4f).coerceIn(0f, 1f)
+                                val radiusScale = (1f - localProgress * 1.2f).coerceIn(0f, 1f)
                                 val alpha = (1f - localProgress).coerceIn(0f, 1f)
                                 
-                                val cellW = w * scale
-                                val cellH = h * scale
-                                val offsetX = (w - cellW) / 2f
-                                val offsetY = (h - cellH) / 2f
+                                // Micro-jitter offset for organic particle dispersion
+                                val jitterX = kotlin.math.sin(r.toFloat() + microJitter * 6.28f) * 3f * localProgress
+                                val jitterY = kotlin.math.cos(c.toFloat() + microJitter * 6.28f) * 3f * localProgress
                                 
-                                drawRect(
-                                    color = Color(0xFF090D14).copy(alpha = alpha),
-                                    topLeft = Offset(c * w + offsetX, r * h + offsetY),
-                                    size = androidx.compose.ui.geometry.Size(cellW, cellH)
-                                )
+                                val centerX = c * w + w / 2f + jitterX
+                                val centerY = r * h + h / 2f + jitterY
+                                val radius = (w.coerceAtMost(h) * 0.45f) * radiusScale
+                                
+                                if (radius > 0f) {
+                                    drawCircle(
+                                        color = Color(0xFF7A9DFF).copy(alpha = alpha * 0.9f),
+                                        radius = radius,
+                                        center = Offset(centerX, centerY)
+                                    )
+                                    drawCircle(
+                                        color = Color(0xFF090D14).copy(alpha = alpha),
+                                        radius = radius * 0.6f,
+                                        center = Offset(centerX, centerY)
+                                    )
+                                }
                             }
                         }
                     }

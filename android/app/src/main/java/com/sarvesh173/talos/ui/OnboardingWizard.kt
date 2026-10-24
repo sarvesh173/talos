@@ -1,14 +1,27 @@
 package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -98,9 +111,9 @@ import java.util.UUID
 // PALETTE (Grok-style dark onboarding)
 // ==========================================
 
-private val WizardBg: Color @Composable get() = talosBg
-private val WizardSurface: Color @Composable get() = talosSurface
-private val WizardSurfaceAlt: Color @Composable get() = talosSurface
+private val WizardBg: Color = Color(0xFF000000)
+private val WizardSurface: Color = Color(0xFF0C1017)
+private val WizardSurfaceAlt: Color = Color(0xFF131923)
 private val WizardBorder: Color @Composable get() = talosBorder
 private val WizardText: Color @Composable get() = talosTextPrimary
 private val WizardMuted: Color @Composable get() = talosTextMuted
@@ -201,34 +214,35 @@ fun OnboardingWizard(
                 onToggleTheme = onToggleTheme
             )
 
-            // ---------- STEP CONTENT (WEIGHTED TO KEEP BOTTOM BAR PINNED) ----------
+            // ---------- STEP CONTENT WITH M3 EXPRESSIVE SHARED MOTION ----------
             AnimatedContent(
                 targetState = step,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 transitionSpec = {
-                    if (targetState > initialState) {
-                        (slideInHorizontally(
-                            animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
-                            initialOffsetX = { it / 3 }
-                        ) + fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing))).togetherWith(
-                            slideOutHorizontally(
-                                animationSpec = tween(180),
-                                targetOffsetX = { -it / 3 }
-                            ) + fadeOut(animationSpec = tween(180))
-                        )
-                    } else {
-                        (slideInHorizontally(
-                            animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
-                            initialOffsetX = { -it / 3 }
-                        ) + fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing))).togetherWith(
-                            slideOutHorizontally(
-                                animationSpec = tween(180),
-                                targetOffsetX = { it / 3 }
-                            ) + fadeOut(animationSpec = tween(180))
-                        )
-                    }
+                    val forward = targetState > initialState
+                    val dir = if (forward) 1 else -1
+                    val decelerate = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)
+                    val accelerate = CubicBezierEasing(0.30f, 0.00f, 1.00f, 1.00f)
+
+                    (
+                        slideInHorizontally(
+                            animationSpec = tween(durationMillis = 440, easing = decelerate),
+                            initialOffsetX = { width -> (width / 3) * dir }
+                        ) + scaleIn(
+                            animationSpec = tween(durationMillis = 440, easing = decelerate),
+                            initialScale = 0.94f
+                        ) + fadeIn(animationSpec = tween(durationMillis = 360, easing = decelerate))
+                    ).togetherWith(
+                        slideOutHorizontally(
+                            animationSpec = tween(durationMillis = 340, easing = accelerate),
+                            targetOffsetX = { width -> -(width / 3) * dir }
+                        ) + scaleOut(
+                            animationSpec = tween(durationMillis = 340, easing = accelerate),
+                            targetScale = 1.04f
+                        ) + fadeOut(animationSpec = tween(durationMillis = 280, easing = accelerate))
+                    )
                 },
                 label = "wizard_step"
             ) { current ->
@@ -262,30 +276,36 @@ fun OnboardingWizard(
                         )
                         else -> WelcomeStep(onEnterChamber = onComplete)
                     }
-                    if (copiedNotice != null) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(StatusGreen.copy(alpha = 0.15f))
-                                .border(1.dp, StatusGreen.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = StatusGreen,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = copiedNotice ?: "",
-                                color = StatusGreen,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                    AnimatedVisibility(
+                        visible = copiedNotice != null,
+                        enter = expandVertically(animationSpec = tween(260)) + fadeIn(animationSpec = tween(260)),
+                        exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
+                    ) {
+                        Column {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(StatusGreen.copy(alpha = 0.15f))
+                                    .border(1.dp, StatusGreen.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = StatusGreen,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = copiedNotice ?: "",
+                                    color = StatusGreen,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
@@ -401,7 +421,7 @@ private fun WizardTopBar(
             }
         }
 
-        // Segmented progress rail
+        // Segmented progress rail with fluid M3 animated fill
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
@@ -409,14 +429,18 @@ private fun WizardTopBar(
                 .padding(top = 10.dp, bottom = 12.dp, start = 6.dp, end = 6.dp)
         ) {
             for (i in 0 until 4) {
+                val isActive = i <= step
+                val animatedColor by animateColorAsState(
+                    targetValue = if (isActive) PrimaryAccent else Color(0xFF1E2430),
+                    animationSpec = tween(380, easing = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)),
+                    label = "rail_color_$i"
+                )
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(3.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(
-                            if (i <= step) PrimaryAccent else WizardBorder
-                        )
+                        .background(animatedColor)
                 )
             }
         }
@@ -469,9 +493,9 @@ private fun WizardBottomBar(
             interactionSource = interactionSource,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
-                contentColor = WizardBg,
+                contentColor = Color(0xFF090D14),
                 disabledContainerColor = Color.White.copy(alpha = 0.30f),
-                disabledContentColor = WizardBg.copy(alpha = 0.50f)
+                disabledContentColor = Color(0xFF090D14).copy(alpha = 0.50f)
             ),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
@@ -479,12 +503,22 @@ private fun WizardBottomBar(
                 .height(52.dp)
                 .scale(buttonScale)
         ) {
-            Text(
-                text = label,
-                color = WizardBg,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
+            AnimatedContent(
+                targetState = label,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(220)) + slideInVertically(animationSpec = tween(220)) { it / 2 }).togetherWith(
+                        fadeOut(animationSpec = tween(180)) + slideOutVertically(animationSpec = tween(180)) { -it / 2 }
+                    )
+                },
+                label = "btn_label_morph"
+            ) { targetText ->
+                Text(
+                    text = targetText,
+                    color = Color(0xFF090D14),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
+            }
         }
 
         // Tiny discrete test button in corner for safety / UI test bypass

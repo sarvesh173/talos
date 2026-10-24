@@ -39,6 +39,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         private const val PREFS_NAME = "talos_prefs"
         private const val KEY_BASE_URL = "base_url"
         private const val KEY_API_TOKEN = "api_token"
+        private const val KEY_THEME_MODE = "theme_mode"
         private const val TAG = "TalosClient"
     }
 
@@ -77,6 +78,22 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
+
+    private val _themeMode = MutableStateFlow(
+        prefs.getString(KEY_THEME_MODE, "DARK") ?: "DARK"
+    )
+    val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+
+    fun setThemeMode(mode: String) {
+        val normalized = if (mode.equals("LIGHT", ignoreCase = true)) "LIGHT" else "DARK"
+        _themeMode.value = normalized
+        prefs.edit().putString(KEY_THEME_MODE, normalized).apply()
+    }
+
+    fun toggleTheme() {
+        val next = if (_themeMode.value == "DARK") "LIGHT" else "DARK"
+        setThemeMode(next)
+    }
 
     private val _isAgentTyping = MutableStateFlow(false)
     val isAgentTyping: StateFlow<Boolean> = _isAgentTyping.asStateFlow()

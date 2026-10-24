@@ -90,12 +90,12 @@ import java.util.UUID
 // PALETTE (Grok-style dark onboarding)
 // ==========================================
 
-private val WizardBg: Color = Color(0xFF000000)
-private val WizardSurface: Color = Color(0xFF0C1017)
-private val WizardSurfaceAlt: Color = Color(0xFF131923)
-private val WizardBorder: Color @Composable get() = talosBorder
-private val WizardText: Color @Composable get() = talosTextPrimary
-private val WizardMuted: Color @Composable get() = talosTextMuted
+private val WizardBg: Color @Composable get() = MaterialTheme.colorScheme.background
+private val WizardSurface: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainer
+private val WizardSurfaceAlt: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh
+private val WizardBorder: Color @Composable get() = MaterialTheme.colorScheme.outlineVariant
+private val WizardText: Color @Composable get() = MaterialTheme.colorScheme.onSurface
+private val WizardMuted: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
 private val WizardDanger = Color(0xFFEF4444)
 
 // Dark theme illustration badge colors
@@ -499,15 +499,19 @@ private fun WizardBottomBar(
             .background(WizardBg)
             .padding(horizontal = 22.dp, vertical = 10.dp)
     ) {
+        val isDark = LocalIsDark.current
+        val btnContainer = if (isDark) Color.White else PrimaryAccent
+        val btnContent = if (isDark) Color(0xFF090D14) else Color.White
+
         Button(
             onClick = onPrimary,
             enabled = canProceed && !isBusy,
             interactionSource = interactionSource,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = Color(0xFF090D14),
-                disabledContainerColor = Color.White.copy(alpha = 0.30f),
-                disabledContentColor = Color(0xFF090D14).copy(alpha = 0.50f)
+                containerColor = btnContainer,
+                contentColor = btnContent,
+                disabledContainerColor = btnContainer.copy(alpha = 0.30f),
+                disabledContentColor = btnContent.copy(alpha = 0.50f)
             ),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
@@ -526,7 +530,7 @@ private fun WizardBottomBar(
             ) { targetText ->
                 Text(
                     text = targetText,
-                    color = Color(0xFF090D14),
+                    color = btnContent,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
@@ -622,21 +626,42 @@ private fun OverviewStep() {
                 title = "Connect over Tailscale WireGuard",
                 body = "Private overlay network. No public ports, no exposed surface.",
                 badgeTint = CyberGreen,
-                badge = { ShieldLanBadge(tint = WizardBg) }
+                badge = {
+                    Image(
+                        painter = painterResource(R.drawable.ic_step_mesh),
+                        contentDescription = "Tailscale Mesh",
+                        modifier = Modifier.size(28.dp),
+                        colorFilter = ColorFilter.tint(CyberGreen)
+                    )
+                }
             )
             OverviewElevatedCard(
                 index = 2,
                 title = "Pair with Autonomous Agent Fleet",
                 body = "One handshake brings every always-on agent into the mesh.",
                 badgeTint = CyberViolet,
-                badge = { AgentFleetBadge(tint = WizardBg) }
+                badge = {
+                    Image(
+                        painter = painterResource(R.drawable.ic_step_fleet),
+                        contentDescription = "Agent Fleet",
+                        modifier = Modifier.size(28.dp),
+                        colorFilter = ColorFilter.tint(CyberViolet)
+                    )
+                }
             )
             OverviewElevatedCard(
                 index = 3,
                 title = "Real-Time Collaboration & Tool Bus",
                 body = "Shared event bus, tool calls and presence in a single stream.",
                 badgeTint = PrimaryAccent,
-                badge = { TerminalBusBadge(tint = WizardBg) }
+                badge = {
+                    Image(
+                        painter = painterResource(R.drawable.ic_step_token),
+                        contentDescription = "Cryptographic Key",
+                        modifier = Modifier.size(28.dp),
+                        colorFilter = ColorFilter.tint(PrimaryAccent)
+                    )
+                }
             )
         }
     }
@@ -700,12 +725,14 @@ private fun OverviewElevatedCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Pastel illustration badge
+            val isDark = LocalIsDark.current
+            // High-contrast Machined Socket (Carbon & M3 Expressive)
             Box(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(badgeTint),
+                    .background(if (isDark) Color(0xFF0F172A) else MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .border(1.dp, badgeTint.copy(alpha = 0.45f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 badge()
@@ -740,8 +767,45 @@ private fun MeshStep(
         else -> Color(0xFFF59E0B)
     }
 
+    val infinitePulse = rememberInfiniteTransition(label = "mesh_pulse")
+    val beaconScale by infinitePulse.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = CubicBezierEasing(0.37f, 0f, 0.63f, 1f)),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "beacon_scale"
+    )
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
+
+        // M3 Expressive Machined Header Socket for Mesh
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = WizardSurface,
+                border = BorderStroke(1.dp, WizardBorder),
+                modifier = Modifier
+                    .size(64.dp)
+                    .scale(if (active) beaconScale else 1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_step_mesh),
+                        contentDescription = "Tailscale Mesh Verification",
+                        modifier = Modifier.size(32.dp),
+                        colorFilter = ColorFilter.tint(statusColor)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
 
         Text(
             text = "Tailscale Mesh Verification",
@@ -1043,11 +1107,11 @@ private fun TokenStep(
                 modifier = Modifier.size(64.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Key,
-                        contentDescription = "Device Key",
-                        tint = PrimaryAccent,
-                        modifier = Modifier.size(32.dp)
+                    Image(
+                        painter = painterResource(R.drawable.ic_step_token),
+                        contentDescription = "Cryptographic Device Key",
+                        modifier = Modifier.size(32.dp),
+                        colorFilter = ColorFilter.tint(Color(0xFFF59E0B))
                     )
                 }
             }
@@ -1315,11 +1379,11 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                 modifier = Modifier.size(64.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Groups,
-                        contentDescription = "Agent Fleet",
-                        tint = PrimaryAccent,
-                        modifier = Modifier.size(32.dp)
+                    Image(
+                        painter = painterResource(R.drawable.ic_step_chamber),
+                        contentDescription = "Council Chamber Portal",
+                        modifier = Modifier.size(34.dp),
+                        colorFilter = ColorFilter.tint(PrimaryAccent)
                     )
                 }
             }

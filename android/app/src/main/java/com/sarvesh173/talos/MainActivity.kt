@@ -67,13 +67,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            var themeMode by remember { mutableStateOf(AppThemeMode.DARK) }
+            val storedTheme by client.themeMode.collectAsState()
+            val activeThemeMode = if (storedTheme == "LIGHT") AppThemeMode.LIGHT else AppThemeMode.DARK
             var appScreen by remember { mutableStateOf("landing") }
 
-            TalosTheme(themeMode = themeMode) {
+            TalosTheme(themeMode = activeThemeMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFF000000)
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     val isPaired by client.isPaired.collectAsState()
                     val isCurrentlyDark = LocalIsDark.current
@@ -155,7 +156,7 @@ class MainActivity : ComponentActivity() {
                                 client = client,
                                 isDark = isCurrentlyDark,
                                 onToggleTheme = {
-                                    themeMode = if (isCurrentlyDark) AppThemeMode.LIGHT else AppThemeMode.DARK
+                                    client.toggleTheme()
                                 },
                                 onOpenLanding = {
                                     appScreen = "landing"
@@ -166,7 +167,7 @@ class MainActivity : ComponentActivity() {
                             OnboardingWizard(
                                 client = client,
                                 onToggleTheme = {
-                                    themeMode = if (isCurrentlyDark) AppThemeMode.LIGHT else AppThemeMode.DARK
+                                    client.toggleTheme()
                                 },
                                 onComplete = {
                                     client.refreshRooms()
@@ -180,7 +181,7 @@ class MainActivity : ComponentActivity() {
                                 client = client,
                                 isDark = isCurrentlyDark,
                                 onToggleTheme = {
-                                    themeMode = if (isCurrentlyDark) AppThemeMode.LIGHT else AppThemeMode.DARK
+                                    client.toggleTheme()
                                 },
                                 onGetStarted = {
                                     appScreen = if (client.isPaired.value) "main" else "wizard"

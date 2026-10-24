@@ -4,12 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -91,27 +94,33 @@ class MainActivity : ComponentActivity() {
                 AnimatedContent(
                     targetState = activeTarget,
                     transitionSpec = {
-                        if (targetState == "main" || targetState == "wizard") {
-                            (fadeIn(animationSpec = tween(240)) + slideInHorizontally(
-                                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
-                                initialOffsetX = { it / 4 }
-                            )).togetherWith(
-                                fadeOut(animationSpec = tween(180)) + slideOutHorizontally(
-                                    animationSpec = tween(180),
-                                    targetOffsetX = { -it / 4 }
+                        // Material 3 emphasised motion: long, decelerating, no snapping.
+                        val forward = targetState == "main" || targetState == "wizard"
+                        val dir = if (forward) 1 else -1
+                        val decelerate = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)
+                        val accelerate = CubicBezierEasing(0.30f, 0.00f, 1.00f, 1.00f)
+
+                        (
+                            fadeIn(animationSpec = tween(durationMillis = 520, easing = decelerate)) +
+                                slideInHorizontally(
+                                    animationSpec = tween(durationMillis = 620, easing = decelerate),
+                                    initialOffsetX = { width -> (width / 3) * dir }
+                                ) +
+                                scaleIn(
+                                    animationSpec = tween(durationMillis = 620, easing = decelerate),
+                                    initialScale = 0.96f
+                                )
+                            ).togetherWith(
+                            fadeOut(animationSpec = tween(durationMillis = 380, easing = accelerate)) +
+                                slideOutHorizontally(
+                                    animationSpec = tween(durationMillis = 520, easing = accelerate),
+                                    targetOffsetX = { width -> -(width / 3) * dir }
+                                ) +
+                                scaleOut(
+                                    animationSpec = tween(durationMillis = 520, easing = accelerate),
+                                    targetScale = 1.04f
                                 )
                             )
-                        } else {
-                            (fadeIn(animationSpec = tween(220)) + slideInHorizontally(
-                                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
-                                initialOffsetX = { -it / 4 }
-                            )).togetherWith(
-                                fadeOut(animationSpec = tween(180)) + slideOutHorizontally(
-                                    animationSpec = tween(180),
-                                    targetOffsetX = { it / 4 }
-                                )
-                            )
-                        }
                     },
                     label = "AppScreenTransition"
                 ) { screenKey ->

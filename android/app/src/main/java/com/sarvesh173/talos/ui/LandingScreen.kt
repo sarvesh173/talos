@@ -31,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,6 +42,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -113,24 +117,45 @@ fun LandingScreen(
 
     var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
 
+    // ==== FULL-SCREEN ADAPTIVE MICRO-PARTICLE DISSOLVE (Material 3 Motion) ====
+    val rootView = LocalView.current
     var isDissolving by remember { mutableStateOf(false) }
-    // 3.2 seconds duration with mathematical entropy, fallback force kill at 3.0s
-    val dissolveProgress by animateFloatAsState(
-        targetValue = if (isDissolving) 1f else 0f,
-        animationSpec = tween(3200, easing = CubicBezierEasing(0.19f, 1f, 0.22f, 1f)),
-        finishedListener = {
-            if (isDissolving) {
-                onGetStarted()
-            }
-        },
-        label = "MathematicalPixelDestruction"
+    var particleField by remember { mutableStateOf<DotField?>(null) }
+    val dissolveProgress = remember { mutableFloatStateOf(0f) }
+
+    // Ambient idle micro-motion: keeps the hero alive while the user rests on the page.
+    val idleBreath by rememberInfiniteTransition(label = "idle_micro_motion").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2800, easing = CubicBezierEasing(0.37f, 0f, 0.63f, 1f)),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "idle_breath_phase"
     )
 
-    // Force-animation safeguard: if 3 seconds elapse, guarantee clean transition
     LaunchedEffect(isDissolving) {
-        if (isDissolving) {
-            kotlinx.coroutines.delay(3000)
-            onGetStarted()
+        if (!isDissolving) return@LaunchedEffect
+
+        // 1. Freeze the exact rendered frame so every micro particle inherits the real
+        //    colour of whatever it sits on (background, cards, emblems, glyphs, text).
+        val frozenFrame = captureRenderedFrame(rootView)
+        val palette = if (isCurrentDark) DarkDissolvePalette else LightDissolvePalette
+
+        // 2. Materialise the mathematically staggered micro-particle field.
+        particleField = buildDotField(frozenFrame, palette)
+
+        // 3. Frame-synced dissolve ramp with a hard safety completion.
+        val startNanos = withFrameNanos { it }
+        while (true) {
+            val nowNanos = withFrameNanos { it }
+            val elapsedMs = (nowNanos - startNanos) / 1_000_000f
+            val normalized = (elapsedMs / DISSOLVE_TOTAL_MS).coerceIn(0f, 1f)
+            dissolveProgress.floatValue = DISSOLVE_RAMP_EASING.transform(normalized)
+            if (elapsedMs >= DISSOLVE_NAVIGATE_MS) {
+                onGetStarted()
+                break
+            }
         }
     }
 
@@ -267,7 +292,19 @@ fun LandingScreen(
         anchorMap["opencode"] = opencodeAnchor
     }
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                // Read in the draw phase only: the whole application dissolves smoothly
+                // into the surface colour without a single recomposition per frame.
+                alpha = (1f - dissolveProgress.floatValue).coerceIn(0f, 1f)
+            },
         containerColor = MaterialTheme.colorScheme.background,
                 topBar = {
             Column(
@@ -406,6 +443,14 @@ fun LandingScreen(
                         .fillMaxWidth()
                         .height(52.dp)
                         .scale(buttonScale)
+                        .graphicsLayer {
+                            // Idle micro-motion: never a dead frame while the page rests.
+                            val breath = idleBreath
+                            val breathScale = 1f + 0.010f * breath
+                            scaleX = breathScale
+                            scaleY = breathScale
+                            translationY = -1.6f * breath
+                        }
                         .semantics {
                             contentDescription = "Enter Chamber and begin multi-agent session"
                         }
@@ -453,67 +498,8 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Full-Screen Micro-Particle Dots Destruction & 6 Trillion Entropy Particle Dissolve
-            val infiniteTransition = rememberInfiniteTransition(label = "MicroJitter")
-            val microJitter by infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(1200, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "Jitter"
-            )
-
-            if (dissolveProgress > 0f) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .zIndex(999f)
-                ) {
-                    val cols = 48
-                    val rows = 80
-                    val w = size.width / cols
-                    val h = size.height / rows
-                    
-                    val p = dissolveProgress
-                    for (r in 0 until rows) {
-                        for (c in 0 until cols) {
-                            val entropy1 = kotlin.math.sin((r * 17.123f + c * 89.431f)).let { it - kotlin.math.floor(it) }
-                            val entropy2 = kotlin.math.cos((r * 43.192f + c * 23.774f)).let { it - kotlin.math.floor(it) }
-                            val combinedEntropy = (entropy1 * 0.5f + entropy2 * 0.5f) % 1f
-                            
-                            val delayThreshold = combinedEntropy * 0.7f
-                            if (p > delayThreshold) {
-                                val localProgress = ((p - delayThreshold) / (1f - delayThreshold)).coerceIn(0f, 1f)
-                                val radiusScale = (1f - localProgress * 1.2f).coerceIn(0f, 1f)
-                                val alpha = (1f - localProgress).coerceIn(0f, 1f)
-                                
-                                // Micro-jitter offset for organic particle dispersion
-                                val jitterX = kotlin.math.sin(r.toFloat() + microJitter * 6.28f) * 3f * localProgress
-                                val jitterY = kotlin.math.cos(c.toFloat() + microJitter * 6.28f) * 3f * localProgress
-                                
-                                val centerX = c * w + w / 2f + jitterX
-                                val centerY = r * h + h / 2f + jitterY
-                                val radius = (w.coerceAtMost(h) * 0.45f) * radiusScale
-                                
-                                if (radius > 0f) {
-                                    drawCircle(
-                                        color = Color(0xFF7A9DFF).copy(alpha = alpha * 0.9f),
-                                        radius = radius,
-                                        center = Offset(centerX, centerY)
-                                    )
-                                    drawCircle(
-                                        color = Color(0xFF090D14).copy(alpha = alpha),
-                                        radius = radius * 0.6f,
-                                        center = Offset(centerX, centerY)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            // The dissolve overlay now lives at the window root (see ParticleDissolveOverlay)
+            // so the micro-particles cover the entire application, edge to edge.
             // Fluid Material 3 Expressive Canvas
             Canvas(modifier = Modifier.fillMaxSize()) {
                 if (centerAnchor == Offset.Zero) return@Canvas
@@ -905,7 +891,316 @@ fun LandingScreen(
             )
         }
     }
+
+    // Full-screen adaptive micro-particle dissolve overlay: covers the complete window,
+    // top bar and bottom gesture area included, on top of every other surface.
+    ParticleDissolveOverlay(
+        field = particleField,
+        progress = { dissolveProgress.floatValue },
+        modifier = Modifier.fillMaxSize()
+    )
+    }
 }
+
+// ============================================================================
+//  Adaptive Micro-Particle Dissolve Engine
+// ============================================================================
+
+/** Total dissolve length. Hard-capped below five seconds by design. */
+private const val DISSOLVE_TOTAL_MS = 4520f
+
+/** The screen starts handing over to the next surface while the last particles fade. */
+private const val DISSOLVE_NAVIGATE_MS = 4180f
+
+/** Coarse-to-fine density of the micro-particle lattice. */
+private const val DISSOLVE_COLS = 96
+private const val MAX_DISSOLVE_DOTS = 26000
+
+/** Material 3 emphasised motion ramp for the whole dissolve. */
+private val DISSOLVE_RAMP_EASING = CubicBezierEasing(0.20f, 0.66f, 0.14f, 1.0f)
+
+private val DarkDissolvePalette = intArrayOf(
+    0xFF0B1220.toInt(), 0xFF0B1220.toInt(), 0xFF111A29.toInt(), 0xFF161F2E.toInt(),
+    0xFF22304A.toInt(), 0xFFE2E8F0.toInt(), 0xFF94A3B8.toInt(),
+    0xFF7A9DFF.toInt(), 0xFFFFBF00.toInt(), 0xFFD97757.toInt(),
+    0xFF3B82F6.toInt(), 0xFFEA580C.toInt()
+)
+
+private val LightDissolvePalette = intArrayOf(
+    0xFFF7F9FC.toInt(), 0xFFF7F9FC.toInt(), 0xFFEDF1F7.toInt(), 0xFFE3E9F2.toInt(),
+    0xFFCBD5E1.toInt(), 0xFF0F172A.toInt(), 0xFF64748B.toInt(),
+    0xFF5B7BE8.toInt(), 0xFFD99A00.toInt(), 0xFFC4623F.toInt(),
+    0xFF2563EB.toInt(), 0xFFC2410C.toInt()
+)
+
+/**
+ * Immutable micro-particle lattice. Every dot carries its own sampled colour, its own
+ * entropy delay, life span, radial drift and tangential swirl, so no two taps, and no
+ * two dots, ever resolve into the same trajectory.
+ *
+ * Dots are pre-grouped into colour buckets and drawn with batched native point runs,
+ * which keeps tens of thousands of particles inside the frame budget.
+ */
+private class DotField(
+    val count: Int,
+    val cols: Int,
+    val rows: Int,
+    val xs: FloatArray,
+    val ys: FloatArray,
+    val delay: FloatArray,
+    val life: FloatArray,
+    val dirX: FloatArray,
+    val dirY: FloatArray,
+    val swirl: FloatArray,
+    val order: IntArray,
+    val bucketColor: IntArray,
+    val bucketStart: IntArray,
+    val bucketEnd: IntArray
+)
+
+private fun hash01(x: Float): Float {
+    val s = sin(x) * 43758.5453f
+    return s - kotlin.math.floor(s)
+}
+
+/** Lifts captured pixels slightly so dark particles stay readable against dark surfaces. */
+private fun liftLuma(argb: Int): Int {
+    val a = (argb ushr 24) and 0xFF
+    if (a < 24) return 0xFF131C2B.toInt()
+    val r = ((argb ushr 16) and 0xFF) + 30
+    val g = ((argb ushr 8) and 0xFF) + 30
+    val b = (argb and 0xFF) + 30
+    return (0xFF shl 24) or
+            (r.coerceAtMost(255) shl 16) or
+            (g.coerceAtMost(255) shl 8) or
+            b.coerceAtMost(255)
+}
+
+/** Synchronous freeze-frame of what is on screen right now, in device pixels. */
+private fun captureRenderedFrame(view: android.view.View): android.graphics.Bitmap? {
+    return try {
+        val w = view.width
+        val h = view.height
+        if (w <= 0 || h <= 0) {
+            null
+        } else {
+            val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+            view.draw(canvas)
+            bitmap
+        }
+    } catch (t: Throwable) {
+        null
+    }
+}
+
+private fun buildDotField(
+    shot: android.graphics.Bitmap?,
+    fallbackPalette: IntArray
+): DotField {
+    val bmpW = shot?.width ?: 1080
+    val bmpH = shot?.height ?: 2340
+    val cols = DISSOLVE_COLS
+    val rows = ((cols.toFloat() * bmpH.toFloat()) / bmpW.toFloat()).toInt().coerceIn(48, 260)
+    val count = cols * rows
+
+    val xs = FloatArray(count)
+    val ys = FloatArray(count)
+    val delay = FloatArray(count)
+    val life = FloatArray(count)
+    val dirX = FloatArray(count)
+    val dirY = FloatArray(count)
+    val swirl = FloatArray(count)
+    val colors = IntArray(count)
+
+    val rowBuf = IntArray(bmpW)
+    val histogram = HashMap<Int, Int>()
+    var captured = shot != null
+
+    for (r in 0 until rows) {
+        if (captured) {
+            val srcRow = (((r + 0.5f) * bmpH.toFloat()) / rows.toFloat()).toInt().coerceIn(0, bmpH - 1)
+            shot!!.getPixels(rowBuf, 0, bmpW, 0, srcRow, bmpW, 1)
+        }
+        for (c in 0 until cols) {
+            val i = r * cols + c
+            val u = (c + 0.5f) / cols.toFloat()
+            val v = (r + 0.5f) / rows.toFloat()
+            xs[i] = u
+            ys[i] = v
+
+            val e1 = hash01(c * 12.9898f + r * 78.233f)
+            val e2 = hash01(c * 39.346f + r * 11.135f)
+            val e3 = hash01(c * 4.171f + r * 61.723f)
+
+            // Non-repeating stagger: every dot owns a unique slice of the timeline.
+            delay[i] = e1 * 0.52f
+            life[i] = 0.30f + e2 * 0.17f
+            swirl[i] = e3
+
+            val cx = u - 0.5f
+            val cy = v - 0.5f
+            val len = kotlin.math.sqrt(cx * cx + cy * cy) + 0.0001f
+            val nx = cx / len
+            val ny = cy / len
+            val sgn = if (e3 > 0.5f) 1f else -1f
+            dirX[i] = nx * 0.55f + (-ny) * sgn * (0.28f + e2 * 0.55f)
+            dirY[i] = ny * 0.55f + nx * sgn * (0.28f + e2 * 0.55f) - 0.20f
+
+            if (captured) {
+                val px = ((c + 0.5f) * bmpW.toFloat() / cols.toFloat()).toInt().coerceIn(0, bmpW - 1)
+                val sampled = liftLuma(rowBuf[px])
+                colors[i] = sampled
+                val key = sampled and 0xFFE0E0E0.toInt()
+                histogram[key] = (histogram[key] ?: 0) + 1
+            } else {
+                colors[i] = fallbackPalette[(e1 * fallbackPalette.size).toInt().coerceIn(0, fallbackPalette.size - 1)]
+            }
+        }
+    }
+
+    // A blank or blocked capture (hardware layer, protected surface) falls back to the
+    // app's own brand palette instead of producing an invisible dissolve.
+    if (captured && histogram.size < 6) {
+        for (i in 0 until count) {
+            val e = hash01(xs[i] * 917.13f + ys[i] * 41.77f)
+            colors[i] = fallbackPalette[(e * fallbackPalette.size).toInt().coerceIn(0, fallbackPalette.size - 1)]
+        }
+    }
+
+    // Group dots by quantised colour so the whole field renders as a handful of batched runs.
+    val bucketIndex = IntArray(count)
+    val bucketOrderColors = ArrayList<Int>()
+    val lookup = HashMap<Int, Int>()
+    for (i in 0 until count) {
+        val key = colors[i] and 0xFFE0E0E0.toInt()
+        val existing = lookup[key]
+        if (existing != null) {
+            bucketIndex[i] = existing
+        } else {
+            val id = bucketOrderColors.size
+            bucketOrderColors.add(colors[i])
+            lookup[key] = id
+            bucketIndex[i] = id
+        }
+    }
+
+    val nb = bucketOrderColors.size
+    val bucketStart = IntArray(nb)
+    val bucketEnd = IntArray(nb)
+    val counts = IntArray(nb)
+    for (i in 0 until count) counts[bucketIndex[i]]++
+    var acc = 0
+    for (b in 0 until nb) {
+        bucketStart[b] = acc
+        acc += counts[b]
+        bucketEnd[b] = acc
+    }
+    val cursor = bucketStart.copyOf()
+    val order = IntArray(count)
+    for (i in 0 until count) {
+        val b = bucketIndex[i]
+        order[cursor[b]] = i
+        cursor[b]++
+    }
+
+    return DotField(
+        count = count,
+        cols = cols,
+        rows = rows,
+        xs = xs,
+        ys = ys,
+        delay = delay,
+        life = life,
+        dirX = dirX,
+        dirY = dirY,
+        swirl = swirl,
+        order = order,
+        bucketColor = bucketColorsOf(bucketOrderColors),
+        bucketStart = bucketStart,
+        bucketEnd = bucketEnd
+    )
+}
+
+private fun bucketColorsOf(list: ArrayList<Int>): IntArray {
+    val arr = IntArray(list.size)
+    for (i in list.indices) arr[i] = list[i]
+    return arr
+}
+
+/**
+ * Draws the dissolving window: tens of thousands of micro dots, each one fading out in
+ * the exact colour it sampled from the frozen frame, drifting outward with its own swirl.
+ */
+@Composable
+private fun ParticleDissolveOverlay(
+    field: DotField?,
+    progress: () -> Float,
+    modifier: Modifier = Modifier
+) {
+    val scratch = remember { FloatArray(MAX_DISSOLVE_DOTS * 2) }
+    val dotPaint = remember {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            style = android.graphics.Paint.Style.STROKE
+            strokeCap = android.graphics.Paint.Cap.ROUND
+        }
+    }
+
+    Canvas(modifier = modifier) {
+        val f = field ?: return@Canvas
+        val p = progress()
+        if (p <= 0.002f) return@Canvas
+
+        val w = size.width
+        val h = size.height
+        val baseDot = (w / f.cols.toFloat()) * 0.62f
+        val phases = 5
+
+        var b = 0
+        while (b < f.bucketColor.size) {
+            val start = f.bucketStart[b]
+            val end = f.bucketEnd[b]
+            if (start < end) {
+                var phase = 0
+                while (phase < phases) {
+                    var n = 0
+                    var k = start
+                    while (k < end) {
+                        val i = f.order[k]
+                        val d = f.delay[i]
+                        if (p > d) {
+                            val raw = (p - d) / f.life[i]
+                            if (raw < 1f) {
+                                val l = if (raw < 0f) 0f else raw
+                                if ((l * phases.toFloat()).toInt() == phase) {
+                                    val eased = 1f - (1f - l) * (1f - l)
+                                    val spread = (0.020f + 0.075f * f.swirl[i]) * eased
+                                    scratch[n] = f.xs[i] * w + f.dirX[i] * spread * w
+                                    scratch[n + 1] = f.ys[i] * h + f.dirY[i] * spread * h
+                                    n += 2
+                                }
+                            }
+                        }
+                        k++
+                    }
+                    if (n > 0) {
+                        val decay = 1f - phase * 0.20f
+                        dotPaint.color = f.bucketColor[b]
+                        dotPaint.alpha = (255f * decay * decay).toInt().coerceIn(0, 255)
+                        dotPaint.strokeWidth = baseDot * (1f - phase * 0.14f)
+                        drawIntoCanvas { canvas ->
+                            canvas.nativeCanvas.drawPoints(scratch, 0, n, dotPaint)
+                        }
+                    }
+                    phase++
+                }
+            }
+            b++
+        }
+    }
+}
+
+
 
 /**
  * Material 3 ElevatedCard with Machined Dark Obsidian Sockets

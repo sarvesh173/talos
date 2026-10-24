@@ -14,8 +14,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.SettingsEthernet
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,19 +49,18 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Full Material Design 3 (M3 Expressive) Constellation Canvas
+ * Full Material Design 3 (M3 Expressive) Constellation Dashboard
  *
- * M3 Standards & Anti-Slop Implementation:
- * 1. MaterialTheme.colorScheme & Tonal Containers: Complete surface hierarchy
- *    (surface, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest).
- * 2. M3 Shape Scale: ShapeLargeIncreased (20dp) for cards, ShapeFull for badges/pills.
- * 3. M3 Spacing Tokens: MdSpacing (4dp, 8dp, 16dp, 24dp, 32dp).
- * 4. M3 Typography Tokens: titleLarge, labelLarge, labelMedium, bodySmall.
- * 5. M3 Metallic UI Tokens: Brushed metallic specular gradient borders (metallicBorderBrush()).
- * 6. Frictionless Startup Flow: Direct time-to-value routing (onGetStarted) with
- *    secondary mesh setup toggle, eliminating forced wizard loops.
- * 7. Authentic Vendor Vectors: OpenCode 3D monogram, Nous Research Hermes, Codex >_ prompt,
- *    Claude spark, and OpenClaw in a dark metallic squircle well.
+ * Google M3 Standards:
+ * 1. M3 TopAppBar & Badges: CenterAligned / Elevated Top Bar with dynamic live peer badge.
+ * 2. M3 AssistChips: Live telemetry row (WireGuard, 0.8ms Ping, 60% Quorum).
+ * 3. M3 Segmented Button: Perspective switcher ([ ☩ Mesh Constellation | 📊 Telemetry Council ]).
+ * 4. M3 ElevatedCards: Real elevated card containers with tonal elevation and metallic borders.
+ * 5. Machined Dark-Well Sockets: Every agent emblem sits in a precision obsidian socket (#0F172A)
+ *    to eliminate contrast washed-out issues across both dark and light modes.
+ * 6. M3 Springs & Motion: 800f/0.75f tactile press scale and 400f/0.75f spatial morphs.
+ * 7. Authentic MCP Vectors: Nous Research Hermes, Codex >_ prompt, Claude terracotta spark,
+ *    OpenClaw lobster, and OpenCode 3D monogram.
  */
 data class AgentNode(
     val key: String,
@@ -81,6 +85,7 @@ enum class DelegationAction {
     TERMINATE_OPENCODE
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(
     client: TalosClient,
@@ -100,12 +105,12 @@ fun LandingScreen(
         label = "ButtonScale"
     )
 
-    // Frictionless startup: prioritize direct chamber entry if paired or ready
+    var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
+
     val handlePrimaryAction = {
         onGetStarted()
     }
 
-    // Agent fleet with authentic MCP vectors
     val baseNodes = remember {
         listOf(
             AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), Color(0xFFEA580C)),
@@ -121,7 +126,7 @@ fun LandingScreen(
     // Dynamic Multi-Agent Banter & Summon/Dismiss Lifecycle
     val scenarios = remember {
         listOf(
-            DelegationEvent("hermes", "codex", "Hi @codex, synthesize unit test suite", "Tests generated: 60/60 passing"),
+            DelegationEvent("hermes", "codex", "Hi @codex, synthesize unit test suite", "Tests generated: 63/63 passing"),
             DelegationEvent("codex", "claude", "Hi @claude, review AST parser refactor", "System design verified: clean"),
             DelegationEvent(
                 fromKey = "claude",
@@ -235,8 +240,10 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = MdSpacing.md, vertical = MdSpacing.xs)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xs)
             ) {
+                // M3 Top Bar Row with Badge
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -250,21 +257,38 @@ fun LandingScreen(
                             text = "TALOS",
                             color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.titleLarge,
-                            letterSpacing = 1.5.sp
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.2.sp
                         )
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(StatusGreen)
-                        )
-                        Text(
-                            text = "Mesh Online · WireGuard",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelMedium
-                        )
+
+                        // M3 Live Peer Badge
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            shape = ShapeFull,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(StatusGreen)
+                                )
+                                Text(
+                                    text = if (isOpenCodeSpawned) "5 AGENTS ACTIVE" else "4 AGENTS ACTIVE",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
 
+                    // M3 Icon Button for Theme Toggle
                     IconButton(
                         onClick = onToggleTheme,
                         modifier = Modifier
@@ -285,14 +309,97 @@ fun LandingScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(MdSpacing.xxs))
+                Spacer(modifier = Modifier.height(MdSpacing.xs))
 
-                Text(
-                    text = "Your private mesh of always-on CLI agents that execute, reason, and build together.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
-                )
+                // M3 AssistChip Telemetry Row (Genuine Material 3 Identity)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("WireGuard Mesh", style = MaterialTheme.typography.labelSmall) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(12.dp))
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        border = AssistChipDefaults.assistChipBorder(borderColor = MaterialTheme.colorScheme.outlineVariant)
+                    )
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("0.8ms Ping", style = MaterialTheme.typography.labelSmall) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(12.dp))
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        border = AssistChipDefaults.assistChipBorder(borderColor = MaterialTheme.colorScheme.outlineVariant)
+                    )
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("Quorum 60%", style = MaterialTheme.typography.labelSmall) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Groups, contentDescription = null, modifier = Modifier.size(12.dp))
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        border = AssistChipDefaults.assistChipBorder(borderColor = MaterialTheme.colorScheme.outlineVariant)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // M3 Segmented Perspective Switcher
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(34.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(if (selectedViewMode == 0) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
+                                .clickable { selectedViewMode = 0 },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "☩ Mesh Constellation",
+                                color = if (selectedViewMode == 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (selectedViewMode == 0) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(if (selectedViewMode == 1) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
+                                .clickable { selectedViewMode = 1 },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "📊 Council Telemetry",
+                                color = if (selectedViewMode == 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (selectedViewMode == 1) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         },
         bottomBar = {
@@ -301,7 +408,7 @@ fun LandingScreen(
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = MdSpacing.md, vertical = MdSpacing.sm),
+                    .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xs),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Docked Live Activity Pill
@@ -345,7 +452,7 @@ fun LandingScreen(
                     }
                 }
 
-                // Primary Enter Chamber Action
+                // Primary M3 Enter Chamber Action
                 Button(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
@@ -353,7 +460,7 @@ fun LandingScreen(
                         containerColor = if (isCurrentDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                         contentColor = if (isCurrentDark) Color(0xFF090D14) else Color(0xFFF8FAFC)
                     ),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = ShapeFull,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
@@ -362,6 +469,12 @@ fun LandingScreen(
                             contentDescription = "Enter Chamber and begin multi-agent session"
                         }
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.RocketLaunch,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Enter Chamber",
                         style = MaterialTheme.typography.labelLarge,
@@ -371,30 +484,24 @@ fun LandingScreen(
 
                 // Frictionless Onboarding & Setup Actions (M3 Outlined Secondary)
                 if (onOpenWizard != null) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TextButton(
+                        onClick = onOpenWizard,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
+                        modifier = Modifier.height(30.dp)
                     ) {
-                        TextButton(
-                            onClick = onOpenWizard,
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.SettingsEthernet,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Setup WireGuard Mesh & Token",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.SettingsEthernet,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Setup WireGuard Mesh & Token",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
             }
@@ -554,12 +661,12 @@ fun LandingScreen(
             }
 
             // ==============================================================
-            // 1. CENTER TALOS HARDWARE INSTRUMENT (M3 Metallic Finish)
+            // 1. CENTER TALOS HARDWARE INSTRUMENT (M3 ElevatedCard)
             // ==============================================================
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(y = (-38).dp)
+                    .offset(y = (-36).dp)
                     .scale(auraPulse)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
@@ -568,16 +675,15 @@ fun LandingScreen(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ElevatedCard(
                     shape = ShapeLargeIncreased,
-                    border = BorderStroke(
-                        width = 1.2.dp,
-                        brush = metallicBorderBrush(isCurrentDark)
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
                     modifier = Modifier
                         .size(width = 114.dp, height = 98.dp)
-                        .shadow(6.dp, ShapeLargeIncreased, spotColor = Color.Black.copy(alpha = 0.25f))
+                        .border(1.2.dp, metallicBorderBrush(isCurrentDark), ShapeLargeIncreased)
                 ) {
                     Column(
                         modifier = Modifier
@@ -632,7 +738,7 @@ fun LandingScreen(
             }
 
             // ==============================================================
-            // 2. CORNER & DYNAMIC AGENT CARDS
+            // 2. CORNER & DYNAMIC AGENT CARDS (M3 ElevatedCards)
             // ==============================================================
 
             // TOP-LEFT: OpenClaw (With dark metallic squircle well for 100% lobster contrast!)
@@ -642,10 +748,9 @@ fun LandingScreen(
                 bubbleText = if (activeSender == "openclaw") senderTask else (if (activeReceiver == "openclaw" && isReceiverSpeaking) receiverReply else null),
                 bubbleBelow = true,
                 isDark = isCurrentDark,
-                forceDarkIconWell = true,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = MdSpacing.sm, top = MdSpacing.sm)
+                    .padding(start = MdSpacing.sm, top = MdSpacing.xs)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -670,7 +775,7 @@ fun LandingScreen(
                 isDark = isCurrentDark,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = MdSpacing.sm, top = MdSpacing.sm)
+                    .padding(end = MdSpacing.sm, top = MdSpacing.xs)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -726,7 +831,7 @@ fun LandingScreen(
                 isDark = isCurrentDark,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = MdSpacing.sm, bottom = MdSpacing.md)
+                    .padding(start = MdSpacing.sm, bottom = MdSpacing.sm)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -751,7 +856,7 @@ fun LandingScreen(
                 isDark = isCurrentDark,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = MdSpacing.sm, bottom = MdSpacing.md)
+                    .padding(end = MdSpacing.sm, bottom = MdSpacing.sm)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -770,7 +875,7 @@ fun LandingScreen(
 }
 
 /**
- * Material 3 Metallic Agent Card with Specular Highlights and Dark-Well Support
+ * Material 3 ElevatedCard with Machined Dark Obsidian Sockets
  */
 @Composable
 private fun AgentNodeWithBubble(
@@ -781,7 +886,6 @@ private fun AgentNodeWithBubble(
     isDark: Boolean,
     modifier: Modifier = Modifier,
     alignRight: Boolean = false,
-    forceDarkIconWell: Boolean = false,
     onTap: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -841,36 +945,37 @@ private fun AgentNodeWithBubble(
             }
         }
 
-        // Tactile Material 3 Metallic Agent Card
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceContainer,
+        // Tactile Material 3 ElevatedCard
+        ElevatedCard(
             shape = ShapeLargeIncreased,
-            border = BorderStroke(
-                width = if (isActive) 1.5.dp else 1.dp,
-                brush = if (isActive) {
-                    Brush.linearGradient(
-                        colors = listOf(
-                            node.accent.copy(alpha = 0.95f),
-                            node.accent.copy(alpha = 0.40f)
-                        )
-                    )
-                } else {
-                    metallicBorderBrush(isDark)
-                }
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            ),
+            elevation = CardDefaults.elevatedCardElevation(
+                defaultElevation = if (isActive) 6.dp else 2.dp,
+                pressedElevation = 0.dp
             ),
             modifier = Modifier
                 .size(width = 114.dp, height = 100.dp)
                 .scale(cardScale)
-                .clip(ShapeLargeIncreased)
+                .border(
+                    width = if (isActive) 1.5.dp else 1.dp,
+                    brush = if (isActive) {
+                        Brush.linearGradient(
+                            colors = listOf(
+                                node.accent.copy(alpha = 0.95f),
+                                node.accent.copy(alpha = 0.40f)
+                            )
+                        )
+                    } else {
+                        metallicBorderBrush(isDark)
+                    },
+                    shape = ShapeLargeIncreased
+                )
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null
                 ) { onTap() }
-                .shadow(
-                    elevation = if (isActive) 6.dp else 1.dp,
-                    shape = ShapeLargeIncreased,
-                    spotColor = Color.Black.copy(alpha = 0.20f)
-                )
         ) {
             Column(
                 modifier = Modifier
@@ -879,25 +984,13 @@ private fun AgentNodeWithBubble(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 44dp icon well with dark metallic squircle support (OpenClaw)
-                val wellBg = if (forceDarkIconWell) {
-                    Color(0xFF0F172A) // Dark obsidian tile so white/colored details pop 100% in both themes!
-                } else {
-                    node.accent.copy(alpha = if (isDark) 0.12f else 0.10f)
-                }
-
-                val wellBorder = if (forceDarkIconWell) {
-                    BorderStroke(1.dp, Color(0xFFEA580C).copy(alpha = 0.45f))
-                } else {
-                    BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.30f else 0.40f))
-                }
-
+                // Machined Dark Obsidian Socket (ensures 100% emblem contrast in all themes!)
                 Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(wellBg)
-                        .border(wellBorder.width, wellBorder.brush, RoundedCornerShape(12.dp)),
+                        .background(Color(0xFF0F172A))
+                        .border(1.dp, node.accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     AgentEmblemIcon(emblem = node.emblem, size = 28.dp, tint = null)

@@ -4,6 +4,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -297,6 +300,26 @@ enum class AppThemeMode {
     SYSTEM
 }
 
+/**
+ * Smoothly interpolates the color scheme across theme switches for fluid M3 transition satisfaction.
+ */
+@Composable
+private fun animatedColorSchemeOf(target: ColorScheme): ColorScheme {
+    val animSpec = tween<Color>(360, easing = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f))
+    return target.copy(
+        primary = animateColorAsState(target.primary, animSpec, label = "th_primary").value,
+        background = animateColorAsState(target.background, animSpec, label = "th_bg").value,
+        surface = animateColorAsState(target.surface, animSpec, label = "th_surface").value,
+        surfaceContainer = animateColorAsState(target.surfaceContainer, animSpec, label = "th_sc").value,
+        surfaceContainerHigh = animateColorAsState(target.surfaceContainerHigh, animSpec, label = "th_sch").value,
+        surfaceContainerHighest = animateColorAsState(target.surfaceContainerHighest, animSpec, label = "th_schh").value,
+        onSurface = animateColorAsState(target.onSurface, animSpec, label = "th_onSurface").value,
+        onSurfaceVariant = animateColorAsState(target.onSurfaceVariant, animSpec, label = "th_onSurfaceVar").value,
+        outline = animateColorAsState(target.outline, animSpec, label = "th_outline").value,
+        outlineVariant = animateColorAsState(target.outlineVariant, animSpec, label = "th_outlineVar").value
+    )
+}
+
 @Composable
 fun TalosTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
@@ -308,9 +331,12 @@ fun TalosTheme(
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
 
+    val targetScheme = if (isDark) DarkColorScheme else LightColorScheme
+    val animatedScheme = animatedColorSchemeOf(targetScheme)
+
     CompositionLocalProvider(LocalIsDark provides isDark) {
         MaterialTheme(
-            colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
+            colorScheme = animatedScheme,
             shapes = TalosShapes,
             typography = TalosTypography,
             content = content

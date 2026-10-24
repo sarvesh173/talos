@@ -182,23 +182,22 @@ fun OnboardingWizard(
             label = "dust_phase"
         )
 
+        // High-performance lightweight stardust embers (zero GPU overhead during step transitions)
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            for (i in 0 until 16) {
+            for (i in 0 until 8) {
                 val seedX = ((i * 37 + 13) % 100) / 100f
                 val seedY = ((i * 59 + 29) % 100) / 100f
-                val speed = 0.5f + ((i * 17) % 50) / 100f
+                val speed = 0.35f + ((i * 17) % 30) / 100f
                 val currentY = (seedY - dustPhase * speed) % 1f
                 val y = if (currentY < 0f) (currentY + 1f) * h else currentY * h
-                val x = seedX * w + kotlin.math.sin(dustPhase * 6.28f + i.toFloat()) * 14.dp.toPx()
-                val sinVal = kotlin.math.sin(((y / h) * 3.14159f).coerceIn(0f, 3.14159f))
-                val alpha = (sinVal * 0.22f).coerceIn(0f, 1f)
+                val x = seedX * w
 
                 drawCircle(
-                    color = if (i % 2 == 0) PrimaryAccent.copy(alpha = alpha) else Color(0xFF7A9DFF).copy(alpha = alpha * 0.85f),
-                    radius = 1.5.dp.toPx() * (1f + (i % 3) * 0.35f),
-                    center = Offset(x.toFloat(), y.toFloat())
+                    color = if (i % 2 == 0) PrimaryAccent.copy(alpha = 0.14f) else Color(0xFF7A9DFF).copy(alpha = 0.12f),
+                    radius = 1.5.dp.toPx(),
+                    center = Offset(x, y)
                 )
             }
         }
@@ -417,6 +416,16 @@ private fun WizardTopBar(
 
             Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                 if (onToggleTheme != null) {
+                    val themeRot by animateFloatAsState(
+                        targetValue = if (isDark) 0f else 180f,
+                        animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                        label = "wiz_theme_rot"
+                    )
+                    val themeScale by animateFloatAsState(
+                        targetValue = if (isDark) 1.0f else 1.15f,
+                        animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                        label = "wiz_theme_scale"
+                    )
                     IconButton(
                         onClick = onToggleTheme,
                         modifier = Modifier.semantics {
@@ -426,14 +435,19 @@ private fun WizardTopBar(
                         Icon(
                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = WizardMuted
+                            tint = WizardMuted,
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = themeRot
+                                scaleX = themeScale
+                                scaleY = themeScale
+                            }
                         )
                     }
                 }
             }
         }
 
-        // Segmented progress rail with fluid M3 animated fill
+        // Dynamic Segmented Progress Rail with M3 Morphing Weight
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
@@ -441,16 +455,26 @@ private fun WizardTopBar(
                 .padding(top = 10.dp, bottom = 12.dp, start = 6.dp, end = 6.dp)
         ) {
             for (i in 0 until 4) {
-                val isActive = i <= step
+                val isCurrent = i == step
+                val isPassed = i < step
+                val animatedWeight by animateFloatAsState(
+                    targetValue = if (isCurrent) 1.45f else 0.85f,
+                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 450f),
+                    label = "rail_weight_$i"
+                )
                 val animatedColor by animateColorAsState(
-                    targetValue = if (isActive) PrimaryAccent else Color(0xFF1E2430),
-                    animationSpec = tween(380, easing = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)),
+                    targetValue = when {
+                        isCurrent -> PrimaryAccent
+                        isPassed -> PrimaryAccent.copy(alpha = 0.70f)
+                        else -> MaterialTheme.colorScheme.outlineVariant
+                    },
+                    animationSpec = tween(320, easing = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)),
                     label = "rail_color_$i"
                 )
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(3.dp)
+                        .weight(animatedWeight)
+                        .height(4.dp)
                         .clip(RoundedCornerShape(2.dp))
                         .background(animatedColor)
                 )
@@ -675,12 +699,23 @@ private fun OverviewElevatedCard(
     badgeTint: Color,
     badge: @Composable () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val cardScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 600f),
+        label = "card_scale"
+    )
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(cardScale)
+            .clickable(interactionSource = interactionSource, indication = null) { },
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = WizardSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, talosBorder)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Zero shadow pass = 60fps locked
+        border = BorderStroke(1.dp, WizardBorder)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -781,11 +816,35 @@ private fun MeshStep(
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
 
-        // M3 Expressive Machined Header Socket for Mesh
+        // M3 Expressive Machined Header Socket for Mesh with Radar Ping Wave
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
+            val infinitePing = rememberInfiniteTransition(label = "mesh_ping_wave")
+            val pingProgress by infinitePing.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(2200, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "ping_progress"
+            )
+
+            if (active) {
+                Box(
+                    modifier = Modifier
+                        .size((64 + (pingProgress * 36)).dp)
+                        .clip(CircleShape)
+                        .border(
+                            1.5.dp,
+                            statusColor.copy(alpha = (1f - pingProgress) * 0.65f),
+                            CircleShape
+                        )
+                )
+            }
+
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = WizardSurface,

@@ -358,6 +358,16 @@ fun LandingScreen(
                         }
                     }
 
+                    val themeRot by animateFloatAsState(
+                        targetValue = if (isCurrentDark) 0f else 180f,
+                        animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                        label = "landing_theme_rot"
+                    )
+                    val themeScale by animateFloatAsState(
+                        targetValue = if (isCurrentDark) 1.0f else 1.15f,
+                        animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                        label = "landing_theme_scale"
+                    )
                     IconButton(
                         onClick = onToggleTheme,
                         modifier = Modifier
@@ -373,7 +383,13 @@ fun LandingScreen(
                             imageVector = if (isCurrentDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier
+                                .size(18.dp)
+                                .graphicsLayer {
+                                    rotationZ = themeRot
+                                    scaleX = themeScale
+                                    scaleY = themeScale
+                                }
                         )
                     }
                 }

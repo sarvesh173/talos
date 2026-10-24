@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
@@ -440,7 +440,7 @@ fun LandingScreen(
                     }
                 }
 
-                // Primary M3 Enter Chamber Action
+                // Primary M3 Enter Chamber Action - FilledButton with ShapeFull and spring physics
                 Button(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
@@ -451,16 +451,16 @@ fun LandingScreen(
                     shape = ShapeFull,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .height(54.dp)
                         .scale(buttonScale)
                         .semantics {
                             contentDescription = "Enter Chamber and begin multi-agent session"
                         }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.RocketLaunch,
+                        imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -470,25 +470,30 @@ fun LandingScreen(
                     )
                 }
 
-                // Frictionless Onboarding & Setup Actions (M3 Outlined Secondary)
+                // M3 OutlinedButton for Setup Mesh & Token
                 if (onOpenWizard != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    TextButton(
+                    Spacer(modifier = Modifier.height(MdSpacing.sm))
+                    OutlinedButton(
                         onClick = onOpenWizard,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
-                        modifier = Modifier.height(30.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = ShapeFull,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Icon(
                             imageVector = Icons.Default.SettingsEthernet,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(MdSpacing.xs))
                         Text(
-                            text = "Setup WireGuard Mesh & Token",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelSmall
+                            text = "Setup Mesh & Token",
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
                 }

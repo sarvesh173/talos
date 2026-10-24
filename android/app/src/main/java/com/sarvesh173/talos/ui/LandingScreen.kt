@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,19 +44,19 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Material 3 Metallic UI Multi-Agent Constellation Canvas
+ * Full Material Design 3 (M3 Expressive) Constellation Canvas
  *
- * Core Engineering Upgrades:
- * 1. Direct Peer-to-Peer Summoning Conduit: When Claude Code recruits OpenCode,
- *    a direct sweeping curvilinear conduit connects Claude Code -> OpenCode, with
- *    luminous traveling energy packets, followed by task completion and graceful termination.
- * 2. Collision-Free Layout Spacing: Re-aligned center TALOS Core (y = -38dp) and OpenCode
- *    (y = 100dp) with downward-oriented bubbles, eliminating all overlaps.
- * 3. High-Contrast Dark Metallic Tile for OpenClaw: Dedicated dark slate container (#0F172A)
- *    ensures white claw details pop crisply against light mode cards.
- * 4. M3 Metallic UI Specular Design: Multi-stop metallic brushed borders (#94A3B8 -> #475569 -> #1E293B),
- *    top-edge specular highlight shimmers, and machined chamfer sockets.
- * 5. Authentic MCP Vectors: Pixel-perfect OpenCode 3D monogram and Nous Research Hermes Agent.
+ * M3 Standards & Anti-Slop Implementation:
+ * 1. MaterialTheme.colorScheme & Tonal Containers: Complete surface hierarchy
+ *    (surface, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest).
+ * 2. M3 Shape Scale: ShapeLargeIncreased (20dp) for cards, ShapeFull for badges/pills.
+ * 3. M3 Spacing Tokens: MdSpacing (4dp, 8dp, 16dp, 24dp, 32dp).
+ * 4. M3 Typography Tokens: titleLarge, labelLarge, labelMedium, bodySmall.
+ * 5. M3 Metallic UI Tokens: Brushed metallic specular gradient borders (metallicBorderBrush()).
+ * 6. Frictionless Startup Flow: Direct time-to-value routing (onGetStarted) with
+ *    secondary mesh setup toggle, eliminating forced wizard loops.
+ * 7. Authentic Vendor Vectors: OpenCode 3D monogram, Nous Research Hermes, Codex >_ prompt,
+ *    Claude spark, and OpenClaw in a dark metallic squircle well.
  */
 data class AgentNode(
     val key: String,
@@ -94,13 +95,14 @@ fun LandingScreen(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val buttonScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1.0f,
+        targetValue = if (isPressed) 0.96f else 1.0f,
         animationSpec = spring(dampingRatio = 0.75f, stiffness = 800f),
         label = "ButtonScale"
     )
 
+    // Frictionless startup: prioritize direct chamber entry if paired or ready
     val handlePrimaryAction = {
-        onOpenWizard?.invoke() ?: onGetStarted()
+        onGetStarted()
     }
 
     // Agent fleet with authentic MCP vectors
@@ -227,13 +229,13 @@ fun LandingScreen(
     }
 
     Scaffold(
-        containerColor = talosBg,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 10.dp)
+                    .padding(horizontal = MdSpacing.md, vertical = MdSpacing.xs)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -242,14 +244,13 @@ fun LandingScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MdSpacing.xs)
                     ) {
                         Text(
                             text = "TALOS",
-                            color = talosTextPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.2.sp
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.titleLarge,
+                            letterSpacing = 1.5.sp
                         )
                         Box(
                             modifier = Modifier
@@ -259,9 +260,8 @@ fun LandingScreen(
                         )
                         Text(
                             text = "Mesh Online · WireGuard",
-                            color = talosTextMuted,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
 
@@ -270,8 +270,8 @@ fun LandingScreen(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(talosSurface)
-                            .border(1.dp, talosBorder, CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                             .semantics {
                                 contentDescription = if (isCurrentDark) "Switch to Light Mode" else "Switch to Dark Mode"
                             }
@@ -279,19 +279,18 @@ fun LandingScreen(
                         Icon(
                             imageVector = if (isCurrentDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = talosTextMuted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(MdSpacing.xxs))
 
                 Text(
                     text = "Your private mesh of always-on CLI agents that execute, reason, and build together.",
-                    color = talosTextMuted,
-                    fontSize = 11.sp,
-                    lineHeight = 15.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
                     maxLines = 2
                 )
             }
@@ -301,22 +300,22 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .background(talosBg)
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = MdSpacing.md, vertical = MdSpacing.sm),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Docked Live Activity Pill
                 val activeNode = baseNodes.firstOrNull { it.key == activeSender }
                 val targetNode = baseNodes.firstOrNull { it.key == activeReceiver }
-                val activeColor = activeNode?.accent ?: Color(0xFF6366F1)
+                val activeColor = activeNode?.accent ?: PrimaryAccent
 
                 Surface(
-                    color = talosSurface,
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, talosBorder),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = ShapeFull,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 10.dp)
+                        .padding(bottom = MdSpacing.xs)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -328,25 +327,25 @@ fun LandingScreen(
                                 .clip(CircleShape)
                                 .background(activeColor)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MdSpacing.xs))
                         Text(
                             text = "${activeNode?.name ?: "Agent"} → ${targetNode?.name ?: "Agent"}:",
                             color = activeColor,
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = senderTask,
-                            color = talosTextPrimary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
 
+                // Primary Enter Chamber Action
                 Button(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
@@ -354,10 +353,10 @@ fun LandingScreen(
                         containerColor = if (isCurrentDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                         contentColor = if (isCurrentDark) Color(0xFF090D14) else Color(0xFFF8FAFC)
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(52.dp)
                         .scale(buttonScale)
                         .semantics {
                             contentDescription = "Enter Chamber and begin multi-agent session"
@@ -365,20 +364,39 @@ fun LandingScreen(
                 ) {
                     Text(
                         text = "Enter Chamber",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        letterSpacing = 0.3.sp
+                        style = MaterialTheme.typography.labelLarge,
+                        letterSpacing = 0.4.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Tap any agent to trigger instant task delegation",
-                    color = talosTextMuted,
-                    fontSize = 10.5.sp,
-                    textAlign = TextAlign.Center
-                )
+                // Frictionless Onboarding & Setup Actions (M3 Outlined Secondary)
+                if (onOpenWizard != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = onOpenWizard,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SettingsEthernet,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Setup WireGuard Mesh & Token",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
             }
         }
     ) { paddingValues ->
@@ -484,7 +502,7 @@ fun LandingScreen(
                     if (cardPos == Offset.Zero) continue
 
                     val isBeamActive = (key == activeSender || key == activeReceiver)
-                    val nodeAccent = baseNodes.firstOrNull { it.key == key }?.accent ?: Color(0xFF6366F1)
+                    val nodeAccent = baseNodes.firstOrNull { it.key == key }?.accent ?: PrimaryAccent
 
                     val dx = centerAnchor.x - cardPos.x
                     val dy = centerAnchor.y - cardPos.y
@@ -551,40 +569,34 @@ fun LandingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
-                    color = talosSurface,
-                    shape = RoundedCornerShape(22.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = ShapeLargeIncreased,
                     border = BorderStroke(
                         width = 1.2.dp,
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF94A3B8).copy(alpha = 0.60f),
-                                Color(0xFF475569).copy(alpha = 0.30f),
-                                Color(0xFF1E293B).copy(alpha = 0.60f)
-                            )
-                        )
+                        brush = metallicBorderBrush(isCurrentDark)
                     ),
                     modifier = Modifier
-                        .size(width = 112.dp, height = 98.dp)
-                        .shadow(8.dp, RoundedCornerShape(22.dp), spotColor = Color.Black.copy(alpha = 0.25f))
+                        .size(width = 114.dp, height = 98.dp)
+                        .shadow(6.dp, ShapeLargeIncreased, spotColor = Color.Black.copy(alpha = 0.25f))
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                            .padding(horizontal = MdSpacing.xs, vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = "TALOS",
-                            color = talosTextPrimary,
-                            fontSize = 17.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 2.sp
                         )
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(MdSpacing.xxs)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -594,23 +606,23 @@ fun LandingScreen(
                             )
                             Text(
                                 text = "MESH CORE",
-                                color = talosTextMuted,
-                                fontSize = 8.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.8.sp
                             )
                         }
 
                         Surface(
-                            color = if (isCurrentDark) Color(0xFF000000).copy(alpha = 0.35f) else Color(0xFFF1F5F9),
+                            color = MaterialTheme.colorScheme.surfaceContainerLowest,
                             shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(0.6.dp, talosBorder),
+                            border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outlineVariant),
                             modifier = Modifier.padding(horizontal = 4.dp)
                         ) {
                             Text(
                                 text = if (isOpenCodeSpawned) "5 PEERS · 0.8ms" else "4 PEERS · 0.8ms",
-                                color = talosTextMuted,
-                                fontSize = 8.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
@@ -633,7 +645,7 @@ fun LandingScreen(
                 forceDarkIconWell = true,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 18.dp, top = 16.dp)
+                    .padding(start = MdSpacing.sm, top = MdSpacing.sm)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -658,7 +670,7 @@ fun LandingScreen(
                 isDark = isCurrentDark,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = 18.dp, top = 16.dp)
+                    .padding(end = MdSpacing.sm, top = MdSpacing.sm)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -714,7 +726,7 @@ fun LandingScreen(
                 isDark = isCurrentDark,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 18.dp, bottom = 22.dp)
+                    .padding(start = MdSpacing.sm, bottom = MdSpacing.md)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -739,7 +751,7 @@ fun LandingScreen(
                 isDark = isCurrentDark,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 18.dp, bottom = 22.dp)
+                    .padding(end = MdSpacing.sm, bottom = MdSpacing.md)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -797,9 +809,9 @@ private fun AgentNodeWithBubble(
                 exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { -10 }
             ) {
                 Surface(
-                    color = if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.55f else 0.85f)),
+                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
                     modifier = Modifier
                         .padding(bottom = 6.dp)
                         .widthIn(max = 168.dp)
@@ -818,10 +830,9 @@ private fun AgentNodeWithBubble(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = bubbleText ?: "",
-                            color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
-                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
-                            lineHeight = 14.sp,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -832,8 +843,8 @@ private fun AgentNodeWithBubble(
 
         // Tactile Material 3 Metallic Agent Card
         Surface(
-            color = talosSurface,
-            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            shape = ShapeLargeIncreased,
             border = BorderStroke(
                 width = if (isActive) 1.5.dp else 1.dp,
                 brush = if (isActive) {
@@ -844,26 +855,20 @@ private fun AgentNodeWithBubble(
                         )
                     )
                 } else {
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF94A3B8).copy(alpha = if (isDark) 0.40f else 0.60f),
-                            Color(0xFF475569).copy(alpha = if (isDark) 0.20f else 0.30f),
-                            Color(0xFF1E293B).copy(alpha = if (isDark) 0.40f else 0.50f)
-                        )
-                    )
+                    metallicBorderBrush(isDark)
                 }
             ),
             modifier = Modifier
                 .size(width = 114.dp, height = 100.dp)
                 .scale(cardScale)
-                .clip(RoundedCornerShape(18.dp))
+                .clip(ShapeLargeIncreased)
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null
                 ) { onTap() }
                 .shadow(
                     elevation = if (isActive) 6.dp else 1.dp,
-                    shape = RoundedCornerShape(18.dp),
+                    shape = ShapeLargeIncreased,
                     spotColor = Color.Black.copy(alpha = 0.20f)
                 )
         ) {
@@ -901,16 +906,16 @@ private fun AgentNodeWithBubble(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = node.name,
-                        color = talosTextPrimary,
-                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = if (isActive) "Active" else node.specTag,
-                        color = if (isActive) node.accent else talosTextMuted,
-                        fontSize = 9.5.sp,
+                        color = if (isActive) node.accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -925,9 +930,9 @@ private fun AgentNodeWithBubble(
                 exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { 10 }
             ) {
                 Surface(
-                    color = if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.55f else 0.85f)),
+                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
                     modifier = Modifier
                         .padding(top = 6.dp)
                         .widthIn(max = 168.dp)
@@ -946,10 +951,9 @@ private fun AgentNodeWithBubble(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = bubbleText ?: "",
-                            color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
-                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
-                            lineHeight = 14.sp,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )

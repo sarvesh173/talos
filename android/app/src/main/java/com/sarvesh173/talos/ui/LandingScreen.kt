@@ -911,7 +911,7 @@ fun LandingScreen(
 private const val DISSOLVE_TOTAL_MS = 4800f
 
 /** Seamless handover: next screen materializes under the floating starry embers at 3.2s. */
-private const val DISSOLVE_NAVIGATE_MS = 3200f
+private const val DISSOLVE_NAVIGATE_MS = 2900f
 
 /** Coarse-to-fine density of the micro-particle lattice. */
 private const val DISSOLVE_COLS = 96
@@ -1165,6 +1165,10 @@ private fun ParticleDissolveOverlay(
         val h = size.height
         val baseDot = (w / f.cols.toFloat()) * 0.76f
 
+        // Smooth quadratic evaporation envelope: particles softly fade to absolute zero
+        val globalFade = if (p < 0.58f) 1.0f else ((1.0f - p) / 0.42f).coerceIn(0f, 1f)
+        val fadeAlpha = globalFade * globalFade
+
         var b = 0
         while (b < f.bucketColor.size) {
             val start = f.bucketStart[b]
@@ -1201,14 +1205,14 @@ private fun ParticleDissolveOverlay(
 
                 if (haloCount > 0) {
                     haloPaint.color = f.bucketColor[b]
-                    haloPaint.alpha = (255f * (1f - (p * 0.30f))).toInt().coerceIn(0, 255)
+                    haloPaint.alpha = (255f * fadeAlpha).toInt().coerceIn(0, 255)
                     haloPaint.strokeWidth = baseDot * 1.35f
                     drawIntoCanvas { canvas ->
                         canvas.nativeCanvas.drawPoints(scratchHalo, 0, haloCount, haloPaint)
                     }
                 }
                 if (coreCount > 0) {
-                    corePaint.alpha = (220f * (1f - (p * 0.35f))).toInt().coerceIn(0, 255)
+                    corePaint.alpha = (220f * fadeAlpha).toInt().coerceIn(0, 255)
                     corePaint.strokeWidth = baseDot * 0.60f
                     drawIntoCanvas { canvas ->
                         canvas.nativeCanvas.drawPoints(scratchCore, 0, coreCount, corePaint)

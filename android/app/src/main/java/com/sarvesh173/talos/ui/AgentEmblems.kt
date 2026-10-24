@@ -44,7 +44,8 @@ val AgentEmblems: List<AgentEmblem> = listOf(
     AgentEmblem("deepseek", "DeepSeek", "DeepSeek · Reasoning", R.drawable.ic_deepseek, Color(0xFF0066FF)),
     AgentEmblem("qwen", "Qwen", "Alibaba · Qwen Series", R.drawable.ic_qwen, Color(0xFF2563EB)),
     AgentEmblem("openclaw", "OpenClaw", "Tools & Automation", R.drawable.ic_openclaw, Color(0xFFF97316)),
-    AgentEmblem("omnirush", "OmniRush", "High-Throughput Runner", R.drawable.ic_omnirush, Color(0xFFA855F7))
+    AgentEmblem("omnirush", "OmniRush", "High-Throughput Runner", R.drawable.ic_omnirush, Color(0xFFA855F7)),
+    AgentEmblem("opencode", "OpenCode", "Open-Source Terminal CLI", R.drawable.ic_opencode, Color(0xFF3B82F6))
 )
 
 fun emblemByKey(key: String): AgentEmblem =
@@ -65,7 +66,8 @@ fun emblemBySender(name: String): AgentEmblem {
         clean.contains("claude") || clean.contains("anthropic") -> emblemByKey("claude")
         clean.contains("codex") || clean.contains("openai") -> emblemByKey("codex")
         clean.contains("hermes") || clean.contains("nous") || clean.contains("core") -> emblemByKey("hermes")
-        clean.contains("claw") || clean.contains("openclaw") || clean.contains("opencode") -> emblemByKey("openclaw")
+        clean.contains("opencode") -> emblemByKey("opencode")
+        clean.contains("claw") || clean.contains("openclaw") -> emblemByKey("openclaw")
         clean.contains("deepseek") -> emblemByKey("deepseek")
         clean.contains("gemini") || clean.contains("google") -> emblemByKey("gemini")
         clean.contains("qwen") || clean.contains("alibaba") -> emblemByKey("qwen")

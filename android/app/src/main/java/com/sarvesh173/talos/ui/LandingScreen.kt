@@ -122,6 +122,7 @@ fun LandingScreen(
     var isDissolving by remember { mutableStateOf(false) }
     var particleField by remember { mutableStateOf<DotField?>(null) }
     val dissolveProgress = remember { mutableFloatStateOf(0f) }
+    val scaffoldAlpha = remember { mutableFloatStateOf(1f) }
 
     // Ambient idle micro-motion: keeps the hero alive while the user rests on the page.
     val idleBreath by rememberInfiniteTransition(label = "idle_micro_motion").animateFloat(
@@ -137,23 +138,24 @@ fun LandingScreen(
     LaunchedEffect(isDissolving) {
         if (!isDissolving) return@LaunchedEffect
 
-        // 1. Freeze the exact rendered frame so every micro particle inherits the real
-        //    colour of whatever it sits on (background, cards, emblems, glyphs, text).
         val frozenFrame = captureRenderedFrame(rootView)
-        val palette = if (isCurrentDark) DarkDissolvePalette else LightDissolvePalette
-
-        // 2. Materialise the mathematically staggered micro-particle field.
+        val palette = DarkDissolvePalette // Always OLED pure dark palette
         particleField = buildDotField(frozenFrame, palette)
 
-        // 3. Frame-synced dissolve ramp with a hard safety completion.
         val startNanos = withFrameNanos { it }
+        var navigated = false
         while (true) {
             val nowNanos = withFrameNanos { it }
             val elapsedMs = (nowNanos - startNanos) / 1_000_000f
             val normalized = (elapsedMs / DISSOLVE_TOTAL_MS).coerceIn(0f, 1f)
-            dissolveProgress.floatValue = DISSOLVE_RAMP_EASING.transform(normalized)
-            if (elapsedMs >= DISSOLVE_NAVIGATE_MS) {
+            dissolveProgress.floatValue = normalized
+            scaffoldAlpha.floatValue = (1f - (elapsedMs / 950f)).coerceIn(0f, 1f)
+
+            if (!navigated && elapsedMs >= DISSOLVE_NAVIGATE_MS) {
+                navigated = true
                 onGetStarted()
+            }
+            if (elapsedMs >= DISSOLVE_TOTAL_MS) {
                 break
             }
         }
@@ -295,17 +297,16 @@ fun LandingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xFF000000))
     ) {
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .graphicsLayer {
-                // Read in the draw phase only: the whole application dissolves smoothly
-                // into the surface colour without a single recomposition per frame.
-                alpha = (1f - dissolveProgress.floatValue).coerceIn(0f, 1f)
+                // Smooth initial cross-dissolve to particles
+                alpha = scaffoldAlpha.floatValue
             },
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFF000000),
                 topBar = {
             Column(
                 modifier = Modifier
@@ -906,11 +907,11 @@ fun LandingScreen(
 //  Adaptive Micro-Particle Dissolve Engine
 // ============================================================================
 
-/** Total dissolve length. Hard-capped below five seconds by design. */
-private const val DISSOLVE_TOTAL_MS = 4520f
+/** Total dissolve length: exactly 4.8 seconds for sustained visual satisfaction. */
+private const val DISSOLVE_TOTAL_MS = 4800f
 
-/** The screen starts handing over to the next surface while the last particles fade. */
-private const val DISSOLVE_NAVIGATE_MS = 4180f
+/** Seamless handover: next screen materializes under the floating starry embers at 3.2s. */
+private const val DISSOLVE_NAVIGATE_MS = 3200f
 
 /** Coarse-to-fine density of the micro-particle lattice. */
 private const val DISSOLVE_COLS = 96
@@ -1001,7 +1002,7 @@ private fun buildDotField(
     val bmpW = shot?.width ?: 1080
     val bmpH = shot?.height ?: 2340
     val cols = DISSOLVE_COLS
-    val rows = ((cols.toFloat() * bmpH.toFloat()) / bmpW.toFloat()).toInt().coerceIn(48, 260)
+    val rows = ((cols.toFloat() * bmpH.toFloat()) / bmpW.toFloat()).toInt().coerceIn(60, 240)
     val count = cols * rows
 
     val xs = FloatArray(count)
@@ -1015,7 +1016,7 @@ private fun buildDotField(
 
     val rowBuf = IntArray(bmpW)
     val histogram = HashMap<Int, Int>()
-    var captured = shot != null
+    val captured = shot != null
 
     for (r in 0 until rows) {
         if (captured) {
@@ -1029,23 +1030,27 @@ private fun buildDotField(
             xs[i] = u
             ys[i] = v
 
-            val e1 = hash01(c * 12.9898f + r * 78.233f)
-            val e2 = hash01(c * 39.346f + r * 11.135f)
-            val e3 = hash01(c * 4.171f + r * 61.723f)
+            // Distance from button blast epicenter (bottom center: 0.5, 0.88)
+            val dx = u - 0.5f
+            val dy = v - 0.88f
+            val dist = kotlin.math.sqrt(dx * dx + dy * dy)
 
-            // Non-repeating stagger: every dot owns a unique slice of the timeline.
-            delay[i] = e1 * 0.52f
-            life[i] = 0.30f + e2 * 0.17f
-            swirl[i] = e3
+            val e1 = hash01(c * 17.123f + r * 89.431f)
+            val e2 = hash01(c * 43.192f + r * 23.774f)
+            val e3 = hash01(c * 7.891f + r * 53.219f)
 
-            val cx = u - 0.5f
-            val cy = v - 0.5f
-            val len = kotlin.math.sqrt(cx * cx + cy * cy) + 0.0001f
-            val nx = cx / len
-            val ny = cy / len
-            val sgn = if (e3 > 0.5f) 1f else -1f
-            dirX[i] = nx * 0.55f + (-ny) * sgn * (0.28f + e2 * 0.55f)
-            dirY[i] = ny * 0.55f + nx * sgn * (0.28f + e2 * 0.55f) - 0.20f
+            // Radial shockwave cascade: dots near button detonate first, spreading upward
+            delay[i] = (dist * 0.35f + e1 * 0.10f).coerceIn(0f, 0.42f)
+            // Sustained life: dots stay visible and float gracefully across the full 4.8s
+            life[i] = 0.52f + e2 * 0.16f
+            swirl[i] = (e3 - 0.5f) * 2f
+
+            val nx = if (dist > 0.001f) dx / dist else (e1 - 0.5f) * 2f
+            val ny = if (dist > 0.001f) dy / dist else -1f
+
+            // Radial blast + fluid vortex curl
+            dirX[i] = nx * 0.70f - ny * swirl[i] * 0.40f
+            dirY[i] = ny * 0.70f + nx * swirl[i] * 0.40f - 0.16f
 
             if (captured) {
                 val px = ((c + 0.5f) * bmpW.toFloat() / cols.toFloat()).toInt().coerceIn(0, bmpW - 1)
@@ -1059,8 +1064,6 @@ private fun buildDotField(
         }
     }
 
-    // A blank or blocked capture (hardware layer, protected surface) falls back to the
-    // app's own brand palette instead of producing an invisible dissolve.
     if (captured && histogram.size < 6) {
         for (i in 0 until count) {
             val e = hash01(xs[i] * 917.13f + ys[i] * 41.77f)
@@ -1068,7 +1071,6 @@ private fun buildDotField(
         }
     }
 
-    // Group dots by quantised colour so the whole field renders as a handful of batched runs.
     val bucketIndex = IntArray(count)
     val bucketOrderColors = ArrayList<Int>()
     val lookup = HashMap<Int, Int>()
@@ -1129,8 +1131,8 @@ private fun bucketColorsOf(list: ArrayList<Int>): IntArray {
 }
 
 /**
- * Draws the dissolving window: tens of thousands of micro dots, each one fading out in
- * the exact colour it sampled from the frozen frame, drifting outward with its own swirl.
+ * Draws the dissolving window: tens of thousands of microscopic glowing quantum dots,
+ * with outer colored halos and glowing specular white cores, sweeping upward and floating.
  */
 @Composable
 private fun ParticleDissolveOverlay(
@@ -1138,249 +1140,82 @@ private fun ParticleDissolveOverlay(
     progress: () -> Float,
     modifier: Modifier = Modifier
 ) {
-    val scratch = remember { FloatArray(MAX_DISSOLVE_DOTS * 2) }
-    val dotPaint = remember {
+    val scratchHalo = remember { FloatArray(MAX_DISSOLVE_DOTS * 2) }
+    val scratchCore = remember { FloatArray(MAX_DISSOLVE_DOTS * 2) }
+    val haloPaint = remember {
         android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             style = android.graphics.Paint.Style.STROKE
             strokeCap = android.graphics.Paint.Cap.ROUND
+        }
+    }
+    val corePaint = remember {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            style = android.graphics.Paint.Style.STROKE
+            strokeCap = android.graphics.Paint.Cap.ROUND
+            color = android.graphics.Color.WHITE
         }
     }
 
     Canvas(modifier = modifier) {
         val f = field ?: return@Canvas
         val p = progress()
-        if (p <= 0.002f) return@Canvas
+        if (p <= 0.001f || p >= 1.0f) return@Canvas
 
         val w = size.width
         val h = size.height
-        val baseDot = (w / f.cols.toFloat()) * 0.62f
-        val phases = 5
+        val baseDot = (w / f.cols.toFloat()) * 0.76f
 
         var b = 0
         while (b < f.bucketColor.size) {
             val start = f.bucketStart[b]
             val end = f.bucketEnd[b]
             if (start < end) {
-                var phase = 0
-                while (phase < phases) {
-                    var n = 0
-                    var k = start
-                    while (k < end) {
-                        val i = f.order[k]
-                        val d = f.delay[i]
-                        if (p > d) {
-                            val raw = (p - d) / f.life[i]
-                            if (raw < 1f) {
-                                val l = if (raw < 0f) 0f else raw
-                                if ((l * phases.toFloat()).toInt() == phase) {
-                                    val eased = 1f - (1f - l) * (1f - l)
-                                    val spread = (0.020f + 0.075f * f.swirl[i]) * eased
-                                    scratch[n] = f.xs[i] * w + f.dirX[i] * spread * w
-                                    scratch[n + 1] = f.ys[i] * h + f.dirY[i] * spread * h
-                                    n += 2
-                                }
-                            }
-                        }
-                        k++
-                    }
-                    if (n > 0) {
-                        val decay = 1f - phase * 0.20f
-                        dotPaint.color = f.bucketColor[b]
-                        dotPaint.alpha = (255f * decay * decay).toInt().coerceIn(0, 255)
-                        dotPaint.strokeWidth = baseDot * (1f - phase * 0.14f)
-                        drawIntoCanvas { canvas ->
-                            canvas.nativeCanvas.drawPoints(scratch, 0, n, dotPaint)
+                var haloCount = 0
+                var coreCount = 0
+                var k = start
+                while (k < end) {
+                    val i = f.order[k]
+                    val d = f.delay[i]
+                    val l = f.life[i]
+                    if (p > d && p < d + l) {
+                        val localP = (p - d) / l
+                        val alpha = kotlin.math.sin(localP * 3.14159f)
+                        val drag = (1f - kotlin.math.exp(-2.6f * localP))
+                        val spread = (0.04f + 0.09f * kotlin.math.abs(f.swirl[i])) * drag
+
+                        val px = f.xs[i] * w + f.dirX[i] * spread * w
+                        val py = f.ys[i] * h + f.dirY[i] * spread * h - (localP * 0.045f * h)
+
+                        scratchHalo[haloCount] = px
+                        scratchHalo[haloCount + 1] = py
+                        haloCount += 2
+
+                        if (alpha > 0.40f) {
+                            scratchCore[coreCount] = px
+                            scratchCore[coreCount + 1] = py
+                            coreCount += 2
                         }
                     }
-                    phase++
+                    k++
+                }
+
+                if (haloCount > 0) {
+                    haloPaint.color = f.bucketColor[b]
+                    haloPaint.alpha = (255f * (1f - (p * 0.30f))).toInt().coerceIn(0, 255)
+                    haloPaint.strokeWidth = baseDot * 1.35f
+                    drawIntoCanvas { canvas ->
+                        canvas.nativeCanvas.drawPoints(scratchHalo, 0, haloCount, haloPaint)
+                    }
+                }
+                if (coreCount > 0) {
+                    corePaint.alpha = (220f * (1f - (p * 0.35f))).toInt().coerceIn(0, 255)
+                    corePaint.strokeWidth = baseDot * 0.60f
+                    drawIntoCanvas { canvas ->
+                        canvas.nativeCanvas.drawPoints(scratchCore, 0, coreCount, corePaint)
+                    }
                 }
             }
             b++
-        }
-    }
-}
-
-
-
-/**
- * Material 3 ElevatedCard with Machined Dark Obsidian Sockets
- */
-@Composable
-private fun AgentNodeWithBubble(
-    node: AgentNode,
-    isActive: Boolean,
-    bubbleText: String?,
-    bubbleBelow: Boolean,
-    isDark: Boolean,
-    modifier: Modifier = Modifier,
-    alignRight: Boolean = false,
-    onTap: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val cardScale by animateFloatAsState(
-        targetValue = when {
-            isPressed -> 0.96f
-            isActive -> 1.03f
-            else -> 1.0f
-        },
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = 600f),
-        label = "card_scale"
-    )
-
-    Column(
-        modifier = modifier,
-        horizontalAlignment = if (alignRight) Alignment.End else Alignment.Start
-    ) {
-        // Speech Bubble Placed Above Card
-        if (!bubbleBelow) {
-            AnimatedVisibility(
-                visible = !bubbleText.isNullOrBlank() && isActive,
-                enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { 15 },
-                exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { -10 }
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
-                    modifier = Modifier
-                        .padding(bottom = 6.dp)
-                        .widthIn(max = 168.dp)
-                        .shadow(4.dp, RoundedCornerShape(12.dp), spotColor = Color.Black.copy(alpha = 0.25f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(node.accent)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = bubbleText ?: "",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-        }
-
-        // Tactile Material 3 ElevatedCard
-        ElevatedCard(
-            shape = ShapeLargeIncreased,
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            elevation = CardDefaults.elevatedCardElevation(
-                defaultElevation = if (isActive) 6.dp else 2.dp,
-                pressedElevation = 0.dp
-            ),
-            modifier = Modifier
-                .size(width = 114.dp, height = 100.dp)
-                .scale(cardScale)
-                .border(
-                    width = if (isActive) 1.5.dp else 1.dp,
-                    brush = if (isActive) {
-                        Brush.linearGradient(
-                            colors = listOf(
-                                node.accent.copy(alpha = 0.95f),
-                                node.accent.copy(alpha = 0.40f)
-                            )
-                        )
-                    } else {
-                        metallicBorderBrush(isDark)
-                    },
-                    shape = ShapeLargeIncreased
-                )
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) { onTap() }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(7.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Machined Dark Obsidian Socket (ensures 100% emblem contrast in all themes)
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF0F172A))
-                        .border(1.dp, node.accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AgentEmblemIcon(emblem = node.emblem, size = 28.dp, tint = null)
-                }
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = node.name,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = if (isActive) "Active" else node.specTag,
-                        color = if (isActive) node.accent else MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-
-        // Speech Bubble Placed Below Card
-        if (bubbleBelow) {
-            AnimatedVisibility(
-                visible = !bubbleText.isNullOrBlank() && isActive,
-                enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { -15 },
-                exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { 10 }
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
-                    modifier = Modifier
-                        .padding(top = 6.dp)
-                        .widthIn(max = 168.dp)
-                        .shadow(4.dp, RoundedCornerShape(12.dp), spotColor = Color.Black.copy(alpha = 0.25f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(node.accent)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = bubbleText ?: "",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
         }
     }
 }

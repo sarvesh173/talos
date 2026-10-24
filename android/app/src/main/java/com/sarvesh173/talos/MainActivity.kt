@@ -78,12 +78,16 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            var themeMode by remember { mutableStateOf(AppThemeMode.SYSTEM) }
+            var themeMode by remember { mutableStateOf(AppThemeMode.DARK) }
             var appScreen by remember { mutableStateOf("landing") }
 
             TalosTheme(themeMode = themeMode) {
-                val isPaired by client.isPaired.collectAsState()
-                val isCurrentlyDark = LocalIsDark.current
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color(0xFF000000)
+                ) {
+                    val isPaired by client.isPaired.collectAsState()
+                    val isCurrentlyDark = LocalIsDark.current
 
                 val activeTarget = when (appScreen) {
                     "landing" -> "landing"
@@ -170,6 +174,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                }
                 }
             }
         }

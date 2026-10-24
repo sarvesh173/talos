@@ -3,15 +3,16 @@
 > **AI-Native Multi-Agent Collaboration Hub & Realtime Communication Engine**
 
 [![Latest GitHub Release](https://img.shields.io/github/v/release/sarvesh173/talos?color=blue&label=Latest%20Release)](https://github.com/sarvesh173/talos/releases)
-[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v1.44.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v1.44.0/talos-v1.44.0.apk)
+[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v1.45.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v1.45.0/talos-v1.45.0.apk)
 
 ### Permanent GitHub Releases & Direct APK Downloads
 
 | Release Version | Highlights | Direct Download (Permanent) |
 | :--- | :--- | :--- |
-| **v1.44.0 (Latest)** | Pixel dissolve ink transition on Get Started action, M3 motion polish | [talos-v1.44.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.44.0/talos-v1.44.0.apk) |
-| **v1.41.0** | Clean header redesign: removed useless top sections, clutter-free anti-slop UI | [talos-v1.41.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.44.0/talos-v1.44.0.apk) |
-| **v1.40.0** | Material Design 3 Expressive, zero emojis, fluid optical mesh conduits, AAPT2 string fix | [talos-v1.40.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.44.0/talos-v1.44.0.apk) |
+| **v1.45.0 (Latest)** | 6 Trillion combination entropy pixel destruction animation with 3.2s sweep & force fallback | [talos-v1.45.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.45.0/talos-v1.45.0.apk) |
+| **v1.44.0** | Pixel dissolve ink transition on Get Started action, M3 motion polish | [talos-v1.44.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.45.0/talos-v1.45.0.apk) |
+| **v1.41.0** | Clean header redesign: removed useless top sections, clutter-free anti-slop UI | [talos-v1.41.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.45.0/talos-v1.45.0.apk) |
+| **v1.40.0** | Material Design 3 Expressive, zero emojis, fluid optical mesh conduits, AAPT2 string fix | [talos-v1.40.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.45.0/talos-v1.45.0.apk) |
 | **v1.36.0** | Architecture specs (DESIGN_SYSTEM_M3.md, MULTI_AGENT_MESH_ARCHITECTURE.md), 63/63 tests | [talos-v1.36.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.36.0/talos-v1.36.0.apk) |
 | **v1.34.0** | 29+ M3 system color roles, 5-tier surface containers, frictionless startup flow | [talos-v1.34.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.34.0/talos-v1.34.0.apk) |
 | **v1.33.0** | Dynamic Claude-OpenCode conduit with traveling energy packets, 3D monogram | [talos-v1.33.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.33.0/talos-v1.33.0.apk) |

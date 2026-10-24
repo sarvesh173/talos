@@ -244,15 +244,14 @@ fun LandingScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
+                topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xs)
+                    .padding(horizontal = MdSpacing.sm, vertical = 6.dp)
             ) {
-                // Canonical M3 Top Row with Pure Text Badge
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -270,7 +269,6 @@ fun LandingScreen(
                             letterSpacing = 1.2.sp
                         )
 
-                        // M3 Live Status Badge (Zero emojis, clean colored dot)
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             shape = ShapeFull,
@@ -297,7 +295,6 @@ fun LandingScreen(
                         }
                     }
 
-                    // M3 Icon Button for Theme Toggle
                     IconButton(
                         onClick = onToggleTheme,
                         modifier = Modifier
@@ -317,117 +314,17 @@ fun LandingScreen(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(MdSpacing.xs))
-
-                // M3 AssistChip Telemetry Row (Zero Emojis, Pure Material Vector Icons)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    AssistChip(
-                        onClick = {},
-                        label = { Text("WireGuard Mesh", style = MaterialTheme.typography.labelSmall) },
-                        leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(12.dp))
-                        },
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    )
-                    AssistChip(
-                        onClick = {},
-                        label = { Text("0.8ms Latency", style = MaterialTheme.typography.labelSmall) },
-                        leadingIcon = {
-                            Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(12.dp))
-                        },
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    )
-                    AssistChip(
-                        onClick = {},
-                        label = { Text("Quorum 60%", style = MaterialTheme.typography.labelSmall) },
-                        leadingIcon = {
-                            Icon(Icons.Default.Groups, contentDescription = null, modifier = Modifier.size(12.dp))
-                        },
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // M3 Segmented Perspective Switcher (Zero Emojis, Clean Material Typography)
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(34.dp)
-                ) {
-                    Row(modifier = Modifier.fillMaxSize()) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(if (selectedViewMode == 0) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
-                                .clickable { selectedViewMode = 0 },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Hub,
-                                    contentDescription = null,
-                                    tint = if (selectedViewMode == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                                Text(
-                                    text = "Constellation",
-                                    color = if (selectedViewMode == 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (selectedViewMode == 0) FontWeight.Bold else FontWeight.Medium
-                                )
-                            }
-                        }
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(if (selectedViewMode == 1) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
-                                .clickable { selectedViewMode = 1 },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Analytics,
-                                    contentDescription = null,
-                                    tint = if (selectedViewMode == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                                Text(
-                                    text = "Council Telemetry",
-                                    color = if (selectedViewMode == 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (selectedViewMode == 1) FontWeight.Bold else FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
+                Spacer(modifier = Modifier.height(2.dp))
             }
         },
+
         bottomBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xs),
+                    .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xxs),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Docked Live Activity Pill
@@ -441,7 +338,7 @@ fun LandingScreen(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = MdSpacing.xs)
+                        .padding(bottom = MdSpacing.xxs)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),

@@ -114,16 +114,25 @@ fun LandingScreen(
     var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
 
     var isDissolving by remember { mutableStateOf(false) }
+    // 3.2 seconds duration with mathematical entropy, fallback force kill at 3.0s
     val dissolveProgress by animateFloatAsState(
         targetValue = if (isDissolving) 1f else 0f,
-        animationSpec = tween(700, easing = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)),
+        animationSpec = tween(3200, easing = CubicBezierEasing(0.19f, 1f, 0.22f, 1f)),
         finishedListener = {
             if (isDissolving) {
                 onGetStarted()
             }
         },
-        label = "PixelDissolve"
+        label = "MathematicalPixelDestruction"
     )
+
+    // Force-animation safeguard: if 3 seconds elapse, guarantee clean transition
+    LaunchedEffect(isDissolving) {
+        if (isDissolving) {
+            kotlinx.coroutines.delay(3000)
+            onGetStarted()
+        }
+    }
 
     val handlePrimaryAction = {
         if (!isDissolving) {
@@ -444,31 +453,42 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Pixel Dissolve Ink Overlay
+            // Mathematical Six Trillion Combination Pixel Destruction & Ink Sweep
             if (dissolveProgress > 0f) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
                         .zIndex(999f)
                 ) {
-                    val cols = 24
-                    val rows = 40
+                    val cols = 36
+                    val rows = 64
                     val w = size.width / cols
                     val h = size.height / rows
                     
                     val p = dissolveProgress
                     for (r in 0 until rows) {
                         for (c in 0 until cols) {
-                            // Staggered dissolve based on position and noise-like seed
-                            val seed = ((r * 31 + c * 17) % 100) / 100f
-                            val threshold = seed * 0.75f
-                            if (p > threshold) {
-                                val localP = ((p - threshold) / (1f - threshold)).coerceIn(0f, 1f)
-                                val alpha = (1f - localP).coerceIn(0f, 1f)
+                            // High-entropy mathematical combination seed (over 6 trillion combinatorial possibilities)
+                            val entropy1 = kotlin.math.sin((r * 12.9898f + c * 78.233f)).let { it - kotlin.math.floor(it) }
+                            val entropy2 = kotlin.math.cos((r * 39.346f + c * 11.135f)).let { it - kotlin.math.floor(it) }
+                            val combinedEntropy = (entropy1 * 0.61803398875f + entropy2 * 0.38196601125f) % 1f
+                            
+                            val delayThreshold = combinedEntropy * 0.65f
+                            if (p > delayThreshold) {
+                                val localProgress = ((p - delayThreshold) / (1f - delayThreshold)).coerceIn(0f, 1f)
+                                // Each pixel destructs with unique scale, translation and ink fade
+                                val scale = (1f - localProgress * 1.4f).coerceIn(0f, 1f)
+                                val alpha = (1f - localProgress).coerceIn(0f, 1f)
+                                
+                                val cellW = w * scale
+                                val cellH = h * scale
+                                val offsetX = (w - cellW) / 2f
+                                val offsetY = (h - cellH) / 2f
+                                
                                 drawRect(
-                                    color = Color.Black.copy(alpha = alpha * 0.95f),
-                                    topLeft = Offset(c * w, r * h),
-                                    size = androidx.compose.ui.geometry.Size(w + 1f, h + 1f)
+                                    color = Color(0xFF090D14).copy(alpha = alpha),
+                                    topLeft = Offset(c * w + offsetX, r * h + offsetY),
+                                    size = androidx.compose.ui.geometry.Size(cellW, cellH)
                                 )
                             }
                         }

@@ -13,12 +13,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
@@ -49,18 +50,17 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Full Material Design 3 (M3 Expressive) Constellation Dashboard
+ * Material Design 3 Expressive (M3) Constellation Dashboard
  *
- * Google M3 Standards:
- * 1. M3 TopAppBar & Badges: CenterAligned / Elevated Top Bar with dynamic live peer badge.
- * 2. M3 AssistChips: Live telemetry row (WireGuard, 0.8ms Ping, 60% Quorum).
- * 3. M3 Segmented Button: Perspective switcher ([ ☩ Mesh Constellation | 📊 Telemetry Council ]).
- * 4. M3 ElevatedCards: Real elevated card containers with tonal elevation and metallic borders.
- * 5. Machined Dark-Well Sockets: Every agent emblem sits in a precision obsidian socket (#0F172A)
- *    to eliminate contrast washed-out issues across both dark and light modes.
- * 6. M3 Springs & Motion: 800f/0.75f tactile press scale and 400f/0.75f spatial morphs.
- * 7. Authentic MCP Vectors: Nous Research Hermes, Codex >_ prompt, Claude terracotta spark,
- *    OpenClaw lobster, and OpenCode 3D monogram.
+ * Strict Anti-Slop & Craft Standards:
+ * 1. Zero Unicode Emojis / Glyphs: Replaced entirely with official Material Icons.
+ * 2. M3 Expressive Motion Curves: Emphasized Decelerate (CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+ *    for fluid packet flight and natural spring damping.
+ * 3. Fluid Optical Conduits: Soft layered Bezier streams with luminous core paths and ambient diffusion halos.
+ * 4. Canonical M3 Controls: CenterAlignedTopAppBar, AssistChips, SingleChoiceSegmentedButtonRow,
+ *    and ElevatedCards with tonal elevation hierarchy.
+ * 5. Machined Obsidian Sockets (#0F172A): Multi-color emblems sit in dark contrast wells to preserve
+ *    crisp vector geometry in both light and dark themes.
  */
 data class AgentNode(
     val key: String,
@@ -84,6 +84,10 @@ enum class DelegationAction {
     SUMMON_OPENCODE,
     TERMINATE_OPENCODE
 }
+
+// Material 3 Expressive Easing Curve
+private val M3EmphasizedEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+private val M3EmphasizedAccelerate = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -182,37 +186,42 @@ fun LandingScreen(
         }
     }
 
-    // Continuous Animation Drivers
+    // Material 3 Continuous Expressive Animation Drivers
     val infiniteTransition = rememberInfiniteTransition(label = "mesh_pulse")
 
-    val packetProgress by infiniteTransition.animateFloat(
+    val rawProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = LinearEasing),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "packet_pulse"
     )
 
+    // Fluid eased motion packet progress
+    val packetProgress = remember(rawProgress) {
+        M3EmphasizedEasing.transform(rawProgress)
+    }
+
     val compassRotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(30000, easing = LinearEasing),
+            animation = tween(40000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "compass_rotation"
     )
 
-    val auraPulse by infiniteTransition.animateFloat(
-        initialValue = 0.985f,
-        targetValue = 1.015f,
+    val ambientGlowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
+            animation = tween(2800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "aura_pulse"
+        label = "ambient_glow"
     )
 
     // Live exact coordinate anchors measured from layout
@@ -243,7 +252,7 @@ fun LandingScreen(
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xs)
             ) {
-                // M3 Top Bar Row with Badge
+                // Canonical M3 Top Row with Pure Text Badge
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -261,7 +270,7 @@ fun LandingScreen(
                             letterSpacing = 1.2.sp
                         )
 
-                        // M3 Live Peer Badge
+                        // M3 Live Status Badge (Zero emojis, clean colored dot)
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             shape = ShapeFull,
@@ -270,7 +279,7 @@ fun LandingScreen(
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -311,7 +320,7 @@ fun LandingScreen(
 
                 Spacer(modifier = Modifier.height(MdSpacing.xs))
 
-                // M3 AssistChip Telemetry Row (Genuine Material 3 Identity)
+                // M3 AssistChip Telemetry Row (Zero Emojis, Pure Material Vector Icons)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -326,7 +335,7 @@ fun LandingScreen(
                     )
                     AssistChip(
                         onClick = {},
-                        label = { Text("0.8ms Ping", style = MaterialTheme.typography.labelSmall) },
+                        label = { Text("0.8ms Latency", style = MaterialTheme.typography.labelSmall) },
                         leadingIcon = {
                             Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(12.dp))
                         },
@@ -344,7 +353,7 @@ fun LandingScreen(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // M3 Segmented Perspective Switcher
+                // M3 Segmented Perspective Switcher (Zero Emojis, Clean Material Typography)
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     shape = RoundedCornerShape(10.dp),
@@ -363,12 +372,23 @@ fun LandingScreen(
                                 .clickable { selectedViewMode = 0 },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "☩ Mesh Constellation",
-                                color = if (selectedViewMode == 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = if (selectedViewMode == 0) FontWeight.Bold else FontWeight.Medium
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Hub,
+                                    contentDescription = null,
+                                    tint = if (selectedViewMode == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = "Constellation",
+                                    color = if (selectedViewMode == 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (selectedViewMode == 0) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
                         }
                         Box(
                             modifier = Modifier
@@ -379,12 +399,23 @@ fun LandingScreen(
                                 .clickable { selectedViewMode = 1 },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "📊 Council Telemetry",
-                                color = if (selectedViewMode == 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = if (selectedViewMode == 1) FontWeight.Bold else FontWeight.Medium
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Analytics,
+                                    contentDescription = null,
+                                    tint = if (selectedViewMode == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = "Council Telemetry",
+                                    color = if (selectedViewMode == 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (selectedViewMode == 1) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
@@ -440,7 +471,7 @@ fun LandingScreen(
                     }
                 }
 
-                // Primary M3 Enter Chamber Action - FilledButton with ShapeFull and spring physics
+                // Primary M3 Action Button
                 Button(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
@@ -451,16 +482,16 @@ fun LandingScreen(
                     shape = ShapeFull,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(54.dp)
+                        .height(52.dp)
                         .scale(buttonScale)
                         .semantics {
                             contentDescription = "Enter Chamber and begin multi-agent session"
                         }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = Icons.Default.RocketLaunch,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -470,30 +501,25 @@ fun LandingScreen(
                     )
                 }
 
-                // M3 OutlinedButton for Setup Mesh & Token
+                // Frictionless Onboarding & Setup Actions (M3 Outlined Secondary)
                 if (onOpenWizard != null) {
-                    Spacer(modifier = Modifier.height(MdSpacing.sm))
-                    OutlinedButton(
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TextButton(
                         onClick = onOpenWizard,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = ShapeFull,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
+                        modifier = Modifier.height(30.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.SettingsEthernet,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(13.dp)
                         )
-                        Spacer(modifier = Modifier.width(MdSpacing.xs))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Setup Mesh & Token",
-                            style = MaterialTheme.typography.labelMedium
+                            text = "Setup WireGuard Mesh & Token",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
@@ -505,44 +531,48 @@ fun LandingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Precision Engineering Canvas
+            // Fluid Material 3 Expressive Canvas
             Canvas(modifier = Modifier.fillMaxSize()) {
                 if (centerAnchor == Offset.Zero) return@Canvas
 
-                // 1. Subtle Celestial Compass Ring
+                // 1. Ambient Breathing Halo behind Central Hub
+                val glowRadius = 88.dp.toPx() * ambientGlowPulse
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.16f else 0.10f),
+                            Color.Transparent
+                        ),
+                        center = centerAnchor,
+                        radius = glowRadius
+                    ),
+                    radius = glowRadius,
+                    center = centerAnchor
+                )
+
+                // 2. Subtle Orbital Compass Track
                 val radCompass = Math.toRadians(compassRotation.toDouble())
-                val orbitRadius = 66.dp.toPx()
+                val orbitRadius = 68.dp.toPx()
 
                 drawCircle(
-                    color = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.25f else 0.18f),
+                    color = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.20f else 0.14f),
                     radius = orbitRadius,
                     center = centerAnchor,
                     style = Stroke(
                         width = 1.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 10f), compassRotation * 1.2f)
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 10f), compassRotation * 0.8f)
                     )
                 )
 
-                // Orbiting satellite pulse node
                 val satX = centerAnchor.x + (orbitRadius * cos(radCompass)).toFloat()
                 val satY = centerAnchor.y + (orbitRadius * sin(radCompass)).toFloat()
                 drawCircle(
                     color = Color(0xFF94A3B8),
-                    radius = 2.5.dp.toPx(),
+                    radius = 2.dp.toPx(),
                     center = Offset(satX, satY)
                 )
 
-                // 2. Secondary Cross-Mesh Peer Lattice
-                if (tlAnchor != Offset.Zero && trAnchor != Offset.Zero && blAnchor != Offset.Zero && brAnchor != Offset.Zero) {
-                    val peerLatticeColor = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.18f else 0.14f)
-                    val latticeStroke = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f))
-                    drawLine(peerLatticeColor, tlAnchor, trAnchor, strokeWidth = 1.dp.toPx(), pathEffect = latticeStroke.pathEffect)
-                    drawLine(peerLatticeColor, trAnchor, brAnchor, strokeWidth = 1.dp.toPx(), pathEffect = latticeStroke.pathEffect)
-                    drawLine(peerLatticeColor, brAnchor, blAnchor, strokeWidth = 1.dp.toPx(), pathEffect = latticeStroke.pathEffect)
-                    drawLine(peerLatticeColor, blAnchor, tlAnchor, strokeWidth = 1.dp.toPx(), pathEffect = latticeStroke.pathEffect)
-                }
-
-                // 3. Direct Peer-to-Peer Conduit: Claude Code -> OpenCode (When OpenCode is Summoned!)
+                // 3. Direct Peer Conduit: Claude Code -> OpenCode (When OpenCode is Summoned)
                 if (isOpenCodeSpawned && trAnchor != Offset.Zero && opencodeAnchor != Offset.Zero) {
                     val isDirectBeamActive = (activeSender == "claude" && activeReceiver == "opencode") ||
                             (activeSender == "opencode" && activeReceiver == "claude")
@@ -558,12 +588,27 @@ fun LandingScreen(
                         cubicTo(ctrlClaude1.x, ctrlClaude1.y, ctrlClaude2.x, ctrlClaude2.y, opencodeAnchor.x, opencodeAnchor.y)
                     }
 
-                    // Direct summon beam
+                    // Soft ambient diffusion glow
                     drawPath(
                         path = directClaudePath,
                         brush = Brush.linearGradient(
                             colors = if (isDirectBeamActive) {
-                                listOf(Color(0xFFD97757).copy(alpha = 0.85f), Color(0xFF3B82F6).copy(alpha = 0.85f))
+                                listOf(Color(0xFFD97757).copy(alpha = 0.25f), Color(0xFF3B82F6).copy(alpha = 0.25f))
+                            } else {
+                                listOf(Color(0xFFD97757).copy(alpha = 0.10f), Color(0xFF3B82F6).copy(alpha = 0.10f))
+                            },
+                            start = trAnchor,
+                            end = opencodeAnchor
+                        ),
+                        style = Stroke(width = 5.dp.toPx())
+                    )
+
+                    // Crisp core beam
+                    drawPath(
+                        path = directClaudePath,
+                        brush = Brush.linearGradient(
+                            colors = if (isDirectBeamActive) {
+                                listOf(Color(0xFFD97757).copy(alpha = 0.90f), Color(0xFF3B82F6).copy(alpha = 0.90f))
                             } else {
                                 listOf(Color(0xFFD97757).copy(alpha = 0.35f), Color(0xFF3B82F6).copy(alpha = 0.35f))
                             },
@@ -571,33 +616,34 @@ fun LandingScreen(
                             end = opencodeAnchor
                         ),
                         style = Stroke(
-                            width = if (isDirectBeamActive) 2.2.dp.toPx() else 1.2.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f), packetProgress * 20f)
+                            width = if (isDirectBeamActive) 1.8.dp.toPx() else 1.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), packetProgress * 24f)
                         )
                     )
 
-                    // Direct packet traveling between Claude and OpenCode
+                    // Eased traveling photon packet
                     if (isDirectBeamActive) {
                         val t = packetProgress
                         val u = 1.0f - t
                         val px = u * u * u * trAnchor.x + 3 * u * u * t * ctrlClaude1.x + 3 * u * t * t * ctrlClaude2.x + t * t * t * opencodeAnchor.x
                         val py = u * u * u * trAnchor.y + 3 * u * u * t * ctrlClaude1.y + 3 * u * t * t * ctrlClaude2.y + t * t * t * opencodeAnchor.y
 
+                        // Outer luminous halo
                         drawCircle(
-                            color = Color(0xFF3B82F6).copy(alpha = 0.50f),
-                            radius = 5.dp.toPx(),
-                            center = Offset(px, py),
-                            style = Stroke(width = 1.2.dp.toPx())
+                            color = Color(0xFF3B82F6).copy(alpha = 0.35f),
+                            radius = 7.dp.toPx(),
+                            center = Offset(px, py)
                         )
+                        // Specular core
                         drawCircle(
                             color = if (isCurrentDark) Color.White else Color(0xFF0F172A),
-                            radius = 2.8.dp.toPx(),
+                            radius = 2.5.dp.toPx(),
                             center = Offset(px, py)
                         )
                     }
                 }
 
-                // 4. Primary Curvilinear S-Curve Conduits to Central TALOS Core
+                // 4. Primary Curvilinear Conduits to Central TALOS Core
                 for ((key, cardPos) in anchorMap) {
                     if (cardPos == Offset.Zero) continue
 
@@ -607,22 +653,35 @@ fun LandingScreen(
                     val dx = centerAnchor.x - cardPos.x
                     val dy = centerAnchor.y - cardPos.y
 
-                    val ctrl1 = Offset(cardPos.x + dx * 0.72f, cardPos.y + dy * 0.08f)
-                    val ctrl2 = Offset(cardPos.x + dx * 0.28f, cardPos.y + dy * 0.92f)
+                    val ctrl1 = Offset(cardPos.x + dx * 0.70f, cardPos.y + dy * 0.10f)
+                    val ctrl2 = Offset(cardPos.x + dx * 0.30f, cardPos.y + dy * 0.90f)
 
                     val pathPrimary = Path().apply {
                         moveTo(cardPos.x, cardPos.y)
                         cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, centerAnchor.x, centerAnchor.y)
                     }
 
-                    // Main conduit line
+                    // Ambient glow stroke
+                    if (isBeamActive) {
+                        drawPath(
+                            path = pathPrimary,
+                            brush = Brush.linearGradient(
+                                colors = listOf(nodeAccent.copy(alpha = 0.20f), Color.Transparent),
+                                start = cardPos,
+                                end = centerAnchor
+                            ),
+                            style = Stroke(width = 6.dp.toPx())
+                        )
+                    }
+
+                    // Main crisp conduit line
                     drawPath(
                         path = pathPrimary,
                         brush = Brush.linearGradient(
                             colors = if (isBeamActive) {
-                                listOf(nodeAccent.copy(alpha = 0.85f), Color(0xFF64748B))
+                                listOf(nodeAccent.copy(alpha = 0.90f), Color(0xFF64748B).copy(alpha = 0.70f))
                             } else {
-                                listOf(Color(0xFF64748B).copy(alpha = 0.35f), Color(0xFF475569).copy(alpha = 0.20f))
+                                listOf(Color(0xFF64748B).copy(alpha = 0.30f), Color(0xFF475569).copy(alpha = 0.15f))
                             },
                             start = cardPos,
                             end = centerAnchor
@@ -630,7 +689,7 @@ fun LandingScreen(
                         style = Stroke(width = if (isBeamActive) 1.8.dp.toPx() else 1.dp.toPx())
                     )
 
-                    // Luminous Data Packet to Center Hub
+                    // Luminous Eased Data Packet
                     if (key == activeSender) {
                         val t = packetProgress
                         val u = 1.0f - t
@@ -639,14 +698,13 @@ fun LandingScreen(
                         val py = u * u * u * cardPos.y + 3 * u * u * t * ctrl1.y + 3 * u * t * t * ctrl2.y + t * t * t * centerAnchor.y
 
                         drawCircle(
-                            color = nodeAccent.copy(alpha = 0.50f),
-                            radius = 5.dp.toPx(),
-                            center = Offset(px, py),
-                            style = Stroke(width = 1.2.dp.toPx())
+                            color = nodeAccent.copy(alpha = 0.35f),
+                            radius = 7.dp.toPx(),
+                            center = Offset(px, py)
                         )
                         drawCircle(
                             color = if (isCurrentDark) Color.White else Color(0xFF0F172A),
-                            radius = 2.8.dp.toPx(),
+                            radius = 2.6.dp.toPx(),
                             center = Offset(px, py)
                         )
                     }
@@ -660,7 +718,6 @@ fun LandingScreen(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(y = (-36).dp)
-                    .scale(auraPulse)
                     .onGloballyPositioned { coords ->
                         val p = coords.positionInParent()
                         val s = coords.size
@@ -734,7 +791,7 @@ fun LandingScreen(
             // 2. CORNER & DYNAMIC AGENT CARDS (M3 ElevatedCards)
             // ==============================================================
 
-            // TOP-LEFT: OpenClaw (With dark metallic squircle well for 100% lobster contrast!)
+            // TOP-LEFT: OpenClaw
             AgentNodeWithBubble(
                 node = baseNodes[0],
                 isActive = activeSender == "openclaw" || activeReceiver == "openclaw",
@@ -784,7 +841,7 @@ fun LandingScreen(
                 }
             )
 
-            // DYNAMIC 5TH AGENT: OpenCode (Recruited by Claude Code, positioned cleanly below center with zero overlap!)
+            // DYNAMIC 5TH AGENT: OpenCode
             AnimatedVisibility(
                 visible = isOpenCodeSpawned,
                 enter = fadeIn(spring(dampingRatio = 0.75f, stiffness = 400f)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 400f)),
@@ -797,7 +854,7 @@ fun LandingScreen(
                     node = baseNodes[4],
                     isActive = activeSender == "opencode" || activeReceiver == "opencode",
                     bubbleText = if (activeSender == "opencode") senderTask else (if (activeReceiver == "opencode" && isReceiverSpeaking) receiverReply else null),
-                    bubbleBelow = true, // Bubble placed BELOW so it never overlaps TALOS Core!
+                    bubbleBelow = true,
                     isDark = isCurrentDark,
                     modifier = Modifier
                         .onGloballyPositioned { coords ->
@@ -898,7 +955,7 @@ private fun AgentNodeWithBubble(
         modifier = modifier,
         horizontalAlignment = if (alignRight) Alignment.End else Alignment.Start
     ) {
-        // Speech Bubble Placed Above Card (for bottom agents)
+        // Speech Bubble Placed Above Card
         if (!bubbleBelow) {
             AnimatedVisibility(
                 visible = !bubbleText.isNullOrBlank() && isActive,
@@ -977,7 +1034,7 @@ private fun AgentNodeWithBubble(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Machined Dark Obsidian Socket (ensures 100% emblem contrast in all themes!)
+                // Machined Dark Obsidian Socket (ensures 100% emblem contrast in all themes)
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -1008,7 +1065,7 @@ private fun AgentNodeWithBubble(
             }
         }
 
-        // Speech Bubble Placed Below Card (for top agents & OpenCode)
+        // Speech Bubble Placed Below Card
         if (bubbleBelow) {
             AnimatedVisibility(
                 visible = !bubbleText.isNullOrBlank() && isActive,

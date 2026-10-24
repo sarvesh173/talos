@@ -226,7 +226,7 @@ fun OnboardingWizard(
                 onToggleTheme = onToggleTheme
             )
 
-            // ---------- STEP CONTENT WITH M3 EXPRESSIVE SHARED MOTION ----------
+            // ---------- STEP CONTENT WITH M3 EXPRESSIVE VERTICAL MOTION (↑) ----------
             AnimatedContent(
                 targetState = step,
                 modifier = Modifier
@@ -239,20 +239,20 @@ fun OnboardingWizard(
                     val accelerate = CubicBezierEasing(0.30f, 0.00f, 1.00f, 1.00f)
 
                     (
-                        slideInHorizontally(
+                        slideInVertically(
                             animationSpec = tween(durationMillis = 440, easing = decelerate),
-                            initialOffsetX = { width -> (width / 3) * dir }
+                            initialOffsetY = { height -> (height / 5) * dir }
                         ) + scaleIn(
                             animationSpec = tween(durationMillis = 440, easing = decelerate),
-                            initialScale = 0.94f
+                            initialScale = 0.95f
                         ) + fadeIn(animationSpec = tween(durationMillis = 360, easing = decelerate))
                     ).togetherWith(
-                        slideOutHorizontally(
+                        slideOutVertically(
                             animationSpec = tween(durationMillis = 340, easing = accelerate),
-                            targetOffsetX = { width -> -(width / 3) * dir }
+                            targetOffsetY = { height -> -(height / 5) * dir }
                         ) + scaleOut(
                             animationSpec = tween(durationMillis = 340, easing = accelerate),
-                            targetScale = 1.04f
+                            targetScale = 1.03f
                         ) + fadeOut(animationSpec = tween(durationMillis = 280, easing = accelerate))
                     )
                 },

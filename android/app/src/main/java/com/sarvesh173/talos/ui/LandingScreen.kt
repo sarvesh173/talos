@@ -1046,11 +1046,10 @@ private fun buildDotField(
             swirl[i] = (e3 - 0.5f) * 2f
 
             val nx = if (dist > 0.001f) dx / dist else (e1 - 0.5f) * 2f
-            val ny = if (dist > 0.001f) dy / dist else -1f
 
-            // Radial blast + fluid vortex curl
-            dirX[i] = nx * 0.70f - ny * swirl[i] * 0.40f
-            dirY[i] = ny * 0.70f + nx * swirl[i] * 0.40f - 0.16f
+            // Upward Ascension (↑): particles ascend vertically with subtle organic flutter (no wide sideways drift)
+            dirX[i] = (nx * 0.18f) + (e3 - 0.5f) * 0.22f
+            dirY[i] = -0.92f - (e2 * 0.48f)
 
             if (captured) {
                 val px = ((c + 0.5f) * bmpW.toFloat() / cols.toFloat()).toInt().coerceIn(0, bmpW - 1)
@@ -1188,7 +1187,8 @@ private fun ParticleDissolveOverlay(
                         val spread = (0.04f + 0.09f * kotlin.math.abs(f.swirl[i])) * drag
 
                         val px = f.xs[i] * w + f.dirX[i] * spread * w
-                        val py = f.ys[i] * h + f.dirY[i] * spread * h - (localP * 0.045f * h)
+                        // Continuous upward lift (↑): particles ascend steadily towards the top of the screen
+                        val py = f.ys[i] * h - (localP * 0.18f * h) + f.dirY[i] * spread * h
 
                         scratchHalo[haloCount] = px
                         scratchHalo[haloCount + 1] = py

@@ -3,19 +3,8 @@ package com.sarvesh173.talos
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -102,42 +91,57 @@ class MainActivity : ComponentActivity() {
                         val accelerate = CubicBezierEasing(0.30f, 0.00f, 1.00f, 1.00f)
 
                         if (initialState == "landing" && (targetState == "wizard" || targetState == "main")) {
-                            // In-place cosmic emergence: particles dissolve in-place, new screen emerges from depth without horizontal jerk
+                            // Pure Upward Ascension (↑): incoming screen glides upward from below, matching the ascending stardust
                             (
-                                fadeIn(animationSpec = tween(durationMillis = 950, easing = decelerate)) +
-                                scaleIn(animationSpec = tween(durationMillis = 950, easing = decelerate), initialScale = 0.95f)
+                                fadeIn(animationSpec = tween(durationMillis = 850, easing = decelerate)) +
+                                slideInVertically(
+                                    animationSpec = tween(durationMillis = 850, easing = decelerate),
+                                    initialOffsetY = { height -> height / 4 }
+                                ) +
+                                scaleIn(animationSpec = tween(durationMillis = 850, easing = decelerate), initialScale = 0.96f)
                             ).togetherWith(
-                                fadeOut(animationSpec = tween(durationMillis = 950, easing = androidx.compose.animation.core.LinearEasing))
+                                fadeOut(animationSpec = tween(durationMillis = 650, easing = androidx.compose.animation.core.LinearEasing)) +
+                                slideOutVertically(
+                                    animationSpec = tween(durationMillis = 750, easing = decelerate),
+                                    targetOffsetY = { height -> -height / 8 }
+                                )
                             )
                         } else if ((initialState == "wizard" || initialState == "main") && targetState == "landing") {
-                            // Return to landing: smooth fade + scale out
+                            // Return to landing: reverse vertical flow
                             (
-                                fadeIn(animationSpec = tween(durationMillis = 480, easing = decelerate))
+                                fadeIn(animationSpec = tween(durationMillis = 500, easing = decelerate)) +
+                                slideInVertically(
+                                    animationSpec = tween(durationMillis = 500, easing = decelerate),
+                                    initialOffsetY = { height -> -height / 6 }
+                                )
                             ).togetherWith(
                                 fadeOut(animationSpec = tween(durationMillis = 400, easing = accelerate)) +
-                                scaleOut(animationSpec = tween(durationMillis = 400, easing = accelerate), targetScale = 0.95f)
+                                slideOutVertically(
+                                    animationSpec = tween(durationMillis = 400, easing = accelerate),
+                                    targetOffsetY = { height -> height / 6 }
+                                )
                             )
                         } else {
                             val forward = targetState == "main" || targetState == "wizard"
                             val dir = if (forward) 1 else -1
                             (
                                 fadeIn(animationSpec = tween(durationMillis = 480, easing = decelerate)) +
-                                slideInHorizontally(
-                                    animationSpec = tween(durationMillis = 540, easing = decelerate),
-                                    initialOffsetX = { width -> (width / 3) * dir }
+                                slideInVertically(
+                                    animationSpec = tween(durationMillis = 520, easing = decelerate),
+                                    initialOffsetY = { height -> (height / 5) * dir }
                                 ) +
                                 scaleIn(
-                                    animationSpec = tween(durationMillis = 540, easing = decelerate),
+                                    animationSpec = tween(durationMillis = 520, easing = decelerate),
                                     initialScale = 0.96f
                                 )
                             ).togetherWith(
                                 fadeOut(animationSpec = tween(durationMillis = 360, easing = accelerate)) +
-                                slideOutHorizontally(
-                                    animationSpec = tween(durationMillis = 460, easing = accelerate),
-                                    targetOffsetX = { width -> -(width / 3) * dir }
+                                slideOutVertically(
+                                    animationSpec = tween(durationMillis = 440, easing = accelerate),
+                                    targetOffsetY = { height -> -(height / 5) * dir }
                                 ) +
                                 scaleOut(
-                                    animationSpec = tween(durationMillis = 460, easing = accelerate),
+                                    animationSpec = tween(durationMillis = 440, easing = accelerate),
                                     targetScale = 1.04f
                                 )
                             )

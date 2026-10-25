@@ -49,29 +49,48 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Assemble Debug APK
+      - name: Assemble Release APK
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Rename APK for Release Artifact
         run: |
           mkdir -p build-artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk build-artifacts/talos-latest.apk
+          cp android/app/build/outputs/apk/release/app-release.apk build-artifacts/talos-latest.apk
 
-      - name: Upload Debug APK Artifact
+      - name: Upload APK Artifact (every run)
         uses: actions/upload-artifact@v4
         with:
-          name: talos-debug-apk
+          name: talos-apk
           path: build-artifacts/talos-latest.apk
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish Direct GitHub Release Asset
+      - name: Publish Rolling Latest Release (push builds)
+        # Every push to main/dev refreshes the "Latest Build" release with a fresh APK
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-build
+          name: "TALOS Latest Build"
+          body: |
+            Automated cloud build from `${{ github.ref_name }}` @ ${{ github.sha }}.
+
+            Install: download `talos-latest.apk` and sideload.
+          files: build-artifacts/talos-latest.apk
+          draft: false
+          prerelease: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Versioned Release (v* tags only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: build-artifacts/talos-latest.apk
           draft: false
           prerelease: false
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

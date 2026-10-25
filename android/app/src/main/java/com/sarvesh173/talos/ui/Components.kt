@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -136,35 +137,53 @@ fun MessageBubble(msg: Message) {
         horizontalArrangement = if (isHuman) Arrangement.End else Arrangement.Start
     ) {
         if (!isHuman) {
-            // Official CLI Agent SVG Emblem Avatar
+            // Official CLI Agent SVG Emblem inside Machined Obsidian Socket
             val emblem = emblemBySender(msg.sender_name)
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(emblem.accent.copy(alpha = 0.15f))
-                    .border(1.dp, emblem.accent.copy(alpha = 0.45f), CircleShape),
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF0F172A))
+                    .border(1.dp, emblem.accent.copy(alpha = 0.55f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                AgentEmblemIcon(emblem = emblem, size = 20.dp, tint = null)
+                AgentEmblemIcon(emblem = emblem, size = 22.dp, tint = null)
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
         }
 
         Column(
             modifier = Modifier.widthIn(max = 320.dp),
             horizontalAlignment = if (isHuman) Alignment.End else Alignment.Start
         ) {
-            // Sender name header with matching brand accent
+            // Sender name header with matching brand accent and spec chip
             if (!isHuman) {
                 val emblem = emblemBySender(msg.sender_name)
-                Text(
-                    text = msg.sender_name,
-                    color = emblem.accent,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                ) {
+                    Text(
+                        text = msg.sender_name,
+                        color = emblem.accent,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        shape = CircleShape,
+                        color = emblem.accent.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, emblem.accent.copy(alpha = 0.35f))
+                    ) {
+                        Text(
+                            text = emblem.specTag,
+                            color = emblem.accent,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
             }
 
             // Collapsible Thought / Reasoning Block
@@ -203,11 +222,22 @@ fun MessageBubble(msg: Message) {
                     )
                 }
                 else -> {
+                    val isDark = LocalIsDark.current
                     Surface(
-                        color = if (isHuman) PrimaryAccent else talosSurface,
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, if (isHuman) PrimaryAccent else talosBorder),
-                        shadowElevation = 1.dp
+                        color = if (isHuman) PrimaryAccent else MaterialTheme.colorScheme.surfaceContainer,
+                        shape = if (isHuman) {
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 4.dp, bottomEnd = 18.dp, bottomStart = 18.dp)
+                        } else {
+                            RoundedCornerShape(topStart = 4.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 18.dp)
+                        },
+                        border = BorderStroke(
+                            width = 1.2.dp,
+                            brush = if (isHuman) {
+                                Brush.linearGradient(listOf(Color.White.copy(alpha = 0.40f), Color.Transparent))
+                            } else {
+                                metallicBorderBrush(isDark)
+                            }
+                        )
                     ) {
                         Box(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)

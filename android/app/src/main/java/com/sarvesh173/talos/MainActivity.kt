@@ -337,14 +337,42 @@ fun MainScreen(
     ) {
         Scaffold(
             topBar = {
-                Column(modifier = Modifier.background(talosBg)) {
-                    TopAppBar(
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = talosBg,
-                            titleContentColor = TextPrimary
-                        ),
-                        title = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    // Floating M3 Glassmorphic Chamber Header
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                        shape = RoundedCornerShape(22.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Left: Chamber Drawer Toggle & Machined Emblem Socket
                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { scope.launch { drawerState.open() } },
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = "Chambers Menu",
+                                        tint = talosTextPrimary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(6.dp))
                                 val roomEmblem = activeRoom?.let { room ->
                                     when {
                                         room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
@@ -352,110 +380,143 @@ fun MainScreen(
                                         else -> emblemBySender(room.name)
                                     }
                                 }
-                                if (roomEmblem != null) {
-                                    AgentEmblemIcon(
-                                        emblem = roomEmblem,
-                                        size = 20.dp,
-                                        tint = null
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                }
-                                Text(
-                                    text = roomTitle,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
                                 Box(
                                     modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(if (isConnected) StatusGreen else Color(0xFFEF4444))
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(
-                                onClick = { scope.launch { drawerState.open() } },
-                                modifier = Modifier.semantics { contentDescription = "Open chamber navigation menu" }
-                            ) {
-                                Icon(imageVector = Icons.Default.Menu, contentDescription = null, tint = talosTextPrimary)
-                            }
-                        },
-                        actions = {
-                            IconButton(
-                                onClick = onOpenLanding,
-                                modifier = Modifier.semantics {
-                                    contentDescription = "Switch to Developer Fleet Hub"
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFF0F172A))
+                                        .border(1.dp, PrimaryAccent.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (roomEmblem != null) {
+                                        AgentEmblemIcon(emblem = roomEmblem, size = 20.dp, tint = null)
+                                    } else {
+                                        Icon(Icons.Default.Hub, contentDescription = null, tint = PrimaryAccent, modifier = Modifier.size(18.dp))
+                                    }
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Dashboard,
-                                    contentDescription = null,
-                                    tint = talosTextMuted
-                                )
-                            }
-                            IconButton(
-                                onClick = onToggleTheme,
-                                modifier = Modifier.semantics {
-                                    contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode"
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = roomTitle,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = talosTextPrimary,
+                                        maxLines = 1
+                                    )
+                                    // Real-Time Telemetry Capsule
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(if (isConnected) StatusGreen else Color(0xFFEF4444))
+                                        )
+                                        Spacer(modifier = Modifier.width(5.dp))
+                                        Text(
+                                            text = if (isConnected) "MESH LINKED · 12ms" else "OFFLINE",
+                                            color = if (isConnected) StatusGreen else Color(0xFFEF4444),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 0.4.sp
+                                        )
+                                    }
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                    contentDescription = null,
-                                    tint = talosTextMuted
-                                )
                             }
-                            IconButton(
-                                onClick = { showSettingsDialog = true },
-                                modifier = Modifier.semantics { contentDescription = "Open server connection settings" }
-                            ) {
-                                Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = talosTextMuted)
+
+                            // Right: Action Capsule Controls
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = onOpenLanding,
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Dashboard,
+                                        contentDescription = "Fleet Hub",
+                                        tint = talosTextMuted,
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }
+
+                                val themeRot by animateFloatAsState(
+                                    targetValue = if (isDark) 0f else 180f,
+                                    animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                                    label = "m_theme_rot"
+                                )
+                                val themeScale by animateFloatAsState(
+                                    targetValue = if (isDark) 1.0f else 1.15f,
+                                    animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                                    label = "m_theme_scale"
+                                )
+                                IconButton(
+                                    onClick = onToggleTheme,
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                        contentDescription = "Theme",
+                                        tint = talosTextMuted,
+                                        modifier = Modifier
+                                            .size(17.dp)
+                                            .graphicsLayer {
+                                                rotationZ = themeRot
+                                                scaleX = themeScale
+                                                scaleY = themeScale
+                                            }
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = { showSettingsDialog = true },
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = "Settings",
+                                        tint = talosTextMuted,
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }
                             }
                         }
-                    )
+                    }
 
                     // Horizontal Chamber Quick Switcher Rail
                     if (rooms.size > 1) {
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp),
+                                .padding(horizontal = 14.dp, vertical = 2.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(rooms) { room: Room ->
                                 val isSelected = room.id == currentRoomId
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .background(if (isSelected) PrimaryAccent.copy(alpha = 0.2f) else talosSurface)
-                                        .border(
-                                            1.dp,
-                                            if (isSelected) PrimaryAccent else SurfaceBorder,
-                                            RoundedCornerShape(20.dp)
-                                        )
-                                        .clickable { client.switchRoom(room.id) }
-                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                Surface(
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = if (isSelected) PrimaryAccent else MaterialTheme.colorScheme.surfaceContainer,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isSelected) Color.White.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant
+                                    ),
+                                    modifier = Modifier.clickable { client.switchRoom(room.id) }
                                 ) {
-                                    val quickEmblem = when {
-                                        room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
-                                        room.id == "the-council" -> emblemByKey("omnirush")
-                                        else -> emblemBySender(room.name)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
+                                    ) {
+                                        val quickEmblem = when {
+                                            room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
+                                            room.id == "the-council" -> emblemByKey("omnirush")
+                                            else -> emblemBySender(room.name)
+                                        }
+                                        AgentEmblemIcon(emblem = quickEmblem, size = 14.dp, tint = null)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = room.name,
+                                            color = if (isSelected) Color.White else talosTextPrimary,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        )
                                     }
-                                    AgentEmblemIcon(
-                                        emblem = quickEmblem,
-                                        size = 14.dp,
-                                        tint = null
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = room.name,
-                                        color = if (isSelected) PrimaryAccent else TextPrimary,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                    )
                                 }
                             }
                         }
@@ -463,60 +524,72 @@ fun MainScreen(
                 }
             },
             bottomBar = {
-                Surface(
-                    color = talosBg,
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
                         .imePadding()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
-                    Column {
-                        if (isTyping) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                            ) {
-                                ThreeDotTypingIndicator(
-                                    dotColor = PrimaryAccent,
-                                    dotSize = 6.dp,
-                                    dotSpacing = 4.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Agent fleet is deliberating...",
-                                    color = PrimaryAccent,
-                                    fontSize = 12.sp
-                                )
-                            }
+                    if (isTyping) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(bottom = 6.dp, start = 8.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(PrimaryAccent.copy(alpha = 0.12f))
+                                .border(1.dp, PrimaryAccent.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            ThreeDotTypingIndicator(dotColor = PrimaryAccent, dotSize = 5.dp, dotSpacing = 3.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Agent fleet is deliberating...",
+                                color = PrimaryAccent,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
+                    }
 
+                    // Floating Metallic Command Dock
+                    Surface(
+                        shape = RoundedCornerShape(26.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             OutlinedTextField(
                                 value = inputText,
                                 onValueChange = { inputText = it },
-                                placeholder = { Text(text = "Message $roomTitle...", color = TextMuted, fontSize = 14.sp) },
+                                placeholder = {
+                                    Text(
+                                        text = "Command fleet or message $roomTitle...",
+                                        color = talosTextMuted,
+                                        fontSize = 14.sp
+                                    )
+                                },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = talosSurface,
-                                    unfocusedContainerColor = talosSurface,
-                                    focusedBorderColor = PrimaryAccent,
-                                    unfocusedBorderColor = SurfaceBorder,
-                                    focusedTextColor = TextPrimary,
-                                    unfocusedTextColor = TextPrimary
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedTextColor = talosTextPrimary,
+                                    unfocusedTextColor = talosTextPrimary
                                 ),
-                                shape = RoundedCornerShape(24.dp),
                                 modifier = Modifier
                                     .weight(1f)
                                     .semantics {
                                         contentDescription = "Message composition input field for $roomTitle"
                                     }
                             )
-
-                            Spacer(modifier = Modifier.width(8.dp))
 
                             val sendInteraction = remember { MutableInteractionSource() }
                             val isSendPressed by sendInteraction.collectIsPressedAsState()
@@ -526,35 +599,34 @@ fun MainScreen(
                                 label = "sendScale"
                             )
 
-                            IconButton(
-                                onClick = {
-                                    if (inputText.isNotBlank()) {
+                            Surface(
+                                shape = CircleShape,
+                                color = if (inputText.isNotBlank()) PrimaryAccent else PrimaryAccent.copy(alpha = 0.35f),
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .scale(sendScale)
+                                    .clickable(
+                                        enabled = inputText.isNotBlank() && !isTyping,
+                                        interactionSource = sendInteraction,
+                                        indication = null
+                                    ) {
                                         client.sendMessage(inputText)
                                         inputText = ""
-                                    }
-                                },
-                                interactionSource = sendInteraction,
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .scale(sendScale)
-                                    .clip(CircleShape)
-                                    .background(PrimaryAccent)
-                                    .semantics {
-                                        contentDescription = "Send message to chamber"
-                                    }
+                                    },
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = null,
+                                    contentDescription = "Send",
                                     tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
                     }
                 }
             },
-            containerColor = talosBg
+            containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
             if (messages.isEmpty()) {
                 ChamberHero(
@@ -713,7 +785,17 @@ fun ChamberHero(
     modifier: Modifier = Modifier
 ) {
     val isDark = LocalIsDark.current
-    val boxBg = if (isDark) Color(0xFF161F2E) else Color(0xFFF1F5F9)
+
+    val infiniteCorePulse = rememberInfiniteTransition(label = "hero_core_pulse")
+    val coreScale by infiniteCorePulse.animateFloat(
+        initialValue = 0.96f,
+        targetValue = 1.04f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = CubicBezierEasing(0.37f, 0f, 0.63f, 1f)),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "core_scale"
+    )
 
     Column(
         modifier = modifier
@@ -722,6 +804,38 @@ fun ChamberHero(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // High-Contrast Machined Chamber Core Portal
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = if (isDark) Color(0xFF0F172A) else MaterialTheme.colorScheme.surfaceContainerHigh,
+            border = BorderStroke(1.5.dp, metallicBorderBrush(isDark)),
+            modifier = Modifier
+                .size(76.dp)
+                .scale(coreScale)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                val heroEmblem = room?.let { r ->
+                    when {
+                        r.id == "core-dm" || r.mode == "dm" -> emblemByKey("hermes")
+                        r.id == "the-council" -> emblemByKey("omnirush")
+                        else -> emblemBySender(r.name)
+                    }
+                }
+                if (heroEmblem != null) {
+                    AgentEmblemIcon(emblem = heroEmblem, size = 42.dp, tint = null)
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Hub,
+                        contentDescription = null,
+                        tint = PrimaryAccent,
+                        modifier = Modifier.size(38.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Active Chamber Title with Live Mesh Indicator
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -736,8 +850,8 @@ fun ChamberHero(
             Text(
                 text = room?.name ?: "TALOS Chamber",
                 color = talosTextPrimary,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-0.3).sp
             )
         }
@@ -755,48 +869,56 @@ fun ChamberHero(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // Participating Agent Roster Dock
+        // Participating Agent Roster Dock with Machined Obsidian Sockets
         Surface(
-            color = talosSurface,
-            shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, talosBorder),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            shape = RoundedCornerShape(18.dp),
+            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Participating Fleet",
+                        text = "Participating Agent Fleet",
                         color = talosTextPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "${AgentEmblems.size} Registered",
-                        color = talosTextMuted,
-                        fontSize = 11.sp
-                    )
+                    Surface(
+                        shape = CircleShape,
+                        color = StatusGreen.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, StatusGreen.copy(alpha = 0.35f))
+                    ) {
+                        Text(
+                            text = "${AgentEmblems.size} Agents Online",
+                            color = StatusGreen,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(AgentEmblems, key = { it.key }) { emblem ->
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(boxBg)
-                                .border(1.dp, talosBorder, RoundedCornerShape(8.dp)),
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF0F172A))
+                                .border(1.dp, emblem.accent.copy(alpha = 0.45f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            AgentEmblemIcon(emblem = emblem, size = 18.dp, tint = null)
+                            AgentEmblemIcon(emblem = emblem, size = 20.dp, tint = null)
                         }
                     }
                 }
@@ -814,37 +936,37 @@ fun ChamberHero(
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             for ((cmd, desc, icon) in commands) {
                 Surface(
-                    color = talosSurface,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, talosBorder),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 48.dp)
                         .clickable { onPromptClick(cmd) }
                         .semantics { contentDescription = "Execute command $cmd: $desc" }
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(28.dp)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(PrimaryAccent.copy(alpha = 0.12f)),
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF0F172A))
+                                .border(1.dp, PrimaryAccent.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
                                 tint = PrimaryAccent,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
 
@@ -853,7 +975,7 @@ fun ChamberHero(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = cmd,
-                                color = talosTextPrimary,
+                                color = PrimaryAccent,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
@@ -861,7 +983,7 @@ fun ChamberHero(
                             Text(
                                 text = desc,
                                 color = talosTextMuted,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )

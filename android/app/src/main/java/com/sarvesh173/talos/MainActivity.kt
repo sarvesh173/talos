@@ -957,7 +957,7 @@ fun ChamberHero(
         val commands = listOf(
             Triple("/consensus", "Propose democratic vote across registered agents", Icons.Default.Groups),
             Triple("/benchmark", "Ping AI providers and recalculate latency route", Icons.Default.Speed),
-            Triple("/mesh", "Scan Tailscale peers on 100.75.107.79 subnet", Icons.Default.Hub)
+            Triple("/mesh", "Scan peers on your private Tailscale overlay", Icons.Default.Hub)
         )
 
         Column(

@@ -150,11 +150,11 @@ def get_tailscale_mesh_info() -> Dict[str, Any]:
                     "online": p.get("Online", False),
                     "os": p.get("OS", ""),
                 })
-            self_ips = self_node.get("TailscaleIPs", ["100.75.107.79"])
+            self_ips = self_node.get("TailscaleIPs", [])
             return {
                 "active": True,
                 "hostname": self_node.get("HostName", "sarvesh-82c3"),
-                "self_ip": self_ips[0] if self_ips else "100.75.107.79",
+                "self_ip": self_ips[0] if self_ips else "unknown",
                 "peers_count": len(peer_list),
                 "peers": peer_list,
             }
@@ -163,7 +163,7 @@ def get_tailscale_mesh_info() -> Dict[str, Any]:
     return {
         "active": True,
         "hostname": "sarvesh-82c3",
-        "self_ip": "100.75.107.79",
+        "self_ip": "unknown",
         "peers_count": 1,
         "peers": [{"hostname": "V2158", "ip": "100.104.6.26", "online": True, "os": "android"}],
     }
@@ -193,7 +193,7 @@ async def discover_mesh_peers():
         })
     return {
         "status": "active" if info.get("active") else "offline",
-        "mesh_ip": info.get("self_ip", "100.75.107.79"),
+        "mesh_ip": info.get("self_ip", "unknown"),
         "peers": discovered,
         "count": len(discovered),
     }

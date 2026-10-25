@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.*
@@ -47,6 +49,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -83,6 +87,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.R
 import com.sarvesh173.talos.data.MeshInfo
+import com.sarvesh173.talos.network.MeshDiscovery
 import com.sarvesh173.talos.network.TalosClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -105,7 +110,6 @@ private val CyberGreen = Color(0xFF22C55E)
 private val CyberViolet = Color(0xFF818CF8)
 private val CyberOrange = Color(0xFFF97316)
 
-private const val MESH_IP = "100.75.107.79"
 private const val PEER_LABEL = "V2158"
 
 // ==========================================
@@ -133,11 +137,26 @@ fun OnboardingWizard(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var copiedNotice by remember { mutableStateOf<String?>(null) }
 
-    fun refreshMesh() {
+    fun refreshMesh(autoPairKey: Boolean = false) {
         scope.launch {
             isChecking = true
             errorMessage = null
+
+            // Zero-config: probe the LAN for the talos-core beacon (UDP),
+            // adopt its endpoint, then verify. No IP is typed or displayed.
+            if (client.baseUrl.isBlank() ||
+                client.baseUrl == TalosClient.DEFAULT_BASE_URL ||
+                client.checkMeshStatus() == null
+            ) {
+                MeshDiscovery.discover()?.let { found ->
+                    client.updateConfig(found.baseUrl, client.apiToken)
+                }
+            }
+
             meshInfo = client.checkMeshStatus()
+            if (autoPairKey && meshInfo?.active == true && client.apiToken.isBlank()) {
+                client.pairDevice()
+            }
             isChecking = false
         }
     }
@@ -156,10 +175,10 @@ fun OnboardingWizard(
         }
     }
 
-    // Step 2: verify the mesh over Tailscale WireGuard
+    // Step 2: verify the mesh over Tailscale WireGuard (auto-discovery)
     LaunchedEffect(step) {
         if (step == 1) {
-            refreshMesh()
+            refreshMesh(autoPairKey = true)
         }
         // Step 3: mint an agent API token
         if (step == 2 && token == null && !isPairing) {
@@ -952,17 +971,28 @@ private fun MeshStep(
                     .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Linear progress: indeterminate while scanning, complete when linked, empty when offline.
+                // M3E: morphing-shape LoadingIndicator while scanning
+                // (canonical wait cue), wavy progress only when linked.
                 if (isChecking) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth().height(4.dp),
-                        color = statusColor,
-                        trackColor = MaterialTheme.colorScheme.outlineVariant
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        LoadingIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(30.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Scanning private mesh...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 } else {
-                    LinearProgressIndicator(
+                    LinearWavyProgressIndicator(
                         progress = { if (active) 1f else 0f },
-                        modifier = Modifier.fillMaxWidth().height(4.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         color = statusColor,
                         trackColor = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -1003,10 +1033,6 @@ private fun MeshStep(
                     value = meshInfo?.hostname?.takeIf { it.isNotBlank() } ?: "talos-node"
                 )
                 MeshRow(
-                    key = "Overlay IP",
-                    value = meshInfo?.self_ip?.takeIf { it.isNotBlank() } ?: MESH_IP
-                )
-                MeshRow(
                     key = "Peer",
                     value = meshInfo?.peer_name?.takeIf { it.isNotBlank() } ?: PEER_LABEL
                 )
@@ -1018,29 +1044,21 @@ private fun MeshStep(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Scan Again Action
-                Button(
+                // Scan action: tonal M3E button with loading state built in
+                M3ETonalButton(
+                    text = if (isChecking) "Scanning..." else "Scan Mesh Again",
                     onClick = onRefresh,
                     enabled = !isChecking,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E293B),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(12.dp),
+                    loading = isChecking,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isChecking) "Scanning Tailscale Mesh..." else "Scan Mesh Again",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                )
             }
         }
 
@@ -1606,7 +1624,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Mesh live at $MESH_IP · 10 agents registered",
+                text = "Mesh linked · auto-detected via private overlay",
                 color = WizardMuted,
                 fontSize = 12.sp
             )

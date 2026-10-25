@@ -1,6 +1,7 @@
 mod auth;
 mod consensus;
 mod db;
+mod discovery;
 mod mesh;
 mod models;
 mod providers;
@@ -97,6 +98,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     info!("TALOS Core listening on http://{}", addr);
+
+    // Zero-config pairing beacon: lets the app auto-detect this core on the
+    // LAN without any IP being typed or displayed.
+    tokio::spawn(discovery::run_discovery_responder());
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;

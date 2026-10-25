@@ -35,7 +35,9 @@ import java.util.concurrent.TimeUnit
 
 class TalosClient(private val context: Context, private val scope: CoroutineScope) {
     companion object {
-        const val DEFAULT_BASE_URL = "http://100.75.107.79:8000"
+        // No personal IP baked in: real endpoint comes from MeshDiscovery
+        // (UDP probe) or user pairing; loopback covers desktop/emulator runs.
+        const val DEFAULT_BASE_URL = "http://127.0.0.1:8000"
         private const val PREFS_NAME = "talos_prefs"
         private const val KEY_BASE_URL = "base_url"
         private const val KEY_API_TOKEN = "api_token"

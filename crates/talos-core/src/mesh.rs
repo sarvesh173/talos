@@ -19,7 +19,7 @@ impl MeshDiscovery {
                 let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
                 (stdout, true)
             }
-            _ => ("100.75.107.79".to_string(), true),
+            _ => ("unknown".to_string(), false),
         };
 
         let hostname = match Command::new("hostname").output() {
@@ -45,7 +45,7 @@ impl MeshDiscovery {
             MeshPeer {
                 id: "peer-desktop-01".to_string(),
                 name: "Workstation (Debian)".to_string(),
-                ip: "100.75.107.79".to_string(),
+                ip: "self (tailscale)".to_string(),
                 os: "linux".to_string(),
                 status: "active".to_string(),
                 latency_ms: 2.1,

@@ -88,6 +88,12 @@ impl Database {
                 created_at REAL NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS theme_config (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                payload TEXT NOT NULL,
+                updated_at REAL NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_messages_room ON messages(room_id, created_at);
             CREATE INDEX IF NOT EXISTS idx_tokens_hash ON tokens(token_hash);
             "#,
@@ -167,6 +173,43 @@ impl Database {
             )?;
         }
 
+        // Seed theme config if empty (single-row table)
+        let theme_count: i64 = conn.query_row("SELECT count(*) FROM theme_config", [], |r| r.get(0))?;
+        if theme_count == 0 {
+            let default_theme = crate::theme::ThemeConfig::default();
+            let payload = serde_json::to_string(&default_theme)
+                .unwrap_or_else(|_| "{}".to_string());
+            conn.execute(
+                "INSERT INTO theme_config (id, payload, updated_at) VALUES (1, ?1, ?2)",
+                params![payload, now_ts()],
+            )?;
+        }
+
+        Ok(())
+    }
+
+    /// Load the active theme config, falling back to built-in defaults.
+    pub fn get_theme(&self) -> crate::theme::ThemeConfig {
+        let conn = self.conn.lock().unwrap();
+        match conn.query_row("SELECT payload FROM theme_config WHERE id = 1", [], |r| {
+            r.get::<_, String>(0)
+        }) {
+            Ok(payload) => serde_json::from_str(&payload)
+                .unwrap_or_else(|_| crate::theme::ThemeConfig::default()),
+            Err(_) => crate::theme::ThemeConfig::default(),
+        }
+    }
+
+    /// Persist a theme config (replaces the single row).
+    pub fn save_theme(&self, cfg: &crate::theme::ThemeConfig) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let payload = serde_json::to_string(cfg)
+            .map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
+        conn.execute(
+            "INSERT INTO theme_config (id, payload, updated_at) VALUES (1, ?1, ?2)
+             ON CONFLICT(id) DO UPDATE SET payload = ?1, updated_at = ?2",
+            params![payload, now_ts()],
+        )?;
         Ok(())
     }
 

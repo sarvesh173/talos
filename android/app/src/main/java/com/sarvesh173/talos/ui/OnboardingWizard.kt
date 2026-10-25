@@ -525,43 +525,18 @@ private fun WizardBottomBar(
             .background(WizardBg)
             .padding(horizontal = 22.dp, vertical = 10.dp)
     ) {
-        val isDark = LocalIsDark.current
-        val btnContainer = if (isDark) Color.White else PrimaryAccent
-        val btnContent = if (isDark) Color(0xFF090D14) else Color.White
-
-        Button(
+        // M3E CTA: scheme color roles, spring press physics, circle->scallop
+        // morph on press, canonical LoadingIndicator while busy.
+        M3EButton(
+            text = label,
             onClick = onPrimary,
-            enabled = canProceed && !isBusy,
+            enabled = canProceed,
+            loading = isBusy,
             interactionSource = interactionSource,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = btnContainer,
-                contentColor = btnContent,
-                disabledContainerColor = btnContainer.copy(alpha = 0.30f),
-                disabledContentColor = btnContent.copy(alpha = 0.50f)
-            ),
-            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
-                .scale(buttonScale)
-        ) {
-            AnimatedContent(
-                targetState = label,
-                transitionSpec = {
-                    (fadeIn(animationSpec = tween(220)) + slideInVertically(animationSpec = tween(220)) { it / 2 }).togetherWith(
-                        fadeOut(animationSpec = tween(180)) + slideOutVertically(animationSpec = tween(180)) { -it / 2 }
-                    )
-                },
-                label = "btn_label_morph"
-            ) { targetText ->
-                Text(
-                    text = targetText,
-                    color = btnContent,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-            }
-        }
+        )
 
         // Tiny discrete test button in corner for safety / UI test bypass
         if (onSkip != null) {
@@ -801,9 +776,9 @@ private fun MeshStep(
         else -> "Offline"
     }
     val statusColor = when {
-        isChecking -> PrimaryAccent
-        active -> StatusGreen
-        else -> Color(0xFFF59E0B)
+        isChecking -> MaterialTheme.colorScheme.primary
+        active -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.error
     }
 
     val infinitePulse = rememberInfiniteTransition(label = "mesh_pulse")
@@ -982,14 +957,14 @@ private fun MeshStep(
                     LinearProgressIndicator(
                         modifier = Modifier.fillMaxWidth().height(4.dp),
                         color = statusColor,
-                        trackColor = WizardBorder
+                        trackColor = MaterialTheme.colorScheme.outlineVariant
                     )
                 } else {
                     LinearProgressIndicator(
                         progress = { if (active) 1f else 0f },
                         modifier = Modifier.fillMaxWidth().height(4.dp),
                         color = statusColor,
-                        trackColor = WizardBorder
+                        trackColor = MaterialTheme.colorScheme.outlineVariant
                     )
                 }
 
@@ -1252,8 +1227,8 @@ private fun TokenStep(
                             isPairing -> {
                                 Column {
                                     LinearProgressIndicator(
-                                        color = PrimaryAccent,
-                                        trackColor = WizardBorder,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.outlineVariant,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(3.dp)

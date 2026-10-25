@@ -46,7 +46,7 @@ import com.sarvesh173.talos.data.ToolCall
 @Composable
 fun ThreeDotTypingIndicator(
     modifier: Modifier = Modifier,
-    dotColor: Color = PrimaryAccent,
+    dotColor: Color = MaterialTheme.colorScheme.primary,
     dotSize: Dp = 6.dp,
     dotSpacing: Dp = 4.dp
 ) {
@@ -224,7 +224,7 @@ fun MessageBubble(msg: Message) {
                 else -> {
                     val isDark = LocalIsDark.current
                     Surface(
-                        color = if (isHuman) PrimaryAccent else MaterialTheme.colorScheme.surfaceContainer,
+                        color = if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer,
                         shape = if (isHuman) {
                             RoundedCornerShape(topStart = 18.dp, topEnd = 4.dp, bottomEnd = 18.dp, bottomStart = 18.dp)
                         } else {
@@ -244,7 +244,7 @@ fun MessageBubble(msg: Message) {
                         ) {
                             Text(
                                 text = msg.content,
-                                color = if (isHuman) Color.White else talosTextPrimary,
+                                color = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                 fontSize = 15.sp,
                                 lineHeight = 21.sp
                             )
@@ -264,17 +264,17 @@ fun NativeAudioPlayerBubble(
     var isPlaying by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0.35f) }
 
-    val contentColor = if (isHuman) Color.White else talosTextPrimary
-    val mutedColor = if (isHuman) Color.White.copy(alpha = 0.8f) else talosTextMuted
-    val trackActive = if (isHuman) Color.White else PrimaryAccent
-    val trackInactive = if (isHuman) Color.White.copy(alpha = 0.3f) else talosBorder
-    val buttonBg = if (isHuman) Color.White.copy(alpha = 0.2f) else PrimaryAccent.copy(alpha = 0.15f)
-    val iconTint = if (isHuman) Color.White else PrimaryAccent
+    val contentColor = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val mutedColor = if (isHuman) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val trackActive = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+    val trackInactive = if (isHuman) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.outlineVariant
+    val buttonBg = if (isHuman) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    val iconTint = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
 
     Surface(
-        color = if (isHuman) PrimaryAccent else talosSurface,
+        color = if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, if (isHuman) PrimaryAccent else talosBorder),
+        border = BorderStroke(1.dp, if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -353,9 +353,9 @@ fun NativeVideoPreviewBubble(
     isHuman: Boolean
 ) {
     Surface(
-        color = talosSurface,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, talosBorder),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -367,8 +367,8 @@ fun NativeVideoPreviewBubble(
                     .fillMaxWidth()
                     .height(160.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(talosBg)
-                    .border(1.dp, talosBorder, RoundedCornerShape(12.dp)),
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -377,12 +377,12 @@ fun NativeVideoPreviewBubble(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(PrimaryAccent)
+                            .background(MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = "Play Video",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -391,13 +391,13 @@ fun NativeVideoPreviewBubble(
                         Icon(
                             imageVector = Icons.Default.Videocam,
                             contentDescription = null,
-                            tint = talosTextMuted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = videoUrl.substringAfterLast("/").ifBlank { "Video Stream" },
-                            color = talosTextMuted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
                     }
@@ -412,9 +412,9 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Surface(
-        color = talosSurface,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(1.dp, talosBorder),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
@@ -430,13 +430,13 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
                 Icon(
                     imageVector = Icons.Default.Psychology,
                     contentDescription = null,
-                    tint = Color(0xFFA855F7),
+                    tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Reasoning Process",
-                    color = Color(0xFFA855F7),
+                    color = MaterialTheme.colorScheme.tertiary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -444,7 +444,7 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = talosTextMuted,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
             }
@@ -452,7 +452,7 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
             AnimatedVisibility(visible = isExpanded) {
                 Text(
                     text = thoughtText,
-                    color = talosTextMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 17.sp,
                     modifier = Modifier.padding(top = 8.dp)
@@ -467,9 +467,9 @@ fun ToolCallItem(tool: ToolCall) {
     var showOutput by remember { mutableStateOf(false) }
 
     Surface(
-        color = talosSurface,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, talosBorder),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
@@ -484,13 +484,13 @@ fun ToolCallItem(tool: ToolCall) {
                 Icon(
                     imageVector = if (tool.tool_name.contains("code", ignoreCase = true)) Icons.Default.Code else Icons.Default.Terminal,
                     contentDescription = null,
-                    tint = PrimaryAccent,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = tool.tool_name,
-                    color = talosTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Medium
@@ -507,14 +507,14 @@ fun ToolCallItem(tool: ToolCall) {
             if (showOutput && !tool.output.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Surface(
-                    color = talosBg,
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     shape = RoundedCornerShape(4.dp),
-                    border = BorderStroke(1.dp, talosBorder),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = tool.output,
-                        color = talosTextMuted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier.padding(6.dp)

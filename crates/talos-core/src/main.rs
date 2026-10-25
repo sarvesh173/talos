@@ -5,6 +5,7 @@ mod mesh;
 mod models;
 mod providers;
 mod room_bus;
+mod theme;
 
 use auth::AuthEngine;
 use axum::{
@@ -82,6 +83,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Providers & Failover
         .route("/api/providers/health", get(provider_health))
         .route("/api/providers/failover", get(provider_failover))
+        // Flexible theme tokens (client applies as ColorScheme overrides)
+        .route("/api/theme", get(get_theme).put(put_theme))
         // Realtime WebSocket Room Event Bus
         .route("/ws/:room_id/:client_id", get(ws_handler))
         .layer(cors)
@@ -316,6 +319,34 @@ async fn provider_health() -> impl IntoResponse {
 
 async fn provider_failover() -> impl IntoResponse {
     Json(ProviderRegistry::get_failover_route())
+}
+
+/// Serve the active theme config from the database.
+async fn get_theme(State(state): State<AppState>) -> impl IntoResponse {
+    Json(state.db.get_theme())
+}
+
+/// Replace the theme config. Validates hex roles before persisting.
+async fn put_theme(
+    State(state): State<AppState>,
+    Json(cfg): Json<crate::theme::ThemeConfig>,
+) -> impl IntoResponse {
+    if let Err(problem) = cfg.validate() {
+        return (
+            axum::http::StatusCode::UNPROCESSABLE_ENTITY,
+            Json(serde_json::json!({ "error": problem })),
+        );
+    }
+    match state.db.save_theme(&cfg) {
+        Ok(()) => (
+            axum::http::StatusCode::OK,
+            Json(serde_json::json!({ "status": "theme_updated", "name": cfg.name })),
+        ),
+        Err(e) => (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({ "error": e.to_string() })),
+        ),
+    }
 }
 
 // -----------------------------------------------------------------------------

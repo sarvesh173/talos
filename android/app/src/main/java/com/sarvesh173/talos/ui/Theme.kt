@@ -234,6 +234,7 @@ private fun animatedColorSchemeOf(target: ColorScheme): ColorScheme {
 @Composable
 fun TalosTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
+    remoteConfig: TalosThemeConfig? = null,
     content: @Composable () -> Unit
 ) {
     val isDark = when (themeMode) {
@@ -242,7 +243,14 @@ fun TalosTheme(
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
 
-    val targetScheme = if (isDark) DarkColorScheme else LightColorScheme
+    // Remote tokens (talos-core /api/theme) override the built-in scheme -
+    // same runtime-swap pattern ReadYou uses for its tonal palettes.
+    val targetScheme = when {
+        remoteConfig != null && isDark -> remoteConfig.darkScheme()
+        remoteConfig != null -> remoteConfig.lightScheme()
+        isDark -> DarkColorScheme
+        else -> LightColorScheme
+    }
     val animatedScheme = animatedColorSchemeOf(targetScheme)
 
     CompositionLocalProvider(LocalIsDark provides isDark) {

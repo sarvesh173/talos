@@ -54,7 +54,9 @@ import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.Room
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
 
@@ -74,7 +76,16 @@ class MainActivity : ComponentActivity() {
             val activeThemeMode = if (storedTheme == "LIGHT") AppThemeMode.LIGHT else AppThemeMode.DARK
             var appScreen by remember { mutableStateOf(if (client.isPaired.value) "main" else "landing") }
 
-            TalosTheme(themeMode = activeThemeMode) {
+            // Flexible theming: tokens from talos-core /api/theme (cached),
+            // falling back to the built-in scheme when unreachable.
+            var remoteTheme by remember { mutableStateOf<TalosThemeConfig?>(null) }
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    ThemeRepository.load(client.baseUrl, applicationContext)
+                }?.let { remoteTheme = it }
+            }
+
+            TalosTheme(themeMode = activeThemeMode, remoteConfig = remoteTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -544,7 +555,7 @@ fun MainScreen(
                                 .border(1.dp, PrimaryAccent.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
-                            ThreeDotTypingIndicator(dotColor = PrimaryAccent, dotSize = 5.dp, dotSpacing = 3.dp)
+                            ThreeDotTypingIndicator(dotSize = 5.dp, dotSpacing = 3.dp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Agent fleet is deliberating...",

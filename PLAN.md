@@ -205,4 +205,21 @@ Pending: compile verification → APK build → screenshot verification → comm
 - **CI:** `.github/workflows/build-apk.yml` builds the APK on GitHub Actions (PR → dev triggers; tags publish release asset). Per user directive: no more local APK builds on the 4GB laptop — cloud builds only.
 - **On-device verification:** deferred — phone not reachable via wireless adb this session.
 
+### 7.4 M3E Component System + Flexible Theming (04:55 IST, v2.5.0)
+**Reference base (user-directed):** real open-source M3E apps — ReadYou (7.6k★), Now in Android, Jetchat, Tomato, Rhythm, + spoo-android's distilled 55-app M3E census skill (`.claude/skills/m3-expressive`). Extracted shared principles, not any single UI.
+
+**Flexible theming (Rust-first):**
+- `crates/talos-core/src/theme.rs`: ThemeConfig (name/seed/dark/light roles + motion springs + shape tokens), SQLite `theme_config` table, hex validation.
+- `GET /api/theme` + `PUT /api/theme` — **verified live**: palette swapped to "#90CAF9 Ocean" via PUT, persisted, served.
+- Android `ui/DynamicTheme.kt`: ThemeRepository (OkHttp fetch → SharedPreferences cache → fallback), TalosThemeConfig → `darkColorScheme()/lightColorScheme()` (ReadYou runtime-swap pattern).
+- `Theme.kt`: `TalosTheme(remoteConfig=...)` — remote tokens override built-in scheme; animatedColorSchemeOf applies effects-spring cross-fade on swap.
+
+**Component system (craft-floor + census compliant):**
+- `ui/ExpressiveComponents.kt`: M3EButton (scheme roles, spring press, circle→scallop morph, M3E LoadingIndicator loading state), M3ETonalButton (secondary-container, press-only per morph-budget rule), M3ETypingDots (M3 emphasized easing).
+- Pairing law: every fill paired with its on-color from the SAME role; `Color.White`/hardcoded hexes removed from Components.kt (PrimaryAccent, 0xFFA855F7, talosSurface/Border/Text* all → scheme roles).
+- OnboardingWizard CTA → M3EButton (loading state while pairing); status/progress colors → scheme roles.
+- Morph budget: raw Morph reserved for primary CTA + send button (census: one bold idiom).
+
+**Verified:** `:app:compileReleaseKotlin` BUILD SUCCESSFUL; talos-core `cargo check` clean; theme API round-trip live-tested.
+
 ---

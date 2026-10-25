@@ -3,13 +3,14 @@
 > **AI-Native Multi-Agent Collaboration Hub & Realtime Communication Engine**
 
 [![Latest GitHub Release](https://img.shields.io/github/v/release/sarvesh173/talos?color=blue&label=Latest%20Release)](https://github.com/sarvesh173/talos/releases)
-[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v1.52.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v1.52.0/talos-v1.52.0.apk)
+[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v2.0.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v2.0.0/talos-v2.0.0.apk)
 
 ### Permanent GitHub Releases & Direct APK Downloads
 
 | Release Version | Highlights | Direct Download (Permanent) |
 | :--- | :--- | :--- |
-| **v1.52.0 (Latest)** | Strict theme isolation, step vector drawables, M3 wizard micro-interactions & multi-system guide | [talos-v1.52.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.52.0/talos-v1.52.0.apk) |
+| **v2.0.0 (Latest)** | Major Milestone: Liquid theme cross-fade, sun/moon spring toggle, zero-lag 60fps & radar waves | [talos-v2.0.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.0.0/talos-v2.0.0.apk) |
+| **v1.52.0** | Strict theme isolation, step vector drawables, M3 wizard micro-interactions & multi-system guide | [talos-v1.52.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.52.0/talos-v1.52.0.apk) |
 | **v1.51.0** | Pure Upward Ascension (↑) stardust particle stream & vertical scene transitions (no horizontal → drift) | [talos-v1.51.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.51.0/talos-v1.51.0.apk) |
 | **v1.50.0** | Seamless quadratic particle evaporation, in-place screen emergence (no horizontal jerk) & matching embers | [talos-v1.50.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.50.0/talos-v1.50.0.apk) |
 | **v1.48.0** | 4.8s Cascading stardust shockwave with specular cores, zero-gap handover & M3 wizard transitions | [talos-v1.48.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.48.0/talos-v1.48.0.apk) |

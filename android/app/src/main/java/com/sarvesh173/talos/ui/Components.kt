@@ -176,7 +176,7 @@ fun MessageBubble(msg: Message) {
                         border = BorderStroke(1.dp, emblem.accent.copy(alpha = 0.35f))
                     ) {
                         Text(
-                            text = emblem.specTag,
+                            text = emblem.role.substringBefore(" · ").ifBlank { emblem.role },
                             color = emblem.accent,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.SemiBold,

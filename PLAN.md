@@ -192,4 +192,17 @@ Completed:
 
 Pending: compile verification → APK build → screenshot verification → commit/push/CI.
 
+### 7.3 Build & Ship Status (03:40 IST)
+- **Local compile: SUCCESS** (`:app:compileReleaseKotlin`, clean).
+- **Local APK: SUCCESS** (`assembleRelease` → 15.6MB, debug-keystore signed).
+- **Toolchain resolution (ground-truth from Google Maven AAR metadata):**
+  - material3 1.4.0 stable ships expressive APIs as **internal** → unusable.
+  - material3 1.5.0-beta02 → requires AGP 9.1 + compileSdk 37 (too big a jump).
+  - **material3 1.5.0-alpha12 chosen**: minCompileSdk 35, minAGP 8.6.0, public M3E APIs.
+  - Final: AGP 8.9.1 + Gradle 8.11.1 + compileSdk 36 + BOM 2025.09.01 + material3 1.5.0-alpha12 + graphics-shapes 1.1.0.
+- **Git hygiene fix:** crates/talos-core/target build artifacts were committed by mistake → removed from index, .gitignore rule added, commit amended (3571 → 21 files).
+- **Pushed:** `feature/m3-expressive-rust-first` → origin (SSH, verified).
+- **CI:** `.github/workflows/build-apk.yml` builds the APK on GitHub Actions (PR → dev triggers; tags publish release asset). Per user directive: no more local APK builds on the 4GB laptop — cloud builds only.
+- **On-device verification:** deferred — phone not reachable via wireless adb this session.
+
 ---

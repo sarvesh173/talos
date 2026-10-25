@@ -709,6 +709,8 @@ private fun OverviewElevatedCard(
         label = "card_scale"
     )
 
+    val isDark = LocalIsDark.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -717,7 +719,7 @@ private fun OverviewElevatedCard(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = WizardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Zero shadow pass = 60fps locked
-        border = BorderStroke(1.dp, WizardBorder)
+        border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -885,13 +887,14 @@ private fun MeshStep(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // --- TAILSCALE SETUP & HOST GUIDE (M3 ELEVATED CARD) ---
+        // --- TAILSCALE SETUP & HOST GUIDE (M3 METALLIC CARD) ---
+        val isDark = LocalIsDark.current
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = BorderStroke(1.dp, talosBorder)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
         ) {
             Column(
                 modifier = Modifier
@@ -960,13 +963,13 @@ private fun MeshStep(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // --- MESH STATUS (M3 ELEVATED CARD + LINEAR PROGRESS + STATUS CHIP) ---
+        // --- MESH STATUS (M3 METALLIC CARD + LINEAR PROGRESS + STATUS CHIP) ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = BorderStroke(1.dp, talosBorder)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
         ) {
             Column(
                 modifier = Modifier
@@ -1198,12 +1201,13 @@ private fun TokenStep(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        val isDark = LocalIsDark.current
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = BorderStroke(1.dp, talosBorder)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1371,8 +1375,8 @@ private fun TokenStep(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            border = BorderStroke(1.dp, talosBorder)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1425,6 +1429,7 @@ private fun TokenStep(
 
 @Composable
 private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
+    val isDark = LocalIsDark.current
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -1525,8 +1530,8 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                         Card(
                             shape = RoundedCornerShape(14.dp),
                             colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                            border = BorderStroke(1.dp, talosBorder),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
                             modifier = Modifier.weight(1f)
                         ) {
                             Row(

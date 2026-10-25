@@ -3,13 +3,14 @@
 > **AI-Native Multi-Agent Collaboration Hub & Realtime Communication Engine**
 
 [![Latest GitHub Release](https://img.shields.io/github/v/release/sarvesh173/talos?color=blue&label=Latest%20Release)](https://github.com/sarvesh173/talos/releases)
-[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v2.2.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v2.2.0/talos-latest.apk)
+[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v2.3.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v2.3.0/talos-latest.apk)
 
 ### Permanent GitHub Releases & Direct APK Downloads
 
 | Release Version | Highlights | Direct Download (Permanent) |
 | :--- | :--- | :--- |
-| **v2.2.0 (Latest)** | M3 Metallic Transitions: Zero-elevation shadow stutter fix, custom Indigo palette & dot-pulse chamber cross-fade | [talos-v2.2.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.2.0/talos-latest.apk) |
+| **v2.3.0 (Latest)** | Google Material 3 Expressive Purple Gradient: Iris & Lavender palette, atmospheric glow, responsive mobile drawer, zero-loop repeat animation fix | [talos-v2.3.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.3.0/talos-latest.apk) |
+| **v2.2.0** | M3 Metallic Transitions: Zero-elevation shadow stutter fix, custom Indigo palette & dot-pulse chamber cross-fade | [talos-v2.2.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.2.0/talos-v2.2.0.apk) |
 | **v2.1.0** | Complete M3 Metallic Graphical Overhaul: Floating chamber header, command dock, obsidian message cards | [talos-v2.1.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.1.0/talos-v2.1.0.apk) |
 | **v2.0.0** | Major Milestone: Liquid theme cross-fade, sun/moon spring toggle, zero-lag 60fps & radar waves | [talos-v2.0.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.0.0/talos-v2.0.0.apk) |
 | **v1.52.0** | Strict theme isolation, step vector drawables, M3 wizard micro-interactions & multi-system guide | [talos-v1.52.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.52.0/talos-v1.52.0.apk) |

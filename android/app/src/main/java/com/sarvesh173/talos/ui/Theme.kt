@@ -35,89 +35,90 @@ object MdSpacing {
 }
 
 // Brand Accent Anchors
-val PrimaryAccent = Color(0xFF6366F1)       // Indigo primary
+val PrimaryAccent = Color(0xFFD0BCFF)       // M3 Expressive Luminous Lavender
+val PrimaryIris = Color(0xFF6750A4)         // Google M3 Baseline Iris
 val StatusGreen = Color(0xFF10B981)         // Status Online beacon
 val StatusAmber = Color(0xFFF59E0B)         // Warning
 val StatusRed = Color(0xFFEF4444)           // Error / Danger
 val CoralPink = Color(0xFFEC4899)
-val OmniBlue = Color(0xFF3B82F6)
+val OmniBlue = Color(0xFF38BDF8)
 
 // -----------------------------------------------------------------------------
-// Dark & True OLED Black Palette (0% Light Waste, Infinite Contrast)
+// Dark M3 Expressive Purple Gradient Palette (Google Material 3 Baseline)
 // -----------------------------------------------------------------------------
 val DarkColorScheme = darkColorScheme(
-    primary = PrimaryAccent,
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFF312E81),
-    onPrimaryContainer = Color(0xFFE0E7FF),
-    secondary = Color(0xFF38BDF8),
-    onSecondary = Color(0xFF0C4A6E),
-    secondaryContainer = Color(0xFF0369A1),
-    onSecondaryContainer = Color(0xFFE0F2FE),
-    tertiary = Color(0xFFFFBF00),
-    onTertiary = Color(0xFF451A03),
-    tertiaryContainer = Color(0xFF78350F),
-    onTertiaryContainer = Color(0xFFFEF3C7),
+    primary = Color(0xFFD0BCFF),
+    onPrimary = Color(0xFF381E72),
+    primaryContainer = Color(0xFF4F378B),
+    onPrimaryContainer = Color(0xFFEADDFF),
+    secondary = Color(0xFFCCC2DC),
+    onSecondary = Color(0xFF332D41),
+    secondaryContainer = Color(0xFF4A4458),
+    onSecondaryContainer = Color(0xFFE8DEF8),
+    tertiary = Color(0xFFEFB8C8),
+    onTertiary = Color(0xFF492532),
+    tertiaryContainer = Color(0xFF633B48),
+    onTertiaryContainer = Color(0xFFFFD8E4),
     error = StatusRed,
     onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFF7F1D1D),
-    onErrorContainer = Color(0xFFFEE2E2),
-    background = Color(0xFF000000),             // True Pure OLED Black
-    onBackground = Color(0xFFF8FAFC),
-    surface = Color(0xFF000000),                // Base surface
-    onSurface = Color(0xFFF1F5F9),
-    onSurfaceVariant = Color(0xFF94A3B8),       // Muted typography
-    surfaceContainerLowest = Color(0xFF000000), // Lowest plane
-    surfaceContainerLow = Color(0xFF080B10),    // Recessed background
-    surfaceContainer = Color(0xFF0C1017),       // Elevated card plane
-    surfaceContainerHigh = Color(0xFF131923),   // Modal/Pop-in plane
-    surfaceContainerHighest = Color(0xFF1A2230),// Highlighted card plane
-    surfaceDim = Color(0xFF05070B),
-    surfaceBright = Color(0xFF1F2937),
-    outline = Color(0xFF334155),                // Control boundary (3:1 contrast)
-    outlineVariant = Color(0xFF1E2430),         // Decorative hairlines
-    inverseSurface = Color(0xFFF1F5F9),
-    inverseOnSurface = Color(0xFF0F172A),
-    inversePrimary = Color(0xFF4338CA)
+    errorContainer = Color(0xFF8C1D18),
+    onErrorContainer = Color(0xFFF9DEDC),
+    background = Color(0xFF141218),             // Deep Twilight Purple Surface
+    onBackground = Color(0xFFE6E0E9),
+    surface = Color(0xFF141218),                // Base surface
+    onSurface = Color(0xFFE6E0E9),
+    onSurfaceVariant = Color(0xFFCAC4D0),       // Muted typography
+    surfaceContainerLowest = Color(0xFF0F0D13), // Lowest plane
+    surfaceContainerLow = Color(0xFF1D1B20),    // Recessed background
+    surfaceContainer = Color(0xFF211F26),       // Elevated card plane
+    surfaceContainerHigh = Color(0xFF2B2930),   // Modal/Pop-in plane
+    surfaceContainerHighest = Color(0xFF36343B),// Highlighted card plane
+    surfaceDim = Color(0xFF141218),
+    surfaceBright = Color(0xFF3B383E),
+    outline = Color(0xFF938F99),                // Control boundary (3:1 contrast)
+    outlineVariant = Color(0xFF49454F),         // Decorative hairlines
+    inverseSurface = Color(0xFFE6E0E9),
+    inverseOnSurface = Color(0xFF322F35),
+    inversePrimary = Color(0xFF6750A4)
 )
 
 // -----------------------------------------------------------------------------
-// Light Palette (Calm Editorial Slate)
+// Light Palette (Google Material 3 Purple Lilac)
 // -----------------------------------------------------------------------------
 val LightColorScheme = lightColorScheme(
-    primary = PrimaryAccent,
+    primary = Color(0xFF6750A4),
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFE0E7FF),
-    onPrimaryContainer = Color(0xFF1E1B4B),
-    secondary = Color(0xFF0284C7),
+    primaryContainer = Color(0xFFEADDFF),
+    onPrimaryContainer = Color(0xFF21005D),
+    secondary = Color(0xFF625B71),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFE0F2FE),
-    onSecondaryContainer = Color(0xFF0C4A6E),
-    tertiary = Color(0xFFD97706),
+    secondaryContainer = Color(0xFFE8DEF8),
+    onSecondaryContainer = Color(0xFF1D192B),
+    tertiary = Color(0xFF7D5260),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFFEF3C7),
-    onTertiaryContainer = Color(0xFF78350F),
+    tertiaryContainer = Color(0xFFFFD8E4),
+    onTertiaryContainer = Color(0xFF31111D),
     error = StatusRed,
     onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFEE2E2),
-    onErrorContainer = Color(0xFF7F1D1D),
-    background = Color(0xFFF8FAFC),
-    onBackground = Color(0xFF0F172A),
-    surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF0F172A),
-    onSurfaceVariant = Color(0xFF64748B),
+    errorContainer = Color(0xFFF9DEDC),
+    onErrorContainer = Color(0xFF410E0B),
+    background = Color(0xFFFEF7FF),
+    onBackground = Color(0xFF1D1B20),
+    surface = Color(0xFFFEF7FF),
+    onSurface = Color(0xFF1D1B20),
+    onSurfaceVariant = Color(0xFF49454F),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF1F5F9),
-    surfaceContainer = Color(0xFFE2E8F0),
-    surfaceContainerHigh = Color(0xFFCBD5E1),
-    surfaceContainerHighest = Color(0xFF94A3B8),
-    surfaceDim = Color(0xFFE2E8F0),
-    surfaceBright = Color(0xFFFFFFFF),
-    outline = Color(0xFF64748B),
-    outlineVariant = Color(0xFFE2E8F0),
-    inverseSurface = Color(0xFF0F172A),
-    inverseOnSurface = Color(0xFFF8FAFC),
-    inversePrimary = Color(0xFF818CF8)
+    surfaceContainerLow = Color(0xFFF7F2FA),
+    surfaceContainer = Color(0xFFF3EDF7),
+    surfaceContainerHigh = Color(0xFFECE6F0),
+    surfaceContainerHighest = Color(0xFFE6E0E9),
+    surfaceDim = Color(0xFFDED8E1),
+    surfaceBright = Color(0xFFFEF7FF),
+    outline = Color(0xFF79747E),
+    outlineVariant = Color(0xFFCAC4D0),
+    inverseSurface = Color(0xFF322F35),
+    inverseOnSurface = Color(0xFFF5EFF7),
+    inversePrimary = Color(0xFFD0BCFF)
 )
 
 // -----------------------------------------------------------------------------
@@ -280,15 +281,15 @@ fun metallicBorderBrush(isDark: Boolean = LocalIsDark.current): Brush {
     return Brush.linearGradient(
         colors = if (isDark) {
             listOf(
-                Color(0xFF94A3B8).copy(alpha = 0.45f), // Specular highlight
-                Color(0xFF475569).copy(alpha = 0.25f), // Midtone
-                Color(0xFF1E2430).copy(alpha = 0.60f)  // Core shadow
+                Color(0xFFD0BCFF).copy(alpha = 0.40f), // Luminous lavender specular highlight
+                Color(0xFF8B5CF6).copy(alpha = 0.22f), // Radiant violet midtone
+                Color(0xFF4F378B).copy(alpha = 0.12f)  // Deep royal violet shadow
             )
         } else {
             listOf(
-                Color(0xFFCBD5E1).copy(alpha = 0.80f),
-                Color(0xFF94A3B8).copy(alpha = 0.40f),
-                Color(0xFFE2E8F0).copy(alpha = 0.90f)
+                Color(0xFF6750A4).copy(alpha = 0.35f),
+                Color(0xFF9A82DB).copy(alpha = 0.20f),
+                Color(0xFFEADDFF).copy(alpha = 0.50f)
             )
         }
     )

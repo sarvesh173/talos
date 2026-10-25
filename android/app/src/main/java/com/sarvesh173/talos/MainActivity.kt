@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val storedTheme by client.themeMode.collectAsState()
             val activeThemeMode = if (storedTheme == "LIGHT") AppThemeMode.LIGHT else AppThemeMode.DARK
-            var appScreen by remember { mutableStateOf("landing") }
+            var appScreen by remember { mutableStateOf(if (client.isPaired.value) "main" else "landing") }
 
             TalosTheme(themeMode = activeThemeMode) {
                 Surface(

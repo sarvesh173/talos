@@ -13,20 +13,20 @@ import {
   WifiOff,
 } from 'lucide-react';
 
-const WIZARD_BG = '#0F1117';
-const WIZARD_SURFACE = '#171B24';
-const WIZARD_SURFACE_ALT = '#1E2433';
-const WIZARD_BORDER = '#2A3242';
-const WIZARD_TEXT = '#F1F5F9';
-const WIZARD_MUTED = '#8A94A6';
-const WIZARD_DANGER = '#EF4444';
-const INDIGO = '#6366F1';
+const WIZARD_BG = '#141218';
+const WIZARD_SURFACE = '#211F26';
+const WIZARD_SURFACE_ALT = '#2B2930';
+const WIZARD_BORDER = 'rgba(208, 188, 255, 0.16)';
+const WIZARD_TEXT = '#E6E0E9';
+const WIZARD_MUTED = '#CAC4D0';
+const WIZARD_DANGER = '#F2B8B5';
+const INDIGO = '#D0BCFF';
 const STATUS_GREEN = '#10B981';
 
-const PASTEL_MINT = '#A7F3D0';
-const PASTEL_LAVENDER = '#DDD6FE';
-const PASTEL_SKY = '#BAE6FD';
-const PASTEL_PEACH = '#FED7AA';
+const PASTEL_MINT = 'rgba(16, 185, 129, 0.22)';
+const PASTEL_LAVENDER = 'rgba(208, 188, 255, 0.22)';
+const PASTEL_SKY = 'rgba(56, 189, 248, 0.22)';
+const PASTEL_PEACH = 'rgba(239, 184, 200, 0.22)';
 
 const MESH_IP = '100.75.107.79';
 const PEER_LABEL = 'V2158';
@@ -64,8 +64,7 @@ function StepHeading({ title, subtitle }) {
 function Card({ children, className = '' }) {
   return (
     <div
-      className={`rounded-[22px] border p-3.5 ${className}`}
-      style={{ background: WIZARD_SURFACE, borderColor: WIZARD_BORDER }}
+      className={`rounded-[26px] m3-expressive-border m3-card-glass p-4 ${className}`}
     >
       {children}
     </div>
@@ -94,29 +93,30 @@ function ErrorNote({ children }) {
 function OverviewCard({ index, title, body, badgeTint, icon: Icon }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-2xl p-3.5"
-      style={{ background: WIZARD_SURFACE_ALT }}
+      className="flex items-center gap-3.5 rounded-[20px] p-4 bg-[rgba(43,41,48,0.7)] border border-[rgba(208,188,255,0.14)]"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2.5">
           <span
-            className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold text-white"
-            style={{ background: INDIGO }}
+            className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold bg-[#D0BCFF] text-[#381E72]"
           >
             {index}
           </span>
-          <span className="text-sm font-semibold leading-[19px]" style={{ color: WIZARD_TEXT }}>
+          <span className="text-sm font-semibold leading-[19px] text-[#E6E0E9]">
             {title}
           </span>
         </div>
-        <p className="mt-2 text-xs leading-[17px]" style={{ color: WIZARD_MUTED }}>
+        <p className="mt-1.5 text-xs leading-[17px] text-[#CAC4D0]">
           {body}
         </p>
       </div>
 
-      <PastelBadge tint={badgeTint}>
-        <Icon className="w-[26px] h-[26px]" style={{ color: WIZARD_BG }} strokeWidth={1.9} />
-      </PastelBadge>
+      <div
+        className="w-[52px] h-[52px] shrink-0 rounded-[16px] flex items-center justify-center border border-[rgba(208,188,255,0.25)]"
+        style={{ background: badgeTint }}
+      >
+        <Icon className="w-[26px] h-[26px] text-[#D0BCFF]" strokeWidth={1.9} />
+      </div>
     </div>
   );
 }
@@ -514,18 +514,18 @@ export default function OnboardingWizard({ serverUrl, onComplete }) {
 
   return (
     <div
-      className="flex flex-col h-full min-h-screen"
-      style={{ background: WIZARD_BG, color: WIZARD_TEXT }}
+      className="flex flex-col h-full min-h-screen m3-purple-atmosphere relative"
+      style={{ color: WIZARD_TEXT }}
     >
       {/* Top bar: back + step counter + segmented progress rail */}
-      <div className="w-full px-3 py-2">
+      <div className="w-full px-3 py-2 relative z-10">
         <div className="flex items-center">
           <div className="w-10 h-10 flex items-center justify-center shrink-0">
             {step > 0 && (
               <button
                 onClick={handleBack}
                 aria-label="Back"
-                className="w-10 h-10 flex items-center justify-center rounded-full transition hover:bg-white/5"
+                className="w-10 h-10 flex items-center justify-center rounded-full transition hover:bg-white/10"
                 style={{ color: WIZARD_TEXT }}
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -536,8 +536,7 @@ export default function OnboardingWizard({ serverUrl, onComplete }) {
           <div className="flex-1" />
 
           <span
-            className="text-xs font-medium tracking-[0.6px]"
-            style={{ color: WIZARD_MUTED }}
+            className="text-xs font-medium tracking-[0.6px] text-[#D0BCFF]/80"
           >
             Step {step + 1} of {STEPS}
           </span>
@@ -551,15 +550,18 @@ export default function OnboardingWizard({ serverUrl, onComplete }) {
           {Array.from({ length: STEPS }).map((_, i) => (
             <div
               key={i}
-              className="flex-1 h-[3px] rounded-full transition-colors duration-300"
-              style={{ background: i <= step ? INDIGO : WIZARD_BORDER }}
+              className="flex-1 h-[4px] rounded-full transition-all duration-300"
+              style={{
+                background: i <= step ? '#D0BCFF' : 'rgba(208,188,255,0.18)',
+                boxShadow: i <= step ? '0 0 10px rgba(208,188,255,0.5)' : 'none'
+              }}
             />
           ))}
         </div>
       </div>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-[22px]">
+      <div className="flex-1 overflow-y-auto px-[22px] relative z-10">
         <div
           key={step}
           className="animate-[wizardSlideIn_220ms_ease-out] pb-7"
@@ -584,14 +586,14 @@ export default function OnboardingWizard({ serverUrl, onComplete }) {
       </div>
 
       {/* Bottom action */}
-      <div className="w-full px-[22px] py-[18px]" style={{ background: WIZARD_BG }}>
+      <div className="w-full px-[22px] py-[18px] bg-transparent relative z-10">
         <button
           onClick={handlePrimary}
           disabled={busy}
-          className="w-full h-14 rounded-[28px] font-bold text-[15px] flex items-center justify-center gap-2.5 transition disabled:opacity-45"
-          style={{ background: '#FFFFFF', color: WIZARD_BG }}
+          className="w-full h-14 rounded-[28px] font-bold text-[15px] flex items-center justify-center gap-2.5 transition m3-spring-press disabled:opacity-45 shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #7C4DFF 0%, #6750A4 100%)', color: '#FFFFFF', border: '1px solid rgba(208,188,255,0.3)' }}
         >
-          {busy && <Loader2 className="w-[18px] h-[18px] animate-spin" />}
+          {busy && <Loader2 className="w-[18px] h-[18px] animate-spin text-[#FFFFFF]" />}
           {busy ? busyLabel : primaryLabel}
         </button>
       </div>

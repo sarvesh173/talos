@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.sarvesh173.talos"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.sarvesh173.talos"
@@ -64,14 +64,19 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
 
-    // Jetpack Compose & Material 3
-    val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
+    // Jetpack Compose & Material 3 Expressive (BOM 2025.09.01 -> material3 1.4.0, ui 1.9.2;
+    // verified via Google Maven POMs: minCompileSdk 35, minAGP 8.6.0 - compatible)
+    val composeBom = platform("androidx.compose:compose-bom:2025.09.01")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    // Explicit material3 1.4.0: BOM 2025.09.01 constraint resolves 1.3.2 without a pin,
+    // which hides MotionScheme/MaterialExpressiveTheme (internal in 1.3.x).
+    implementation("androidx.compose.material3:material3:1.5.0-alpha12")
     implementation("androidx.compose.material:material-icons-extended")
+    // M3E shape engine: RoundedPolygon / Morph (stable 1.1.0)
+    implementation("androidx.graphics:graphics-shapes:1.1.0")
 
     // Networking (OkHttp for WebSockets & Tailscale REST)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

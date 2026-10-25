@@ -45,8 +45,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.graphics.shapes.Morph
 import androidx.lifecycle.lifecycleScope
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.Room
@@ -89,37 +91,39 @@ class MainActivity : ComponentActivity() {
                 AnimatedContent(
                     targetState = activeTarget,
                     transitionSpec = {
-                        val decelerate = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)
-                        val accelerate = CubicBezierEasing(0.30f, 0.00f, 1.00f, 1.00f)
-
+                        // M3E physics: spatial springs for screen-level transitions.
+                        // Slow spatial (0.8/200) for full-screen movement - expressive, interruptible.
+                        val offsetIn = M3EMotion.slowSpatial<IntOffset>()
+                        val floatIn = M3EMotion.slowSpatial<Float>()
+                        val fadeSpec = M3EMotion.defaultEffects<Float>()
                         if (initialState == "landing" && (targetState == "wizard" || targetState == "main")) {
-                            // Pure Upward Ascension (↑): incoming screen glides upward from below, matching the ascending stardust
+                            // Ascension: incoming screen glides upward from below with spring overshoot
                             (
-                                fadeIn(animationSpec = tween(durationMillis = 850, easing = decelerate)) +
+                                fadeIn(animationSpec = fadeSpec) +
                                 slideInVertically(
-                                    animationSpec = tween(durationMillis = 850, easing = decelerate),
+                                    animationSpec = offsetIn,
                                     initialOffsetY = { height -> height / 4 }
                                 ) +
-                                scaleIn(animationSpec = tween(durationMillis = 850, easing = decelerate), initialScale = 0.96f)
+                                scaleIn(animationSpec = floatIn, initialScale = 0.96f)
                             ).togetherWith(
-                                fadeOut(animationSpec = tween(durationMillis = 650, easing = androidx.compose.animation.core.LinearEasing)) +
+                                fadeOut(animationSpec = M3EMotion.fastEffects()) +
                                 slideOutVertically(
-                                    animationSpec = tween(durationMillis = 750, easing = decelerate),
+                                    animationSpec = offsetIn,
                                     targetOffsetY = { height -> -height / 8 }
                                 )
                             )
                         } else if ((initialState == "wizard" || initialState == "main") && targetState == "landing") {
                             // Return to landing: reverse vertical flow
                             (
-                                fadeIn(animationSpec = tween(durationMillis = 500, easing = decelerate)) +
+                                fadeIn(animationSpec = fadeSpec) +
                                 slideInVertically(
-                                    animationSpec = tween(durationMillis = 500, easing = decelerate),
+                                    animationSpec = offsetIn,
                                     initialOffsetY = { height -> -height / 6 }
                                 )
                             ).togetherWith(
-                                fadeOut(animationSpec = tween(durationMillis = 400, easing = accelerate)) +
+                                fadeOut(animationSpec = M3EMotion.fastEffects()) +
                                 slideOutVertically(
-                                    animationSpec = tween(durationMillis = 400, easing = accelerate),
+                                    animationSpec = offsetIn,
                                     targetOffsetY = { height -> height / 6 }
                                 )
                             )
@@ -127,25 +131,19 @@ class MainActivity : ComponentActivity() {
                             val forward = targetState == "main" || targetState == "wizard"
                             val dir = if (forward) 1 else -1
                             (
-                                fadeIn(animationSpec = tween(durationMillis = 480, easing = decelerate)) +
+                                fadeIn(animationSpec = fadeSpec) +
                                 slideInVertically(
-                                    animationSpec = tween(durationMillis = 520, easing = decelerate),
+                                    animationSpec = offsetIn,
                                     initialOffsetY = { height -> (height / 5) * dir }
                                 ) +
-                                scaleIn(
-                                    animationSpec = tween(durationMillis = 520, easing = decelerate),
-                                    initialScale = 0.96f
-                                )
+                                scaleIn(animationSpec = floatIn, initialScale = 0.96f)
                             ).togetherWith(
-                                fadeOut(animationSpec = tween(durationMillis = 360, easing = accelerate)) +
+                                fadeOut(animationSpec = M3EMotion.fastEffects()) +
                                 slideOutVertically(
-                                    animationSpec = tween(durationMillis = 440, easing = accelerate),
+                                    animationSpec = offsetIn,
                                     targetOffsetY = { height -> -(height / 5) * dir }
                                 ) +
-                                scaleOut(
-                                    animationSpec = tween(durationMillis = 440, easing = accelerate),
-                                    targetScale = 1.04f
-                                )
+                                scaleOut(animationSpec = floatIn, targetScale = 1.04f)
                             )
                         }
                     },
@@ -440,12 +438,12 @@ fun MainScreen(
 
                                 val themeRot by animateFloatAsState(
                                     targetValue = if (isDark) 0f else 180f,
-                                    animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                                    animationSpec = M3EMotion.fastSpatial(),
                                     label = "m_theme_rot"
                                 )
                                 val themeScale by animateFloatAsState(
                                     targetValue = if (isDark) 1.0f else 1.15f,
-                                    animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                                    animationSpec = M3EMotion.fastSpatial(),
                                     label = "m_theme_scale"
                                 )
                                 IconButton(
@@ -481,7 +479,7 @@ fun MainScreen(
                         }
                     }
 
-                    // Horizontal Chamber Quick Switcher Rail
+                    // Horizontal Chamber Quick Switcher Rail - canonical M3 FilterChips
                     if (rooms.size > 1) {
                         LazyRow(
                             modifier = Modifier
@@ -489,36 +487,39 @@ fun MainScreen(
                                 .padding(horizontal = 14.dp, vertical = 2.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(rooms) { room: Room ->
+                            items(rooms, key = { room -> room.id }) { room: Room ->
                                 val isSelected = room.id == currentRoomId
-                                Surface(
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = if (isSelected) PrimaryAccent else MaterialTheme.colorScheme.surfaceContainer,
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (isSelected) Color.White.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant
-                                    ),
-                                    modifier = Modifier.clickable { client.switchRoom(room.id) }
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
-                                    ) {
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { client.switchRoom(room.id) },
+                                    leadingIcon = {
                                         val quickEmblem = when {
                                             room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
                                             room.id == "the-council" -> emblemByKey("omnirush")
                                             else -> emblemBySender(room.name)
                                         }
                                         AgentEmblemIcon(emblem = quickEmblem, size = 14.dp, tint = null)
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                    },
+                                    label = {
                                         Text(
                                             text = room.name,
-                                            color = if (isSelected) Color.White else talosTextPrimary,
                                             fontSize = 12.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                         )
-                                    }
-                                }
+                                    },
+                                    shape = ShapeLargeIncreased,
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = PrimaryAccent,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                        labelColor = talosTextPrimary
+                                    ),
+                                    border = FilterChipDefaults.filterChipBorder(
+                                        enabled = true,
+                                        selected = isSelected,
+                                        borderColor = MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                )
                             }
                         }
                     }
@@ -596,12 +597,19 @@ fun MainScreen(
                             val isSendPressed by sendInteraction.collectIsPressedAsState()
                             val sendScale by animateFloatAsState(
                                 targetValue = if (isSendPressed) 0.90f else 1.0f,
-                                animationSpec = spring(dampingRatio = 0.6f, stiffness = 800f),
+                                animationSpec = M3EMotion.fastSpatial(),
                                 label = "sendScale"
                             )
+                            // M3E signature shape morph: circle -> 12-lobed scallop while pressed
+                            val sendMorphProgress by animateFloatAsState(
+                                targetValue = if (isSendPressed) 1f else 0f,
+                                animationSpec = M3EMotion.defaultSpatial(),
+                                label = "sendMorph"
+                            )
+                            val sendMorph = remember { Morph(M3EShapes.circle(), M3EShapes.scallop12()) }
 
                             Surface(
-                                shape = CircleShape,
+                                shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
                                 color = if (inputText.isNotBlank()) PrimaryAccent else PrimaryAccent.copy(alpha = 0.35f),
                                 modifier = Modifier
                                     .size(42.dp)
@@ -648,8 +656,10 @@ fun MainScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    items(messages) { msg: Message ->
-                        MessageBubble(msg = msg)
+                    items(messages, key = { it.id }) { msg: Message ->
+                        Box(modifier = Modifier.animateItem()) {
+                            MessageBubble(msg = msg)
+                        }
                     }
                 }
             }
@@ -793,8 +803,8 @@ fun ChamberHero(
 
     val infiniteCorePulse = rememberInfiniteTransition(label = "hero_core_pulse")
     val coreScale by infiniteCorePulse.animateFloat(
-        initialValue = 0.96f,
-        targetValue = 1.04f,
+        initialValue = 0.97f,
+        targetValue = 1.03f,
         animationSpec = infiniteRepeatable(
             animation = tween(2200, easing = CubicBezierEasing(0.37f, 0f, 0.63f, 1f)),
             repeatMode = RepeatMode.Reverse
@@ -809,9 +819,9 @@ fun ChamberHero(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // High-Contrast Machined Chamber Core Portal
+        // M3E signature scallop badge: 12-lobed expressive flower portal
         Surface(
-            shape = RoundedCornerShape(28.dp),
+            shape = M3EPolygonShape(M3EShapes.scallop12()),
             color = if (isDark) Color(0xFF0F172A) else MaterialTheme.colorScheme.surfaceContainerHigh,
             border = BorderStroke(1.5.dp, metallicBorderBrush(isDark)),
             modifier = Modifier

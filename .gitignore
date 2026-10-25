@@ -51,3 +51,6 @@ android/.kotlin/
 local.properties
 *.apk
 *.aab
+
+# Rust build artifacts
+crates/**/target/

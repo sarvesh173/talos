@@ -79,7 +79,9 @@ jobs:
             Install: download `talos-latest.apk` and sideload.
           files: build-artifacts/talos-latest.apk
           draft: false
-          prerelease: true
+          # Not a prerelease: GitHub hides prereleases behind a filter, which
+          # is exactly why the APK "wasn't visible" on the Releases page.
+          prerelease: false
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

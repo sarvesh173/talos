@@ -1,46 +1,35 @@
 # TALOS
 
-> **AI-Native Multi-Agent Collaboration Hub & Realtime Communication Engine**
+> Private multi-agent room bus and native Android client running over Tailscale WireGuard and local networks.
 
 [![Latest GitHub Release](https://img.shields.io/github/v/release/sarvesh173/talos?color=blue&label=Latest%20Release)](https://github.com/sarvesh173/talos/releases)
-[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--v2.3.0.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/download/v2.3.0/talos-latest.apk)
+[![Direct APK Download](https://img.shields.io/badge/Direct%20Download-talos--latest.apk-success?logo=android)](https://github.com/sarvesh173/talos/releases/latest/download/talos-latest.apk)
 
-### Permanent GitHub Releases & Direct APK Downloads
-
-| Release Version | Highlights | Direct Download (Permanent) |
-| :--- | :--- | :--- |
-| **v2.3.0 (Latest)** | Google Material 3 Expressive Purple Gradient: Iris & Lavender palette, atmospheric glow, responsive mobile drawer, zero-loop repeat animation fix | [talos-v2.3.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.3.0/talos-latest.apk) |
-| **v2.2.0** | M3 Metallic Transitions: Zero-elevation shadow stutter fix, custom Indigo palette & dot-pulse chamber cross-fade | [talos-v2.2.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.2.0/talos-v2.2.0.apk) |
-| **v2.1.0** | Complete M3 Metallic Graphical Overhaul: Floating chamber header, command dock, obsidian message cards | [talos-v2.1.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.1.0/talos-v2.1.0.apk) |
-| **v2.0.0** | Major Milestone: Liquid theme cross-fade, sun/moon spring toggle, zero-lag 60fps & radar waves | [talos-v2.0.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.0.0/talos-v2.0.0.apk) |
-| **v1.52.0** | Strict theme isolation, step vector drawables, M3 wizard micro-interactions & multi-system guide | [talos-v1.52.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.52.0/talos-v1.52.0.apk) |
-| **v1.51.0** | Pure Upward Ascension (↑) stardust particle stream & vertical scene transitions (no horizontal → drift) | [talos-v1.51.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.51.0/talos-v1.51.0.apk) |
-| **v1.50.0** | Seamless quadratic particle evaporation, in-place screen emergence (no horizontal jerk) & matching embers | [talos-v1.50.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.50.0/talos-v1.50.0.apk) |
-| **v1.48.0** | 4.8s Cascading stardust shockwave with specular cores, zero-gap handover & M3 wizard transitions | [talos-v1.48.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.48.0/talos-v1.48.0.apk) |
-| **v1.47.0** | Full-screen adaptive micro-particle dissolve: 20k dots, frozen-frame color sampling, 4.52s M3 ramp | [talos-v1.47.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.47.0/talos-v1.47.0.apk) |
-| **v1.46.0** | Full-screen micro-particle dots destruction with organic micro-jitters | [talos-v1.46.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.46.0/talos-v1.46.0.apk) |
-| **v1.45.0** | 6 Trillion combination entropy pixel destruction animation with 3.2s sweep & force fallback | [talos-v1.45.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.45.0/talos-v1.45.0.apk) |
-| **v1.44.0** | Pixel dissolve ink transition on Get Started action, M3 motion polish | [talos-v1.44.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.44.0/talos-v1.44.0.apk) |
-| **v1.41.0** | Clean header redesign: removed useless top sections, clutter-free anti-slop UI | [talos-v1.41.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.41.0/talos-v1.41.0.apk) |
-| **v1.40.0** | Material Design 3 Expressive, zero emojis, fluid optical mesh conduits, AAPT2 string fix | [talos-v1.40.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.40.0/talos-v1.40.0.apk) |
-| **v1.36.0** | Architecture specs (DESIGN_SYSTEM_M3.md, MULTI_AGENT_MESH_ARCHITECTURE.md), 63/63 tests | [talos-v1.36.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.36.0/talos-v1.36.0.apk) |
-| **v1.34.0** | 29+ M3 system color roles, 5-tier surface containers, frictionless startup flow | [talos-v1.34.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.34.0/talos-v1.34.0.apk) |
-| **v1.33.0** | Dynamic Claude-OpenCode conduit with traveling energy packets, 3D monogram | [talos-v1.33.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.33.0/talos-v1.33.0.apk) |
-| **v1.31.0** | Authentic Codex Lavender-Blue (#7A9DFF) & Hermes Gold (#FFBF00) identity | [talos-v1.31.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.31.0/talos-v1.31.0.apk) |
-| **v1.28.0** | Cybernetic Neural Grid & Initial 4-Corner Constellation | [talos-v1.28.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.28.0/talos-v1.28.0.apk) |
-| **v1.23.0** | Genesis Release: Initial Native Android Multi-Agent Mesh Chamber | [talos-v1.23.0.apk](https://github.com/sarvesh173/talos/releases/download/v1.23.0/talos-v1.23.0.apk) |
-
-TALOS is a dedicated communication interface built specifically for human-to-AI and multi-agent interaction. Unlike legacy centralized chat platforms where bots are isolated by strict platform barriers, TALOS provides a shared, zero-latency room bus where humans and multiple autonomous agents collaborate, stream thoughts, execute tools, and exchange multimodal data seamlessly.
+TALOS provides a shared communication bus for human and multi-agent collaboration. Instead of isolating automated bots into separate channels, TALOS runs a unified room bus where multiple agents and people exchange structured events, stream responses in real time, and trigger tools across private networks.
 
 ---
 
-## Why TALOS?
+## Features
 
-- **Zero Bot-to-Bot Barriers**: Legacy chat platforms prevent bots from seeing other bots' messages. TALOS implements a native event bus where multiple agents can debate, coordinate, and execute joint workflows.
-- **AI-Native UI**: First-class collapsible thought blocks, real-time token streaming, live tool-call status badges, interactive artifact view, and native voice notes.
-- **End-to-End Encrypted Access**: Access securely anywhere from mobile or desktop via **Tailscale** WireGuard mesh or LAN with zero exposed open ports.
-- **Hermes Gateway & Agent Integration**: Plugs directly into Hermes Agent's platform ecosystem and external autonomous coding agents (OmniRush, Claude Code, Codex).
-- **Single-Source Brand Architecture**: Decoupled branding via `brand.json` for effortless renaming and styling without breaking core system architecture.
+- **Shared room bus**: Multiple agents observe room state, participate in discussions, and coordinate workflows in real time.
+- **Native Android client**: Built with Jetpack Compose and Material 3 Expressive. Features spring-driven navigation, normalized 24dp vector emblems, and zero raw emoji controls.
+- **Network roaming**: Automatically switches between local LAN and Tailscale WireGuard VPN overlays. Operates reliably on cellular data (4G/5G) and dynamic Wi-Fi without open public ports.
+- **One-time onboarding**: Guided device pairing and mesh setup on initial launch, followed by direct startup into the active chamber.
+- **Rust core backend**: Lightweight Axum and Tokio server with SQLite state persistence and WebSocket streaming.
+
+---
+
+## Releases & APK Downloads
+
+| Version | Highlights | Direct Download |
+| :--- | :--- | :--- |
+| **v2.7.4 (Latest)** | Normalized 24dp brand drawables, fixed vector parsing on agent grid, universal mobile Tailscale roaming, and one-time launch sequence. | [talos-latest.apk](https://github.com/sarvesh173/talos/releases/download/v2.7.4/talos-latest.apk) |
+| **v2.7.3** | Universal cellular/Wi-Fi Tailscale discovery and persistent launch state. | [talos-v2.7.3.apk](https://github.com/sarvesh173/talos/releases/download/v2.7.3/talos-latest.apk) |
+| **v2.7.2** | Official dashboard brand icons and M3 Expressive spatial spring transitions. | [talos-v2.7.2.apk](https://github.com/sarvesh173/talos/releases/download/v2.7.2/talos-latest.apk) |
+| **v2.3.0** | Material 3 Expressive Purple Gradient theme and responsive mobile drawer. | [talos-v2.3.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.3.0/talos-latest.apk) |
+| **v2.0.0** | Liquid theme transitions, dark/light spring toggle, and initial room bus. | [talos-v2.0.0.apk](https://github.com/sarvesh173/talos/releases/download/v2.0.0/talos-v2.0.0.apk) |
+
+Older releases and changelogs are available on the [Releases page](https://github.com/sarvesh173/talos/releases).
 
 ---
 
@@ -48,8 +37,8 @@ TALOS is a dedicated communication interface built specifically for human-to-AI 
 
 ```
                        +-------------------------+
-                       |    Client Devices       |
-                       |  (Mobile PWA / Web UI)  |
+                       |    Android Client       |
+                       |   (Jetpack Compose)     |
                        +------------+------------+
                                     |
                     Tailscale WireGuard / WebSocket
@@ -59,8 +48,8 @@ TALOS is a dedicated communication interface built specifically for human-to-AI 
 |                         TALOS CORE SERVER                          |
 |                                                                    |
 |  +--------------------+   +-------------------+   +-------------+  |
-|  |  WebSocket Room    |   |  Media & Audio    |   |  Session &  |  |
-|  |  Event Bus         |   |  Pipeline         |   |  State Hub  |  |
+|  |  WebSocket Room    |   |  Media Pipeline   |   |  Session &  |  |
+|  |  Event Bus         |   |                   |   |  State Hub  |  |
 |  +---------+----------+   +---------+---------+   +------+------+  |
 |            |                        |                    |         |
 |            +------------------------+--------------------+         |
@@ -72,42 +61,52 @@ TALOS is a dedicated communication interface built specifically for human-to-AI 
                  |                                         |
                  v                                         v
    +---------------------------+             +---------------------------+
-   |    Hermes Agent Daemon    |             |    Specialist Agents      |
-   | (Hermes / Core Platform)  |             |   (OmniRush, Coders)      |
+   |   Autonomous Agents       |             |   External Tools & CLIs   |
    +---------------------------+             +---------------------------+
 ```
 
 ---
 
-## Repository Structure
+## Project Structure
 
 ```
 talos/
-├── brand.json          # Single Source of Truth for branding and display
-├── core/               # Protocols, events, and data models
-├── server/             # FastAPI + WebSocket room bus & Hermes bridge
-├── web/                # Mobile-first React/Vite PWA interface
-├── docs/               # Architecture & design documentation
+├── crates/talos-core/  # Rust backend server (Axum, Tokio, SQLite, WebSocket)
+├── android/            # Native Android app (Kotlin, Jetpack Compose, Material 3)
+├── web/                # Web dashboard interface
+├── docs/               # Architecture and protocol specifications
 └── README.md
 ```
 
 ---
 
-## Documentation
-
-- **[Multi-Agent Mesh Architecture](docs/MULTI_AGENT_MESH_ARCHITECTURE.md)** — Full technical architecture covering the WireGuard mesh layer, Tailscale peer discovery, agent orchestration, consensus protocol, provider failover, and security model.
-
----
-
-## Getting Started
-
-*(In active development)*
+## Development
 
 ### Prerequisites
-- Node.js 18+ & Python 3.10+
-- Tailscale (for remote private mesh connection)
+
+- Rust (stable toolchain)
+- Android Studio / Android SDK (API 34+)
+- Tailscale (optional, for remote private mesh access)
+
+### Running the Core Server
+
+```bash
+cargo run --manifest-path crates/talos-core/Cargo.toml
+```
+
+By default, the server binds to local interfaces and listens on port `8010` (or `8000`).
+
+### Building the Android App
+
+```bash
+cd android
+./gradlew assembleDebug
+```
+
+The output APK will be placed in `android/app/build/outputs/apk/debug/`.
 
 ---
 
-**Author**: [@sarvesh173](https://github.com/sarvesh173)  
-**License**: MIT
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.

@@ -85,11 +85,6 @@ fun M3EButton(
     ) { s -> if (s == M3EButtonState.Pressed) 1f else 0f }
 
     // Effects family: alpha (critically damped, never bounces).
-    val contentAlpha by transition.animateFloat(
-        transitionSpec = { M3EMotion.defaultEffects() },
-        label = "m3e_btn_alpha",
-    ) { s -> if (s == M3EButtonState.Loading) 0f else 1f }
-
     val loadingAlpha by transition.animateFloat(
         transitionSpec = { M3EMotion.defaultEffects() },
         label = "m3e_btn_loading",
@@ -112,12 +107,21 @@ fun M3EButton(
     ) {
         Box(contentAlignment = Alignment.Center) {
             Row(
-                modifier = Modifier
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-                    .graphicsAlphaFx(contentAlpha),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (leadingIcon != null) {
+                // M3E: while busy the indicator takes the leading slot and the
+                // LABEL STAYS. Fading the label out leaves a blank pill that
+                // reads as a broken button.
+                if (loadingAlpha > 0.01f) {
+                    LoadingIndicator(
+                        color = contentColor,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .graphicsAlphaFx(loadingAlpha),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                } else if (leadingIcon != null) {
                     leadingIcon()
                     Spacer(Modifier.width(8.dp))
                 }
@@ -125,15 +129,6 @@ fun M3EButton(
                     text = text,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
-                )
-            }
-            if (loadingAlpha > 0.01f) {
-                LoadingIndicator(
-                    color = contentColor,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(28.dp)
-                        .graphicsAlphaFx(loadingAlpha),
                 )
             }
         }
@@ -170,25 +165,24 @@ fun M3ETonalButton(
         interactionSource = interaction,
         modifier = modifier.m3ePressScale(interaction),
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Busy state keeps the label: the indicator takes the leading
+            // slot, the text stays readable.
             if (loading) {
-                LoadingIndicator(color = contentColor, modifier = Modifier.size(26.dp).padding(6.dp))
-            } else {
-                Row(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (leadingIcon != null) {
-                        leadingIcon()
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                LoadingIndicator(color = contentColor, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+            } else if (leadingIcon != null) {
+                leadingIcon()
+                Spacer(Modifier.width(8.dp))
             }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }

@@ -142,20 +142,20 @@ fun OnboardingWizard(
             isChecking = true
             errorMessage = null
 
-            // Zero-config: probe the LAN for the talos-core beacon (UDP),
-            // adopt its endpoint, then verify. No IP is typed or displayed.
-            if (client.baseUrl.isBlank() ||
-                client.baseUrl == TalosClient.DEFAULT_BASE_URL ||
-                client.checkMeshStatus() == null
-            ) {
-                MeshDiscovery.discover()?.let { found ->
-                    client.updateConfig(found.baseUrl, client.apiToken)
-                }
+            // Zero-config and bounded: resolveCore() tries the endpoint we
+            // already know, then the same host on the standard TALOS ports,
+            // then the LAN discovery beacon - and it always returns within a
+            // hard timeout, so the wizard can never sit in "Scanning" forever.
+            val status = client.resolveCore()
+            meshInfo = status
+
+            if (status != null && autoPairKey && client.apiToken.isBlank()) {
+                client.pairDevice()
             }
 
-            meshInfo = client.checkMeshStatus()
-            if (autoPairKey && meshInfo?.active == true && client.apiToken.isBlank()) {
-                client.pairDevice()
+            if (status == null) {
+                errorMessage = "No node answered. Make sure Tailscale is on and the " +
+                    "talos-core is running on your host, then scan again."
             }
             isChecking = false
         }
@@ -185,6 +185,12 @@ fun OnboardingWizard(
             generateOrPairToken()
         }
     }
+
+    // Split-screen: the window can be very short (landscape 1/2 split) or
+    // very narrow (1/3 split). Measure the window - not the screen - and
+    // compact the chrome so the content always stays usable.
+    val windowSize = rememberWindowSize()
+    val compact = windowSize.isShort || windowSize.isNarrow
 
     Box(
         modifier = Modifier
@@ -283,7 +289,10 @@ fun OnboardingWizard(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .padding(
+                            horizontal = if (compact) 12.dp else 20.dp,
+                            vertical = if (compact) 8.dp else 12.dp
+                        )
                 ) {
                     when (current) {
                         0 -> OverviewStep()
@@ -351,6 +360,7 @@ fun OnboardingWizard(
 
             WizardBottomBar(
                 step = step,
+                compactHeight = windowSize.isShort,
                 isBusy = isChecking || isPairing,
                 isMeshActive = isMeshActive,
                 hasToken = hasToken,
@@ -374,12 +384,6 @@ fun OnboardingWizard(
                         3 -> onComplete()
                     }
                 },
-                onSkip = {
-                    val t = token.takeIf { !it.isNullOrBlank() }
-                        ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
-                    client.updateConfig(client.baseUrl, t)
-                    onComplete()
-                }
             )
         }
     }
@@ -516,7 +520,7 @@ private fun WizardBottomBar(
     isMeshActive: Boolean,
     hasToken: Boolean,
     onPrimary: () -> Unit,
-    onSkip: (() -> Unit)? = null
+    compactHeight: Boolean = false,
 ) {
     val canProceed = when (step) {
         1 -> isMeshActive
@@ -526,7 +530,7 @@ private fun WizardBottomBar(
 
     val label = when (step) {
         0 -> "Get started"
-        1 -> if (isMeshActive) "Confirm Mesh & Continue" else "Tailscale Required to Continue"
+        1 -> if (isMeshActive) "Confirm Mesh & Continue" else "Scan Again"
         2 -> if (hasToken) "Link Device & Enter Chamber" else "Generate Device Token"
         else -> "Enter Chamber"
     }
@@ -555,34 +559,11 @@ private fun WizardBottomBar(
             interactionSource = interactionSource,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(if (compactHeight) 44.dp else 52.dp)
         )
 
-        // Tiny discrete test button in corner for safety / UI test bypass
-        if (onSkip != null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(
-                    onClick = onSkip,
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
-                    modifier = Modifier
-                        .height(22.dp)
-                        .semantics { contentDescription = "Test bypass: skip mesh verification" }
-                ) {
-                    Text(
-                        text = "test",
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                }
-            }
-        }
+        // No dev-only bypass in the shipping UI: every path goes through a
+        // real, verified node.
     }
 }
 
@@ -788,7 +769,21 @@ private fun MeshStep(
     onCopyPrompt: (String) -> Unit = {}
 ) {
     val active = meshInfo?.active == true
-    val hostSetupPrompt = "Set up TALOS mesh node: git clone https://github.com/sarvesh173/talos.git && cd talos && pip install -r requirements.txt && uvicorn server.main:app --host 0.0.0.0 --port 8000"
+    // Agent-facing prompt: dependency preflight first, Tailscale before the
+    // core, never overwrite an existing install, no hardcoded addresses.
+    val hostSetupPrompt = """Set up the TALOS node (agent mode).
+
+1. Preflight - check before installing, never overwrite a working install:
+   for dep in git cargo rustc python3 pip sqlite3 curl; do command -v ${'$'}dep >/dev/null 2>&1 || echo "MISSING: ${'$'}dep"; done
+2. Tailscale (required):
+   - if command -v tailscale fails -> install Tailscale, then ask the user to log in ONCE on the host and on their phone with the same account
+   - verify: tailscale status --json  (BackendState must be Running)
+3. Build and run the Rust core:
+   cd talos/crates/talos-core && cargo build --release
+   PORT=8010 ./target/release/talos-core
+   (it answers the app's zero-config discovery beacon automatically)
+4. Verify: curl -s http://127.0.0.1:8010/api/mesh/status   -> tailscale_enabled: true
+5. Never hardcode an IP, hostname or token in code; discover everything at runtime."""
 
     val statusLabel = when {
         isChecking -> "Scanning"
@@ -1051,13 +1046,21 @@ private fun MeshStep(
                 // private information and are never rendered in the app.
                 MeshRow(
                     key = "Node",
-                    value = "TALOS node"
+                    value = if (active) "TALOS node" else "Not connected"
                 )
                 MeshRow(
                     key = "Peers online",
-                    value = meshInfo?.peers_count?.takeIf { it > 0 }?.toString() ?: "1"
+                    value = if (active) {
+                        meshInfo?.peers_count?.takeIf { it > 0 }?.toString() ?: "1"
+                    } else {
+                        "-"
+                    }
                 )
-                MeshRow(key = "Transport", value = "Encrypted overlay", last = true)
+                MeshRow(
+                    key = "Transport",
+                    value = if (active) "Encrypted overlay" else "Offline",
+                    last = true
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 

@@ -290,7 +290,10 @@ fun MainScreen(
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = talosSurface,
-                modifier = Modifier.width(300.dp)
+                // In a 1/3-width split a fixed 300dp drawer would overflow.
+                modifier = Modifier
+                    .widthIn(max = 300.dp)
+                    .fillMaxWidth(0.85f)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(

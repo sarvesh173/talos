@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -56,6 +57,17 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS)
+        .build()
+
+    /**
+     * Separate client for short control-plane probes (mesh status, pairing).
+     * The streaming client has no read timeout on purpose - a probe must
+     * never hang the UI waiting for a silent server.
+     */
+    private val probeClient = OkHttpClient.Builder()
+        .connectTimeout(4, TimeUnit.SECONDS)
+        .readTimeout(6, TimeUnit.SECONDS)
+        .callTimeout(8, TimeUnit.SECONDS)
         .build()
 
     var baseUrl: String = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
@@ -314,9 +326,16 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                         val obj = json.parseToJsonElement(body).jsonObject
                         // Only state is read here - never host identity
                         // (hostname, overlay IP, peer names).
-                        val active = obj["active"]?.jsonPrimitive?.content?.toBoolean() ?: false
-                        val peers = obj["peers_count"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+                        // The core may report `active` directly, or the older
+                        // shape (is_online + wireguard_active). Read both and
+                        // never default to false just because a field is
+                        // missing - that silently blocked the whole wizard.
+                        val explicitActive = obj["active"]?.jsonPrimitive?.content?.toBoolean()
+                        val isOnline = obj["is_online"]?.jsonPrimitive?.content?.toBoolean() ?: false
+                        val wgActive = obj["wireguard_active"]?.jsonPrimitive?.content?.toBoolean() ?: false
                         val tsEnabled = obj["tailscale_enabled"]?.jsonPrimitive?.content?.toBoolean()
+                        val active = explicitActive ?: (isOnline && wgActive)
+                        val peers = obj["peers_count"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
                         MeshInfo(active, peers, tsEnabled)
                     } else null
                 }
@@ -334,27 +353,42 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
      * TALOS ports (the node may have moved ports) -> LAN auto-discovery.
      */
     suspend fun resolveCore(): MeshInfo? = withContext(Dispatchers.IO) {
-        checkMeshStatus(baseUrl)?.let { return@withContext it }
+        // Hard ceiling: a silent server must never freeze the wizard.
+        withTimeoutOrNull(12_000L) {
+            resolveCoreInternal()
+        }
+    }
 
+    private suspend fun resolveCoreInternal(): MeshInfo? {
+        // 1. The endpoint we already know.
+        val known = checkMeshStatus(baseUrl)
+        if (known != null) return known
+
+        // 2. The same host on the standard TALOS ports (the node may have
+        //    moved ports). The host is never hardcoded - it comes from the
+        //    endpoint the user paired with.
         val host = runCatching { java.net.URI(baseUrl).host }.getOrNull()
         if (!host.isNullOrBlank()) {
             for (port in listOf(8000, 8010)) {
                 val candidate = "http://$host:$port"
-                checkMeshStatus(candidate)?.let { status ->
+                val status = checkMeshStatus(candidate)
+                if (status != null) {
                     updateConfig(candidate, apiToken)
-                    return@withContext status
+                    return status
                 }
             }
         }
 
+        // 3. LAN auto-discovery (UDP beacon).
         val found = MeshDiscovery.discover()
         if (found != null) {
-            checkMeshStatus(found.baseUrl)?.let { status ->
+            val status = checkMeshStatus(found.baseUrl)
+            if (status != null) {
                 updateConfig(found.baseUrl, apiToken)
-                return@withContext status
+                return status
             }
         }
-        null
+        return null
     }
 
     suspend fun discoverPeers(): List<MeshPeerInfo> {

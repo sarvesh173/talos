@@ -37,6 +37,7 @@ impl MeshDiscovery {
             tailscale_ip: ip,
             is_online: online,
             wireguard_active: tailscale_enabled,
+            active: online && tailscale_enabled,
             tailscale_enabled,
             peers_count: peer_count(),
             last_handshake: now_ts() - 14.0,

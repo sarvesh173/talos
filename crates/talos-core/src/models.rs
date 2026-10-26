@@ -201,6 +201,10 @@ pub struct MeshNodeStatus {
     pub tailscale_ip: String,
     pub is_online: bool,
     pub wireguard_active: bool,
+    /// Single boolean the clients use: the node is reachable AND the overlay
+    /// is up. Without it clients had to guess from two fields and guessed
+    /// wrong (the app read a field the core never sent).
+    pub active: bool,
     /// True only when a live Tailscale tunnel exists on this host.
     /// The app refuses to run without it (the overlay carries the encryption
     /// layer), so this must reflect reality - never a hardcoded assumption.

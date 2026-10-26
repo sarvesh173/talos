@@ -365,7 +365,10 @@ fun NativeVideoPreviewBubble(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    // Scales with the pane instead of a fixed height that
+                    // overflows in a short split-screen window.
+                    .aspectRatio(1.7f)
+                    .heightIn(max = 160.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),

@@ -223,3 +223,34 @@ Pending: compile verification → APK build → screenshot verification → comm
 **Verified:** `:app:compileReleaseKotlin` BUILD SUCCESSFUL; talos-core `cargo check` clean; theme API round-trip live-tested.
 
 ---
+
+## 2026-10-26 — v2.7.0 (agent-first + split-screen + wizard unblock)
+
+### Root cause of "stuck at Step 2 after Tailscale ON"
+The Android client read `mesh.active` from `/api/mesh/status`, but the Rust core
+never sent that field (it sends `is_online` + `wireguard_active`). The parse
+defaulted to `false`, so the wizard's "Confirm Mesh & Continue" button stayed
+disabled forever and the app never advanced - regardless of Tailscale state.
+Fixed on both sides: the core now emits `active` (online && overlay up) and the
+client accepts either shape and never silently defaults to false.
+
+### Shipped in v2.7.0
+- Wizard flow: bounded endpoint resolution (12s ceiling, 8s probe timeouts),
+  honest rows (no fake "Peers online: 1" when offline), correct agent setup
+  prompt (Rust core + dependency preflight), dev "test" bypass removed
+- M3E correctness: loading state keeps the button LABEL (loader takes the
+  leading slot) - a blank hexagon pill is not M3E
+- Split-screen (universal Android): resizeableActivity=true, smallestScreenSize
+  + density + uiMode configChanges, dependency-free window size classes
+  (ui/Adaptive.kt), adaptive paddings/heights, drawer and preview box adapt
+- Privacy: no host identity serialized by the core, no identity fields in the
+  Android model at all
+- Agent-first docs: AGENTS.md (any CLI agent) + HERMES.md (Hermes-specific) +
+  scripts/talos-core.service for a systemd-run background core
+- Docs: docs/split-screen-android.md, docs/agent-setup-guide.md,
+  docs/split-screen-oem-matrix.md (per-OEM matrix)
+
+### Host cleanup (disk was 100% full)
+- Root partition: 217G used / 1.1G free -> 181G used / 38G free
+- Caches purged (npm, pip, apt lists, uv, go modcache, orphaned npm temp dir)
+- Cold data relocated to the 477G disk at /mnt/talos-512/dump/

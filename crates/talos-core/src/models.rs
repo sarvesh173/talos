@@ -192,6 +192,10 @@ pub struct MeshNodeStatus {
     pub tailscale_ip: String,
     pub is_online: bool,
     pub wireguard_active: bool,
+    /// True only when a live Tailscale tunnel exists on this host.
+    /// The app refuses to run without it (the overlay carries the encryption
+    /// layer), so this must reflect reality - never a hardcoded assumption.
+    pub tailscale_enabled: bool,
     pub peers_count: usize,
     pub last_handshake: f64,
 }

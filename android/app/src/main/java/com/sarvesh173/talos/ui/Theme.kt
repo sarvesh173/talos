@@ -179,22 +179,19 @@ val TextMuted: Color @Composable get() = talosTextMuted
 // -----------------------------------------------------------------------------
 // M3 Metallic specular brush tokens
 // -----------------------------------------------------------------------------
+/**
+ * One brush for both modes. The scheme already carries light + dark role
+ * values, so there is no second code path and no per-mode asset to maintain.
+ */
 @Composable
-fun metallicBorderBrush(isDark: Boolean = LocalIsDark.current): Brush {
+fun metallicBorderBrush(): Brush {
+    val scheme = MaterialTheme.colorScheme
     return Brush.linearGradient(
-        colors = if (isDark) {
-            listOf(
-                Color(0xFFD0BCFF).copy(alpha = 0.40f),
-                Color(0xFF8B5CF6).copy(alpha = 0.22f),
-                Color(0xFF4F378B).copy(alpha = 0.12f)
-            )
-        } else {
-            listOf(
-                Color(0xFF6750A4).copy(alpha = 0.35f),
-                Color(0xFF9A82DB).copy(alpha = 0.20f),
-                Color(0xFFEADDFF).copy(alpha = 0.50f)
-            )
-        }
+        colors = listOf(
+            scheme.primary.copy(alpha = 0.40f),
+            scheme.primary.copy(alpha = 0.22f),
+            scheme.primaryContainer.copy(alpha = 0.16f)
+        )
     )
 }
 

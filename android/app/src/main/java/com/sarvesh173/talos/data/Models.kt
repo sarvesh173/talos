@@ -75,5 +75,7 @@ data class MeshInfo(
     val hostname: String = "",
     val self_ip: String = "",
     val peers_count: Int = 0,
-    val peer_name: String = ""
+    val peer_name: String = "",
+    /** Live Tailscale tunnel on the core - the app requires this to run. */
+    val tailscale_enabled: Boolean = false
 )

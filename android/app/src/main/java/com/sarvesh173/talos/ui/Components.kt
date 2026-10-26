@@ -235,7 +235,7 @@ fun MessageBubble(msg: Message) {
                             brush = if (isHuman) {
                                 Brush.linearGradient(listOf(Color.White.copy(alpha = 0.40f), Color.Transparent))
                             } else {
-                                metallicBorderBrush(isDark)
+                                metallicBorderBrush()
                             }
                         )
                     ) {

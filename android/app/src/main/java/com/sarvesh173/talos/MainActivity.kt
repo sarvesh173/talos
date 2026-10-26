@@ -85,6 +85,29 @@ class MainActivity : ComponentActivity() {
                 }?.let { remoteTheme = it }
             }
 
+            // Service gate: TALOS needs the private overlay (Tailscale) for its
+            // encrypted agent transport. Auto-detect the core, verify the
+            // overlay, and block the app with clear guidance when it is down.
+            var gateState by remember { mutableStateOf(ServiceGateState.Checking) }
+            var gateNonce by remember { mutableStateOf(0) }
+            var manualSetup by remember { mutableStateOf(false) }
+            LaunchedEffect(gateNonce) {
+                gateState = ServiceGateState.Checking
+                val mesh = withContext(Dispatchers.IO) {
+                    // Auto-discovery first - no IP is ever typed or shown.
+                    val found = com.sarvesh173.talos.network.MeshDiscovery.discover()
+                    if (found != null && found.baseUrl != client.baseUrl) {
+                        client.updateConfig(found.baseUrl, client.apiToken)
+                    }
+                    client.checkMeshStatus()
+                }
+                gateState = when {
+                    mesh == null -> ServiceGateState.CoreUnavailable
+                    !mesh.tailscale_enabled -> ServiceGateState.TailscaleRequired
+                    else -> ServiceGateState.Ready
+                }
+            }
+
             TalosTheme(themeMode = activeThemeMode, remoteConfig = remoteTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -93,6 +116,17 @@ class MainActivity : ComponentActivity() {
                     val isPaired by client.isPaired.collectAsState()
                     val isCurrentlyDark = LocalIsDark.current
 
+                if (gateState != ServiceGateState.Ready && !manualSetup) {
+                    ServiceGateScreen(
+                        state = gateState,
+                        onRetry = { gateNonce++ },
+                        modifier = Modifier.fillMaxSize(),
+                        onManualSetup = {
+                            manualSetup = true
+                            appScreen = "wizard"
+                        }
+                    )
+                } else {
                 val activeTarget = when (appScreen) {
                     "landing" -> "landing"
                     "wizard" -> "wizard"
@@ -206,6 +240,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                }
                 }
                 }
             }
@@ -360,7 +395,7 @@ fun MainScreen(
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                         shape = RoundedCornerShape(22.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
+                        border = BorderStroke(1.2.dp, metallicBorderBrush())
                     ) {
                         Row(
                             modifier = Modifier
@@ -570,7 +605,7 @@ fun MainScreen(
                     Surface(
                         shape = RoundedCornerShape(26.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
+                        border = BorderStroke(1.2.dp, metallicBorderBrush()),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
@@ -834,7 +869,7 @@ fun ChamberHero(
         Surface(
             shape = M3EPolygonShape(M3EShapes.scallop12()),
             color = if (isDark) Color(0xFF0F172A) else MaterialTheme.colorScheme.surfaceContainerHigh,
-            border = BorderStroke(1.5.dp, metallicBorderBrush(isDark)),
+            border = BorderStroke(1.5.dp, metallicBorderBrush()),
             modifier = Modifier
                 .size(76.dp)
                 .scale(coreScale)
@@ -899,7 +934,7 @@ fun ChamberHero(
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainer,
             shape = RoundedCornerShape(18.dp),
-            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
+            border = BorderStroke(1.2.dp, metallicBorderBrush()),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
@@ -968,7 +1003,7 @@ fun ChamberHero(
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainer,
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
+                    border = BorderStroke(1.2.dp, metallicBorderBrush()),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onPromptClick(cmd) }

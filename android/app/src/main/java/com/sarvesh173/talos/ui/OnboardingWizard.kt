@@ -104,12 +104,12 @@ private val WizardSurfaceAlt: Color @Composable get() = MaterialTheme.colorSchem
 private val WizardBorder: Color @Composable get() = MaterialTheme.colorScheme.outlineVariant
 private val WizardText: Color @Composable get() = MaterialTheme.colorScheme.onSurface
 private val WizardMuted: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
-private val WizardDanger = Color(0xFFEF4444)
+private val WizardDanger: Color @Composable get() = MaterialTheme.colorScheme.error
 
-// Dark theme illustration badge colors
-private val CyberGreen = Color(0xFF22C55E)
-private val CyberViolet = Color(0xFF818CF8)
-private val CyberOrange = Color(0xFFF97316)
+// Illustration badge accents - scheme-driven so both modes stay consistent.
+private val CyberGreen: Color @Composable get() = MaterialTheme.colorScheme.tertiary
+private val CyberViolet: Color @Composable get() = MaterialTheme.colorScheme.primary
+private val CyberOrange: Color @Composable get() = MaterialTheme.colorScheme.tertiary
 
 private const val PEER_LABEL = "V2158"
 
@@ -205,6 +205,7 @@ fun OnboardingWizard(
         )
 
         // High-performance lightweight stardust embers (zero GPU overhead during step transitions)
+        val particlePrimary = MaterialTheme.colorScheme.primary
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
@@ -217,7 +218,7 @@ fun OnboardingWizard(
                 val x = seedX * w
 
                 drawCircle(
-                    color = if (i % 2 == 0) PrimaryAccent.copy(alpha = 0.14f) else Color(0xFF7A9DFF).copy(alpha = 0.12f),
+                    color = if (i % 2 == 0) PrimaryAccent.copy(alpha = 0.14f) else particlePrimary.copy(alpha = 0.12f),
                     radius = 1.5.dp.toPx(),
                     center = Offset(x, y)
                 )
@@ -576,7 +577,7 @@ private fun WizardBottomBar(
                 ) {
                     Text(
                         text = "test",
-                        color = Color(0xFF334155),
+                        color = MaterialTheme.colorScheme.outlineVariant,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Normal
                     )
@@ -714,7 +715,7 @@ private fun OverviewElevatedCard(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = WizardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Zero shadow pass = 60fps locked
-        border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
+        border = BorderStroke(1.2.dp, metallicBorderBrush())
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -765,7 +766,7 @@ private fun OverviewElevatedCard(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(if (isDark) Color(0xFF0F172A) else MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .background(if (isDark) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surfaceContainerHighest)
                     .border(1.dp, badgeTint.copy(alpha = 0.45f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -889,7 +890,7 @@ private fun MeshStep(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
+            border = BorderStroke(1.2.dp, metallicBorderBrush())
         ) {
             Column(
                 modifier = Modifier
@@ -938,7 +939,7 @@ private fun MeshStep(
                     Button(
                         onClick = { onCopyPrompt(hostSetupPrompt) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1E293B),
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(10.dp),
@@ -964,7 +965,7 @@ private fun MeshStep(
             shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
+            border = BorderStroke(1.2.dp, metallicBorderBrush())
         ) {
             Column(
                 modifier = Modifier
@@ -1083,9 +1084,10 @@ private fun MeshStep(
 
         if (errorMessage != null) {
             Spacer(modifier = Modifier.height(14.dp))
+            val danger = WizardDanger
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Canvas(modifier = Modifier.size(14.dp)) {
-                    drawCircle(WizardDanger)
+                    drawCircle(danger)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -1097,14 +1099,15 @@ private fun MeshStep(
             }
         } else if (!active && !isChecking) {
             Spacer(modifier = Modifier.height(14.dp))
+            val errorColor = MaterialTheme.colorScheme.error
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Canvas(modifier = Modifier.size(14.dp)) {
-                    drawCircle(Color(0xFFF59E0B))
+                    drawCircle(errorColor)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Mesh offline. You can still continue to generate your device token.",
-                    color = Color(0xFFF59E0B),
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
                     lineHeight = 17.sp
                 )
@@ -1187,7 +1190,7 @@ private fun TokenStep(
                         painter = painterResource(R.drawable.ic_step_token),
                         contentDescription = "Cryptographic Device Key",
                         modifier = Modifier.size(32.dp),
-                        colorFilter = ColorFilter.tint(Color(0xFFF59E0B))
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.error)
                     )
                 }
             }
@@ -1219,7 +1222,7 @@ private fun TokenStep(
             shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
+            border = BorderStroke(1.2.dp, metallicBorderBrush())
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1255,7 +1258,7 @@ private fun TokenStep(
                 // Clean mono token surface
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFF0B0E15),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     border = BorderStroke(1.dp, talosBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -1316,7 +1319,7 @@ private fun TokenStep(
                                 onCopyToken(token)
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isCopied) StatusGreen.copy(alpha = 0.20f) else Color(0xFF1E293B),
+                                containerColor = if (isCopied) StatusGreen.copy(alpha = 0.20f) else MaterialTheme.colorScheme.surfaceContainerHighest,
                                 contentColor = if (isCopied) StatusGreen else Color.White
                             ),
                             shape = RoundedCornerShape(12.dp),
@@ -1341,8 +1344,10 @@ private fun TokenStep(
                         onClick = onGenerateToken,
                         enabled = !isPairing,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (token == null) Color.White else Color(0xFF2A3447),
-                            contentColor = if (token == null) Color(0xFF0F1117) else Color.White
+                            containerColor = if (token == null) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = if (token == null) MaterialTheme.colorScheme.onPrimary
+                                           else MaterialTheme.colorScheme.onSurface
                         ),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f)
@@ -1388,14 +1393,14 @@ private fun TokenStep(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark))
+            border = BorderStroke(1.2.dp, metallicBorderBrush())
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Terminal,
                         contentDescription = null,
-                        tint = Color(0xFF38BDF8),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -1419,9 +1424,10 @@ private fun TokenStep(
 
         if (errorMessage != null) {
             Spacer(modifier = Modifier.height(14.dp))
+            val danger = WizardDanger
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Canvas(modifier = Modifier.size(14.dp)) {
-                    drawCircle(WizardDanger)
+                    drawCircle(danger)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -1543,7 +1549,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                             shape = RoundedCornerShape(14.dp),
                             colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
                             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
+                            border = BorderStroke(1.2.dp, metallicBorderBrush()),
                             modifier = Modifier.weight(1f)
                         ) {
                             Row(

@@ -56,7 +56,7 @@ fun MetallicCard(
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = shape,
-        border = BorderStroke(1.2.dp, metallicBorderBrush(isDark)),
+        border = BorderStroke(1.2.dp, metallicBorderBrush()),
         modifier = modifier
             .scale(scale)
             .shadow(4.dp, shape, spotColor = Color.Black.copy(alpha = 0.20f))
@@ -87,15 +87,15 @@ fun MachinedIconWell(
     modifier: Modifier = Modifier
 ) {
     val wellBg = if (forceDark) {
-        Color(0xFF0F172A) // Dark obsidian tile for multi-color emblems
+        MaterialTheme.colorScheme.surfaceContainerHighest // one tile for both modes
     } else {
-        emblem.accent.copy(alpha = if (isDark) 0.12f else 0.10f)
+        emblem.accent.copy(alpha = 0.12f)
     }
 
     val wellBorder = if (forceDark) {
         BorderStroke(1.dp, Color(0xFFEA580C).copy(alpha = 0.45f))
     } else {
-        BorderStroke(1.dp, emblem.accent.copy(alpha = if (isDark) 0.30f else 0.40f))
+        BorderStroke(1.dp, emblem.accent.copy(alpha = 0.35f))
     }
 
     Box(
@@ -132,18 +132,18 @@ fun MetallicButton(
         interactionSource = interactionSource,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isPrimary) {
-                if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)
+                MaterialTheme.colorScheme.surfaceContainerHighest
             } else {
                 MaterialTheme.colorScheme.surfaceContainerHigh
             },
             contentColor = if (isPrimary) {
-                if (isDark) Color(0xFF090D14) else Color(0xFFF8FAFC)
+                MaterialTheme.colorScheme.onSurface
             } else {
                 MaterialTheme.colorScheme.onSurface
             }
         ),
         shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(1.dp, metallicBorderBrush(isDark)),
+        border = BorderStroke(1.dp, metallicBorderBrush()),
         modifier = modifier
             .height(52.dp)
             .scale(scale)

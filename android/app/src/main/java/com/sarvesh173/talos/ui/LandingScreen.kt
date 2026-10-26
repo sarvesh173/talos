@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -105,6 +106,8 @@ fun LandingScreen(
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val dissolvePaletteLocal = dissolvePalette()
     val isCurrentDark = LocalIsDark.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -139,7 +142,7 @@ fun LandingScreen(
         if (!isDissolving) return@LaunchedEffect
 
         val frozenFrame = captureRenderedFrame(rootView)
-        val palette = if (isCurrentDark) DarkDissolvePalette else LightDissolvePalette
+        val palette = dissolvePaletteLocal
         particleField = buildDotField(frozenFrame, palette)
 
         val startNanos = withFrameNanos { it }
@@ -297,7 +300,7 @@ fun LandingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(scheme.background)
     ) {
     Scaffold(
         modifier = Modifier
@@ -306,7 +309,7 @@ fun LandingScreen(
                 // Smooth initial cross-dissolve to particles
                 alpha = scaffoldAlpha.floatValue
             },
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = scheme.background,
                 topBar = {
             Column(
                 modifier = Modifier
@@ -326,7 +329,7 @@ fun LandingScreen(
                     ) {
                         Text(
                             text = "TALOS",
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = scheme.onSurface,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.2.sp
@@ -335,7 +338,7 @@ fun LandingScreen(
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             shape = ShapeFull,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            border = BorderStroke(1.dp, scheme.outlineVariant)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -350,7 +353,7 @@ fun LandingScreen(
                                 )
                                 Text(
                                     text = if (isOpenCodeSpawned) "5 AGENTS ACTIVE" else "4 AGENTS ACTIVE",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = scheme.onSurfaceVariant,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -374,7 +377,7 @@ fun LandingScreen(
                             .size(38.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceContainer)
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                            .border(1.dp, scheme.outlineVariant, CircleShape)
                             .semantics {
                                 contentDescription = if (isCurrentDark) "Switch to Light Mode" else "Switch to Dark Mode"
                             }
@@ -382,7 +385,7 @@ fun LandingScreen(
                         Icon(
                             imageVector = if (isCurrentDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = scheme.onSurfaceVariant,
                             modifier = Modifier
                                 .size(18.dp)
                                 .graphicsLayer {
@@ -402,7 +405,7 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(scheme.background)
                     .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xxs),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -414,7 +417,7 @@ fun LandingScreen(
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                     shape = ShapeFull,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    border = BorderStroke(1.dp, scheme.outlineVariant),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = MdSpacing.xxs)
@@ -439,7 +442,7 @@ fun LandingScreen(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = senderTask,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = scheme.onSurface,
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -452,8 +455,8 @@ fun LandingScreen(
                     onClick = handlePrimaryAction,
                     interactionSource = interactionSource,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isCurrentDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
-                        contentColor = if (isCurrentDark) Color(0xFF090D14) else Color(0xFFF8FAFC)
+                        containerColor = scheme.surfaceContainerHighest,
+                        contentColor = scheme.onSurface
                     ),
                     shape = ShapeFull,
                     modifier = Modifier
@@ -496,13 +499,13 @@ fun LandingScreen(
                         Icon(
                             imageVector = Icons.Default.SettingsEthernet,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = scheme.onSurfaceVariant,
                             modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Setup WireGuard Mesh & Token",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = scheme.onSurfaceVariant,
                             style = MaterialTheme.typography.labelSmall
                         )
                     }
@@ -526,7 +529,7 @@ fun LandingScreen(
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.16f else 0.10f),
+                            scheme.onSurfaceVariant.copy(alpha = 0.16f),
                             Color.Transparent
                         ),
                         center = centerAnchor,
@@ -541,7 +544,7 @@ fun LandingScreen(
                 val orbitRadius = 68.dp.toPx()
 
                 drawCircle(
-                    color = Color(0xFF64748B).copy(alpha = if (isCurrentDark) 0.20f else 0.14f),
+                    color = scheme.onSurfaceVariant.copy(alpha = 0.20f),
                     radius = orbitRadius,
                     center = centerAnchor,
                     style = Stroke(
@@ -553,7 +556,7 @@ fun LandingScreen(
                 val satX = centerAnchor.x + (orbitRadius * cos(radCompass)).toFloat()
                 val satY = centerAnchor.y + (orbitRadius * sin(radCompass)).toFloat()
                 drawCircle(
-                    color = Color(0xFF94A3B8),
+                    color = scheme.onSurfaceVariant,
                     radius = 2.dp.toPx(),
                     center = Offset(satX, satY)
                 )
@@ -622,7 +625,7 @@ fun LandingScreen(
                         )
                         // Specular core
                         drawCircle(
-                            color = if (isCurrentDark) Color.White else Color(0xFF0F172A),
+                            color = scheme.onSurface,
                             radius = 2.5.dp.toPx(),
                             center = Offset(px, py)
                         )
@@ -665,9 +668,9 @@ fun LandingScreen(
                         path = pathPrimary,
                         brush = Brush.linearGradient(
                             colors = if (isBeamActive) {
-                                listOf(nodeAccent.copy(alpha = 0.90f), Color(0xFF64748B).copy(alpha = 0.70f))
+                                listOf(nodeAccent.copy(alpha = 0.90f), scheme.onSurfaceVariant.copy(alpha = 0.70f))
                             } else {
-                                listOf(Color(0xFF64748B).copy(alpha = 0.30f), Color(0xFF475569).copy(alpha = 0.15f))
+                                listOf(scheme.onSurfaceVariant.copy(alpha = 0.30f), scheme.outline.copy(alpha = 0.15f))
                             },
                             start = cardPos,
                             end = centerAnchor
@@ -689,7 +692,7 @@ fun LandingScreen(
                             center = Offset(px, py)
                         )
                         drawCircle(
-                            color = if (isCurrentDark) Color.White else Color(0xFF0F172A),
+                            color = scheme.onSurface,
                             radius = 2.6.dp.toPx(),
                             center = Offset(px, py)
                         )
@@ -719,7 +722,7 @@ fun LandingScreen(
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
                     modifier = Modifier
                         .size(width = 114.dp, height = 98.dp)
-                        .border(1.2.dp, metallicBorderBrush(isCurrentDark), ShapeLargeIncreased)
+                        .border(1.2.dp, metallicBorderBrush(), ShapeLargeIncreased)
                 ) {
                     Column(
                         modifier = Modifier
@@ -730,7 +733,7 @@ fun LandingScreen(
                     ) {
                         Text(
                             text = "TALOS",
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = scheme.onSurface,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 2.sp
@@ -748,7 +751,7 @@ fun LandingScreen(
                             )
                             Text(
                                 text = "MESH CORE",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = scheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.8.sp
@@ -758,12 +761,12 @@ fun LandingScreen(
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainerLowest,
                             shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outlineVariant),
+                            border = BorderStroke(0.6.dp, scheme.outlineVariant),
                             modifier = Modifier.padding(horizontal = 4.dp)
                         ) {
                             Text(
                                 text = if (isOpenCodeSpawned) "5 PEERS · 0.8ms" else "4 PEERS · 0.8ms",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = scheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -936,19 +939,23 @@ private const val MAX_DISSOLVE_DOTS = 26000
 /** Material 3 emphasised motion ramp for the whole dissolve. */
 private val DISSOLVE_RAMP_EASING = CubicBezierEasing(0.20f, 0.66f, 0.14f, 1.0f)
 
-private val DarkDissolvePalette = intArrayOf(
-    0xFF0B1220.toInt(), 0xFF0B1220.toInt(), 0xFF111A29.toInt(), 0xFF161F2E.toInt(),
-    0xFF22304A.toInt(), 0xFFE2E8F0.toInt(), 0xFF94A3B8.toInt(),
-    0xFF7A9DFF.toInt(), 0xFFFFBF00.toInt(), 0xFFD97757.toInt(),
-    0xFF3B82F6.toInt(), 0xFFEA580C.toInt()
-)
-
-private val LightDissolvePalette = intArrayOf(
-    0xFFF7F9FC.toInt(), 0xFFF7F9FC.toInt(), 0xFFEDF1F7.toInt(), 0xFFE3E9F2.toInt(),
-    0xFFCBD5E1.toInt(), 0xFF0F172A.toInt(), 0xFF64748B.toInt(),
-    0xFF5B7BE8.toInt(), 0xFFD99A00.toInt(), 0xFFC4623F.toInt(),
-    0xFF2563EB.toInt(), 0xFFC2410C.toInt()
-)
+/**
+ * Dissolve gradient palette - derived from the active scheme so the same
+ * gradient reads correctly in light and dark (one code path, no per-mode
+ * duplicate palette to maintain).
+ */
+@Composable
+private fun dissolvePalette(): IntArray {
+    val s = MaterialTheme.colorScheme
+    return intArrayOf(
+        s.surfaceContainerLowest.toArgb(), s.surfaceContainerLowest.toArgb(),
+        s.surfaceContainerLow.toArgb(), s.surfaceContainer.toArgb(),
+        s.surfaceContainerHigh.toArgb(), s.onSurface.toArgb(),
+        s.onSurfaceVariant.toArgb(),
+        s.primary.toArgb(), s.tertiary.toArgb(), s.secondary.toArgb(),
+        s.primaryContainer.toArgb(), s.tertiaryContainer.toArgb()
+    )
+}
 
 /**
  * Immutable micro-particle lattice. Every dot carries its own sampled colour, its own
@@ -1334,7 +1341,7 @@ private fun AgentNodeWithBubble(
                             )
                         )
                     } else {
-                        metallicBorderBrush(isDark)
+                        metallicBorderBrush()
                     },
                     shape = ShapeLargeIncreased
                 )

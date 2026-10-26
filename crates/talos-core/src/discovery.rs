@@ -28,9 +28,11 @@ pub async fn run_discovery_responder() {
             Ok((len, peer)) => {
                 let msg = String::from_utf8_lossy(&buf[..len]);
                 if msg.trim().contains(PROBE_PHRASE) {
+                    // Privacy: no hostname, no overlay IP. The client only
+                    // needs to know that a talos-core exists and where to
+                    // reach it - the machine's identity stays private.
                     let reply = serde_json::json!({
                         "service": "talos-core",
-                        "node": hostname(),
                         "port": effective_port(),
                         "version": env!("CARGO_PKG_VERSION"),
                     });
@@ -46,19 +48,6 @@ pub async fn run_discovery_responder() {
             }
         }
     }
-}
-
-fn hostname() -> String {
-    std::env::var("TALOS_NODE_NAME")
-        .ok()
-        .filter(|v| !v.is_empty())
-        .or_else(|| {
-            std::fs::read_to_string("/etc/hostname")
-                .ok()
-                .map(|h| h.trim().to_string())
-                .filter(|h| !h.is_empty())
-        })
-        .unwrap_or_else(|| "talos-node".to_string())
 }
 
 fn effective_port() -> u16 {

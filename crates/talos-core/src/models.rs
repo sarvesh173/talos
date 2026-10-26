@@ -185,10 +185,19 @@ pub struct TokenInfo {
     pub is_master: bool,
 }
 
+/// Mesh state exposed to clients.
+///
+/// Privacy rule: the node's own identity (node id, hostname, overlay IP) is
+/// NEVER serialized. Clients only need to know whether the overlay is up and
+/// how many nodes are reachable - host identity is private information and
+/// must not leak into another app's UI.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeshNodeStatus {
+    #[serde(skip_serializing)]
     pub node_id: String,
+    #[serde(skip_serializing)]
     pub hostname: String,
+    #[serde(skip_serializing)]
     pub tailscale_ip: String,
     pub is_online: bool,
     pub wireguard_active: bool,
@@ -200,11 +209,17 @@ pub struct MeshNodeStatus {
     pub last_handshake: f64,
 }
 
+/// A reachable peer. Identity fields are never serialized: no names, no
+/// device models, no overlay IPs - a client only learns that N nodes exist.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeshPeer {
+    #[serde(skip_serializing)]
     pub id: String,
+    #[serde(skip_serializing)]
     pub name: String,
+    #[serde(skip_serializing)]
     pub ip: String,
+    #[serde(skip_serializing)]
     pub os: String,
     pub status: String,
     pub latency_ms: f64,

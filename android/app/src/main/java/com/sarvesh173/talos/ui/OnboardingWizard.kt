@@ -111,7 +111,6 @@ private val CyberGreen: Color @Composable get() = MaterialTheme.colorScheme.tert
 private val CyberViolet: Color @Composable get() = MaterialTheme.colorScheme.primary
 private val CyberOrange: Color @Composable get() = MaterialTheme.colorScheme.tertiary
 
-private const val PEER_LABEL = "V2158"
 
 // ==========================================
 // MAIN WIZARD
@@ -1048,19 +1047,17 @@ private fun MeshStep(
                     }
                 }
 
+                // Privacy: the host's name, overlay IP and peer identities are
+                // private information and are never rendered in the app.
                 MeshRow(
                     key = "Node",
-                    value = meshInfo?.hostname?.takeIf { it.isNotBlank() } ?: "talos-node"
-                )
-                MeshRow(
-                    key = "Peer",
-                    value = meshInfo?.peer_name?.takeIf { it.isNotBlank() } ?: PEER_LABEL
+                    value = "TALOS node"
                 )
                 MeshRow(
                     key = "Peers online",
                     value = meshInfo?.peers_count?.takeIf { it > 0 }?.toString() ?: "1"
                 )
-                MeshRow(key = "Transport", value = "WireGuard (UDP)", last = true)
+                MeshRow(key = "Transport", value = "Encrypted overlay", last = true)
 
                 Spacer(modifier = Modifier.height(12.dp))
 

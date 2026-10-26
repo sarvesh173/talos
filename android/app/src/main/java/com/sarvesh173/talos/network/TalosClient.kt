@@ -312,16 +312,12 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     if (resp.isSuccessful) {
                         val body = resp.body?.string() ?: "{}"
                         val obj = json.parseToJsonElement(body).jsonObject
+                        // Only state is read here - never host identity
+                        // (hostname, overlay IP, peer names).
                         val active = obj["active"]?.jsonPrimitive?.content?.toBoolean() ?: false
-                        val host = obj["hostname"]?.jsonPrimitive?.content ?: ""
-                        val ip = obj["self_ip"]?.jsonPrimitive?.content ?: ""
                         val peers = obj["peers_count"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
-                        val peersArr = obj["peers"]?.jsonArray
-                        val pName = if (peersArr != null && peersArr.isNotEmpty()) {
-                            peersArr[0].jsonObject["hostname"]?.jsonPrimitive?.content ?: ""
-                        } else ""
                         val tsEnabled = obj["tailscale_enabled"]?.jsonPrimitive?.content?.toBoolean()
-                        MeshInfo(active, host, ip, peers, pName, tsEnabled)
+                        MeshInfo(active, peers, tsEnabled)
                     } else null
                 }
             } catch (e: Exception) {

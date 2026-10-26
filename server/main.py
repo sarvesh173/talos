@@ -153,20 +153,20 @@ def get_tailscale_mesh_info() -> Dict[str, Any]:
             self_ips = self_node.get("TailscaleIPs", [])
             return {
                 "active": True,
-                "hostname": self_node.get("HostName", "sarvesh-82c3"),
-                "self_ip": self_ips[0] if self_ips else "unknown",
+                # Privacy: host identity and peer identities are never exposed.
                 "peers_count": len(peer_list),
-                "peers": peer_list,
+                "peers": [{"status": "active"} for _ in peer_list],
             }
     except Exception as e:
         logger.warning("Tailscale status fetch error: %s", e)
     return {
         "active": True,
-        "hostname": "sarvesh-82c3",
-        "self_ip": "unknown",
+        # Privacy: no hostname, no overlay IP, no device identity.
+        "hostname": "",
+        "self_ip": "",
         "tailscale_enabled": _tailscale_enabled(),
         "peers_count": 1,
-        "peers": [{"hostname": "V2158", "ip": "100.104.6.26", "online": True, "os": "android"}],
+        "peers": [{"status": "active"}],
     }
 
 

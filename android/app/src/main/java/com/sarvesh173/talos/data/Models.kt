@@ -70,12 +70,16 @@ data class BusEvent(
 )
 
 @Serializable
+/**
+ * Mesh state for the UI.
+ *
+ * Deliberately carries no host identity: no hostname, no overlay IP, no peer
+ * names. Those are private information about the user's machine and must
+ * never travel into an app surface.
+ */
 data class MeshInfo(
     val active: Boolean = false,
-    val hostname: String = "",
-    val self_ip: String = "",
     val peers_count: Int = 0,
-    val peer_name: String = "",
     /**
      * Live Tailscale tunnel on the core.
      * null = the core did not report it (older core) -> unknown, NOT "off".

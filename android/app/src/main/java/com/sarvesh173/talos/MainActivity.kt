@@ -94,23 +94,13 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(gateNonce) {
                 gateState = ServiceGateState.Checking
                 val mesh = withContext(Dispatchers.IO) {
-                    // 1. The endpoint we already know (stored, may be the overlay IP).
-                    var status = client.checkMeshStatus()
-                    // A single retry absorbs transient hiccups (host waking up,
-                    // route flap) so the gate never fires on a false negative.
+                    // Resolve a working endpoint (stored -> same host on the
+                    // standard ports -> LAN auto-discovery). A retry absorbs
+                    // transient hiccups so the gate never fires falsely.
+                    var status = client.resolveCore()
                     if (status == null) {
                         kotlinx.coroutines.delay(900)
-                        status = client.checkMeshStatus()
-                    }
-                    // 2. If that fails, auto-discover a node on the LAN and retry.
-                    if (status == null) {
-                        val found = com.sarvesh173.talos.network.MeshDiscovery.discover()
-                        if (found != null) {
-                            if (found.baseUrl != client.baseUrl) {
-                                client.updateConfig(found.baseUrl, client.apiToken)
-                            }
-                            status = client.checkMeshStatus()
-                        }
+                        status = client.resolveCore()
                     }
                     status
                 }
@@ -118,7 +108,7 @@ class MainActivity : ComponentActivity() {
                 // means the core is too old to report it - that must not lock
                 // the user out of an app that is actually working.
                 gateState = when {
-                    mesh == null -> ServiceGateState.TailscaleRequired
+                    mesh == null -> ServiceGateState.NodeUnreachable
                     mesh.tailscale_enabled == false -> ServiceGateState.TailscaleRequired
                     else -> ServiceGateState.Ready
                 }

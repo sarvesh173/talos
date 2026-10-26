@@ -68,8 +68,11 @@ enum class ServiceGateState {
     /** Core reachable and overlay up - the app may run. */
     Ready,
 
-    /** Overlay down (or node unreachable over it) - the app stays closed. */
+    /** Overlay down - the app stays closed. */
     TailscaleRequired,
+
+    /** No node answered on any path (overlay down, node stopped, or moved). */
+    NodeUnreachable,
 }
 
 private fun systemAnimationsEnabled(context: android.content.Context): Boolean = runCatching {
@@ -118,6 +121,7 @@ fun ServiceGateScreen(
 
     val checking = state == ServiceGateState.Checking
     val blocked = state == ServiceGateState.TailscaleRequired
+    val unreachable = state == ServiceGateState.NodeUnreachable
 
     Box(
         modifier = modifier
@@ -163,7 +167,7 @@ fun ServiceGateScreen(
 
                 Surface(
                     shape = CircleShape,
-                    color = if (blocked) scheme.errorContainer else scheme.primaryContainer,
+                    color = if (blocked || unreachable) scheme.errorContainer else scheme.primaryContainer,
                     modifier = Modifier
                         .size(104.dp)
                         .graphicsLayer {
@@ -180,9 +184,13 @@ fun ServiceGateScreen(
                             )
                         } else {
                             Icon(
-                                imageVector = if (blocked) Icons.Default.Lock else Icons.Default.Router,
+                                imageVector = when {
+                                    blocked -> Icons.Default.Lock
+                                    unreachable -> Icons.Default.Router
+                                    else -> Icons.Default.Router
+                                },
                                 contentDescription = null,
-                                tint = if (blocked) scheme.onErrorContainer else scheme.onPrimaryContainer,
+                                tint = if (blocked || unreachable) scheme.onErrorContainer else scheme.onPrimaryContainer,
                                 modifier = Modifier.size(44.dp)
                             )
                         }
@@ -197,6 +205,7 @@ fun ServiceGateScreen(
                 text = when {
                     checking -> "Connecting to TALOS"
                     blocked -> "Tailscale required"
+                    unreachable -> "Node unreachable"
                     else -> "Ready"
                 },
                 style = MaterialTheme.typography.headlineMedium,
@@ -211,6 +220,7 @@ fun ServiceGateScreen(
                 text = when {
                     checking -> "Verifying your node and the private overlay."
                     blocked -> "TALOS runs over your private overlay, where the encrypted link between agents lives. Turn Tailscale on, then check again."
+                    unreachable -> "No node answered. TALOS reaches your node over the private overlay - make sure Tailscale is on and the node is running, then check again."
                     else -> ""
                 },
                 style = MaterialTheme.typography.bodyLarge,
@@ -239,7 +249,7 @@ fun ServiceGateScreen(
                         onClick = onRetry,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    if (blocked) {
+                    if (blocked || unreachable) {
                         Spacer(Modifier.height(4.dp))
                         M3ETonalButton(
                             text = "Open Tailscale",

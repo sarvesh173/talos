@@ -302,11 +302,11 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
-    suspend fun checkMeshStatus(): MeshInfo? {
+    suspend fun checkMeshStatus(endpoint: String = baseUrl): MeshInfo? {
         return withContext(Dispatchers.IO) {
             try {
                 val req = Request.Builder()
-                    .url("$baseUrl/api/mesh/status")
+                    .url("${endpoint.trimEnd('/')}/api/mesh/status")
                     .build()
                 httpClient.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
@@ -329,6 +329,36 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 null
             }
         }
+    }
+
+
+    /**
+     * Find a working core endpoint without ever hardcoding an address.
+     * Order: the endpoint we already know -> the same host on the standard
+     * TALOS ports (the node may have moved ports) -> LAN auto-discovery.
+     */
+    suspend fun resolveCore(): MeshInfo? = withContext(Dispatchers.IO) {
+        checkMeshStatus(baseUrl)?.let { return@withContext it }
+
+        val host = runCatching { java.net.URI(baseUrl).host }.getOrNull()
+        if (!host.isNullOrBlank()) {
+            for (port in listOf(8000, 8010)) {
+                val candidate = "http://$host:$port"
+                checkMeshStatus(candidate)?.let { status ->
+                    updateConfig(candidate, apiToken)
+                    return@withContext status
+                }
+            }
+        }
+
+        val found = MeshDiscovery.discover()
+        if (found != null) {
+            checkMeshStatus(found.baseUrl)?.let { status ->
+                updateConfig(found.baseUrl, apiToken)
+                return@withContext status
+            }
+        }
+        null
     }
 
     suspend fun discoverPeers(): List<MeshPeerInfo> {

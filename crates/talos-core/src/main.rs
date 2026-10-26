@@ -72,6 +72,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/mesh/status", get(mesh_status))
         .route("/api/mesh/peers/discover", get(mesh_peers))
         .route("/api/auth/pair", post(auth_pair))
+        // Agent-first pairing: the agent on the host fetches a one-time
+        // pairing URI and hands it to the phone (link or QR). Works over
+        // the overlay, so it also works when the phone is on mobile data.
+        .route("/api/pairing/invite", get(pairing_invite))
         // Auth & Tokens
         .route("/api/tokens", get(list_tokens).post(create_token))
         .route("/api/tokens/:id", delete(revoke_token))
@@ -125,6 +129,41 @@ async fn mesh_status() -> impl IntoResponse {
 
 async fn mesh_peers() -> impl IntoResponse {
     Json(MeshDiscovery::discover_peers())
+}
+
+/// One-time pairing invite for the Android client.
+///
+/// The overlay address is read at runtime (never hardcoded) and the URI is
+/// handed to the phone by the agent as a link or QR. The phone never types
+/// or displays an address.
+async fn pairing_invite(State(state): State<AppState>) -> Result<impl IntoResponse, StatusCode> {
+    let status = MeshDiscovery::get_node_status();
+    let host = if status.tailscale_ip.is_empty() || status.tailscale_ip == "unknown" {
+        // No overlay address yet: fall back to loopback so the agent still
+        // gets a usable (same-device) invite.
+        "127.0.0.1".to_string()
+    } else {
+        status.tailscale_ip.clone()
+    };
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8000".to_string());
+
+    let (plain, hash, masked) = AuthEngine::generate_token("Android pairing");
+    state
+        .db
+        .insert_token(&Uuid::new_v4().to_string(), &hash, &masked, "Android pairing", "user")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let base_url = format!("http://{host}:{port}");
+    let uri = format!("talos://pair?url={}&token={}", base_url, plain);
+    Ok(Json(serde_json::json!({
+        "status": "invite_ready",
+        "url": base_url,
+        "token": plain,
+        "masked_token": masked,
+        "uri": uri,
+        "overlay": status.tailscale_enabled,
+        "hint": "Open this uri on the phone, or render it as a QR. It pairs the app without typing an address."
+    })))
 }
 
 #[derive(Deserialize)]

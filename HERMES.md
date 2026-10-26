@@ -125,9 +125,16 @@ smaller briefs rather than re-pinning models.
 3. The app auto-discovers the core over UDP `8089` and pairs itself with
    `POST /api/auth/pair`. **The human never types an IP.**
 4. If discovery cannot reach the host (e.g. the phone is on cellular data and the
-   LAN beacon does not route), the app falls back to the endpoint it already
-   stored, then to the same host on the standard TALOS ports. Never hardcode an
-   address into the app to work around this — fix reachability.
+   LAN beacon does not route), generate a **one-time pairing link** and hand it to
+   the phone:
+
+   ```bash
+   /home/kira/talos/scripts/pairing_link.sh        # -> talos://pair?url=...&token=...
+   ```
+
+   The app handles the `talos://pair` deep link, stores endpoint + token itself,
+   and shows no address. Never hardcode an address into the app to work around a
+   reachability problem — fix reachability.
 
 ---
 

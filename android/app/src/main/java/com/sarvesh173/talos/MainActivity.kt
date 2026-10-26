@@ -1,5 +1,6 @@
 package com.sarvesh173.talos
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -62,10 +63,37 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var client: TalosClient
 
+    /**
+     * Accept a pairing link from the agent (link or QR) and store the
+     * endpoint + device token. The address is never shown to the user.
+     */
+    private fun handlePairingIntent(intent: Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme != "talos" || data.host != "pair") return
+        val url = data.getQueryParameter("url")?.trim()?.trimEnd('/')
+        val token = data.getQueryParameter("token")?.trim()
+        if (url.isNullOrBlank() || !url.startsWith("http")) return
+        client.updateConfig(url, token ?: "")
+        if (client.isPaired.value) {
+            client.refreshRooms()
+            client.switchRoom("the-council")
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handlePairingIntent(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         client = TalosClient(this, lifecycleScope)
+
+        // Agent-first pairing link: talos://pair?url=<core>&token=<token>
+        handlePairingIntent(intent)
+
         if (client.isPaired.value) {
             client.refreshRooms()
             client.switchRoom("the-council")

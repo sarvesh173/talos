@@ -151,6 +151,18 @@ The core answers the phone automatically:
 3. From then on the app uses the stored endpoint; if the node moves ports, the app
    re-resolves it (stored endpoint → same host on standard ports → discovery beacon).
 
+If the phone cannot reach the LAN beacon (e.g. it is on mobile data and only the
+Tailscale overlay connects the two), hand the phone a **one-time pairing link**
+instead - the agent generates it, the user opens it:
+
+```bash
+scripts/pairing_link.sh                      # prints talos://pair?url=...&token=...
+scripts/pairing_link.sh http://127.0.0.1:8010
+```
+
+The app registers the `talos://pair` scheme, stores the endpoint and token
+itself, and never shows the address in its UI.
+
 The **agent's job** is only to make sure the core is running and the overlay is up.
 Never instruct the human to type an IP into the app.
 

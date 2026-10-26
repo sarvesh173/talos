@@ -26,6 +26,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Agent-first pairing: the agent on the host hands the phone a
+                 talos://pair?url=...&token=... link (or QR). No address is
+                 ever typed into the app. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="talos" android:host="pair" />
+            </intent-filter>
         </activity>
     </application>
 

@@ -35,6 +35,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Groups
@@ -1000,22 +1001,40 @@ private fun MeshStep(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // M3E success state: state-change entrance (spring scale-in),
+                    // icon + label in one filled container - not a bare dot chip.
+                    val successEntrance = remember { androidx.compose.animation.core.Animatable(0f) }
+                    LaunchedEffect(active) {
+                        if (active) {
+                            successEntrance.snapTo(0f)
+                            successEntrance.animateTo(
+                                targetValue = 1f,
+                                animationSpec = M3EMotion.fastSpatial()
+                            )
+                        }
+                    }
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(50),
                         color = statusColor.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.35f))
+                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.35f)),
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = 0.92f + 0.08f * successEntrance.value
+                            scaleY = 0.92f + 0.08f * successEntrance.value
+                            alpha = successEntrance.value
+                        }
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(statusColor)
+                            Icon(
+                                imageVector = if (active) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                contentDescription = null,
+                                tint = statusColor,
+                                modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(

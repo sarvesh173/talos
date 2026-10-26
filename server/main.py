@@ -164,6 +164,7 @@ def get_tailscale_mesh_info() -> Dict[str, Any]:
         "active": True,
         "hostname": "sarvesh-82c3",
         "self_ip": "unknown",
+        "tailscale_enabled": _tailscale_enabled(),
         "peers_count": 1,
         "peers": [{"hostname": "V2158", "ip": "100.104.6.26", "online": True, "os": "android"}],
     }
@@ -194,6 +195,7 @@ async def discover_mesh_peers():
     return {
         "status": "active" if info.get("active") else "offline",
         "mesh_ip": info.get("self_ip", "unknown"),
+        "tailscale_enabled": info.get("tailscale_enabled", _tailscale_enabled()),
         "peers": discovered,
         "count": len(discovered),
     }
@@ -592,3 +594,17 @@ async def websocket_endpoint(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+def _tailscale_enabled() -> bool:
+    """Runtime Tailscale detection - never hardcoded."""
+    try:
+        out = subprocess.run(
+            ["tailscale", "status", "--json"],
+            capture_output=True, text=True, timeout=3
+        )
+        if out.returncode == 0 and '"BackendState"' in out.stdout:
+            return '"Running"' in out.stdout
+    except Exception:
+        pass
+    return os.path.exists("/sys/class/net/tailscale0")

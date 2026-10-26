@@ -94,16 +94,32 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(gateNonce) {
                 gateState = ServiceGateState.Checking
                 val mesh = withContext(Dispatchers.IO) {
-                    // Auto-discovery first - no IP is ever typed or shown.
-                    val found = com.sarvesh173.talos.network.MeshDiscovery.discover()
-                    if (found != null && found.baseUrl != client.baseUrl) {
-                        client.updateConfig(found.baseUrl, client.apiToken)
+                    // 1. The endpoint we already know (stored, may be the overlay IP).
+                    var status = client.checkMeshStatus()
+                    // A single retry absorbs transient hiccups (host waking up,
+                    // route flap) so the gate never fires on a false negative.
+                    if (status == null) {
+                        kotlinx.coroutines.delay(900)
+                        status = client.checkMeshStatus()
                     }
-                    client.checkMeshStatus()
+                    // 2. If that fails, auto-discover a node on the LAN and retry.
+                    if (status == null) {
+                        val found = com.sarvesh173.talos.network.MeshDiscovery.discover()
+                        if (found != null) {
+                            if (found.baseUrl != client.baseUrl) {
+                                client.updateConfig(found.baseUrl, client.apiToken)
+                            }
+                            status = client.checkMeshStatus()
+                        }
+                    }
+                    status
                 }
+                // Only an EXPLICIT "overlay down" blocks the app. A missing field
+                // means the core is too old to report it - that must not lock
+                // the user out of an app that is actually working.
                 gateState = when {
-                    mesh == null -> ServiceGateState.CoreUnavailable
-                    !mesh.tailscale_enabled -> ServiceGateState.TailscaleRequired
+                    mesh == null -> ServiceGateState.TailscaleRequired
+                    mesh.tailscale_enabled == false -> ServiceGateState.TailscaleRequired
                     else -> ServiceGateState.Ready
                 }
             }
@@ -116,7 +132,7 @@ class MainActivity : ComponentActivity() {
                     val isPaired by client.isPaired.collectAsState()
                     val isCurrentlyDark = LocalIsDark.current
 
-                if (gateState != ServiceGateState.Ready && !manualSetup) {
+                if (isPaired && gateState != ServiceGateState.Ready && !manualSetup) {
                     ServiceGateScreen(
                         state = gateState,
                         onRetry = { gateNonce++ },

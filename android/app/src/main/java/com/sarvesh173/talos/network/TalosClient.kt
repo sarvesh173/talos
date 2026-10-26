@@ -320,7 +320,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                         val pName = if (peersArr != null && peersArr.isNotEmpty()) {
                             peersArr[0].jsonObject["hostname"]?.jsonPrimitive?.content ?: ""
                         } else ""
-                        val tsEnabled = obj["tailscale_enabled"]?.jsonPrimitive?.content?.toBoolean() ?: false
+                        val tsEnabled = obj["tailscale_enabled"]?.jsonPrimitive?.content?.toBoolean()
                         MeshInfo(active, host, ip, peers, pName, tsEnabled)
                     } else null
                 }

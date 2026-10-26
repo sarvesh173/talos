@@ -84,6 +84,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.R
@@ -260,27 +261,27 @@ fun OnboardingWizard(
                     .weight(1f)
                     .fillMaxWidth(),
                 transitionSpec = {
+                    // M3E physics: spatial springs for position/scale (fast,
+                    // expressive, INTERRUPTIBLE - a mid-transition press never
+                    // queues or reverses weirdly), effects springs for alpha.
+                    // The old fixed-duration tweens made rapid taps feel like
+                    // a slide with a stutter - the reported "slide bug".
                     val forward = targetState > initialState
                     val dir = if (forward) 1 else -1
-                    val decelerate = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)
-                    val accelerate = CubicBezierEasing(0.30f, 0.00f, 1.00f, 1.00f)
+                    val moveIn = M3EMotion.fastSpatial<IntOffset>()
+                    val scaleInSpec = M3EMotion.fastSpatial<Float>()
+                    val fadeSpec = M3EMotion.defaultEffects<Float>()
 
                     (
                         slideInVertically(
-                            animationSpec = tween(durationMillis = 440, easing = decelerate),
-                            initialOffsetY = { height -> (height / 5) * dir }
+                            animationSpec = moveIn,
+                            initialOffsetY = { height -> (height / 6) * dir }
                         ) + scaleIn(
-                            animationSpec = tween(durationMillis = 440, easing = decelerate),
-                            initialScale = 0.95f
-                        ) + fadeIn(animationSpec = tween(durationMillis = 360, easing = decelerate))
+                            animationSpec = scaleInSpec,
+                            initialScale = 0.96f
+                        ) + fadeIn(animationSpec = fadeSpec)
                     ).togetherWith(
-                        slideOutVertically(
-                            animationSpec = tween(durationMillis = 340, easing = accelerate),
-                            targetOffsetY = { height -> -(height / 5) * dir }
-                        ) + scaleOut(
-                            animationSpec = tween(durationMillis = 340, easing = accelerate),
-                            targetScale = 1.03f
-                        ) + fadeOut(animationSpec = tween(durationMillis = 280, easing = accelerate))
+                        fadeOut(animationSpec = M3EMotion.fastEffects())
                     )
                 },
                 label = "wizard_step"
@@ -1062,23 +1063,24 @@ private fun MeshStep(
                     last = true
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Scan action: tonal M3E button with loading state built in
-                M3ETonalButton(
-                    text = if (isChecking) "Scanning..." else "Scan Mesh Again",
-                    onClick = onRefresh,
-                    enabled = !isChecking,
-                    loading = isChecking,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                // No manual re-scan button: the scan runs once on entry and
+                // the resolver auto-retries. The primary CTA doubles as
+                // "Scan Again" when the mesh is not linked - a second button
+                // would just replay the scanning indicator for no reason.
+                if (isChecking) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Scanning resolves the node once - no manual rescans needed.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    }
+                }
             }
         }
 

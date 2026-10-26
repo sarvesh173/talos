@@ -21,10 +21,11 @@ import com.sarvesh173.talos.R
 /**
  * Vector emblems for the CLI agents that make up the TALOS mesh.
  *
- * Every emblem is a hand-authored Android VectorDrawable (no emoji, no raster,
- * no font glyphs). The matching standalone SVGs live in `assets/agent-icons/`
- * and are produced by `assets/agent-icons/generate_icons.py`, which keeps the
- * vector drawables and the web/docs artwork byte-for-byte in sync.
+ * Brand emblems are official SVGs fetched through the dashboard-icons MCP
+ * (dashboardicons.com / simple-icons / selfh.st) and converted to normalized
+ * Android VectorDrawables: square 24dp viewport, uniform scale, centered,
+ * single tintable path. Custom products without an official mark (Hermes,
+ * OpenClaw, OmniRush) keep their hand-authored drawables.
  */
 data class AgentEmblem(
     val key: String,
@@ -112,7 +113,9 @@ fun AgentEmblemBadge(
             .border(1.dp, emblem.accent.copy(alpha = 0.55f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        AgentEmblemIcon(emblem = emblem, size = size, tint = null)
+        // Accent tint: theme-safe on the surface container and consistent
+        // with the M3 color roles. Brand marks stay recognizable by shape.
+        AgentEmblemIcon(emblem = emblem, size = size, tint = emblem.accent)
     }
 }
 

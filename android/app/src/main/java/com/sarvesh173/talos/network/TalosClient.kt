@@ -3,6 +3,9 @@ package com.sarvesh173.talos.network
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import java.net.NetworkInterface
 import com.sarvesh173.talos.data.BusEvent
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.MeshInfo
@@ -41,8 +44,11 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         const val DEFAULT_BASE_URL = "http://127.0.0.1:8000"
         private const val PREFS_NAME = "talos_prefs"
         private const val KEY_BASE_URL = "base_url"
+        private const val KEY_OVERLAY_URL = "overlay_url"
+        private const val KEY_LAN_URL = "lan_url"
         private const val KEY_API_TOKEN = "api_token"
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_HAS_LAUNCHED = "has_launched"
         private const val TAG = "TalosClient"
     }
 
@@ -65,13 +71,27 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
      * never hang the UI waiting for a silent server.
      */
     private val probeClient = OkHttpClient.Builder()
-        .connectTimeout(4, TimeUnit.SECONDS)
-        .readTimeout(6, TimeUnit.SECONDS)
-        .callTimeout(8, TimeUnit.SECONDS)
+        .connectTimeout(3, TimeUnit.SECONDS)
+        .readTimeout(3, TimeUnit.SECONDS)
+        .callTimeout(4, TimeUnit.SECONDS)
         .build()
 
     var baseUrl: String = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
         private set
+
+    var overlayUrl: String = prefs.getString(KEY_OVERLAY_URL, "") ?: ""
+        private set
+
+    var lanUrl: String = prefs.getString(KEY_LAN_URL, "") ?: ""
+        private set
+
+    var hasLaunched: Boolean = prefs.getBoolean(KEY_HAS_LAUNCHED, false)
+        private set
+
+    fun markLaunched() {
+        hasLaunched = true
+        prefs.edit().putBoolean(KEY_HAS_LAUNCHED, true).apply()
+    }
 
     var apiToken: String = prefs.getString(KEY_API_TOKEN, "") ?: ""
         private set
@@ -131,12 +151,25 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     }
 
     fun updateConfig(newUrl: String, newToken: String) {
-        baseUrl = newUrl.trimEnd('/')
+        val cleanUrl = newUrl.trimEnd('/')
+        baseUrl = cleanUrl
         apiToken = newToken.trim()
-        prefs.edit()
+        val editor = prefs.edit()
             .putString(KEY_BASE_URL, baseUrl)
             .putString(KEY_API_TOKEN, apiToken)
-            .apply()
+
+        // Seamless network roaming (Wi-Fi <-> Cellular Mobile Data):
+        // Tailscale CGNAT addresses (100.64.0.0/10) work universally on both
+        // mobile internet and any Wi-Fi. Store both overlay and local LAN so
+        // roaming to cellular never loses the Tailscale connection address.
+        if (cleanUrl.contains("100.") || cleanUrl.contains("tailscale") || cleanUrl.contains("ts.net")) {
+            overlayUrl = cleanUrl
+            editor.putString(KEY_OVERLAY_URL, overlayUrl)
+        } else if (cleanUrl.contains("192.168.") || cleanUrl.contains("10.") || cleanUrl.contains("172.")) {
+            lanUrl = cleanUrl
+            editor.putString(KEY_LAN_URL, lanUrl)
+        }
+        editor.apply()
         _isPaired.value = apiToken.isNotBlank()
         refreshRooms()
         switchRoom(_currentRoomId.value)
@@ -320,7 +353,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 val req = Request.Builder()
                     .url("${endpoint.trimEnd('/')}/api/mesh/status")
                     .build()
-                httpClient.newCall(req).execute().use { resp ->
+                probeClient.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
                         val body = resp.body?.string() ?: "{}"
                         val obj = json.parseToJsonElement(body).jsonObject
@@ -360,15 +393,39 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     }
 
     private suspend fun resolveCoreInternal(): MeshInfo? {
-        // 1. The endpoint we already know.
+        // 1. Try the last known working endpoint.
         val known = checkMeshStatus(baseUrl)
         if (known != null) return known
 
-        // 2. The same host on the standard TALOS ports (the node may have
-        //    moved ports). The host is never hardcoded - it comes from the
-        //    endpoint the user paired with.
-        val host = runCatching { java.net.URI(baseUrl).host }.getOrNull()
-        if (!host.isNullOrBlank()) {
+        // 2. If we have a saved Tailscale overlay URL and it differs from baseUrl,
+        //    try it (essential when switching from Wi-Fi to cellular internet / mobile data).
+        if (overlayUrl.isNotBlank() && overlayUrl != baseUrl) {
+            val status = checkMeshStatus(overlayUrl)
+            if (status != null) {
+                baseUrl = overlayUrl
+                prefs.edit().putString(KEY_BASE_URL, baseUrl).apply()
+                return status
+            }
+        }
+
+        // 3. If we have a saved local LAN URL and it differs from baseUrl, try it.
+        if (lanUrl.isNotBlank() && lanUrl != baseUrl) {
+            val status = checkMeshStatus(lanUrl)
+            if (status != null) {
+                baseUrl = lanUrl
+                prefs.edit().putString(KEY_BASE_URL, baseUrl).apply()
+                return status
+            }
+        }
+
+        // 4. Try alternate standard TALOS ports (8000, 8010) across all known hosts.
+        val hostsToTry = listOfNotNull(
+            runCatching { java.net.URI(baseUrl).host }.getOrNull(),
+            if (overlayUrl.isNotBlank()) runCatching { java.net.URI(overlayUrl).host }.getOrNull() else null,
+            if (lanUrl.isNotBlank()) runCatching { java.net.URI(lanUrl).host }.getOrNull() else null
+        ).distinct()
+
+        for (host in hostsToTry) {
             for (port in listOf(8000, 8010)) {
                 val candidate = "http://$host:$port"
                 val status = checkMeshStatus(candidate)
@@ -379,16 +436,69 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             }
         }
 
-        // 3. LAN auto-discovery (UDP beacon).
+        // 5. LAN auto-discovery (UDP beacon) - works on local Wi-Fi.
         val found = MeshDiscovery.discover()
         if (found != null) {
             val status = checkMeshStatus(found.baseUrl)
             if (status != null) {
-                updateConfig(found.baseUrl, apiToken)
+                lanUrl = found.baseUrl
+                prefs.edit().putString(KEY_LAN_URL, lanUrl).apply()
+                // Never destroy a working overlayUrl when on Wi-Fi - keep overlayUrl
+                // intact so cellular mobile data remains functional when leaving Wi-Fi.
+                if (overlayUrl.isBlank()) {
+                    baseUrl = found.baseUrl
+                    prefs.edit().putString(KEY_BASE_URL, baseUrl).apply()
+                }
                 return status
             }
         }
         return null
+    }
+
+    /**
+     * Universal Tailscale/VPN detection on the Android device itself.
+     * Works on Mobile Internet (Cellular 4G/5G), any Wi-Fi, or across network switches.
+     */
+    fun isLocalTailscaleActive(): Boolean {
+        // 1. Android ConnectivityManager: check if active network or any network has TRANSPORT_VPN
+        try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            if (cm != null) {
+                val activeNet = cm.activeNetwork
+                if (activeNet != null) {
+                    val caps = cm.getNetworkCapabilities(activeNet)
+                    if (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                        return true
+                    }
+                }
+                for (net in cm.allNetworks) {
+                    val caps = cm.getNetworkCapabilities(net)
+                    if (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                        return true
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "VPN capability check: ${e.message}")
+        }
+
+        // 2. NetworkInterface fallback: look for tun / tailscale / wireguard interfaces
+        try {
+            val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
+            if (interfaces != null) {
+                for (iface in interfaces) {
+                    if (iface.isUp && !iface.isLoopback) {
+                        val name = iface.name.lowercase()
+                        if (name.contains("tun") || name.contains("tailscale") || name.contains("wireguard")) {
+                            return true
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Network interface check: ${e.message}")
+        }
+        return false
     }
 
     suspend fun discoverPeers(): List<MeshPeerInfo> {

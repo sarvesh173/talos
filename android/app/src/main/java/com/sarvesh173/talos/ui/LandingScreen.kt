@@ -164,9 +164,15 @@ fun LandingScreen(
         }
     }
 
+    // Breaking particle dot animation: strictly ONE-TIME ONLY.
+    // Once launched, the state is persisted and the animation never re-arms or replays.
     val handlePrimaryAction = {
-        if (!isDissolving) {
+        if (!client.hasLaunched && !isDissolving) {
+            client.markLaunched()
             isDissolving = true
+        } else {
+            client.markLaunched()
+            onGetStarted()
         }
     }
 

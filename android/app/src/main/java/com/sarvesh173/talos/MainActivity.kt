@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val storedTheme by client.themeMode.collectAsState()
             val activeThemeMode = if (storedTheme == "LIGHT") AppThemeMode.LIGHT else AppThemeMode.DARK
-            var appScreen by remember { mutableStateOf(if (client.isPaired.value) "main" else "landing") }
+            var appScreen by remember { mutableStateOf(if (client.hasLaunched || client.isPaired.value) "main" else "landing") }
 
             // Flexible theming: tokens from talos-core /api/theme (cached),
             // falling back to the built-in scheme when unreachable.
@@ -121,24 +121,31 @@ class MainActivity : ComponentActivity() {
             var manualSetup by remember { mutableStateOf(false) }
             LaunchedEffect(gateNonce) {
                 gateState = ServiceGateState.Checking
+
+                val localVpnActive = withContext(Dispatchers.IO) {
+                    client.isLocalTailscaleActive()
+                }
+
                 val mesh = withContext(Dispatchers.IO) {
                     // Resolve a working endpoint (stored -> same host on the
                     // standard ports -> LAN auto-discovery). A retry absorbs
                     // transient hiccups so the gate never fires falsely.
                     var status = client.resolveCore()
                     if (status == null) {
-                        kotlinx.coroutines.delay(900)
+                        kotlinx.coroutines.delay(600)
                         status = client.resolveCore()
                     }
                     status
                 }
-                // Only an EXPLICIT "overlay down" blocks the app. A missing field
-                // means the core is too old to report it - that must not lock
-                // the user out of an app that is actually working.
+
+                // Universal Tailscale validation:
+                // Works seamlessly whether on Mobile Data (Cellular), any Wi-Fi,
+                // or across Wi-Fi network handoffs.
                 gateState = when {
-                    mesh == null -> ServiceGateState.NodeUnreachable
-                    mesh.tailscale_enabled == false -> ServiceGateState.TailscaleRequired
-                    else -> ServiceGateState.Ready
+                    mesh != null && mesh.tailscale_enabled != false -> ServiceGateState.Ready
+                    mesh != null && mesh.tailscale_enabled == false -> ServiceGateState.TailscaleRequired
+                    !localVpnActive -> ServiceGateState.TailscaleRequired
+                    else -> ServiceGateState.NodeUnreachable
                 }
             }
 
@@ -235,9 +242,6 @@ class MainActivity : ComponentActivity() {
                                 isDark = isCurrentlyDark,
                                 onToggleTheme = {
                                     client.toggleTheme()
-                                },
-                                onOpenLanding = {
-                                    appScreen = "landing"
                                 }
                             )
                         }
@@ -248,6 +252,7 @@ class MainActivity : ComponentActivity() {
                                     client.toggleTheme()
                                 },
                                 onComplete = {
+                                    client.markLaunched()
                                     client.refreshRooms()
                                     client.switchRoom("the-council")
                                     appScreen = "main"
@@ -262,6 +267,7 @@ class MainActivity : ComponentActivity() {
                                     client.toggleTheme()
                                 },
                                 onGetStarted = {
+                                    client.markLaunched()
                                     appScreen = if (client.isPaired.value) "main" else "wizard"
                                 },
                                 onOpenWizard = {
@@ -287,8 +293,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     client: TalosClient,
     isDark: Boolean = true,
-    onToggleTheme: () -> Unit = {},
-    onOpenLanding: () -> Unit = {}
+    onToggleTheme: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -339,34 +344,7 @@ fun MainScreen(
                     )
                 }
 
-                // Quick Navigation back to Developer Console & Fleet Hub
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(PrimaryAccent.copy(alpha = 0.10f))
-                        .clickable {
-                            scope.launch { drawerState.close() }
-                            onOpenLanding()
-                        }
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Dashboard,
-                        contentDescription = null,
-                        tint = PrimaryAccent,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Fleet Hub & Agent Bench",
-                        color = talosTextPrimary,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp
-                    )
-                }
+
 
                 HorizontalDivider(color = talosBorder, modifier = Modifier.padding(top = 8.dp))
 
@@ -507,17 +485,7 @@ fun MainScreen(
 
                             // Right: Action Capsule Controls
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = onOpenLanding,
-                                    modifier = Modifier.size(34.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Dashboard,
-                                        contentDescription = "Fleet Hub",
-                                        tint = talosTextMuted,
-                                        modifier = Modifier.size(17.dp)
-                                    )
-                                }
+
 
                                 val themeRot by animateFloatAsState(
                                     targetValue = if (isDark) 0f else 180f,

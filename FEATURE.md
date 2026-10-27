@@ -139,32 +139,38 @@ Categorizes agents by model flexibility: Universal Agents receive the entire Omn
 
 ---
 
-## 9. Dynamic Reasoning Effort & Thinking Budget Control
+## 9. Dynamic Reasoning Effort & Ultra Code Mode
 
-Provides granular control over the depth of reasoning/thinking tokens across modern AI models and CLI agents.
+Provides granular control over the depth of reasoning/thinking tokens and multi-agent expansion across modern AI models and CLI agents.
 
-### Official Reasoning Effort Scale (7 Levels):
-Modern frontier reasoning engines (OpenAI o3/GPT-6/GPT-5.5, Anthropic Claude 3.7 Sonnet, DeepSeek R1, Fable) support an expanded 7-tier scale:
-1. `none`: Zero reasoning overhead. Bypasses chain-of-thought entirely for latency-critical tasks (voice, classifications, simple lookups).
+### Complete Hierarchy Scale (8 Tiers — from `none` to `ultra`):
+Modern frontier reasoning engines (OpenAI Codex, Claude Code Ultra, DeepSeek R1, Grok 3 Think) follow an 8-tier progression:
+
+1. `none`: Zero reasoning overhead. Bypasses chain-of-thought entirely for latency-critical tasks (voice, simple lookups, classification).
 2. `minimal`: Ultra-light sanity pass with near-zero latency impact.
 3. `low`: Efficient reasoning for structured tasks, tool calling, and fast drafting.
 4. `medium`: Default balanced tier for complex reasoning, planning, and multi-step decisions.
 5. `high`: Deep deliberate planning, complex debugging, and agentic workflows.
-6. `xhigh`: Extended deep research, long asynchronous verification loops, and heavy multi-file code refactors.
-7. `max` (also known as `ultra` / `favor-ultra` in Fable / ChatGPT Pro): Maximum uncapped reasoning budget for toughest logic and security audits.
+6. `xhigh`: Extended deep research, long asynchronous verification loops, and heavy multi-file refactors.
+7. `max`: Highest single-model test-time compute. Uncapped internal chain-of-thought where one context explores and verifies all edge cases.
+8. **`ultra` (Ultra Code Mode)**: The ultimate tier beyond `max`. Combines **Maximum single-turn reasoning (`max`) with Proactive Dynamic Multi-Agent Orchestration**.
+   - Rather than just thinking longer in a single thread, `ultra` automatically decomposes the goal and spawns parallel sub-agents (e.g. 3–4 parallel investigation streams + verification judge).
+   - In Codex CLI: `ultra` maps to inference effort `max` + `multiAgentMode: "proactive"`.
+   - In Claude Code: Activates `Ultra Code` mode for full-repository refactoring, parallel verification, and automated consensus synthesis.
 
 ### Specifications & Behavior:
 1. **Normalized Scale Mapping**:
-   - Backend exposes all 7 normalized tiers (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`).
-   - Translates per model/provider to supported subsets (e.g. models rejecting `none` gracefully clamp to `low` or `minimal`).
+   - Backend exposes all 8 tiers (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`, `ultra`).
+   - Translates per model/provider to supported subsets (e.g. models rejecting `none` gracefully clamp to `low`; single-agent CLIs receiving `ultra` run at `max`).
 2. **Provider & CLI Translation Engine**:
-   - **OpenAI / Codex API**: `reasoning_effort: "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"`.
-   - **Anthropic Claude (3.7 Sonnet)**: `thinking: { type: "enabled", budget_tokens: <1024..128000> }` (`minimal`: 1024, `low`: 2048, `medium`: 8192, `high`: 32768, `xhigh`: 64000, `max`: 128000).
-   - **Google Gemini (Thinking)**: `thinking_config: { thinking_budget: <tokens> }`.
-   - **OmniRush & CLI Coding Tools**: Translates to CLI flags (`--effort <tier>`, `--reasoning <tier>`) or model tags (e.g. `:max`, `:high`).
+   - **Codex CLI**: `ultra` translates to `--reasoning max --multi-agent proactive`.
+   - **Claude Code**: Activates `Ultra Code` mode with maximum thinking budget + sub-agent fan-out.
+   - **OpenAI API**: `reasoning_effort: "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"`.
+   - **Anthropic API**: `thinking: { type: "enabled", budget_tokens: <1024..128000> }`.
+   - **OmniRush**: Translates `ultra` to `:max` model suffix with background worker slots.
 3. **Backend REST Endpoints**:
    - `GET /api/agents/:id/reasoning` -> Returns `{ agent_id, current_effort, supported_efforts }`.
-   - `POST /api/agents/:id/reasoning` -> Payload `{ "effort": "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" }`.
+   - `POST /api/agents/:id/reasoning` -> Payload `{ \"effort\": \"none\" | \"minimal\" | \"low\" | \"medium\" | \"high\" | \"xhigh\" | \"max\" | \"ultra\" }`.
 4. **UI Mapping (Pending Frontend)**:
-   - *Reasoning Effort Segmented Capsule / Slider*: 7-level tactile scrub/selector (`None` | `Min` | `Low` | `Med` | `High` | `xHigh` | `Max`).
-   - *Thinking Depth Badge*: Flame/Brain icon showing currently applied reasoning depth in the composer.
+   - *Reasoning Effort Selector*: 8-step tactile scrub (`None` | `Min` | `Low` | `Med` | `High` | `xHigh` | `Max` | `Ultra`).
+   - *Ultra Code Mode Shimmer Pill*: Special gold/violet gradient badge when `Ultra` is engaged to indicate autonomous multi-agent fanout.

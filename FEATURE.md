@@ -87,3 +87,28 @@ Prevents fragmented multiple-image analysis by holding incoming images in a debo
 - [ ] **UI Mapping**:
   - *Multi-Image Preview Grid*: Horizontal thumbnail strip above the input box showing queued images before sending.
   - *Queued Turn Badge*: Visual indicator showing pending media count when a turn is currently in flight.
+
+---
+
+## 7. Universal CLI Agent Dynamic Model Switching
+
+Allows switching the underlying AI model for any registered CLI coding agent dynamically from the backend and future client interface.
+
+### Specifications & Behavior:
+1. **Dynamic Model Inspection**:
+   - Backend tracks `supported_models` and `current_model` per agent.
+   - Models can be queried per agent to inspect what choices exist (e.g. `claude-3-7-sonnet`, `gpt-6-astra:max`, `gpt-4o`, `deepseek-r1`, `gemini-2.5-flash`).
+2. **Dynamic Model Switching**:
+   - Switching an agent's model updates the agent's runtime state immediately without restarting the TALOS backend.
+   - Future task executions (`/api/agents/:id/run`) automatically inject the selected model using the agent's specific CLI convention.
+3. **Execution Injection Mechanisms**:
+   - **Flag Injection**: Injects `--model <name>` or `-m <name>` for agents like OmniRush, OpenCode, Cline, OpenCLI, Codex, etc.
+   - **Environment Variable Injection**: Injects `HERMES_MODEL=<name>`, `OPENAI_MODEL=<name>`, etc., for environment-driven agents.
+   - **Custom Config Hooks**: For tools that save configuration files, runs an automated config set command.
+4. **Backend REST Endpoints**:
+   - `GET /api/agents/:id/models` -> Returns `{ agent_id, current_model, supported_models }`.
+   - `POST /api/agents/:id/model` -> Payload `{ "model": "model-name" }`, switches active model and returns updated `AgentInfo`.
+5. **UI Mapping (Pending Frontend)**:
+   - *Model Selector Dropdown / Chips*: Tapping an agent card opens available model options.
+   - *Active Model Badge*: Displays the currently selected model name directly beneath the agent's name in Fleet Hub.
+   - *Model Switch Feedback Toast*: Transient confirmation when a new model is selected.

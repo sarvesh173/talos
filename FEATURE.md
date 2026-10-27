@@ -267,3 +267,32 @@ Pipes unvarnished, exact process terminal output and upstream provider error pay
 5. **UI Mapping (Pending Frontend)**:
    - *Live Terminal Log Sheet / Drawer*: Expandable dark-mode terminal window right inside the app displaying exact scrolling CLI output.
    - *Verbatim Error Callout*: When a command fails, displays the exact stderr string in a monospace console bubble directly under the message.
+
+---
+
+## 13. Context Window Telemetry & On-Device Predictive Token Interpolation
+
+Monitors context window saturation and token consumption with zero CPU load on the host machine by combining periodic server sync pulses with on-device client velocity prediction.
+
+### Specifications & Behavior:
+1. **Dual Telemetry Modes (Configurable in Settings)**:
+   - **Real-Time Mode (`sync_delay: 0s`)**: High-frequency streaming pulses for users who want exact tick-by-tick token counts.
+   - **Optimized Delay Mode (`sync_delay: 1s–10s`, default `5s`)**: The host computer only emits a lightweight token snapshot once every 5 seconds, preventing CPU/RAM overload when running multiple concurrent background agents.
+2. **On-Device Client-Side Velocity Prediction Engine**:
+   - Runs locally on the Android device (phone-local script).
+   - Calculates recent token velocity (tokens generated per second, e.g. ~100 tok/sec).
+   - In between the 5-second server sync pulses, the phone predicts and smoothly animates the token counter ticking upward in real-time.
+   - **Jitter-Free Reconciliation**: When the authoritative 5s snapshot arrives from the server, the client smoothly reconciles without abrupt jumping. If actual token output was lower or higher than expected, it smoothly catches up.
+3. **Context Window Saturation Tracking**:
+   - Tracks current token consumption vs maximum model limit (`prompt_tokens`, `completion_tokens`, `total_tokens`, `context_window_limit`, `percentage_used`).
+   - Emits visual threshold warnings when context exceeds 80% (amber) and 90% (red), suggesting context compaction or model handover.
+4. **"Learn More" Architecture Transparency Sheet**:
+   - Tapping "Learn More" next to the counter opens an on-device modal explaining:
+     *"To keep your PC host cool and preserve hardware resources, server telemetry syncs in 5-second intervals. The live ticking you see is predicted on-device based on generation velocity and reconciled against server snapshots."*
+5. **Backend REST & WebSocket Endpoints**:
+   - `GET /api/agents/:id/context` -> Returns `{ agent_id, current_tokens, context_window, usage_pct, generation_rate_per_sec }`.
+   - `WS /ws/telemetry/tokens` -> Periodic token usage pulse emitted at the user's configured delay interval (`interval_secs: 0..10`).
+6. **UI Mapping (Pending Frontend)**:
+   - *Live Context Ring & Token Pill*: Monospace pill displaying live ticking tokens and circular percentage ring in the app header/composer.
+   - *Telemetry Sync Rate Slider*: Setting slider in Preferences (`0s: Real-Time` to `10s: Ultra-Eco`, default `5s`).
+   - *Context Explainer Dialog*: Tapping "Learn More" pops up the architecture explanation modal.

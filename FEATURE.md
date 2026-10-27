@@ -331,10 +331,15 @@ Calculates live prompt token counts while typing in the composer and displays an
 Enables fully autonomous, uninterrupted 24/7 execution by auto-approving standard commands while maintaining a hard security safety net against destructive actions.
 
 ### Specifications & Behavior:
-1. **Autonomous YOLO Execution**:
-   - Automatically passes `--yolo` or `--dangerously-skip-permissions` to underlying CLI tools (OmniRush, OpenCode, Cline, Codex) so agents do not stop and stall waiting for manual prompt confirmation.
+1. **Interactive `/yolo` Slash Command Toggle**:
+   - Typing `/yolo` directly in any chat room toggles the session execution policy immediately with exact status responses:
+     - When toggled ON: `⚡ YOLO mode ON for this session — all commands auto-approved. Use with caution.`
+     - When toggled OFF: `⚠️ YOLO mode OFF for this session — dangerous commands will require approval.`
+   - Instantly synchronizes across all participating agents in that session without restarting processes.
+2. **Autonomous YOLO Execution**:
+   - When YOLO is ON, automatically passes `--yolo` or `--dangerously-skip-permissions` to underlying CLI tools (OmniRush, OpenCode, Cline, Codex) so agents do not stop and stall waiting for manual prompt confirmation.
    - Auto-approves routine developer tasks: code synthesis, running tests, reading files, creating commits, and local dependency builds.
-2. **Hard Guardrail Safety Filter (Bypass-Proof)**:
+3. **Hard Guardrail Safety Filter (Bypass-Proof)**:
    - Even when YOLO mode is active, the backend execution supervisor inspects commands against a non-bypassable catastrophic blocklist:
      - Root / home wipe attempts (`rm -rf /`, `rm -rf ~`, unanchored wildcards).
      - Sensitive credential harvesting (scripts scanning `~/.ssh`, dumping `.env` tokens, reading private system keyrings).

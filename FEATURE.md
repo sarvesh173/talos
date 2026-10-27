@@ -244,3 +244,30 @@ Gives the user total authority over AI providers, custom endpoints, auto-discove
    - *Add Provider Modal*: Simple Base URL + API Key form with "Auto-Fetch Models" test button.
    - *Model Curation Drawer*: Table with eye toggle icons (Hide/Unhide) and delete action per model.
    - *Fallback Priority Stack*: Drag-and-drop ordered list (1, 2, 3...) for automatic 429 failover.
+
+---
+
+## 12. Transparent Real-Time Diagnostics & Direct Error Telemetry
+
+Eliminates vague "Check gateway logs" or raw "403" failures by translating upstream provider errors into instant, actionable root-cause diagnostics directly inside the mobile app.
+
+### Specifications & Behavior:
+1. **Zero Opaque Errors Mandate**:
+   - Generic error messages like "Internal Server Error" or "Check gateway logs" are forbidden.
+   - TALOS intercepts raw upstream HTTP status, error bodies, and response headers (`Retry-After`, `x-ratelimit-reset`, rate-limit buckets) and produces an immediate causal breakdown.
+2. **Actionable Diagnostic Classification**:
+   - **429 (Rate Limit / Quota Exhaustion)**: Explains exact reset time (`"Quota exhausted. Resets in 1h 14m."`), token consumption metrics, and automatically reports which fallback key was engaged.
+   - **401 / 403 (Auth & Model Permissions)**: Identifies whether the API key is expired, invalid, or lacks entitlement for the requested model (e.g. Claude 3.7 access not granted on this key).
+   - **400 (Context Length Exceeded)**: Reports exact prompt tokens vs model limit (e.g. `135,000 / 128,000 tokens`), recommending context compaction or model switch.
+   - **502 / 503 (Upstream Outage vs Local Gateway)**: Clarifies if the external provider is down vs local network failure with real-time latency ping.
+3. **No-Terminal Remote Live Log Streaming**:
+   - Client does not require SSH or terminal access to inspect errors.
+   - Real-time diagnostic events stream over WebSocket (`/ws/diagnostics`) with sanitized output.
+4. **Backend REST & WebSocket Endpoints**:
+   - `GET /api/diagnostics/recent` -> Returns last 50 structured errors with root cause, affected provider, and model.
+   - `GET /api/diagnostics/:error_id` -> Returns sanitized raw upstream JSON error payload.
+   - `WS /ws/diagnostics` -> Live stream of provider errors, failovers, and latency warnings.
+5. **UI Mapping (Pending Frontend)**:
+   - *Diagnostic Error Banner*: Human-readable banner on the active chat/screen (e.g. `[Groq 429] Limit reached. Switched to OpenRouter`).
+   - *Raw Payload Drawer*: One-tap "Inspect Raw Error" drawer showing headers, status code, and upstream response body on mobile.
+   - *Quick-Remedy Action Chips*: Inline buttons (`Switch Provider`, `Retry Now`, `Change Model`) directly on the error card.

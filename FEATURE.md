@@ -170,7 +170,36 @@ Modern frontier reasoning engines (OpenAI Codex, Claude Code Ultra, DeepSeek R1,
    - **OmniRush**: Translates `ultra` to `:max` model suffix with background worker slots.
 3. **Backend REST Endpoints**:
    - `GET /api/agents/:id/reasoning` -> Returns `{ agent_id, current_effort, supported_efforts }`.
-   - `POST /api/agents/:id/reasoning` -> Payload `{ \"effort\": \"none\" | \"minimal\" | \"low\" | \"medium\" | \"high\" | \"xhigh\" | \"max\" | \"ultra\" }`.
+   - `POST /api/agents/:id/reasoning` -> Payload `{ "effort": "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra" }`.
 4. **UI Mapping (Pending Frontend)**:
    - *Reasoning Effort Selector*: 8-step tactile scrub (`None` | `Min` | `Low` | `Med` | `High` | `xHigh` | `Max` | `Ultra`).
    - *Ultra Code Mode Shimmer Pill*: Special gold/violet gradient badge when `Ultra` is engaged to indicate autonomous multi-agent fanout.
+
+---
+
+## 10. Hierarchical Agent Tree Inspection, Live Sub-Agent Steering & Granular Control
+
+Provides full visibility and interactive control over parent-child agent delegation trees, allowing users to inspect, chat with, steer, or modify the model/reasoning of any individual sub-agent independently.
+
+### Specifications & Behavior:
+1. **Hierarchical DAG Tracking**:
+   - When a primary agent summons sub-agents (e.g. delegating 3–4 parallel investigation or coding tasks), the backend tracks the full dependency graph: `Root Agent -> Child Sub-Agents -> Tasks`.
+   - Every child sub-agent retains a unique `subagent_id`, `parent_id`, `assigned_goal`, current `status` (`running`, `paused`, `completed`, `failed`), and real-time execution log.
+2. **Direct Sub-Agent Interactive Chat & Live Steering**:
+   - Users can directly interact with ANY child agent in real-time, exactly like chatting with the main root agent.
+   - Mid-flight course correction: user can send directive messages directly to a sub-agent to steer its work without aborting or restarting the parent's loop.
+3. **Independent Per-Child Model & Reasoning Customization**:
+   - The user has total freedom to override the underlying model of any specific child agent independently (e.g., Parent is running on `claude-3-7-sonnet`, but Child 1 can be switched to `deepseek-r1` for math, and Child 2 to `gpt-6-astra:max` for code refactoring).
+   - Each child sub-agent's reasoning effort (`none` through `ultra`) can be tuned individually.
+4. **Granular Life-Cycle Management**:
+   - Ability to pause, resume, or kill any specific sub-agent without killing sibling sub-agents or tearing down the parent agent session.
+5. **Backend REST & WebSocket Endpoints**:
+   - `GET /api/agents/tree` -> Returns active hierarchy of root agents and all active child sub-agents.
+   - `GET /api/agents/subagents/:subagent_id` -> Returns full state, live logs, model, and reasoning depth of a specific sub-agent.
+   - `POST /api/agents/subagents/:subagent_id/chat` -> Injects a direct message or steering prompt to a specific sub-agent (`{ "message": "..." }`).
+   - `POST /api/agents/subagents/:subagent_id/model` -> Overrides the child agent's model (`{ "model": "..." }`).
+   - `POST /api/agents/subagents/:subagent_id/reasoning` -> Overrides the child agent's reasoning level (`{ "effort": "..." }`).
+   - `POST /api/agents/subagents/:subagent_id/stop` -> Terminates the specific child sub-agent immediately.
+6. **UI Mapping (Pending Frontend)**:
+   - *Agent Fleet Tree View / DAG Visualizer*: Collapsible tree node graph showing root delegator and child branches with live status pulses.
+   - *Sub-Agent Focus Drawer*: Tapping any child node opens a dedicated conversation pane with individual Model/Reasoning chips and live stdout streaming.

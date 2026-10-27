@@ -44,6 +44,10 @@ pub struct AgentInfo {
     pub capabilities: AgentCapability,
     pub setup_cmd: Option<String>,
     pub default_args: Vec<String>,
+    pub current_model: Option<String>,
+    pub supported_models: Vec<String>,
+    pub model_flag: Option<String>,
+    pub model_env_var: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,6 +59,24 @@ pub struct CustomAgentManifest {
     pub default_args: Option<Vec<String>>,
     pub setup_cmd: Option<String>,
     pub capabilities: Option<AgentCapability>,
+    pub current_model: Option<String>,
+    pub supported_models: Option<Vec<String>>,
+    pub model_flag: Option<String>,
+    pub model_env_var: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentModelSwitchRequest {
+    pub model: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentModelInfo {
+    pub agent_id: String,
+    pub current_model: Option<String>,
+    pub supported_models: Vec<String>,
+    pub model_flag: Option<String>,
+    pub model_env_var: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -104,6 +126,10 @@ struct KnownAgentSpec {
     version_arg: &'static str,
     setup_cmd: Option<&'static str>,
     capabilities: AgentCapability,
+    default_model: &'static str,
+    supported_models: &'static [&'static str],
+    model_flag: Option<&'static str>,
+    model_env_var: Option<&'static str>,
 }
 
 const KNOWN_AGENTS: &[KnownAgentSpec] = &[
@@ -115,6 +141,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: true, tools: true },
+        default_model: "custom/agy/gemini-3.8-flash-tiered",
+        supported_models: &["custom/agy/gemini-3.8-flash-tiered", "nousresearch/hermes-3-llama-3.1-405b", "mistralai/mistral-large-2411"],
+        model_flag: None,
+        model_env_var: Some("HERMES_MODEL"),
     },
     KnownAgentSpec {
         id: "opencode",
@@ -124,6 +154,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g @opencode/cli"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: false, tools: true },
+        default_model: "claude-3-5-sonnet",
+        supported_models: &["claude-3-5-sonnet", "gpt-4o", "deepseek-coder", "gemini-2.0-flash"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "omnirush",
@@ -133,6 +167,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g omnirush"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: false, tools: true },
+        default_model: "gpt-6-astra:max",
+        supported_models: &["gpt-6-astra:max", "gpt-6-sol", "claude-3-7-sonnet", "deepseek-r1"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "codex",
@@ -142,6 +180,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g @openai/codex"),
         capabilities: AgentCapability { coding: true, chat: false, terminal: true, vision: false, tools: true },
+        default_model: "o3-mini",
+        supported_models: &["o3-mini", "o1", "gpt-4o"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "cline",
@@ -151,6 +193,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g cline"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: true, tools: true },
+        default_model: "claude-3-7-sonnet",
+        supported_models: &["claude-3-7-sonnet", "gemini-2.5-pro", "deepseek-v3"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "opencli",
@@ -160,6 +206,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g @jackwener/opencli"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: false, tools: false },
+        default_model: "gpt-4o",
+        supported_models: &["gpt-4o", "claude-3-5-sonnet", "llama3.3"],
+        model_flag: Some("-m"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "koda",
@@ -169,6 +219,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g @openadapter/koda"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: false, tools: true },
+        default_model: "default",
+        supported_models: &["default", "gpt-4o", "claude-3-5-sonnet"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "atlarix",
@@ -178,6 +232,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g atlarix"),
         capabilities: AgentCapability { coding: true, chat: false, terminal: true, vision: false, tools: true },
+        default_model: "deepseek-v3",
+        supported_models: &["deepseek-v3", "gpt-4o"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "darce",
@@ -187,6 +245,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g darce-cli"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: false, tools: false },
+        default_model: "default",
+        supported_models: &["default", "gpt-4o"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "supercode",
@@ -196,6 +258,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g supercode-cli"),
         capabilities: AgentCapability { coding: true, chat: false, terminal: true, vision: false, tools: true },
+        default_model: "claude-3-7-sonnet",
+        supported_models: &["claude-3-7-sonnet", "gpt-4o"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "zcode",
@@ -205,6 +271,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g zcode-cli"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: false, tools: true },
+        default_model: "glm-4-plus",
+        supported_models: &["glm-4-plus", "glm-4-long", "deepseek-coder"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
     KnownAgentSpec {
         id: "gemini",
@@ -214,6 +284,10 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         version_arg: "--version",
         setup_cmd: Some("npm i -g @google/gemini-cli"),
         capabilities: AgentCapability { coding: true, chat: true, terminal: true, vision: true, tools: true },
+        default_model: "gemini-2.5-flash",
+        supported_models: &["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"],
+        model_flag: Some("--model"),
+        model_env_var: None,
     },
 ];
 
@@ -269,6 +343,10 @@ impl AgentSupervisor {
                 capabilities: spec.capabilities.clone(),
                 setup_cmd: spec.setup_cmd.map(|s| s.to_string()),
                 default_args: Vec::new(),
+                current_model: Some(spec.default_model.to_string()),
+                supported_models: spec.supported_models.iter().map(|s| s.to_string()).collect(),
+                model_flag: spec.model_flag.map(|s| s.to_string()),
+                model_env_var: spec.model_env_var.map(|s| s.to_string()),
             };
             map.insert(spec.id.to_string(), info);
         }
@@ -310,6 +388,10 @@ impl AgentSupervisor {
                                     }),
                                     setup_cmd: manifest.setup_cmd,
                                     default_args: manifest.default_args.unwrap_or_default(),
+                                    current_model: manifest.current_model,
+                                    supported_models: manifest.supported_models.unwrap_or_default(),
+                                    model_flag: manifest.model_flag,
+                                    model_env_var: manifest.model_env_var,
                                 };
                                 map.insert(manifest.id, info);
                             }
@@ -355,6 +437,26 @@ impl AgentSupervisor {
             .ok_or_else(|| "Agent not found after registration".to_string())
     }
 
+    
+    pub async fn get_agent_models(&self, id: &str) -> Option<AgentModelInfo> {
+        let lock = self.agents.lock().await;
+        lock.get(id).map(|a| AgentModelInfo {
+            agent_id: a.id.clone(),
+            current_model: a.current_model.clone(),
+            supported_models: a.supported_models.clone(),
+            model_flag: a.model_flag.clone(),
+            model_env_var: a.model_env_var.clone(),
+        })
+    }
+
+    pub async fn switch_agent_model(&self, id: &str, new_model: String) -> Result<AgentInfo, String> {
+        let mut lock = self.agents.lock().await;
+        let agent = lock.get_mut(id).ok_or_else(|| format!("Unknown agent: {}", id))?;
+        agent.current_model = Some(new_model.clone());
+        info!("Switched model for agent '{}' to '{}'", id, new_model);
+        Ok(agent.clone())
+    }
+
     pub async fn get_pool_status(&self) -> PoolStatus {
         let available = self.semaphore.available_permits();
         PoolStatus {
@@ -380,6 +482,16 @@ impl AgentSupervisor {
 
         let mut cmd = tokio::process::Command::new(&agent.binary);
         
+        // Dynamic Model Injection
+        if let Some(ref model) = agent.current_model {
+            if let Some(ref flag) = agent.model_flag {
+                cmd.arg(flag).arg(model);
+            }
+            if let Some(ref env_var) = agent.model_env_var {
+                cmd.env(env_var, model);
+            }
+        }
+
         // Append default args
         for arg in &agent.default_args {
             cmd.arg(arg);
@@ -532,6 +644,23 @@ mod tests {
         assert_eq!(pool.active_runs, 0);
     }
 
+
+    #[tokio::test]
+    async fn test_agent_model_switching() {
+        let supervisor = AgentSupervisor::new(2);
+        supervisor.rescan().await;
+
+        let models_info = supervisor.get_agent_models("omnirush").await.unwrap();
+        assert_eq!(models_info.current_model, Some("gpt-6-astra:max".to_string()));
+        assert!(models_info.supported_models.contains(&"gpt-6-sol".to_string()));
+
+        let switched = supervisor.switch_agent_model("omnirush", "gpt-6-sol".to_string()).await.unwrap();
+        assert_eq!(switched.current_model, Some("gpt-6-sol".to_string()));
+
+        let updated_info = supervisor.get_agent_models("omnirush").await.unwrap();
+        assert_eq!(updated_info.current_model, Some("gpt-6-sol".to_string()));
+    }
+
     #[tokio::test]
     async fn test_custom_agent_registration() {
         let temp_dir = std::env::temp_dir().join(format!("talos_test_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
@@ -546,6 +675,10 @@ mod tests {
             default_args: Some(vec!["hello".to_string()]),
             setup_cmd: None,
             capabilities: None,
+            current_model: None,
+            supported_models: None,
+            model_flag: None,
+            model_env_var: None,
         };
 
         let registered = supervisor.register_custom(manifest).await.unwrap();

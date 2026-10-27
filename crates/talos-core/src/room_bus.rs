@@ -76,3 +76,123 @@ impl RoomBus {
         }
     }
 }
+
+
+/// Inbound Media Batcher: aggregates rapid multi-image submissions (bursts/albums)
+/// so AI agents receive and analyze all images in ONE unified turn instead of one-by-one.
+pub struct MediaBatchEntry {
+    pub room_id: String,
+    pub sender_id: String,
+    pub sender_name: String,
+    pub text: String,
+    pub attachments: Vec<String>,
+    pub timer_handle: Option<tokio::task::JoinHandle<()>>,
+}
+
+#[derive(Clone)]
+pub struct MediaBatchQueue {
+    pending: Arc<AsyncMutex<HashMap<String, Arc<AsyncMutex<MediaBatchEntry>>>>>,
+}
+
+impl MediaBatchQueue {
+    pub fn new() -> Self {
+        Self {
+            pending: Arc::new(AsyncMutex::new(HashMap::new())),
+        }
+    }
+
+    /// Enqueue an incoming message with attachments.
+    /// Debounces across a 3.0 second window to collect all images before broadcasting.
+    pub async fn enqueue_or_merge(
+        &self,
+        room_bus: Arc<RoomBus>,
+        room_id: String,
+        sender_id: String,
+        sender_name: String,
+        text: String,
+        new_attachments: Vec<String>,
+    ) {
+        let key = format!("{}:{}", room_id, sender_id);
+        let mut map = self.pending.lock().await;
+
+        if let Some(entry_lock) = map.get(&key) {
+            let mut entry = entry_lock.lock().await;
+            entry.attachments.extend(new_attachments);
+            if !text.is_empty() && !entry.text.contains(&text) {
+                if entry.text.is_empty() {
+                    entry.text = text;
+                } else {
+                    entry.text.push_str(" ");
+                    entry.text.push_str(&text);
+                }
+            }
+            // Reset debounce timer
+            if let Some(handle) = entry.timer_handle.take() {
+                handle.abort();
+            }
+            let queue_clone = self.clone();
+            let key_clone = key.clone();
+            let bus_clone = room_bus.clone();
+            let entry_clone = entry_lock.clone();
+
+            entry.timer_handle = Some(tokio::spawn(async move {
+                tokio::time::sleep(tokio::time::Duration::from_millis(3000)).await;
+                queue_clone.flush(&key_clone, bus_clone, entry_clone).await;
+            }));
+        } else {
+            let entry = Arc::new(AsyncMutex::new(MediaBatchEntry {
+                room_id: room_id.clone(),
+                sender_id: sender_id.clone(),
+                sender_name: sender_name.clone(),
+                text: text.clone(),
+                attachments: new_attachments,
+                timer_handle: None,
+            }));
+
+            let queue_clone = self.clone();
+            let key_clone = key.clone();
+            let bus_clone = room_bus.clone();
+            let entry_clone = entry.clone();
+
+            {
+                let mut e = entry.lock().await;
+                e.timer_handle = Some(tokio::spawn(async move {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(3000)).await;
+                    queue_clone.flush(&key_clone, bus_clone, entry_clone).await;
+                }));
+            }
+
+            map.insert(key, entry);
+        }
+    }
+
+    async fn flush(
+        &self,
+        key: &str,
+        room_bus: Arc<RoomBus>,
+        entry_lock: Arc<AsyncMutex<MediaBatchEntry>>,
+    ) {
+        // Remove from map
+        {
+            let mut map = self.pending.lock().await;
+            map.remove(key);
+        }
+
+        let entry = entry_lock.lock().await;
+        let msg = Message {
+            id: Uuid::new_v4().to_string(),
+            room_id: entry.room_id.clone(),
+            sender_id: entry.sender_id.clone(),
+            sender_name: entry.sender_name.clone(),
+            sender_role: crate::models::Role::Human,
+            content: entry.text.clone(),
+            thought: None,
+            tool_calls: Vec::new(),
+            attachments: entry.attachments.clone(),
+            reply_to_id: None,
+            created_at: now_ts(),
+        };
+
+        room_bus.broadcast_message(&msg);
+    }
+}

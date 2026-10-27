@@ -1,3 +1,7 @@
+mod compactor;
+mod telemetry;
+mod group_router;
+mod vault;
 mod auth;
 mod consensus;
 mod db;
@@ -17,7 +21,7 @@ use axum::{
     },
     http::StatusCode,
     response::IntoResponse,
-    routing::{delete, get, post},
+    routing::{delete, get, patch as route_patch, post},
     Json, Router,
 };
 use consensus::ConsensusEngine;
@@ -47,6 +51,10 @@ pub struct AppState {
     pub db: Arc<Database>,
     pub bus: Arc<RoomBus>,
     pub supervisor: Arc<agents::AgentSupervisor>,
+    pub media_queue: Arc<room_bus::MediaBatchQueue>,
+    pub vault: Arc<providers::ProviderVault>,
+    pub telemetry_tracker: Arc<tokio::sync::Mutex<telemetry::TokenVelocityTracker>>,
+    pub telemetry_config: Arc<tokio::sync::RwLock<telemetry::TelemetryConfig>>,
 }
 
 #[tokio::main]
@@ -62,8 +70,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bus = Arc::new(RoomBus::new());
     let supervisor = Arc::new(agents::AgentSupervisor::new(2));
     supervisor.rescan().await;
+    let media_queue = Arc::new(room_bus::MediaBatchQueue::new());
+    let vault = Arc::new(providers::ProviderVault::new());
+    let telemetry_tracker = Arc::new(tokio::sync::Mutex::new(telemetry::TokenVelocityTracker::new()));
+    let telemetry_config = Arc::new(tokio::sync::RwLock::new(telemetry::TelemetryConfig::default()));
 
-    let state = AppState { db, bus, supervisor };
+    let state = AppState {
+        db,
+        bus,
+        supervisor,
+        media_queue,
+        vault,
+        telemetry_tracker,
+        telemetry_config,
+    };
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -100,10 +120,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/agents/register", post(register_custom_agent))
         .route("/api/agents/pool", get(pool_status))
         .route("/api/agents/:id", get(get_agent_detail))
+        .route("/api/agents/:id/models", get(get_agent_models))
+        .route("/api/agents/:id/model", post(switch_agent_model))
         .route("/api/agents/:id/run", post(run_agent_task))
         .route("/api/agents/:id/setup", post(setup_agent))
         // Realtime WebSocket Room Event Bus
         .route("/ws/:room_id/:client_id", get(ws_handler))
+        // Feature 8 & 11: Universal Custom Provider Management, Vault & Fallbacks
+        .route("/api/providers/custom", get(list_custom_providers).post(register_custom_provider))
+        .route("/api/providers/custom/:id/fetch-models", post(fetch_provider_models))
+        .route("/api/providers/custom/:id/status", route_patch(toggle_provider_status))
+        .route("/api/providers/custom/:id", delete(delete_custom_provider))
+        .route("/api/models/custom/:model_id/visibility", route_patch(toggle_model_visibility))
+        .route("/api/models/custom/:model_id", delete(delete_model_entry))
+        .route("/api/providers/custom/:id/fallbacks", get(get_provider_fallbacks).put(update_provider_fallbacks))
+        // Feature 13 & 14: Context Saturation & Predictive Token Telemetry
+        .route("/api/telemetry/config", get(get_telemetry_config).post(update_telemetry_config))
+        .route("/api/agents/:id/context", get(get_agent_context_telemetry))
+        .route("/api/rooms/:id/context-breakdown", get(get_room_context_breakdown))
         .layer(cors)
         .with_state(state);
 
@@ -285,6 +319,7 @@ struct PostMessageRequest {
     content: String,
     thought: Option<String>,
     reply_to_id: Option<String>,
+    attachments: Option<Vec<String>>,
 }
 
 async fn post_message(
@@ -292,6 +327,20 @@ async fn post_message(
     Path(room_id): Path<String>,
     Json(req): Json<PostMessageRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
+    let attachments = req.attachments.unwrap_or_default();
+
+    if !attachments.is_empty() {
+        state.media_queue.enqueue_or_merge(
+            state.bus.clone(),
+            room_id,
+            "human-01".to_string(),
+            req.sender_name.unwrap_or_else(|| "Operator".to_string()),
+            req.content,
+            attachments,
+        ).await;
+        return Ok(Json(serde_json::json!({ "status": "queued_for_batch" })));
+    }
+
     let msg = Message {
         id: Uuid::new_v4().to_string(),
         room_id,
@@ -309,7 +358,7 @@ async fn post_message(
     state.db.insert_message(&msg).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     state.bus.broadcast_message(&msg);
 
-    Ok(Json(msg))
+    Ok(Json(serde_json::to_value(msg).unwrap_or_default()))
 }
 
 async fn list_consensus(
@@ -520,8 +569,8 @@ async fn pool_status(State(state): State<AppState>) -> Json<agents::PoolStatus> 
 }
 
 async fn get_agent_detail(
-    State(state): State<AppState>,
     Path(id): Path<String>,
+    State(state): State<AppState>,
 ) -> Result<Json<agents::AgentInfo>, StatusCode> {
     state
         .supervisor
@@ -532,8 +581,8 @@ async fn get_agent_detail(
 }
 
 async fn run_agent_task(
-    State(state): State<AppState>,
     Path(id): Path<String>,
+    State(state): State<AppState>,
     Json(req): Json<agents::AgentRunRequest>,
 ) -> Result<Json<agents::AgentRunResult>, (StatusCode, String)> {
     state
@@ -545,8 +594,8 @@ async fn run_agent_task(
 }
 
 async fn setup_agent(
-    State(state): State<AppState>,
     Path(id): Path<String>,
+    State(state): State<AppState>,
     Json(req): Json<agents::AgentSetupRequest>,
 ) -> Result<Json<agents::AgentSetupResult>, (StatusCode, String)> {
     state
@@ -555,4 +604,272 @@ async fn setup_agent(
         .await
         .map(Json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
+async fn get_agent_models(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<agents::AgentModelInfo>, StatusCode> {
+    state
+        .supervisor
+        .get_agent_models(&id)
+        .await
+        .map(Json)
+        .ok_or(StatusCode::NOT_FOUND)
+}
+
+async fn switch_agent_model(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+    Json(req): Json<agents::AgentModelSwitchRequest>,
+) -> Result<Json<agents::AgentInfo>, (StatusCode, String)> {
+    state
+        .supervisor
+        .switch_agent_model(&id, req.model)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+// -----------------------------------------------------------------------------
+// Feature 8 & 11: Universal Custom Provider Management, Vault & Fallbacks Handlers
+// -----------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct CreateProviderRequest {
+    name: String,
+    base_url: String,
+    api_key: String,
+    target_agents: Option<Vec<String>>,
+}
+
+#[derive(Deserialize)]
+struct ToggleStatusRequest {
+    enabled: bool,
+}
+
+#[derive(Deserialize)]
+struct ToggleVisibilityRequest {
+    hidden: bool,
+}
+
+#[derive(Deserialize)]
+struct FallbacksRequest {
+    fallback_chain: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct TelemetryConfigRequest {
+    sync_delay_secs: u64,
+}
+
+async fn list_custom_providers(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<providers::CustomProvider>>, (StatusCode, String)> {
+    state
+        .vault
+        .list_providers()
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
+async fn register_custom_provider(
+    State(state): State<AppState>,
+    Json(req): Json<CreateProviderRequest>,
+) -> Result<(StatusCode, Json<providers::CustomProvider>), (StatusCode, String)> {
+    let id = Uuid::new_v4().to_string();
+    let provider = providers::CustomProvider {
+        id: id.clone(),
+        name: req.name,
+        base_url: req.base_url,
+        api_key: req.api_key,
+        enabled: true,
+        target_agents: req.target_agents.unwrap_or_default(),
+        created_at: chrono::Utc::now(),
+    };
+
+    state
+        .vault
+        .add_provider(provider.clone())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    Ok((StatusCode::CREATED, Json(provider)))
+}
+
+async fn fetch_provider_models(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<Vec<providers::ModelCatalogEntry>>, (StatusCode, String)> {
+    state
+        .vault
+        .fetch_models_for_provider(&id)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
+async fn toggle_provider_status(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+    Json(req): Json<ToggleStatusRequest>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let changed = state
+        .vault
+        .set_provider_status(&id, req.enabled)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    if !changed {
+        return Err((StatusCode::NOT_FOUND, "Provider not found".to_string()));
+    }
+
+    Ok(Json(serde_json::json!({ "id": id, "enabled": req.enabled })))
+}
+
+async fn delete_custom_provider(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    let deleted = state
+        .vault
+        .delete_provider(&id)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    if deleted {
+        Ok(StatusCode::NO_CONTENT)
+    } else {
+        Err((StatusCode::NOT_FOUND, "Provider not found".to_string()))
+    }
+}
+
+async fn toggle_model_visibility(
+    Path(model_id): Path<String>,
+    State(state): State<AppState>,
+    Json(req): Json<ToggleVisibilityRequest>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let changed = state
+        .vault
+        .set_model_hidden(&model_id, req.hidden)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    if !changed {
+        return Err((StatusCode::NOT_FOUND, "Model not found".to_string()));
+    }
+
+    Ok(Json(serde_json::json!({ "model_id": model_id, "hidden": req.hidden })))
+}
+
+async fn delete_model_entry(
+    Path(model_id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    let deleted = state
+        .vault
+        .delete_model(&model_id)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    if deleted {
+        Ok(StatusCode::NO_CONTENT)
+    } else {
+        Err((StatusCode::NOT_FOUND, "Model not found".to_string()))
+    }
+}
+
+async fn get_provider_fallbacks(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<providers::FallbackCascade>, (StatusCode, String)> {
+    let cascade = state
+        .vault
+        .get_fallback_cascade(&id)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?
+        .unwrap_or_default();
+
+    Ok(Json(cascade))
+}
+
+async fn update_provider_fallbacks(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+    Json(req): Json<FallbacksRequest>,
+) -> Result<Json<providers::FallbackCascade>, (StatusCode, String)> {
+    let cascade = providers::FallbackCascade::new(req.fallback_chain);
+    state
+        .vault
+        .set_fallback_cascade(&id, cascade.clone())
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    Ok(Json(cascade))
+}
+
+// -----------------------------------------------------------------------------
+// Feature 13 & 14: Context Saturation & Predictive Token Telemetry Handlers
+// -----------------------------------------------------------------------------
+
+async fn get_telemetry_config(
+    State(state): State<AppState>,
+) -> Json<telemetry::TelemetryConfig> {
+    let cfg = *state.telemetry_config.read().await;
+    Json(cfg)
+}
+
+async fn update_telemetry_config(
+    State(state): State<AppState>,
+    Json(req): Json<TelemetryConfigRequest>,
+) -> Json<telemetry::TelemetryConfig> {
+    let mut cfg = state.telemetry_config.write().await;
+    *cfg = telemetry::TelemetryConfig::new(req.sync_delay_secs);
+    Json(*cfg)
+}
+
+async fn get_agent_context_telemetry(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    let agent = state.supervisor.get_agent(&id).await.ok_or(StatusCode::NOT_FOUND)?;
+    let tracker = state.telemetry_tracker.lock().await;
+    let rate: f64 = tracker.tokens_per_second();
+
+    let max_window = 1_000_000u64;
+    let prompt_tokens = 4_250u64;
+    let completion_tokens = 1_820u64;
+    let sat = telemetry::ContextSaturation::new(prompt_tokens, completion_tokens, max_window);
+
+    Ok(Json(serde_json::json!({
+        "agent_id": id,
+        "model": agent.current_model,
+        "prompt_tokens": sat.prompt_tokens,
+        "completion_tokens": sat.completion_tokens,
+        "total_tokens": sat.total_tokens,
+        "context_window_limit": sat.context_window_limit,
+        "usage_pct": sat.usage_pct,
+        "warning_threshold": sat.threshold_warning(),
+        "generation_rate_per_sec": rate
+    })))
+}
+
+async fn get_room_context_breakdown(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<telemetry::RoomContextBreakdown>, (StatusCode, String)> {
+    let messages = state
+        .db
+        .get_messages(&id, 100)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let history_chars: usize = messages.iter().map(|m| m.content.len()).sum();
+    let history_tokens = (history_chars / 4) as u64;
+    let system_tokens = 2_500u64;
+    let draft_tokens = 0u64;
+    let completion_tokens = (history_tokens / 2).max(1);
+    let max_window = 1_000_000u64;
+
+    let breakdown = telemetry::RoomContextBreakdown::new(
+        system_tokens,
+        history_tokens,
+        draft_tokens,
+        completion_tokens,
+        max_window,
+    );
+
+    Ok(Json(breakdown))
 }

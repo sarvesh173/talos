@@ -348,3 +348,111 @@ Allows creating multi-agent collaborative rooms where users and agents communica
    - *Multi-Agent Room Creator*: Dialog to name the room, set the goal, and pick participating agents from the fleet.
    - *Mention Auto-Complete Popup*: Typing `@` in the compose box pops up a participant picker with agent avatars.
    - *Active Speaker Indicator*: Displays which agent is currently executing or responding in the room.
+
+---
+
+## 16. Metallic M3 Expressive Graphical Interface, Extensible Feature Architecture & Message-Grade Motion System
+
+The Android client becomes a **metallic, motion-first control surface** for the whole
+agent fleet, architected so **new/external features can be added later without
+rewriting existing code** (one new file + one registry line), and so every future
+edit lands in a single, small, single-responsibility file.
+
+### 16.1 Extensible Feature Slot Registry (external-feature ready)
+
+1. **Feature contract** (`core/feature/FeatureSlot.kt`):
+   - A feature is a pure data+composable unit: `id`, `title`, `icon`, `order`,
+     `enabled`, and a `@Composable fun FeatureSlot.Content(scope, client)`.
+   - No feature may reach into another feature's internals. Features communicate
+     only through the shared repositories and the WebSocket bus.
+2. **Catalog** (`feature/registry/FeatureCatalog.kt`): the single list where every
+   shipped feature is registered. Adding an external feature = write one new file
+   under `feature/<name>/` + add one `FeatureSlot(...)` entry here.
+3. **Shell** (`feature/shell/`): renders the registered slots as a metallic
+   navigation rail + content pane, so a new slot appears in the shell with zero
+   changes to the shell code.
+4. **Backend-driven slots**: the core's `GET /api/features` (when present) can
+   advertise extra slots; the client renders unknown slots as a safe
+   "read-only capability" card instead of crashing.
+
+### 16.2 Chunked Module Layout (one concern per file)
+
+| Path | Responsibility |
+|---|---|
+| `core/feature/FeatureSlot.kt` | The extensibility contract only. |
+| `core/motion/MotionTokens.kt` | All easings/springs/durations in one file. |
+| `core/design/MetallicTokens.kt` | Metallic palette roles, brushes, shape scale. |
+| `data/model/*.kt` | One file per domain (`Agent`, `Room`, `Message`, `Telemetry`, `Provider`). |
+| `data/remote/TalosApi.kt` | One API client per domain group. |
+| `data/repository/*.kt` | One repository per domain, `StateFlow`-exposed. |
+| `feature/<name>/*.kt` | One screen + one state holder per feature. |
+| `ui/MetallicKit.kt` | The shared metallic component kit every screen uses. |
+
+Rule: **no file exceeds one screen's worth of logic.** A single line change must
+never require touching more than the file that owns the behaviour.
+
+### 16.3 Metallic UI Component Kit (every button, every surface)
+
+Every interactive element is re-authored on the metallic system — no stock M3
+buttons, no hardcoded `Color.White`, no legacy tokens:
+
+1. `MetalButton` (primary/tonal/outlined) — spring press `scale(0.96f)` on the
+   M3 Expressive fast-spatial spring, in-button `LoadingIndicator` crossfade
+   (never a stock spinner), disabled state at `onSurface @ 12%`.
+2. `MetalIconButton` — 40dp minimum target, machined socket, tint from scheme role.
+3. `MetalChip` / `MetalFilterChip` / `MetalSegmentedSwitch` — segmented switcher
+   for view perspectives, animated thumb on the default spatial spring.
+4. `MetalCard` / `MetalSheet` / `MetalDialog` — multi-stop brushed-metal border
+   brush from the active scheme, 5 surface-container tiers, tonal elevation.
+5. `MetalListItem` — leading machined emblem well, headline/supporting, trailing slot.
+6. `MetalTextField` / `MetalSearchField` — scheme-role fills, focused border in `primary`.
+7. `MetalProgressRing` / `MetalContextRing` — determinate arc, bounded repaint rate.
+8. `MetalStatusPill` — live state with hardware status dot + uppercase tracking.
+9. `MetalNavRail` / `MetalBottomDock` — tactile, spring-animated selection.
+10. **Zero emoji rule**: Material vector icons only, sentence-case labels.
+
+### 16.4 Message-Grade Motion System (research-grounded)
+
+All motion is centralized in `core/motion/MotionTokens.kt` and derived from
+measured Telegram/WhatsApp behaviour (see `docs/MOTION_SPEC.md` for the raw
+measurements and sources):
+
+| Interaction | Spec | Source lineage |
+|---|---|---|
+| Standard transition curve | `CubicBezierEasing(0.4f, 0f, 0.2f, 1f)` | Telegram Web K `--transition-standard-easing` |
+| Enter transition | 200–300 ms / emphasized decelerate `cubic-bezier(0.05,0.7,0.1,1)` | Telegram Web K `--transition-standard-in-time` |
+| Exit transition | 150–250 ms / emphasized accelerate `cubic-bezier(0.3,0,0.8,0.15)` | Telegram Web K `--transition-standard-out-time` |
+| Sheet present/dismiss | 250 ms, standard curve | Telegram Android `BottomSheet` |
+| Press feedback | spatial spring `damping 0.6 / stiffness 800`, scale `0.96f` | M3 Expressive + Telegram Android `EASE_OUT_BACK` |
+| Message bubble enter | alpha + `translateY 12dp→0` + `scale 0.96→1`, default spatial spring | Telegram/WhatsApp list entry behaviour |
+| Typing indicator | keyframe loop on emphasized decelerate (springs forbidden for loops) | WhatsApp Web 0.333 s / 0.417 s cadence |
+| Mention popup | `scale 0.92→1` fast spatial spring + alpha | WhatsApp Web `cubic-bezier(.22,1,.36,1)` |
+| Context ring sweep | continuous arc, bounded to 1 repaint per frame, no layout work | M3 live-telemetry rule |
+| List stagger | 30–50 ms per item, `translateY` + alpha | WhatsApp Web stagger cadence |
+
+**Rules**: spatial springs for position/size/shape; critically damped effects
+springs for color/alpha (never overshoot); springs never used for infinite
+loops; decorative motion is skipped when the system animation scale is 0.
+
+### 16.5 Screen Inventory & UI Mapping
+
+| Slot | Route source | Core endpoints consumed |
+|---|---|---|
+| **Agent Fleet** | `GET /api/agents`, `/api/agents/pool`, `/api/agents/:id/models`, `POST /api/agents/:id/model`, `POST /api/agents/scan`, `POST /api/agents/register`, `POST /api/agents/:id/setup`, `POST /api/agents/:id/run` | agent registry, dynamic model switching, setup, pool status |
+| **Agent Tree** | `GET /api/agents/:id` (parent/child fields) | hierarchical inspection + live sub-agent steering |
+| **Reasoning Control** | `POST /api/agents/:id/reasoning` | 8-tier reasoning effort ladder + ultra code mode |
+| **Provider Vault** | `GET/POST /api/providers/custom`, `POST /api/providers/custom/:id/fetch-models`, `PATCH /api/providers/custom/:id/status`, `PUT /api/providers/custom/:id/fallbacks`, `DELETE /api/providers/custom/:id` | vaulted providers, auto model fetch, priority fallback cascade |
+| **Context Telemetry** | `GET /api/agents/:id/context`, `GET /api/rooms/:id/context-breakdown`, `GET/POST /api/telemetry/config` | 1M saturation, token velocity, 0s/5s dual sync |
+| **Composer Context Ring** | local tokenizer + `GET /api/agents/:id/context` | live prompt token estimate, corner ring, double-tap exact inspect |
+| **Group Rooms** | `GET/POST /api/rooms`, `GET/POST /api/rooms/:id/messages`, `WS /ws/:room_id/:client_id` | room creation, `@mention` dispatch, active speaker |
+| **Raw Log Mirror** | `WS /ws/:room_id/:client_id` (+ provider stdout) | zero-filtering upstream log streaming |
+| **Shell** | registry + mesh status | Tailscale gate, feature slots |
+
+### 16.6 Privacy & Runtime Rules (unchanged, enforced in UI)
+
+- No IP, hostname, overlay address, peer name or host system detail is ever
+  rendered; rows show node names and transport only.
+- Provider API keys are masked in every surface (`••••` + last 4) and never
+  returned by the core.
+- No fabricated addresses: the client re-discovers the endpoint at runtime and
+  reports "offline" honestly.

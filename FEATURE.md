@@ -323,3 +323,55 @@ Calculates live prompt token counts while typing in the composer and displays an
    - *Compose Token Badge*: Subdued monospace tag in the input box showing live token estimate (`45 tok`).
    - *Corner Circular Gauge*: Compact circular ring with `1M` center label that fills clockwise as context saturates.
    - *Double-Tap Context Deep-Dive Modal*: Glassmorphic HUD overlay showing exact token distributions and compaction actions.
+
+---
+
+## 15. Managed YOLO Mode & Catastrophic Guardrail Interceptor
+
+Enables fully autonomous, uninterrupted 24/7 execution by auto-approving standard commands while maintaining a hard security safety net against destructive actions.
+
+### Specifications & Behavior:
+1. **Autonomous YOLO Execution**:
+   - Automatically passes `--yolo` or `--dangerously-skip-permissions` to underlying CLI tools (OmniRush, OpenCode, Cline, Codex) so agents do not stop and stall waiting for manual prompt confirmation.
+   - Auto-approves routine developer tasks: code synthesis, running tests, reading files, creating commits, and local dependency builds.
+2. **Hard Guardrail Safety Filter (Bypass-Proof)**:
+   - Even when YOLO mode is active, the backend execution supervisor inspects commands against a non-bypassable catastrophic blocklist:
+     - Root / home wipe attempts (`rm -rf /`, `rm -rf ~`, unanchored wildcards).
+     - Sensitive credential harvesting (scripts scanning `~/.ssh`, dumping `.env` tokens, reading private system keyrings).
+     - Low-level disk formatting or partition destruction (`mkfs`, `dd of=/dev/sd*`).
+     - Destructive git operations on protected branches (`git push -f origin main`).
+   - When a blocked command is detected, execution pauses and emits an instant push approval alert to the mobile device.
+3. **Double-Tap Image Fullscreen Lightbox**:
+   - Double-tapping any image attachment in chat opens a high-resolution pinch-to-zoom Lightbox view with OCR and metadata details.
+4. **Backend REST Endpoints**:
+   - `PATCH /api/agents/:id/yolo` -> Toggle YOLO mode (`{ "enabled": true | false }`).
+   - `GET /api/guardrails/pending` -> List any paused dangerous executions awaiting user override.
+   - `POST /api/guardrails/:id/approve` -> Explicit one-time override for a held risky command.
+5. **UI Mapping (Pending Frontend)**:
+   - *YOLO Mode Capsule*: Flame/Shield icon toggle in Agent Settings (`Safe` vs `YOLO ⚡`).
+   - *Security Confirmation Prompt*: Modal dialog when an execution hits a hard guardrail.
+
+---
+
+## 16. Multi-Agent Group Rooms & Mention-Based Inter-Agent Dispatch
+
+Allows creating multi-agent collaborative rooms where users and agents communicate, pass work, and trigger each other using `@mentions`.
+
+### Specifications & Behavior:
+1. **Isolated Multi-Agent Rooms**:
+   - Users can create customized rooms (e.g. "Core Team", "Rust Refactor", "Security Audit") and invite multiple CLI agents (`opencode`, `hermes`, `omnirush`, `codex`, `cline`).
+   - Each room maintains its own isolated message history, execution state, and active process slots.
+2. **Mention-Based Dispatch Engine (`@AgentName`)**:
+   - **User Mentions**: Typing `@opencode` or `@hermes` routes the turn exclusively to that specific agent.
+   - **Inter-Agent Autonomous Collaboration**: When an agent finishes a step and mentions another agent in its reply (e.g., *\"@codex please run the compiler checks on this patch\"*), the mentioned agent automatically wakes up, takes the context, executes the task, and responds back into the room!
+   - **Natural Name Recognition**: Agents also respond when addressed by their exact natural name in conversation without needing rigid syntax.
+3. **Broadcast & Consensus Modes**:
+   - Sending a message with `@all` or omitting mentions in a collaborative room allows all participants to analyze the problem or convene a multi-agent review loop.
+4. **Backend REST & WebSocket Endpoints**:
+   - `POST /api/rooms` -> Create room (`{ "name": "...", "agent_ids": ["hermes", "opencode", "codex"] }`).
+   - `POST /api/rooms/:id/messages` -> Post message with automated `@mention` parsing and async task dispatch.
+   - `WS /ws/:room_id/:client_id` -> Real-time multi-agent message delivery and typing indicators.
+5. **UI Mapping (Pending Frontend)**:
+   - *Multi-Agent Room Creator*: Dialog to name the room, set the goal, and pick participating agents from the fleet.
+   - *Mention Auto-Complete Popup*: Typing `@` in the compose box pops up a participant picker with agent avatars.
+   - *Active Speaker Indicator*: Displays which agent is currently executing or responding in the room.

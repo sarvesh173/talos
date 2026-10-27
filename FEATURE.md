@@ -326,39 +326,7 @@ Calculates live prompt token counts while typing in the composer and displays an
 
 ---
 
-## 15. Managed YOLO Mode & Catastrophic Guardrail Interceptor
-
-Enables fully autonomous, uninterrupted 24/7 execution by auto-approving standard commands while maintaining a hard security safety net against destructive actions.
-
-### Specifications & Behavior:
-1. **Interactive `/yolo` Slash Command Toggle**:
-   - Typing `/yolo` directly in any chat room toggles the session execution policy immediately with exact status responses:
-     - When toggled ON: `⚡ YOLO mode ON for this session — all commands auto-approved. Use with caution.`
-     - When toggled OFF: `⚠️ YOLO mode OFF for this session — dangerous commands will require approval.`
-   - Instantly synchronizes across all participating agents in that session without restarting processes.
-2. **Autonomous YOLO Execution**:
-   - When YOLO is ON, automatically passes `--yolo` or `--dangerously-skip-permissions` to underlying CLI tools (OmniRush, OpenCode, Cline, Codex) so agents do not stop and stall waiting for manual prompt confirmation.
-   - Auto-approves routine developer tasks: code synthesis, running tests, reading files, creating commits, and local dependency builds.
-3. **Hard Guardrail Safety Filter (Bypass-Proof)**:
-   - Even when YOLO mode is active, the backend execution supervisor inspects commands against a non-bypassable catastrophic blocklist:
-     - Root / home wipe attempts (`rm -rf /`, `rm -rf ~`, unanchored wildcards).
-     - Sensitive credential harvesting (scripts scanning `~/.ssh`, dumping `.env` tokens, reading private system keyrings).
-     - Low-level disk formatting or partition destruction (`mkfs`, `dd of=/dev/sd*`).
-     - Destructive git operations on protected branches (`git push -f origin main`).
-   - When a blocked command is detected, execution pauses and emits an instant push approval alert to the mobile device.
-3. **Double-Tap Image Fullscreen Lightbox**:
-   - Double-tapping any image attachment in chat opens a high-resolution pinch-to-zoom Lightbox view with OCR and metadata details.
-4. **Backend REST Endpoints**:
-   - `PATCH /api/agents/:id/yolo` -> Toggle YOLO mode (`{ "enabled": true | false }`).
-   - `GET /api/guardrails/pending` -> List any paused dangerous executions awaiting user override.
-   - `POST /api/guardrails/:id/approve` -> Explicit one-time override for a held risky command.
-5. **UI Mapping (Pending Frontend)**:
-   - *Prominent "Full Access" Action Button*: Dedicated button labeled **"Full Access"** (switches to active `Full Access ⚡` with gold glow when engaged, and neutral `Full Access` when off) placed directly in the top room header and composer quick actions dock. Tapping it instantly toggles YOLO mode with haptic feedback and emits the status notification.
-   - *Security Confirmation Prompt*: Modal dialog when an execution hits a hard guardrail.
-
----
-
-## 16. Multi-Agent Group Rooms & Mention-Based Inter-Agent Dispatch
+## 15. Multi-Agent Group Rooms & Mention-Based Inter-Agent Dispatch
 
 Allows creating multi-agent collaborative rooms where users and agents communicate, pass work, and trigger each other using `@mentions`.
 

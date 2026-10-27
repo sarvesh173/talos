@@ -71,3 +71,19 @@ Hardware and OS level permissions configured in `AndroidManifest.xml`:
   - *Audio Recording Capsule*: Floating recording button with waveform animation.
   - *Camera Attachment Action*: Quick attach button in message compose dock.
   - *Battery Optimization Prompt Dialog*: Guided one-time prompt to request battery unrestricted mode.
+
+---
+
+## 6. Multi-Image Inbound Batching & Turn Queuing
+
+Prevents fragmented multiple-image analysis by holding incoming images in a debounce queue and dispatching a single unified turn.
+
+- [x] **Debounce Window**: Aggregates images sent within a 3.5-second burst window (albums or rapid sequential sends) into a single batch.
+- [x] **Turn-Lock Queuing**: If an agent is already actively executing a turn, incoming images wait in the queue until the active turn finishes instead of creating competing sub-turns.
+- [x] **Unified Multi-Image Prompt**: Dispatches all collected image paths together to the vision model in one single request.
+- [x] **Backend Implementation**:
+  - `MediaBatchQueue` in `crates/talos-core/src/room_bus.rs` for room messages with attachments.
+  - Hermes Telegram adapter configured (`HERMES_TELEGRAM_MEDIA_BATCH_DELAY_SECONDS=3.5`).
+- [ ] **UI Mapping**:
+  - *Multi-Image Preview Grid*: Horizontal thumbnail strip above the input box showing queued images before sending.
+  - *Queued Turn Badge*: Visual indicator showing pending media count when a turn is currently in flight.

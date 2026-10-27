@@ -136,3 +136,28 @@ Categorizes agents by model flexibility: Universal Agents receive the entire Omn
    - *Universal Tier Pill*: Accent-colored pill on compatible agent cards indicating full model freedom.
    - *Dedicated Tier Lock*: Neutral locked icon on fixed-model agents.
    - *OmniRoute Model Browser Drawer*: Categorized drawer (Frontier, Coding, Fast, Free) when selecting models for Universal agents.
+
+---
+
+## 9. Dynamic Reasoning Effort & Thinking Budget Control
+
+Provides granular control over the depth of reasoning/thinking tokens across AI models and CLI agents.
+
+### Specifications & Behavior:
+1. **Normalized Reasoning Tiers**:
+   - `off` / `none`: Zero thinking overhead. Pure fast completion.
+   - `low`: Quick reasoning pass (OpenAI `low` / Claude ~2,000 thinking tokens).
+   - `medium`: Balanced reasoning (OpenAI `medium` / Claude ~8,000 thinking tokens).
+   - `high`: Deep reasoning (OpenAI `high` / Claude ~32,000 thinking tokens / DeepSeek R1).
+   - `max` / `ultra`: Exhaustive thinking mode (ChatGPT Pro Max, Fable `favor-ultra`, Claude 64k tokens, OmniRush `:max` suffix).
+2. **Provider & CLI Translation Engine**:
+   - **OpenAI / Codex**: Translates to `reasoning_effort: "low" | "medium" | "high"`.
+   - **Anthropic / Claude (3.7 Sonnet)**: Translates to `thinking: { type: "enabled", budget_tokens: <count> }`.
+   - **Google Gemini (2.0/2.5 Thinking)**: Translates to `thinking_config: { thinking_budget: <count> }`.
+   - **OmniRush & CLI Coding Tools**: Translates to CLI flags (`--effort <tier>`, `--reasoning <tier>`) or model identifier overrides (e.g. appending `:max`).
+3. **Backend REST Endpoints**:
+   - `GET /api/agents/:id/reasoning` -> Returns `{ agent_id, current_effort, supported_efforts }`.
+   - `POST /api/agents/:id/reasoning` -> Payload `{ "effort": "low" | "medium" | "high" | "max" | "ultra" | "off" }`.
+4. **UI Mapping (Pending Frontend)**:
+   - *Reasoning Effort Segmented Control*: 5-step pill bar (`Off` | `Low` | `Med` | `High` | `Max/Ultra`) in Agent Settings and Room Composer.
+   - *Thinking Flame Badge*: Dynamic visual indicator on the message dock displaying the active reasoning depth.

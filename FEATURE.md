@@ -296,3 +296,30 @@ Monitors context window saturation and token consumption with zero CPU load on t
    - *Live Context Ring & Token Pill*: Monospace pill displaying live ticking tokens and circular percentage ring in the app header/composer.
    - *Telemetry Sync Rate Slider*: Setting slider in Preferences (`0s: Real-Time` to `10s: Ultra-Eco`, default `5s`).
    - *Context Explainer Dialog*: Tapping "Learn More" pops up the architecture explanation modal.
+
+---
+
+## 14. Live Compose Prompt Token Estimator & Interactive Corner Context Ring (Double-Tap Inspect)
+
+Calculates live prompt token counts while typing in the composer and displays an interactive circular context saturation ring in the screen corner with double-tap deep diagnostics.
+
+### Specifications & Behavior:
+1. **Live In-Composer Prompt Token Estimator**:
+   - As the user types in the message input box, a lightweight on-device tokenizer calculates the prompt token count in real-time (e.g. displaying `~42 tokens` near the send button).
+   - Updates instantly on every keystroke with zero network latency, giving immediate cost and context awareness before the message is sent.
+2. **Corner Circular Context Saturation Ring**:
+   - Displayed in the conversation corner / message dock showing the active model's maximum window ceiling (e.g. `1M` or `128k`).
+   - An intuitive circular progress arc that fills up as conversation history and responses accumulate.
+   - When the circle becomes completely full, it visually alerts the user that the model's context window limit has been reached.
+3. **Interactive Double-Tap Deep Dive Gesture**:
+   - **Double-tapping** the corner circular bar opens an instant **Context Diagnostics Sheet**:
+     - **Exact Prompt Tokens**: Breakdown of user messages, system prompt, and tools.
+     - **Exact Completion Tokens**: Model-generated output tokens across turns.
+     - **Remaining Free Runway**: Exact number of remaining free tokens before truncation/compaction triggers.
+     - **Context Health Action**: Quick one-tap shortcut to trigger manual context compaction or switch to a higher-capacity 1M-token model.
+4. **Backend REST Endpoints**:
+   - `GET /api/rooms/:id/context-breakdown` -> Returns detailed token allocation: `{ system_tokens, history_tokens, active_draft_tokens, completion_tokens, free_tokens, max_window: 1000000 }`.
+5. **UI Mapping (Pending Frontend)**:
+   - *Compose Token Badge*: Subdued monospace tag in the input box showing live token estimate (`45 tok`).
+   - *Corner Circular Gauge*: Compact circular ring with `1M` center label that fills clockwise as context saturates.
+   - *Double-Tap Context Deep-Dive Modal*: Glassmorphic HUD overlay showing exact token distributions and compaction actions.

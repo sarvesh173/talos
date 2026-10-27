@@ -7,6 +7,7 @@ mod models;
 mod providers;
 mod room_bus;
 mod theme;
+mod agents;
 
 use auth::AuthEngine;
 use axum::{
@@ -45,6 +46,7 @@ fn now_ts() -> f64 {
 pub struct AppState {
     pub db: Arc<Database>,
     pub bus: Arc<RoomBus>,
+    pub supervisor: Arc<agents::AgentSupervisor>,
 }
 
 #[tokio::main]
@@ -58,8 +60,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db_path = std::env::var("TALOS_DB_PATH").unwrap_or_else(|_| "talos.db".to_string());
     let db = Arc::new(Database::new(&db_path)?);
     let bus = Arc::new(RoomBus::new());
+    let supervisor = Arc::new(agents::AgentSupervisor::new(2));
+    supervisor.rescan().await;
 
-    let state = AppState { db, bus };
+    let state = AppState { db, bus, supervisor };
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -90,6 +94,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/providers/failover", get(provider_failover))
         // Flexible theme tokens (client applies as ColorScheme overrides)
         .route("/api/theme", get(get_theme).put(put_theme))
+        // Dynamic Agent Registry & Process Supervisor
+        .route("/api/agents", get(list_agents))
+        .route("/api/agents/scan", post(scan_agents))
+        .route("/api/agents/register", post(register_custom_agent))
+        .route("/api/agents/pool", get(pool_status))
+        .route("/api/agents/:id", get(get_agent_detail))
+        .route("/api/agents/:id/run", post(run_agent_task))
+        .route("/api/agents/:id/setup", post(setup_agent))
         // Realtime WebSocket Room Event Bus
         .route("/ws/:room_id/:client_id", get(ws_handler))
         .layer(cors)
@@ -475,4 +487,72 @@ async fn handle_socket(socket: WebSocket, room_id: String, client_id: String, st
     };
 
     info!("WebSocket client disconnected: {} (room: {})", client_id, room_id);
+}
+
+
+// ---------------------------------------------------------
+// Dynamic Agent Registry & Process Supervisor Handlers
+// ---------------------------------------------------------
+
+async fn list_agents(State(state): State<AppState>) -> Json<Vec<agents::AgentInfo>> {
+    Json(state.supervisor.list_agents().await)
+}
+
+async fn scan_agents(State(state): State<AppState>) -> Json<Vec<agents::AgentInfo>> {
+    state.supervisor.rescan().await;
+    Json(state.supervisor.list_agents().await)
+}
+
+async fn register_custom_agent(
+    State(state): State<AppState>,
+    Json(manifest): Json<agents::CustomAgentManifest>,
+) -> Result<Json<agents::AgentInfo>, (StatusCode, String)> {
+    state
+        .supervisor
+        .register_custom(manifest)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn pool_status(State(state): State<AppState>) -> Json<agents::PoolStatus> {
+    Json(state.supervisor.get_pool_status().await)
+}
+
+async fn get_agent_detail(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<agents::AgentInfo>, StatusCode> {
+    state
+        .supervisor
+        .get_agent(&id)
+        .await
+        .map(Json)
+        .ok_or(StatusCode::NOT_FOUND)
+}
+
+async fn run_agent_task(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(req): Json<agents::AgentRunRequest>,
+) -> Result<Json<agents::AgentRunResult>, (StatusCode, String)> {
+    state
+        .supervisor
+        .execute_task(&id, req)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
+async fn setup_agent(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(req): Json<agents::AgentSetupRequest>,
+) -> Result<Json<agents::AgentSetupResult>, (StatusCode, String)> {
+    state
+        .supervisor
+        .run_setup(&id, req)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
 }

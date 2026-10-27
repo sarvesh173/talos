@@ -112,3 +112,27 @@ Allows switching the underlying AI model for any registered CLI coding agent dyn
    - *Model Selector Dropdown / Chips*: Tapping an agent card opens available model options.
    - *Active Model Badge*: Displays the currently selected model name directly beneath the agent's name in Fleet Hub.
    - *Model Switch Feedback Toast*: Transient confirmation when a new model is selected.
+
+---
+
+## 8. Universal vs Dedicated Model Tiering across Agent Fleet
+
+Categorizes agents by model flexibility: Universal Agents receive the entire OmniRoute & custom model catalog, while Dedicated Agents retain their proprietary native models.
+
+### Specifications & Behavior:
+1. **Universal Agents Tier** (`tier: "universal"`):
+   - Powerful general-purpose coding agents (e.g. `opencode`, `omnirush`, `hermes`, `codex`, `cline`, `cloudcode`).
+   - Automatically inherit the **Universal Model Pool**: any model added to OmniRoute or TALOS gateway instantly routes into their available model picker without per-agent manual configuration.
+2. **Dedicated Agents Tier** (`tier: "dedicated"`):
+   - Specialized or proprietary CLI tools that only support their native models or fixed single endpoints (e.g. Gemini CLI, standalone reverse-engineered agent binaries from the 50-tool fleet).
+   - Displayed with a locked/native badge in the UI so users know external models cannot be arbitrarily injected.
+3. **Global Universal Model Sync**:
+   - TALOS backend maintains a synchronized catalog of all OmniRoute endpoints and custom models (`GET /api/models/universal`).
+   - Universal agents query this centralized registry to populate their supported model lists dynamically.
+4. **Backend REST Endpoints**:
+   - `GET /api/models/universal` -> Returns full list of universal models across all providers.
+   - `GET /api/agents` -> Returns `tier: "universal" | "dedicated"` for each registered agent.
+5. **UI Mapping (Pending Frontend)**:
+   - *Universal Tier Pill*: Accent-colored pill on compatible agent cards indicating full model freedom.
+   - *Dedicated Tier Lock*: Neutral locked icon on fixed-model agents.
+   - *OmniRoute Model Browser Drawer*: Categorized drawer (Frontier, Coding, Fast, Free) when selecting models for Universal agents.

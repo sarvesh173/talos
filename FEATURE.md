@@ -203,3 +203,44 @@ Provides full visibility and interactive control over parent-child agent delegat
 6. **UI Mapping (Pending Frontend)**:
    - *Agent Fleet Tree View / DAG Visualizer*: Collapsible tree node graph showing root delegator and child branches with live status pulses.
    - *Sub-Agent Focus Drawer*: Tapping any child node opens a dedicated conversation pane with individual Model/Reasoning chips and live stdout streaming.
+
+---
+
+## 11. Universal Custom Provider Management, Secret Vaulting, Auto-Discovery & Priority Fallback Cascades
+
+Gives the user total authority over AI providers, custom endpoints, auto-discovery of models, granular visibility curation, and ordered fallback key chains.
+
+### Specifications & Behavior:
+1. **Dynamic Custom Provider Onboarding**:
+   - User inputs Base URL + API Key + Provider Name (e.g. OpenRouter, Groq, DeepSeek, custom vLLM / Ollama server).
+   - Backend auto-probes `${base_url}/models` (OpenAI format) to pull available model IDs automatically into the catalog.
+   - Allows assigning the new provider to specific CLI agents (`opencode`, `omnirush`, `hermes`, `cline`, etc.).
+2. **Encrypted Secret Vaulting (SG Warden Compliant)**:
+   - API keys are vaulted under `~/.talos/vault/providers.json` with strict `0600` Linux permissions.
+   - Keys are NEVER exposed in plain text logs, error traces, or Git commits (auto-masked as `[REDACTED]`).
+3. **Full Provider Lifecycle Management**:
+   - **Hire / Pause (Enable / Disable)**: Toggle switch to pause a provider without deleting credentials.
+   - **Purge / Delete**: Deletes provider entirely, wiping vaulted API keys and unbinding associated models.
+4. **Model Visibility & Catalog Curation**:
+   - **Hide / Unhide**: Eye icon toggle to hide unwanted/bloated models from the picker so only curated favorites appear.
+   - **Hard Delete**: Delete specific model IDs from the local catalog permanently.
+5. **Ordered Multi-Tier Fallback Cascades (Priority Chains)**:
+   - Users can configure multiple backup keys/endpoints with an explicit priority order:
+     `Primary (Priority 1) -> Fallback 1 (Priority 2) -> Fallback 2 (Priority 3) -> Fallback N`.
+   - Re-order priority numerically or via drag-and-drop.
+   - **Auto-Failover**: When Primary hits HTTP 429 (quota exhausted) or 5xx, the supervisor seamlessly shifts the in-flight request to Fallback 1 within milliseconds, preserving task progress.
+6. **Backend REST Endpoints**:
+   - `GET /api/providers` -> List all configured providers, status, and model counts.
+   - `POST /api/providers` -> Register a custom provider (`{ "name": "...", "base_url": "...", "api_key": "...", "target_agents": [...] }`).
+   - `POST /api/providers/:id/fetch-models` -> Force auto-fetch from `${base_url}/models`.
+   - `PATCH /api/providers/:id/status` -> Enable/Disable provider (`{ "enabled": true | false }`).
+   - `DELETE /api/providers/:id` -> Delete provider and purge keys.
+   - `PATCH /api/models/:model_id/visibility` -> Toggle visibility (`{ "hidden": true | false }`).
+   - `DELETE /api/models/:model_id` -> Remove model from catalog.
+   - `GET /api/providers/:id/fallbacks` -> Get ordered fallback cascade list.
+   - `PUT /api/providers/:id/fallbacks` -> Update fallback order (`{ "ordered_keys": ["key_id_1", "key_id_2"] }`).
+7. **UI Mapping (Pending Frontend)**:
+   - *Provider Vault Dashboard*: Card grid with live provider status toggles, latency meters, and model counts.
+   - *Add Provider Modal*: Simple Base URL + API Key form with "Auto-Fetch Models" test button.
+   - *Model Curation Drawer*: Table with eye toggle icons (Hide/Unhide) and delete action per model.
+   - *Fallback Priority Stack*: Drag-and-drop ordered list (1, 2, 3...) for automatic 429 failover.

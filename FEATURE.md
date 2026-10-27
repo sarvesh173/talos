@@ -247,27 +247,23 @@ Gives the user total authority over AI providers, custom endpoints, auto-discove
 
 ---
 
-## 12. Transparent Real-Time Diagnostics & Direct Error Telemetry
+## 12. Direct Raw Terminal & Upstream Log Mirroring (Zero Artificial Filtering)
 
-Eliminates vague "Check gateway logs" or raw "403" failures by translating upstream provider errors into instant, actionable root-cause diagnostics directly inside the mobile app.
+Pipes unvarnished, exact process terminal output and upstream provider error payloads directly to the application UI—exactly as if running the command in a Linux terminal, without artificial filters or synthetic parsing.
 
 ### Specifications & Behavior:
-1. **Zero Opaque Errors Mandate**:
-   - Generic error messages like "Internal Server Error" or "Check gateway logs" are forbidden.
-   - TALOS intercepts raw upstream HTTP status, error bodies, and response headers (`Retry-After`, `x-ratelimit-reset`, rate-limit buckets) and produces an immediate causal breakdown.
-2. **Actionable Diagnostic Classification**:
-   - **429 (Rate Limit / Quota Exhaustion)**: Explains exact reset time (`"Quota exhausted. Resets in 1h 14m."`), token consumption metrics, and automatically reports which fallback key was engaged.
-   - **401 / 403 (Auth & Model Permissions)**: Identifies whether the API key is expired, invalid, or lacks entitlement for the requested model (e.g. Claude 3.7 access not granted on this key).
-   - **400 (Context Length Exceeded)**: Reports exact prompt tokens vs model limit (e.g. `135,000 / 128,000 tokens`), recommending context compaction or model switch.
-   - **502 / 503 (Upstream Outage vs Local Gateway)**: Clarifies if the external provider is down vs local network failure with real-time latency ping.
-3. **No-Terminal Remote Live Log Streaming**:
-   - Client does not require SSH or terminal access to inspect errors.
-   - Real-time diagnostic events stream over WebSocket (`/ws/diagnostics`) with sanitized output.
+1. **Verbatim 1:1 Pass-Through**:
+   - Zero hardcoded error message rewriting. Whatever stdout, stderr, or HTTP body the CLI tool or upstream API outputs (`Quota exhausted`, `Your access is denied`, `Model deprecated`, python traceback, or raw JSON error) is mirrored 1:1.
+   - Eliminates the risk of synthetic translators hiding real unexpected edge-case errors.
+2. **Gateway-Style Log Pipeline**:
+   - Just like Hermes gateway writes raw diagnostic lines directly to its gateway log stream, TALOS Core captures stderr and upstream failure bodies and emits them immediately over the room event bus.
+   - When an agent job fails or gets rate-limited, the exact line from the process appears directly in the conversation thread and the log stream.
+3. **No-PC Remote Live Terminal Feed**:
+   - Allows the user to inspect the exact terminal state directly from their phone over Tailscale mesh without needing to get up, open SSH, or sit in front of the PC.
 4. **Backend REST & WebSocket Endpoints**:
-   - `GET /api/diagnostics/recent` -> Returns last 50 structured errors with root cause, affected provider, and model.
-   - `GET /api/diagnostics/:error_id` -> Returns sanitized raw upstream JSON error payload.
-   - `WS /ws/diagnostics` -> Live stream of provider errors, failovers, and latency warnings.
+   - `WS /ws/logs` -> Real-time raw log stream forwarding exact process stdout/stderr lines.
+   - `GET /api/logs/latest` -> Returns raw unedited terminal output of the last executed command or agent run.
+   - `GET /api/agents/:id/logs` -> Returns verbatim stdout and stderr logs for a specific agent.
 5. **UI Mapping (Pending Frontend)**:
-   - *Diagnostic Error Banner*: Human-readable banner on the active chat/screen (e.g. `[Groq 429] Limit reached. Switched to OpenRouter`).
-   - *Raw Payload Drawer*: One-tap "Inspect Raw Error" drawer showing headers, status code, and upstream response body on mobile.
-   - *Quick-Remedy Action Chips*: Inline buttons (`Switch Provider`, `Retry Now`, `Change Model`) directly on the error card.
+   - *Live Terminal Log Sheet / Drawer*: Expandable dark-mode terminal window right inside the app displaying exact scrolling CLI output.
+   - *Verbatim Error Callout*: When a command fails, displays the exact stderr string in a monospace console bubble directly under the message.

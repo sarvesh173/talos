@@ -353,7 +353,7 @@ Enables fully autonomous, uninterrupted 24/7 execution by auto-approving standar
    - `GET /api/guardrails/pending` -> List any paused dangerous executions awaiting user override.
    - `POST /api/guardrails/:id/approve` -> Explicit one-time override for a held risky command.
 5. **UI Mapping (Pending Frontend)**:
-   - *YOLO Mode Capsule*: Flame/Shield icon toggle in Agent Settings (`Safe` vs `YOLO ⚡`).
+   - *Prominent "Full Access" Action Button*: Dedicated button labeled **"Full Access"** (switches to active `Full Access ⚡` with gold glow when engaged, and neutral `Full Access` when off) placed directly in the top room header and composer quick actions dock. Tapping it instantly toggles YOLO mode with haptic feedback and emits the status notification.
    - *Security Confirmation Prompt*: Modal dialog when an execution hits a hard guardrail.
 
 ---

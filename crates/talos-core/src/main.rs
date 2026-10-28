@@ -371,13 +371,21 @@ async fn list_tokens(State(state): State<AppState>) -> Result<impl IntoResponse,
 struct CreateTokenRequest {
     label: String,
     role: Option<String>,
+    token: Option<String>,
 }
 
 async fn create_token(
     State(state): State<AppState>,
     Json(req): Json<CreateTokenRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let (plain, hash, masked) = AuthEngine::generate_token(&req.label);
+    let (plain, hash, masked) = if let Some(custom) = req.token {
+        let trimmed = custom.trim().to_string();
+        let hash = AuthEngine::hash_token(&trimmed);
+        let masked = AuthEngine::mask_token(&trimmed);
+        (trimmed, hash, masked)
+    } else {
+        AuthEngine::generate_token(&req.label)
+    };
     let id = format!("tok-{}", &Uuid::new_v4().to_string().replace('-', "")[..8]);
     let role = req.role.unwrap_or_else(|| "user".to_string());
 

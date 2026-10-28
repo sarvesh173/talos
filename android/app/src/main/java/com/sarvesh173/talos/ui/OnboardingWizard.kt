@@ -790,7 +790,7 @@ private fun MeshStep(
     onCopyPrompt: (String) -> Unit = {}
 ) {
     val active = meshInfo?.active == true
-    val hostSetupPrompt = "Read this agent installing .Md file (INSTALLING.md) to start talos-core in the background and output the Tailscale IP and API Key."
+    val hostSetupPrompt = "Read INSTALLING.md, run bash scripts/agent_setup.sh to register a 16-digit API key on talos-core, and output the Tailscale IP and Host Key."
     var endpointInput by remember(initialEndpoint) { mutableStateOf(initialEndpoint) }
     var tokenInput by remember(initialToken) { mutableStateOf(initialToken) }
 

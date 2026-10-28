@@ -21,19 +21,24 @@ When an AI agent is instructed to **"set up TALOS"**, **"run TALOS"**, or **"pai
 A universal bootstrap script is provided in `scripts/`:
 
 ```bash
-# On Linux, macOS, or WSL:
+# On Linux, macOS, or WSL (auto-generates or reuses single 16-digit API key):
 bash scripts/agent_setup.sh
 
-# Or directly with Python 3 on any platform (including Windows):
-python3 scripts/agent_setup.py
+# Pass a custom 16-digit API key:
+python3 scripts/agent_setup.py --key <16_DIGIT_KEY>
+
+# Rotate / regenerate key deliberately:
+python3 scripts/agent_setup.py --rotate
 ```
 
 ### What the Universal Script Does:
 1. **OS & Environment Auto-Detection**: Detects platform (Linux, Darwin/macOS, Windows).
 2. **Daemon Verification**: Ensures `talos-core` is built and running as a detached background daemon on port `8010`.
 3. **Tailscale IPv4 Resolution**: Automatically resolves the active `100.64.0.0/10` Tailscale address via CLI, status JSON, or socket interfaces.
-4. **Single API Key Management**: Checks `~/.config/talos/credentials.json`. If a key already exists and validates against the host, it is **reused**. Otherwise, it mints exactly ONE key and secures it.
-5. **Safe Storage**: Stores credentials at `~/.config/talos/credentials.json` with strict `chmod 600` permissions (owner-only). Never stores secrets in `/tmp` or repository files.
+4. **Single API Key Management & App Reinstall Safety**: Checks `~/.config/talos/credentials.json`. If a key already exists and validates against the host, it is **preserved and reused**. If the user uninstalls and reinstalls the mobile app, they can use this SAME key to log back in without having to generate a new key.
+5. **16-Digit Random Key Generation**: If no key exists or `--rotate` is specified, generates a clean 16-digit random API key and registers it with `talos-core`.
+6. **Key Rotation at Will**: The host allows the user to rotate or input a new key whenever desired (`--rotate` or `--key <16_DIGIT_KEY>`), while otherwise keeping a single stable key.
+7. **Safe Storage**: Stores credentials at `~/.config/talos/credentials.json` with strict `chmod 600` permissions (owner-only). Never stores secrets in `/tmp` or repository files.
 
 ---
 

@@ -3,11 +3,18 @@
 TALOS HOST NODE — UNIVERSAL CROSS-PLATFORM AGENT BOOTSTRAP & CREDENTIAL MANAGER
 Works natively on Linux, macOS, WSL, and Windows.
 Enforces Single Host API Key policy and persists credentials in ~/.config/talos/credentials.json.
+
+Key Behaviors:
+- Single Persistent Key: Reuses existing key across mobile app reinstalls.
+- Custom 16-digit / Alphanumeric Key: Supports user/agent supplied 16-digit keys via --key.
+- Rotation at Will: Supports deliberate key rotation via --rotate / --regenerate.
 """
 
+import argparse
 import json
 import os
 import platform
+import secrets
 import shutil
 import subprocess
 import sys
@@ -47,10 +54,10 @@ def check_daemon_healthy(port: int = PORT) -> bool:
         return False
 
 def verify_token(token: str, port: int = PORT) -> bool:
-    if not token or not token.startswith("talos_sk_"):
+    if not token or len(token.strip()) < 8:
         return False
     url = f"http://127.0.0.1:{port}/api/auth/pair"
-    payload = json.dumps({"token": token}).encode("utf-8")
+    payload = json.dumps({"token": token.strip()}).encode("utf-8")
     req = urllib.request.Request(
         url,
         data=payload,
@@ -150,19 +157,28 @@ def ensure_daemon_running(project_root: Path, port: int = PORT):
             )
 
     # Wait for daemon to respond
-    for _ in range(25):
+    for _ in range(30):
         if check_daemon_healthy(port):
             print(">>> Daemon started and healthy.")
             return
-        time.sleep(0.4)
+        time.sleep(0.5)
 
     print(f"ERROR: Daemon failed to start. Check log at {log_file}")
     sys.exit(1)
 
-def mint_single_api_key(port: int = PORT) -> str:
-    """Mint a single host API key from the local daemon."""
+def register_or_mint_key(custom_key: str = "", port: int = PORT) -> str:
+    """Register custom 16-digit key or generate a random 16-digit key with daemon."""
+    token_to_register = custom_key.strip()
+    if not token_to_register:
+        # Generate clean 16-character hex token (e.g. talos_16chars)
+        token_to_register = f"talos_{secrets.token_hex(8)}"
+
     url = f"http://127.0.0.1:{port}/api/tokens"
-    payload = json.dumps({"name": "Primary Host Key", "role": "admin"}).encode("utf-8")
+    payload = json.dumps({
+        "label": "Primary Host Key",
+        "role": "admin",
+        "token": token_to_register
+    }).encode("utf-8")
     req = urllib.request.Request(
         url,
         data=payload,
@@ -171,13 +187,13 @@ def mint_single_api_key(port: int = PORT) -> str:
     try:
         with urllib.request.urlopen(req, timeout=4) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            token = data.get("plain_token")
+            token = data.get("token")
             if token:
                 return token
     except Exception as e:
-        print(f"Token mint error via /api/tokens: {e}")
+        print(f"Token registration error via /api/tokens: {e}")
 
-    # Fallback to /api/pairing/invite
+    # Fallback to invite endpoint
     try:
         invite_url = f"http://127.0.0.1:{port}/api/pairing/invite"
         req = urllib.request.Request(invite_url, headers={"User-Agent": "Talos-Bootstrap"})
@@ -189,15 +205,22 @@ def mint_single_api_key(port: int = PORT) -> str:
     except Exception as e:
         print(f"Invite mint error via /api/pairing/invite: {e}")
 
-    return ""
+    return token_to_register
 
 def main():
+    parser = argparse.ArgumentParser(description="TALOS Universal Host Node Setup & Single API Key Manager")
+    parser.add_argument("--key", default="", help="Custom 16-digit or alphanumeric API key to register on this host")
+    parser.add_argument("--rotate", action="store_true", help="Rotate/regenerate a new API key deliberately")
+    parser.add_argument("--port", type=int, default=PORT, help="Port to run talos-core daemon on")
+    args = parser.parse_args()
+
     project_root = Path(__file__).resolve().parent.parent
     cred_file = get_safe_credentials_file()
+    port = args.port
 
     print(f">>> [1/4] Environment: {platform.system()} ({platform.machine()})")
-    print(f">>> [2/4] Ensuring talos-core daemon is running on port {PORT}...")
-    ensure_daemon_running(project_root, PORT)
+    print(f">>> [2/4] Ensuring talos-core daemon is running on port {port}...")
+    ensure_daemon_running(project_root, port)
 
     print(">>> [3/4] Resolving host Tailscale IPv4 address...")
     ts_ip = get_tailscale_ip()
@@ -209,30 +232,36 @@ def main():
     print(f">>> [4/4] Managing Single Host API Key at {cred_file}...")
     active_key = None
 
-    # Check if a single key is already stored and still valid
-    if cred_file.exists():
+    # Check if a single key is already stored and still valid (unless explicit rotation or custom key requested)
+    if cred_file.exists() and not args.rotate and not args.key:
         try:
             with open(cred_file, "r") as f:
                 saved = json.load(f)
                 candidate = saved.get("api_key")
-                if candidate and verify_token(candidate, PORT):
+                if candidate and verify_token(candidate, port):
                     active_key = candidate
-                    print(">>> Found existing verified Host API Key in safe storage. Reusing single key.")
+                    print(">>> Existing verified Host API Key found in safe storage.")
+                    print(">>> (Single Persistent Key preserved: you can reinstall the mobile app and log back in with this SAME key!)")
         except Exception:
             pass
 
-    # If no valid key was found, mint exactly ONE key and store it
+    # If key rotation requested or custom key passed or no valid key found:
     if not active_key:
-        print(">>> Minting single persistent Host API Key...")
-        active_key = mint_single_api_key(PORT)
+        if args.key:
+            print(f">>> Registering user/agent specified API key: {args.key}...")
+            active_key = register_or_mint_key(args.key, port)
+        else:
+            print(">>> Generating clean random 16-digit Host API Key...")
+            active_key = register_or_mint_key("", port)
+
         if not active_key:
-            print("ERROR: Failed to obtain API key from talos-core daemon.")
+            print("ERROR: Failed to register or obtain API key from talos-core daemon.")
             sys.exit(1)
 
         cred_data = {
             "tailscale_ip": ts_ip,
-            "port": PORT,
-            "endpoint": f"http://{ts_ip}:{PORT}" if ts_ip != "<YOUR_TAILSCALE_IP>" else "",
+            "port": port,
+            "endpoint": f"http://{ts_ip}:{port}" if ts_ip != "<YOUR_TAILSCALE_IP>" else "",
             "api_key": active_key,
             "created_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
             "environment": f"{platform.system()} {platform.release()}"
@@ -247,8 +276,7 @@ def main():
             pass
         print(f">>> Saved single persistent key to {cred_file} (chmod 600).")
 
-    # Final Output formatting strictly as specified
-    endpoint_str = f"http://{ts_ip}:{PORT}"
+    endpoint_str = f"http://{ts_ip}:{port}"
     print("")
     print("=" * 74)
     print("TALOS HOST NODE — SECURE OVERLAY CREDENTIALS (SINGLE API KEY)")

@@ -285,9 +285,14 @@ fun OnboardingWizard(
                             isChecking = isChecking,
                             errorMessage = errorMessage,
                             initialEndpoint = client.baseUrl,
+                            initialToken = token ?: client.apiToken,
                             onUpdateEndpoint = { newUrl ->
-                                client.updateConfig(newUrl, client.apiToken)
+                                client.updateConfig(newUrl, token ?: client.apiToken)
                                 refreshMesh(autoPairKey = true)
+                            },
+                            onTokenChanged = { newToken ->
+                                token = newToken
+                                client.updateConfig(client.baseUrl, newToken)
                             },
                             onRefresh = { refreshMesh() },
                             onCopyPrompt = { prompt ->
@@ -757,7 +762,7 @@ private fun OverviewElevatedCard(
 }
 
 // ==========================================
-// STEP 2 — TAILSCALE MESH VERIFICATION (M3)
+// STEP 2 — TAILSCALE MESH & HOST PAIRING (M3)
 // ==========================================
 
 @Composable
@@ -766,95 +771,37 @@ private fun MeshStep(
     isChecking: Boolean,
     errorMessage: String? = null,
     initialEndpoint: String = "",
+    initialToken: String = "",
     onUpdateEndpoint: (String) -> Unit = {},
+    onTokenChanged: (String) -> Unit = {},
     onRefresh: () -> Unit = {},
     onCopyPrompt: (String) -> Unit = {}
 ) {
     val active = meshInfo?.active == true
-    // Agent-facing prompt: dependency preflight first, Tailscale before the
-    // core, never overwrite an existing install, no hardcoded addresses.
-    val hostSetupPrompt = """Set up the TALOS node (agent mode).
-
-1. Preflight - check before installing, never overwrite a working install:
-   for dep in git cargo rustc python3 pip sqlite3 curl; do command -v ${'$'}dep >/dev/null 2>&1 || echo "MISSING: ${'$'}dep"; done
-2. Tailscale (required):
-   - if command -v tailscale fails -> install Tailscale, then ask the user to log in ONCE on the host and on their phone with the same account
-   - verify: tailscale status --json  (BackendState must be Running)
-3. Build and run the Rust core:
-   cd talos/crates/talos-core && cargo build --release
-   PORT=8010 ./target/release/talos-core
-   (it answers the app's zero-config discovery beacon automatically)
-4. Verify: curl -s http://127.0.0.1:8010/api/mesh/status   -> tailscale_enabled: true
-5. Never hardcode an IP, hostname or token in code; discover everything at runtime."""
-
-    val statusLabel = when {
-        isChecking -> "Scanning"
-        active -> "Linked"
-        else -> "Offline"
-    }
-    val statusColor = when {
-        isChecking -> MaterialTheme.colorScheme.primary
-        active -> MaterialTheme.colorScheme.tertiary
-        else -> MaterialTheme.colorScheme.error
-    }
-
-    val infinitePulse = rememberInfiniteTransition(label = "mesh_pulse")
-    val beaconScale by infinitePulse.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = CubicBezierEasing(0.37f, 0f, 0.63f, 1f)),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "beacon_scale"
-    )
+    val hostSetupPrompt = "Read this agent installing .Md file (INSTALLING.md) to start talos-core in the background and output the Tailscale IP and API Key."
+    var endpointInput by remember(initialEndpoint) { mutableStateOf(initialEndpoint) }
+    var tokenInput by remember(initialToken) { mutableStateOf(initialToken) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(10.dp))
 
-        // M3 Expressive Machined Header Socket for Mesh with Radar Ping Wave
+        // Static Machined Header
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            val infinitePing = rememberInfiniteTransition(label = "mesh_ping_wave")
-            val pingProgress by infinitePing.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(2200, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart
-                ),
-                label = "ping_progress"
-            )
-
-            if (active) {
-                Box(
-                    modifier = Modifier
-                        .size((64 + (pingProgress * 36)).dp)
-                        .clip(CircleShape)
-                        .border(
-                            1.5.dp,
-                            statusColor.copy(alpha = (1f - pingProgress) * 0.65f),
-                            CircleShape
-                        )
-                )
-            }
-
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = WizardSurface,
                 border = BorderStroke(1.dp, WizardBorder),
-                modifier = Modifier
-                    .size(64.dp)
-                    .scale(if (active) beaconScale else 1f)
+                modifier = Modifier.size(64.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(R.drawable.ic_step_mesh),
-                        contentDescription = "Tailscale Mesh Verification",
+                        contentDescription = "Tailscale Mesh",
                         modifier = Modifier.size(32.dp),
-                        colorFilter = ColorFilter.tint(statusColor)
+                        colorFilter = ColorFilter.tint(if (active) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary)
                     )
                 }
             }
@@ -863,24 +810,23 @@ private fun MeshStep(
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-            text = "Tailscale Mesh Verification",
+            text = "Tailscale Mesh & Host Link",
             color = WizardText,
-            fontSize = 27.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.ExtraBold,
-            lineHeight = 33.sp
+            lineHeight = 30.sp
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Zero open ports. Direct encrypted WireGuard tunnel to your agent host.",
+            text = "Direct encrypted WireGuard connection to your laptop agent. No public ports.",
             color = WizardMuted,
-            fontSize = 14.sp,
-            lineHeight = 20.sp
+            fontSize = 13.sp,
+            lineHeight = 18.sp
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // --- TAILSCALE SETUP & HOST GUIDE (M3 METALLIC CARD) ---
-        val isDark = LocalIsDark.current
+        // Card 1: Agent Setup Prompt (One-Click Copy)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -892,42 +838,36 @@ private fun MeshStep(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Tailscale Setup & Host Guide",
+                    text = "1. Agent Setup Prompt (Laptop / Desktop)",
                     color = WizardText,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "1. Install Tailscale on this phone and on your agent host machine (Linux/Mac/PC).\n2. Sign in to the same Tailscale account on both devices.\n3. Run TALOS backend on your host or give this prompt to your CLI agent:",
+                    text = "Run this or paste to your AI coding agent on your computer:",
                     color = WizardMuted,
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp
                 )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Copy setup prompt box
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(talosBg)
-                        .border(1.dp, WizardBorder, RoundedCornerShape(10.dp))
+                        .border(1.dp, WizardBorder, RoundedCornerShape(8.dp))
                         .padding(10.dp)
                 ) {
                     Text(
                         text = hostSetupPrompt,
                         color = PrimaryAccent,
+                        fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
-                        lineHeight = 16.sp
+                        lineHeight = 15.sp
                     )
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -938,27 +878,27 @@ private fun MeshStep(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Copy Setup Prompt", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(text = "Copy Agent Prompt", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-        // --- MESH STATUS (M3 METALLIC CARD + LINEAR PROGRESS + STATUS CHIP) ---
+        // Card 2: Tailscale Host Address & API Key Form
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             border = BorderStroke(1.2.dp, metallicBorderBrush())
@@ -966,176 +906,104 @@ private fun MeshStep(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // M3E: morphing-shape LoadingIndicator while scanning
-                // (canonical wait cue), wavy progress only when linked.
-                if (isChecking) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        LoadingIndicator(
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(30.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Scanning private mesh...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    LinearWavyProgressIndicator(
-                        progress = { if (active) 1f else 0f },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = statusColor,
-                        trackColor = MaterialTheme.colorScheme.outlineVariant
-                    )
-                }
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // M3E success state: state-change entrance (spring scale-in),
-                    // icon + label in one filled container - not a bare dot chip.
-                    val successEntrance = remember { androidx.compose.animation.core.Animatable(0f) }
-                    LaunchedEffect(active) {
-                        if (active) {
-                            successEntrance.snapTo(0f)
-                            successEntrance.animateTo(
-                                targetValue = 1f,
-                                animationSpec = M3EMotion.fastSpatial()
-                            )
-                        }
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = statusColor.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.35f)),
-                        modifier = Modifier.graphicsLayer {
-                            scaleX = 0.92f + 0.08f * successEntrance.value
-                            scaleY = 0.92f + 0.08f * successEntrance.value
-                            alpha = successEntrance.value
-                        }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (active) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                contentDescription = null,
-                                tint = statusColor,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = statusLabel,
-                                color = statusColor,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                // Privacy: the host's name, overlay IP and peer identities are
-                // private information and are never rendered in the app.
-                MeshRow(
-                    key = "Node",
-                    value = if (active) "TALOS node" else "Not connected"
-                )
-                MeshRow(
-                    key = "Peers online",
-                    value = if (active) {
-                        meshInfo?.peers_count?.takeIf { it > 0 }?.toString() ?: "1"
-                    } else {
-                        "-"
-                    }
-                )
-                MeshRow(
-                    key = "Transport",
-                    value = if (active) "Encrypted overlay" else "Offline",
-                    last = true
-                )
-
-                // No manual re-scan button: the scan runs once on entry and
-                // the resolver auto-retries. The primary CTA doubles as
-                // "Scan Again" when the mesh is not linked - a second button
-                // would just replay the scanning indicator for no reason.
-                if (isChecking) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Scanning resolves the node once - no manual rescans needed.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-
-        if (errorMessage != null) {
-            Spacer(modifier = Modifier.height(14.dp))
-            val danger = WizardDanger
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Canvas(modifier = Modifier.size(14.dp)) {
-                    drawCircle(danger)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = errorMessage,
-                    color = WizardDanger,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp
-                )
-            }
-        } else if (!active && !isChecking) {
-            Spacer(modifier = Modifier.height(14.dp))
-            var endpointInput by remember(initialEndpoint) { mutableStateOf(initialEndpoint) }
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = WizardSurface,
-                border = BorderStroke(1.dp, talosBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Or enter Core Tailscale Address directly:",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "2. Host Tailscale IP & Key",
+                        color = WizardText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    OutlinedTextField(
-                        value = endpointInput,
-                        onValueChange = { endpointInput = it },
-                        placeholder = { Text("http://100.x.y.z:8010", fontSize = 12.sp) },
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            if (endpointInput.isNotBlank()) {
-                                onUpdateEndpoint(endpointInput.trim().trimEnd('/'))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Connect Node", fontSize = 12.sp)
+                    if (active) {
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f))
+                        ) {
+                            Text(
+                                text = "Connected (200 OK)",
+                                color = MaterialTheme.colorScheme.tertiary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
                     }
+                }
+
+                Text(
+                    text = "Core Tailscale Address:",
+                    color = WizardMuted,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                OutlinedTextField(
+                    value = endpointInput,
+                    onValueChange = { 
+                        endpointInput = it
+                        onUpdateEndpoint(it.trim().trimEnd('/'))
+                    },
+                    placeholder = { Text("http://100.x.y.z:8010", fontSize = 12.sp) },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = "Host API Key (talos_sk_...):",
+                    color = WizardMuted,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                OutlinedTextField(
+                    value = tokenInput,
+                    onValueChange = { 
+                        tokenInput = it
+                        onTokenChanged(it.trim())
+                    },
+                    placeholder = { Text("Paste key output by agent", fontSize = 12.sp) },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = WizardDanger,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        if (endpointInput.isNotBlank()) {
+                            onUpdateEndpoint(endpointInput.trim().trimEnd('/'))
+                        }
+                        if (tokenInput.isNotBlank()) {
+                            onTokenChanged(tokenInput.trim())
+                        }
+                        onRefresh()
+                    },
+                    enabled = !isChecking,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(38.dp)
+                ) {
+                    Text(
+                        text = if (isChecking) "Checking..." else "Verify Connection",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }

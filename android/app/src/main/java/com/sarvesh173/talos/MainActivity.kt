@@ -889,26 +889,49 @@ fun SettingsDialog(
 ) {
     var urlText by remember { mutableStateOf(client.baseUrl) }
     var tokenText by remember { mutableStateOf(client.apiToken) }
-    var isGenerating by remember { mutableStateOf(false) }
+    var isVerifying by remember { mutableStateOf(false) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
+    var isSuccess by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = talosSurface,
         title = {
-            Text(text = "Endpoint & Token Settings", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Column {
+                Text(
+                    text = "Tailscale Host & Connection Settings",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Update your host Tailscale IP or API key whenever your network changes.",
+                    color = TextMuted,
+                    fontSize = 11.sp,
+                    lineHeight = 15.sp
+                )
+            }
         },
         text = {
             Column {
                 Text(
-                    text = "Tailscale Host URL:",
+                    text = "Core Tailscale Address:",
                     color = TextMuted,
                     fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 OutlinedTextField(
                     value = urlText,
-                    onValueChange = { urlText = it },
+                    onValueChange = { 
+                        urlText = it
+                        statusMessage = null
+                        isSuccess = false
+                    },
+                    placeholder = { Text("http://100.x.y.z:8010", fontSize = 12.sp) },
+                    singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = talosBg,
                         unfocusedContainerColor = talosBg,
@@ -924,14 +947,21 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Bot API Token:",
+                    text = "Host API Key (talos_sk_...):",
                     color = TextMuted,
                     fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 OutlinedTextField(
                     value = tokenText,
-                    onValueChange = { tokenText = it },
+                    onValueChange = { 
+                        tokenText = it
+                        statusMessage = null
+                        isSuccess = false
+                    },
+                    placeholder = { Text("Paste key from laptop", fontSize = 12.sp) },
+                    singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = talosBg,
                         unfocusedContainerColor = talosBg,
@@ -944,53 +974,63 @@ fun SettingsDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            isGenerating = true
-                            client.updateConfig(urlText, "")
-                            val genToken = client.generateQuickToken()
-                            if (genToken != null) {
-                                tokenText = genToken
-                            }
-                            isGenerating = false
-                        }
-                    },
-                    border = BorderStroke(1.dp, PrimaryAccent),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Key,
-                        contentDescription = null,
-                        tint = PrimaryAccent,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
+                if (statusMessage != null) {
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = if (isGenerating) "Generating..." else "Generate Additional Token",
-                        color = PrimaryAccent,
-                        fontSize = 12.sp,
+                        text = statusMessage ?: "",
+                        color = if (isSuccess) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isVerifying = true
+                            statusMessage = null
+                            val cleanUrl = urlText.trim().trimEnd('/')
+                            val cleanToken = tokenText.trim()
+                            val (ok, msg) = client.verifyAndConnect(cleanUrl, cleanToken)
+                            isVerifying = false
+                            if (ok) {
+                                isSuccess = true
+                                statusMessage = "Verified & Connected (200 OK)"
+                                onSave(cleanUrl, cleanToken)
+                            } else {
+                                isSuccess = false
+                                statusMessage = msg
+                            }
+                        }
+                    },
+                    enabled = !isVerifying,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp)
+                ) {
+                    if (isVerifying) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Verifying Handshake...", fontSize = 12.sp)
+                    } else {
+                        Text(text = "Verify & Update Connection", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         },
-        confirmButton = {
-            Button(
-                onClick = { onSave(urlText, tokenText) },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
-            ) {
-                Text(text = "Save")
-            }
-        },
+        confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Cancel", color = TextMuted)
+                Text(text = "Close", color = TextMuted)
             }
         }
     )

@@ -479,3 +479,16 @@ Eliminates external browser roundtrips and enforces strict cryptographic verific
 - [x] **Zero Token Fabrication**: `POST /api/auth/pair` strictly returns 401 Unauthorized on invalid tokens and never auto-generates guest tokens. Mobile client no longer fabricates fake UUID tokens.
 - [x] **Live 200 OK Verification**: `verifyAndConnect` actively validates both Tailscale node reachability and host-minted API token, transitioning into the Council chamber only upon genuine HTTP 200 OK response.
 - [x] **Native Embedded Browser (`TalosBrowserScreen`)**: Built-in Android WebView with metallic address bar, progress bar, reload, and navigation controls registered in `FeatureCatalog` (slot 40), allowing users to browse host portals and local node tools without leaving the app.
+
+---
+
+## 19. Dynamic Tailscale Host IP Update & Agent Bootstrap PRD
+
+Eliminates network scanning friction and provides flexible runtime host IP management for changing network environments.
+
+- [x] **Settings Tailscale IP Update**: Dedicated connection settings dialog in the Android app allows updating the host Tailscale endpoint (`baseUrl`) and API Key at runtime without clearing app data or resetting council state.
+- [x] **Live Verification in Settings**: Built-in `verifyAndConnect` check verifies the updated IP against `/health` and the key against `/api/auth/pair`, displaying live status (green 200 OK or detailed error).
+- [x] **Direct Setup Step**: Replaced animated radar scanning loops in the onboarding wizard with a clean, immediate prompt card and direct Tailscale IP + Key fields.
+- [x] **Agent Setup Prompt (`INSTALLING.md`)**: A standardized, copy-pasteable prompt card in the mobile UI instructing AI coding agents:
+  `"Read this agent installing .Md file (INSTALLING.md) to start talos-core in the background and output the Tailscale IP and API Key."`
+- [x] **Automated Host Setup (`scripts/agent_setup.sh`)**: One-line script that compiles and starts `talos-core`, resolves the Tailscale IPv4 address, mints an authorized pairing token, and formats the user output.

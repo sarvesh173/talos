@@ -503,3 +503,13 @@ Enforces cryptographic key discipline and safe multi-platform host bootstrap.
 - [x] **Safe Credential Storage (`~/.config/talos/credentials.json`)**: Credentials are stored in a dedicated user configuration directory with owner-only permissions (`chmod 600`), completely avoiding `/tmp` or repository pollution.
 - [x] **Universal Cross-Platform Bootstrap (`scripts/agent_setup.py` / `scripts/agent_setup.sh`)**: Natively executes on Linux, macOS, WSL, and Windows with automatic environment detection, background daemon supervision, Tailscale IP discovery, and idempotent single-key management.
 - [x] **Standardized Agent Output**: Enforces the exact two-line pairing response contract for all AI coding agents.
+
+---
+
+## 21. Official OpenClaw Brand Vector Integration from Dashboard Icons MCP
+
+Replaced custom hand-drawn SVG with the official brand asset fetched directly via Dashboard Icons MCP.
+
+- [x] **Official SVG Extraction**: Retrieved official `openclaw` vector asset from `homarr-labs/dashboard-icons` via `mcp__dashboard_icons__get_icon_svg`.
+- [x] **VectorDrawable Precision Conversion**: Converted all 57 SVG paths (`viewBox 0 0 500 500`) with authentic styling classes into `ic_openclaw.xml` (`#EF0011`, `#BA000D`, `#0B0303`, `#F6F4F4`).
+- [x] **Seamless Agent Card Hierarchy**: OpenClaw card on Step 4 of the Onboarding Wizard and in the Council Chamber now renders with authentic brand quality identical to Hermes, Claude, Codex, Gemini, and OpenAI.

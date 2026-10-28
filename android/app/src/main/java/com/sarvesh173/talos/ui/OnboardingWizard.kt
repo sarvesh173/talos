@@ -462,7 +462,7 @@ private fun WizardTopBar(
                         Icon(
                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = WizardMuted,
+                            tint = if (isDark) Color(0xFFFFD54F) else Color(0xFF6750A4),
                             modifier = Modifier.graphicsLayer {
                                 rotationZ = themeRot
                                 scaleX = themeScale

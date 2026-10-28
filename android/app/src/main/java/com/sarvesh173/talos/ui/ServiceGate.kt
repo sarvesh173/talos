@@ -11,8 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Settings
@@ -51,6 +51,8 @@ fun ServiceGateScreen(
     state: ServiceGateState,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    initialUrl: String = "",
+    onUpdateUrl: ((String) -> Unit)? = null,
     onManualSetup: (() -> Unit)? = null,
     onBypass: (() -> Unit)? = null
 ) {
@@ -73,6 +75,8 @@ fun ServiceGateScreen(
     val checking = state == ServiceGateState.Checking
     val blocked = state == ServiceGateState.TailscaleRequired
     val unreachable = state == ServiceGateState.NodeUnreachable
+
+    var customEndpoint by remember(initialUrl) { mutableStateOf(initialUrl) }
 
     Box(
         modifier = modifier
@@ -107,7 +111,7 @@ fun ServiceGateScreen(
                         shape = CircleShape,
                         color = Color.Transparent,
                         modifier = Modifier
-                            .size(140.dp)
+                            .size(130.dp)
                             .scale(pulse)
                             .background(
                                 brush = Brush.radialGradient(
@@ -126,7 +130,7 @@ fun ServiceGateScreen(
                     color = if (blocked || unreachable) scheme.errorContainer else scheme.surfaceContainerHigh,
                     border = androidx.compose.foundation.BorderStroke(1.2.dp, metallicBorderBrush()),
                     modifier = Modifier
-                        .size(92.dp)
+                        .size(88.dp)
                         .graphicsLayer {
                             scaleX = iconScale.value
                             scaleY = iconScale.value
@@ -148,20 +152,20 @@ fun ServiceGateScreen(
                                 },
                                 contentDescription = null,
                                 tint = if (blocked || unreachable) scheme.onErrorContainer else scheme.primary,
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(38.dp)
                             )
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
 
             // Title
             Text(
                 text = when {
                     checking -> "Verifying Mesh Connection"
-                    blocked -> "Tailscale Connection Required"
+                    blocked -> "Tailscale Required On Host"
                     unreachable -> "Mesh Node Unreachable"
                     else -> "Connection Ready"
                 },
@@ -171,14 +175,14 @@ fun ServiceGateScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
 
             // Body
             Text(
                 text = when {
                     checking -> "Probing TALOS Core daemon across Tailscale mesh..."
-                    blocked -> "TALOS communicates over your encrypted Tailscale overlay. Please connect Tailscale VPN on your phone, then retry."
-                    unreachable -> "Could not reach TALOS Core on the mesh. Verify your laptop daemon is running and Tailscale is active on both devices."
+                    blocked -> "The core reports Tailscale overlay is inactive on the host. Ensure the computer has Tailscale active."
+                    unreachable -> "Could not connect to TALOS Core. Enter the computer's Tailscale IP or tap below to retry."
                     else -> ""
                 },
                 style = MaterialTheme.typography.bodyMedium,
@@ -187,7 +191,7 @@ fun ServiceGateScreen(
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
             // Auto-retrying status pill
             if (!checking) {
@@ -206,9 +210,40 @@ fun ServiceGateScreen(
                 )
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // Action Buttons - ALWAYS visible and immediately clickable
+            // Direct Address Configuration Card
+            MetalCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Core Tailscale Address",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = scheme.onSurface
+                )
+                Spacer(Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = customEndpoint,
+                    onValueChange = { customEndpoint = it },
+                    placeholder = { Text("http://100.x.y.z:8010") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(10.dp))
+                MetalButton(
+                    text = "Save & Connect Endpoint",
+                    onClick = {
+                        if (customEndpoint.isNotBlank()) {
+                            onUpdateUrl?.invoke(customEndpoint.trim().trimEnd('/'))
+                            onRetry()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Action Buttons
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -232,16 +267,6 @@ fun ServiceGateScreen(
                     )
                 }
 
-                if (onManualSetup != null) {
-                    MetalButton(
-                        text = "Configure Core Address",
-                        onClick = onManualSetup,
-                        leadingIcon = Icons.Default.Settings,
-                        variant = MetalButtonVariant.Outlined,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
                 if (onBypass != null) {
                     TextButton(
                         onClick = onBypass,
@@ -250,7 +275,8 @@ fun ServiceGateScreen(
                         Text(
                             text = "Continue to Interface Anyway",
                             style = MaterialTheme.typography.labelMedium,
-                            color = scheme.onSurfaceVariant
+                            color = scheme.primary,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

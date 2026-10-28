@@ -90,11 +90,12 @@ fun AgentEmblemIcon(
     size: Dp = 20.dp,
     tint: Color? = null
 ) {
+    val effectiveTint = tint ?: emblem.accent
     Image(
         painter = painterResource(emblem.drawableRes),
         contentDescription = emblem.label,
         modifier = modifier.size(size),
-        colorFilter = tint?.let { androidx.compose.ui.graphics.ColorFilter.tint(it) }
+        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(effectiveTint)
     )
 }
 

@@ -391,7 +391,7 @@ fun LandingScreen(
                         Icon(
                             imageVector = if (isCurrentDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = scheme.onSurfaceVariant,
+                            tint = if (isCurrentDark) Color(0xFFFFD54F) else Color(0xFF6750A4),
                             modifier = Modifier
                                 .size(18.dp)
                                 .graphicsLayer {

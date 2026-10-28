@@ -148,10 +148,6 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(gateNonce) {
                 gateState = ServiceGateState.Checking
 
-                val localVpnActive = withContext(Dispatchers.IO) {
-                    client.isLocalTailscaleActive()
-                }
-
                 val mesh = withContext(Dispatchers.IO) {
                     var status = client.resolveCore()
                     if (status == null) {
@@ -164,7 +160,6 @@ class MainActivity : ComponentActivity() {
                 gateState = when {
                     mesh != null && mesh.tailscale_enabled != false -> ServiceGateState.Ready
                     mesh != null && mesh.tailscale_enabled == false -> ServiceGateState.TailscaleRequired
-                    !localVpnActive -> ServiceGateState.TailscaleRequired
                     else -> ServiceGateState.NodeUnreachable
                 }
             }
@@ -181,6 +176,10 @@ class MainActivity : ComponentActivity() {
                     ServiceGateScreen(
                         state = gateState,
                         onRetry = { gateNonce++ },
+                        initialUrl = client.baseUrl,
+                        onUpdateUrl = { newUrl ->
+                            client.updateConfig(newUrl, client.apiToken)
+                        },
                         modifier = Modifier.fillMaxSize(),
                         onManualSetup = {
                             manualSetup = true
@@ -586,9 +585,9 @@ fun MainScreen(
                                     Icon(
                                         imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                                         contentDescription = "Theme",
-                                        tint = talosTextMuted,
+                                        tint = if (isDark) Color(0xFFFFD54F) else Color(0xFF6750A4),
                                         modifier = Modifier
-                                            .size(17.dp)
+                                            .size(18.dp)
                                             .graphicsLayer {
                                                 rotationZ = themeRot
                                                 scaleX = themeScale

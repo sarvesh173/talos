@@ -122,6 +122,29 @@ class MainActivity : ComponentActivity() {
             var gateState by remember { mutableStateOf(ServiceGateState.Checking) }
             var gateNonce by remember { mutableStateOf(0) }
             var manualSetup by remember { mutableStateOf(false) }
+
+            // Automatic periodic retry when gate is not ready
+            LaunchedEffect(gateState) {
+                if (gateState != ServiceGateState.Ready) {
+                    while (gateState != ServiceGateState.Ready) {
+                        kotlinx.coroutines.delay(3000)
+                        gateNonce++
+                    }
+                }
+            }
+
+            // Immediately re-verify on app foreground resume (e.g. returning from Tailscale)
+            val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+            DisposableEffect(lifecycleOwner) {
+                val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                    if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                        gateNonce++
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+            }
+
             LaunchedEffect(gateNonce) {
                 gateState = ServiceGateState.Checking
 
@@ -130,20 +153,14 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val mesh = withContext(Dispatchers.IO) {
-                    // Resolve a working endpoint (stored -> same host on the
-                    // standard ports -> LAN auto-discovery). A retry absorbs
-                    // transient hiccups so the gate never fires falsely.
                     var status = client.resolveCore()
                     if (status == null) {
-                        kotlinx.coroutines.delay(600)
+                        kotlinx.coroutines.delay(500)
                         status = client.resolveCore()
                     }
                     status
                 }
 
-                // Universal Tailscale validation:
-                // Works seamlessly whether on Mobile Data (Cellular), any Wi-Fi,
-                // or across Wi-Fi network handoffs.
                 gateState = when {
                     mesh != null && mesh.tailscale_enabled != false -> ServiceGateState.Ready
                     mesh != null && mesh.tailscale_enabled == false -> ServiceGateState.TailscaleRequired
@@ -168,6 +185,9 @@ class MainActivity : ComponentActivity() {
                         onManualSetup = {
                             manualSetup = true
                             appScreen = "wizard"
+                        },
+                        onBypass = {
+                            manualSetup = true
                         }
                     )
                 } else {

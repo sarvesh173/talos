@@ -1,44 +1,23 @@
 package com.sarvesh173.talos.ui
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Router
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -49,33 +28,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
+import androidx.compose.ui.unit.sp
+import com.sarvesh173.talos.core.motion.MotionTokens
 
-/**
- * Service gate: TALOS needs the private overlay (Tailscale) because it
- * carries the encrypted transport between agents. Without it the app must not
- * run, so the user gets one clear instruction instead of silent failures.
- *
- * Motion follows the M3E rules: spatial springs for position/size/shape,
- * effects springs for alpha (never a spatial spring on opacity), slower
- * entrances than exits, and no decorative motion when the system has
- * animations turned off.
- */
 enum class ServiceGateState {
-    /** Verifying core reachability + overlay state. */
     Checking,
-
-    /** Core reachable and overlay up - the app may run. */
     Ready,
-
-    /** Overlay down - the app stays closed. */
     TailscaleRequired,
-
-    /** No node answered on any path (overlay down, node stopped, or moved). */
-    NodeUnreachable,
+    NodeUnreachable
 }
 
-private fun systemAnimationsEnabled(context: android.content.Context): Boolean = runCatching {
+private fun systemAnimationsEnabled(context: Context): Boolean = runCatching {
     Settings.Global.getFloat(
         context.contentResolver,
         Settings.Global.ANIMATOR_DURATION_SCALE,
@@ -83,40 +46,28 @@ private fun systemAnimationsEnabled(context: android.content.Context): Boolean =
     ) > 0.01f
 }.getOrDefault(true)
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ServiceGateScreen(
     state: ServiceGateState,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    onManualSetup: (() -> Unit)? = null
+    onManualSetup: (() -> Unit)? = null,
+    onBypass: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
     val context = LocalContext.current
     val motionOn = remember { systemAnimationsEnabled(context) }
+    val scrollState = rememberScrollState()
 
-    // Staggered entrance: icon -> title -> body -> actions. Spatial springs for
-    // movement/scale, effects springs for alpha.
-    val iconScale = remember { Animatable(0.6f) }
-    val titleAlpha = remember { Animatable(0f) }
-    val bodyAlpha = remember { Animatable(0f) }
-    val actionsAlpha = remember { Animatable(0f) }
+    val iconScale = remember { Animatable(0.8f) }
 
     LaunchedEffect(state) {
-        if (!motionOn) {
-            iconScale.snapTo(1f); titleAlpha.snapTo(1f)
-            bodyAlpha.snapTo(1f); actionsAlpha.snapTo(1f)
-            return@LaunchedEffect
+        if (motionOn) {
+            iconScale.snapTo(0.8f)
+            iconScale.animateTo(1f, MotionTokens.fastSpatial())
+        } else {
+            iconScale.snapTo(1f)
         }
-        iconScale.snapTo(0.6f); titleAlpha.snapTo(0f)
-        bodyAlpha.snapTo(0f); actionsAlpha.snapTo(0f)
-        iconScale.animateTo(1f, M3EMotion.fastSpatial())
-        delay(40)
-        titleAlpha.animateTo(1f, M3EMotion.defaultEffects())
-        delay(40)
-        bodyAlpha.animateTo(1f, M3EMotion.defaultEffects())
-        delay(40)
-        actionsAlpha.animateTo(1f, M3EMotion.defaultEffects())
     }
 
     val checking = state == ServiceGateState.Checking
@@ -126,21 +77,26 @@ fun ServiceGateScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 28.dp, vertical = 32.dp),
+            .background(scheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 20.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
         ) {
-            // --- expressive icon container -------------------------------
+            // Breathing halo container
             Box(contentAlignment = Alignment.Center) {
-                // Soft breathing halo - a loop, so a tween curve is correct here.
                 if (motionOn) {
                     val halo = rememberInfiniteTransition(label = "gate_halo")
                     val pulse by halo.animateFloat(
-                        initialValue = 0.96f,
-                        targetValue = 1.08f,
+                        initialValue = 0.95f,
+                        targetValue = 1.05f,
                         animationSpec = infiniteRepeatable(
                             animation = tween(1800),
                             repeatMode = RepeatMode.Reverse
@@ -151,12 +107,12 @@ fun ServiceGateScreen(
                         shape = CircleShape,
                         color = Color.Transparent,
                         modifier = Modifier
-                            .size(168.dp)
+                            .size(140.dp)
                             .scale(pulse)
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        scheme.primary.copy(alpha = 0.22f),
+                                        (if (blocked || unreachable) scheme.error else scheme.primary).copy(alpha = 0.20f),
                                         Color.Transparent
                                     )
                                 ),
@@ -167,9 +123,10 @@ fun ServiceGateScreen(
 
                 Surface(
                     shape = CircleShape,
-                    color = if (blocked || unreachable) scheme.errorContainer else scheme.primaryContainer,
+                    color = if (blocked || unreachable) scheme.errorContainer else scheme.surfaceContainerHigh,
+                    border = androidx.compose.foundation.BorderStroke(1.2.dp, metallicBorderBrush()),
                     modifier = Modifier
-                        .size(104.dp)
+                        .size(92.dp)
                         .graphicsLayer {
                             scaleX = iconScale.value
                             scaleY = iconScale.value
@@ -177,10 +134,10 @@ fun ServiceGateScreen(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (checking) {
-                            // Canonical M3E morphing loader for a short wait.
-                            androidx.compose.material3.LoadingIndicator(
-                                color = scheme.onPrimaryContainer,
-                                modifier = Modifier.size(44.dp)
+                            CircularProgressIndicator(
+                                color = scheme.primary,
+                                modifier = Modifier.size(36.dp),
+                                strokeWidth = 3.dp
                             )
                         } else {
                             Icon(
@@ -190,109 +147,112 @@ fun ServiceGateScreen(
                                     else -> Icons.Default.Router
                                 },
                                 contentDescription = null,
-                                tint = if (blocked || unreachable) scheme.onErrorContainer else scheme.onPrimaryContainer,
-                                modifier = Modifier.size(44.dp)
+                                tint = if (blocked || unreachable) scheme.onErrorContainer else scheme.primary,
+                                modifier = Modifier.size(40.dp)
                             )
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // --- title ---------------------------------------------------
+            // Title
             Text(
                 text = when {
-                    checking -> "Connecting to TALOS"
-                    blocked -> "Tailscale required"
-                    unreachable -> "Node unreachable"
-                    else -> "Ready"
+                    checking -> "Verifying Mesh Connection"
+                    blocked -> "Tailscale Connection Required"
+                    unreachable -> "Mesh Node Unreachable"
+                    else -> "Connection Ready"
                 },
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = scheme.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.graphicsLayer { alpha = titleAlpha.value }
+                textAlign = TextAlign.Center
             )
 
-            // --- body ----------------------------------------------------
+            Spacer(Modifier.height(8.dp))
+
+            // Body
             Text(
                 text = when {
-                    checking -> "Verifying your node and the private overlay."
-                    blocked -> "TALOS runs over your private overlay, where the encrypted link between agents lives. Turn Tailscale on, then check again."
-                    unreachable -> "No node answered. TALOS reaches your node over the private overlay - make sure Tailscale is on and the node is running, then check again."
+                    checking -> "Probing TALOS Core daemon across Tailscale mesh..."
+                    blocked -> "TALOS communicates over your encrypted Tailscale overlay. Please connect Tailscale VPN on your phone, then retry."
+                    unreachable -> "Could not reach TALOS Core on the mesh. Verify your laptop daemon is running and Tailscale is active on both devices."
                     else -> ""
                 },
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = scheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer { alpha = bodyAlpha.value }
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
 
-            // --- actions -------------------------------------------------
-            AnimatedVisibility(
-                visible = !checking,
-                enter = fadeIn(animationSpec = M3EMotion.defaultEffects()),
-                exit = fadeOut(animationSpec = M3EMotion.fastEffects())
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer { alpha = actionsAlpha.value }
-                ) {
-                    Spacer(Modifier.height(10.dp))
-                    M3EButton(
-                        text = "Check again",
-                        onClick = onRetry,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (blocked || unreachable) {
-                        Spacer(Modifier.height(4.dp))
-                        M3ETonalButton(
-                            text = "Open Tailscale",
-                            onClick = { launchTailscale(context) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.OpenInNew,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    if (onManualSetup != null) {
-                        TextButton(onClick = onManualSetup) {
-                            Text(
-                                text = "Enter address manually",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = scheme.primary
-                            )
-                        }
-                    }
-                }
+            Spacer(Modifier.height(12.dp))
+
+            // Auto-retrying status pill
+            if (!checking) {
+                MetalStatusPill(
+                    text = "Auto-Retrying Every 3s",
+                    isActive = false,
+                    activeColor = StatusGreen,
+                    inactiveColor = StatusAmber
+                )
+            } else {
+                MetalStatusPill(
+                    text = "Probing Endpoints...",
+                    isActive = true,
+                    activeColor = StatusGreen,
+                    inactiveColor = StatusAmber
+                )
             }
 
-            // --- checking indicator -------------------------------------
-            if (checking) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.graphicsLayer { alpha = bodyAlpha.value }
-                ) {
-                    M3ETypingDots(
-                        color = scheme.primary,
-                        dotSize = 5.dp,
-                        dotSpacing = 3.dp
+            Spacer(Modifier.height(28.dp))
+
+            // Action Buttons - ALWAYS visible and immediately clickable
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                MetalButton(
+                    text = if (checking) "Checking Connection..." else "Retry Connection",
+                    onClick = onRetry,
+                    isLoading = checking,
+                    leadingIcon = Icons.Default.Refresh,
+                    variant = MetalButtonVariant.Primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (blocked || unreachable) {
+                    MetalButton(
+                        text = "Open Tailscale App",
+                        onClick = { launchTailscale(context) },
+                        leadingIcon = Icons.AutoMirrored.Filled.OpenInNew,
+                        variant = MetalButtonVariant.Tonal,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Checking",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = scheme.onSurfaceVariant
+                }
+
+                if (onManualSetup != null) {
+                    MetalButton(
+                        text = "Configure Core Address",
+                        onClick = onManualSetup,
+                        leadingIcon = Icons.Default.Settings,
+                        variant = MetalButtonVariant.Outlined,
+                        modifier = Modifier.fillMaxWidth()
                     )
+                }
+
+                if (onBypass != null) {
+                    TextButton(
+                        onClick = onBypass,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = "Continue to Interface Anyway",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = scheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -300,7 +260,7 @@ fun ServiceGateScreen(
 }
 
 /** Open the Tailscale app if installed, else fall back to the web download. */
-private fun launchTailscale(context: android.content.Context) {
+private fun launchTailscale(context: Context) {
     val intents = listOf(
         Intent(Intent.ACTION_VIEW, Uri.parse("tailscale://")),
         Intent(Intent.ACTION_VIEW, Uri.parse("package:com.tailscale.ipn")),

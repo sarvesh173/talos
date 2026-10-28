@@ -39,6 +39,8 @@ val AgentEmblems: List<AgentEmblem> = listOf(
     AgentEmblem("hermes", "Hermes Agent", "Nous Research · Autonomy", R.drawable.ic_hermes, Color(0xFFFFBF00)),
     AgentEmblem("claude", "Claude Code", "Anthropic · Architecture", R.drawable.ic_claude, Color(0xFFD97757)),
     AgentEmblem("codex", "Codex", "OpenAI · Code & Synthesis", R.drawable.ic_codex, Color(0xFF7A9DFF)),
+    AgentEmblem("anthropic", "Anthropic", "Anthropic AI", R.drawable.ic_anthropic, Color(0xFFD97757)),
+    AgentEmblem("openai", "OpenAI", "OpenAI Family", R.drawable.ic_openai, Color(0xFF10A37F)),
     AgentEmblem("gemini", "Gemini", "Google · Multimodal Reasoning", R.drawable.ic_gemini, Color(0xFF3186FF)),
     AgentEmblem("meta", "Meta AI", "Meta · Llama Family", R.drawable.ic_meta, Color(0xFF1877F2)),
     AgentEmblem("mistral", "Mistral AI", "Mistral AI · Open Weights", R.drawable.ic_mistral, Color(0xFFF24E1E)),
@@ -64,8 +66,10 @@ fun emblemBySender(name: String): AgentEmblem {
         clean.contains(emblem.key) || clean.contains(emblem.label.lowercase())
     } ?: when {
         clean.contains("omni") || clean.contains("rush") -> emblemByKey("omnirush")
-        clean.contains("claude") || clean.contains("anthropic") -> emblemByKey("claude")
-        clean.contains("codex") || clean.contains("openai") -> emblemByKey("codex")
+        clean.contains("claude") -> emblemByKey("claude")
+        clean.contains("codex") -> emblemByKey("codex")
+        clean.contains("anthropic") -> emblemByKey("anthropic")
+        clean.contains("openai") || clean.contains("chatgpt") -> emblemByKey("openai")
         clean.contains("hermes") || clean.contains("nous") || clean.contains("core") -> emblemByKey("hermes")
         clean.contains("opencode") -> emblemByKey("opencode")
         clean.contains("claw") || clean.contains("openclaw") -> emblemByKey("openclaw")

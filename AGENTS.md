@@ -145,15 +145,16 @@ work around it in code.
 
 The laptop/computer host is the **sole authority** that mints, registers, and validates API keys. AI agents configuring or managing TALOS must adhere to the contract detailed in **`INSTALLING.md`**.
 
-1. **Agent Setup Command**: Run `bash scripts/agent_setup.sh` to boot the daemon, resolve the host Tailscale IPv4, and mint a key.
-2. **Mandatory Agent Output**: The agent must output these exact instructions to the user:
+1. **Universal Host Setup Command**: Run `bash scripts/agent_setup.sh` (or `python3 scripts/agent_setup.py`) to boot the daemon, resolve the host Tailscale IPv4, and manage the single persistent key across any OS (Linux, macOS, WSL, Windows).
+2. **Single API Key & Safe Storage**: Agents must maintain **only ONE persistent API key** per host. Store credentials safely at `~/.config/talos/credentials.json` (locked with `chmod 600`). Never mint duplicate tokens if a valid key already exists.
+3. **Mandatory Agent Output**: The agent must output these exact instructions to the user:
    ```text
    User please enter this in your Tailscale IP section: http://<tailscale-ip>:8010
    User please enter this in your Host API Key section: talos_sk_<token>
    ```
-3. **App Input & Verification**: The mobile app prompts the user for both values and validates them via `POST /api/auth/pair`. Only genuine HTTP 200 OK responses unlock the Council chamber.
-4. **Settings Dynamic Update**: If the host's Tailscale IP changes or the node roams, users update the IP directly in the mobile app's **Settings > Tailscale Host & Connection** without resetting the app.
-5. **No Client Fabrication**: The mobile app NEVER mints or fabricates tokens locally.
+4. **App Input & Verification**: The mobile app prompts the user for both values and validates them via `POST /api/auth/pair`. Only genuine HTTP 200 OK responses unlock the Council chamber.
+5. **Settings Dynamic Update**: If the host's Tailscale IP changes or the node roams, users update the IP directly in the mobile app's **Settings > Tailscale Host & Connection** without resetting the app.
+6. **No Client Fabrication**: The mobile app NEVER mints or fabricates tokens locally.
 
 For detailed PRD instructions, see **`INSTALLING.md`**.
 

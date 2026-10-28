@@ -492,3 +492,14 @@ Eliminates network scanning friction and provides flexible runtime host IP manag
 - [x] **Agent Setup Prompt (`INSTALLING.md`)**: A standardized, copy-pasteable prompt card in the mobile UI instructing AI coding agents:
   `"Read this agent installing .Md file (INSTALLING.md) to start talos-core in the background and output the Tailscale IP and API Key."`
 - [x] **Automated Host Setup (`scripts/agent_setup.sh`)**: One-line script that compiles and starts `talos-core`, resolves the Tailscale IPv4 address, mints an authorized pairing token, and formats the user output.
+
+---
+
+## 20. Single Host API Key Policy & Universal Safe Credential Management
+
+Enforces cryptographic key discipline and safe multi-platform host bootstrap.
+
+- [x] **Single Host API Key Policy**: The host daemon maintains exactly ONE persistent API key for companion pairing. Subsequent bootstrap runs test and reuse the existing key, preventing token pollution and desynchronization.
+- [x] **Safe Credential Storage (`~/.config/talos/credentials.json`)**: Credentials are stored in a dedicated user configuration directory with owner-only permissions (`chmod 600`), completely avoiding `/tmp` or repository pollution.
+- [x] **Universal Cross-Platform Bootstrap (`scripts/agent_setup.py` / `scripts/agent_setup.sh`)**: Natively executes on Linux, macOS, WSL, and Windows with automatic environment detection, background daemon supervision, Tailscale IP discovery, and idempotent single-key management.
+- [x] **Standardized Agent Output**: Enforces the exact two-line pairing response contract for all AI coding agents.

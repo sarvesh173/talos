@@ -456,3 +456,17 @@ loops; decorative motion is skipped when the system animation scale is 0.
   returned by the core.
 - No fabricated addresses: the client re-discovers the endpoint at runtime and
   reports "offline" honestly.
+
+---
+
+## 17. Host-Authorized Agent API Key Lifecycle & One-Tap Pairing
+
+Shifts the authorization authority entirely to the desktop/laptop host machine, eliminating complex mobile-side key minting.
+
+- [x] **Host-Centric Key Generation**: The desktop/laptop host (`talos-core`) is the single source of truth for generating, hashing, and storing API keys (`POST /api/tokens`, `GET /api/pairing/invite`).
+- [x] **Tailscale CGNAT Detection**: Client inspects network interfaces and `LinkProperties` for the `100.64.0.0/10` address space (`100.64.x.x`–`100.127.x.x`), identifying active Tailscale WireGuard overlay without relying on brittle Android OS heuristics.
+- [x] **One-Tap Browser Pairing**: Core serves `GET /pair` with an automated HTML/JS landing page that dispatches `talos://pair?...` to Android Chrome, enabling 1-tap zero-typing mobile onboarding.
+- [x] **Host API Key Input (Wizard Step 3)**: Mobile app prompts user to activate Tailscale and paste or confirm their host-minted API key rather than attempting client-side token fabrication.
+- [ ] **UI Mapping**:
+  - *Host API Key Authorization Step*: Monospace token field with verification badge and host generation commands (`bash scripts/pairing_link.sh`).
+  - *Browser Landing Page*: Dark-mode pairing card hosted on `http://<host>:8010/pair`.

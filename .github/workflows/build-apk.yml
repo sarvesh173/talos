@@ -60,10 +60,12 @@ jobs:
 
       - name: Upload APK Artifact (every run)
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
-          name: talos-apk
+          name: talos-apk-${{ github.sha }}
           path: build-artifacts/talos-latest.apk
           if-no-files-found: error
+          overwrite: true
           retention-days: 30
 
       - name: Publish Rolling Latest Release (push builds)

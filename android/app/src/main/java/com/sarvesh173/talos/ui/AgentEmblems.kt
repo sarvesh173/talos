@@ -46,7 +46,7 @@ val AgentEmblems: List<AgentEmblem> = listOf(
     AgentEmblem("mistral", "Mistral AI", "Mistral AI · Open Weights", R.drawable.ic_mistral, Color(0xFFF24E1E)),
     AgentEmblem("deepseek", "DeepSeek", "DeepSeek · Reasoning", R.drawable.ic_deepseek, Color(0xFF0066FF)),
     AgentEmblem("qwen", "Qwen", "Alibaba · Qwen Series", R.drawable.ic_qwen, Color(0xFF2563EB)),
-    AgentEmblem("openclaw", "OpenClaw", "Tools & Automation", R.drawable.ic_openclaw, Color(0xFFF97316)),
+    AgentEmblem("openclaw", "OpenClaw", "Tools & Automation", R.drawable.ic_openclaw, Color(0xFFE11D48)),
     AgentEmblem("omnirush", "OmniRush", "High-Throughput Runner", R.drawable.ic_omnirush, Color(0xFFA855F7)),
     AgentEmblem("opencode", "OpenCode", "Open-Source Terminal CLI", R.drawable.ic_opencode, Color(0xFF3B82F6))
 )

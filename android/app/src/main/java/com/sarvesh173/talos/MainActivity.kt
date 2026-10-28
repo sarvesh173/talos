@@ -67,19 +67,32 @@ class MainActivity : ComponentActivity() {
     private lateinit var client: TalosClient
 
     /**
-     * Accept a pairing link from the agent (link or QR) and store the
-     * endpoint + device token. The address is never shown to the user.
+     * Accept a pairing link from the agent or Chrome (link or QR) and store the
+     * endpoint + device token. Supports both talos://pair and http://.../pair
      */
     private fun handlePairingIntent(intent: Intent?) {
         val data = intent?.data ?: return
-        if (data.scheme != "talos" || data.host != "pair") return
-        val url = data.getQueryParameter("url")?.trim()?.trimEnd('/')
-        val token = data.getQueryParameter("token")?.trim()
+        var url: String? = null
+        var token: String? = null
+
+        if (data.scheme == "talos" && data.host == "pair") {
+            url = data.getQueryParameter("url")?.trim()?.trimEnd('/')
+                ?: data.getQueryParameter("endpoint")?.trim()?.trimEnd('/')
+            token = data.getQueryParameter("token")?.trim()
+        } else if (data.scheme == "http" || data.scheme == "https") {
+            val port = if (data.port != -1) ":${data.port}" else ""
+            url = "${data.scheme}://${data.host}$port"
+            token = data.getQueryParameter("token")?.trim()
+        }
+
         if (url.isNullOrBlank() || !url.startsWith("http")) return
         client.updateConfig(url, token ?: "")
-        if (client.isPaired.value) {
-            client.refreshRooms()
-            client.switchRoom("the-council")
+        lifecycleScope.launch(Dispatchers.IO) {
+            client.pairDevice()
+            withContext(Dispatchers.Main) {
+                client.refreshRooms()
+                client.switchRoom("the-council")
+            }
         }
     }
 

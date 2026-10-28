@@ -456,11 +456,12 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     }
 
     /**
-     * Universal Tailscale/VPN detection on the Android device itself.
+     * Check whether a Tailscale or WireGuard encrypted overlay is active locally.
+     * Checks TRANSPORT_VPN, LinkProperties, and the 100.64.0.0/10 CGNAT IP range.
      * Works on Mobile Internet (Cellular 4G/5G), any Wi-Fi, or across network switches.
      */
     fun isLocalTailscaleActive(): Boolean {
-        // 1. Android ConnectivityManager: check if active network or any network has TRANSPORT_VPN
+        // 1. Android ConnectivityManager: check if active network or any network has TRANSPORT_VPN or Tailscale IP
         try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
             if (cm != null) {
@@ -476,21 +477,36 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     if (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
                         return true
                     }
+                    val lp = cm.getLinkProperties(net)
+                    if (lp != null) {
+                        for (la in lp.linkAddresses) {
+                            val ip = la.address.address
+                            if (ip.size == 4 && (ip[0].toInt() and 0xFF) == 100) {
+                                val second = ip[1].toInt() and 0xFF
+                                if (second in 64..127) return true // Tailscale CGNAT IP range
+                            }
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
             Log.w(TAG, "VPN capability check: ${e.message}")
         }
 
-        // 2. NetworkInterface fallback: look for tun / tailscale / wireguard interfaces
+        // 2. NetworkInterface fallback: look for tun / tailscale / wireguard interfaces or 100.64.0.0/10 IPs
         try {
             val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
             if (interfaces != null) {
                 for (iface in interfaces) {
-                    if (iface.isUp && !iface.isLoopback) {
-                        val name = iface.name.lowercase()
-                        if (name.contains("tun") || name.contains("tailscale") || name.contains("wireguard")) {
-                            return true
+                    val name = iface.name.lowercase()
+                    if (name.contains("tun") || name.contains("tailscale") || name.contains("wireguard")) {
+                        return true
+                    }
+                    for (addr in iface.inetAddresses) {
+                        val ip = addr.address
+                        if (ip.size == 4 && (ip[0].toInt() and 0xFF) == 100) {
+                            val second = ip[1].toInt() and 0xFF
+                            if (second in 64..127) return true
                         }
                     }
                 }

@@ -96,6 +96,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/mesh/status", get(mesh_status))
         .route("/api/mesh/peers/discover", get(mesh_peers))
         .route("/api/auth/pair", post(auth_pair))
+        // Browser one-tap pairing landing page (Chrome auto-dispatch)
+        .route("/pair", get(pairing_web_page))
+        .route("/", get(pairing_web_page))
         // Agent-first pairing: the agent on the host fetches a one-time
         // pairing URI and hands it to the phone (link or QR). Works over
         // the overlay, so it also works when the phone is on mobile data.
@@ -210,6 +213,100 @@ async fn pairing_invite(State(state): State<AppState>) -> Result<impl IntoRespon
         "overlay": status.tailscale_enabled,
         "hint": "Open this uri on the phone, or render it as a QR. It pairs the app without typing an address."
     })))
+}
+
+/// Browser one-tap pairing landing page (served over Tailscale overlay)
+async fn pairing_web_page(State(state): State<AppState>) -> impl IntoResponse {
+    let status = MeshDiscovery::get_node_status();
+    let host = if status.tailscale_ip.is_empty() || status.tailscale_ip == "unknown" {
+        "127.0.0.1".to_string()
+    } else {
+        status.tailscale_ip.clone()
+    };
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8000".to_string());
+
+    let (plain, hash, masked) = AuthEngine::generate_token("Android pairing via Browser");
+    let _ = state
+        .db
+        .insert_token(&Uuid::new_v4().to_string(), &hash, &masked, "Android pairing via Browser", "user");
+
+    let base_url = format!("http://{host}:{port}");
+    let uri = format!("talos://pair?url={}&token={}", base_url, plain);
+
+    let html = format!(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TALOS — Pair Device</title>
+    <style>
+        body {{
+            background: #090d16;
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px;
+            box-sizing: border-box;
+        }}
+        .card {{
+            background: #131b2e;
+            border: 1px solid #1e293b;
+            border-radius: 20px;
+            padding: 32px 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }}
+        .badge {{
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 999px;
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }}
+        h2 {{ margin: 0 0 8px 0; font-size: 22px; font-weight: 700; }}
+        p {{ color: #94a3b8; font-size: 14px; line-height: 1.5; margin: 0 0 24px 0; }}
+        .btn {{
+            display: block;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: transform 0.15s ease;
+        }}
+        .btn:active {{ transform: scale(0.98); }}
+        .note {{ color: #64748b; font-size: 12px; margin-top: 20px; line-height: 1.4; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="badge">&#x25CF; Tailscale Node Active</div>
+        <h2>Pair with TALOS</h2>
+        <p>Your private encrypted agent mesh is ready on this device.</p>
+        <a class="btn" href="{uri}">Open &amp; Pair in TALOS App</a>
+        <div class="note">Opening automatically in Chrome... If it doesn't open, tap the button above.</div>
+    </div>
+    <script>
+        setTimeout(function() {{
+            window.location.href = "{uri}";
+        }}, 600);
+    </script>
+</body>
+</html>"#);
+
+    axum::response::Html(html)
 }
 
 #[derive(Deserialize)]

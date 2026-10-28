@@ -96,6 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/mesh/status", get(mesh_status))
         .route("/api/mesh/peers/discover", get(mesh_peers))
         .route("/api/auth/pair", post(auth_pair))
+        .route("/api/auth/verify", get(auth_verify))
         // Browser one-tap pairing landing page (Chrome auto-dispatch)
         .route("/pair", get(pairing_web_page))
         .route("/", get(pairing_web_page))
@@ -325,24 +326,40 @@ async fn auth_pair(
                 "status": "paired",
                 "token_id": id,
                 "role": role,
-                "mesh_verified": true
+                "mesh_verified": true,
+                "health": 200
             })));
+        } else {
+            return Err(StatusCode::UNAUTHORIZED);
         }
     }
-    // If no token or invalid, issue a fresh guest session token
-    let (plain, hash, masked) = AuthEngine::generate_token("Mesh Pairing Node");
-    state
-        .db
-        .insert_token(&Uuid::new_v4().to_string(), &hash, &masked, "Mesh Pairing Node", "user")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Err(StatusCode::BAD_REQUEST)
+}
 
-    Ok(Json(serde_json::json!({
-        "status": "paired",
-        "token": plain,
-        "masked_token": masked,
-        "role": "user",
-        "mesh_verified": true
-    })))
+async fn auth_verify(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+) -> Result<impl IntoResponse, StatusCode> {
+    let auth_header = headers.get("authorization").and_then(|h| h.to_str().ok());
+    let token = auth_header
+        .and_then(|h| h.strip_prefix("Bearer ").map(|s| s.trim()))
+        .unwrap_or("");
+
+    if token.is_empty() {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
+    let hash = AuthEngine::hash_token(token);
+    if let Ok(Some((id, role))) = state.db.verify_token_hash(&hash) {
+        Ok(Json(serde_json::json!({
+            "status": "valid",
+            "token_id": id,
+            "role": role,
+            "health": 200
+        })))
+    } else {
+        Err(StatusCode::UNAUTHORIZED)
+    }
 }
 
 async fn list_tokens(State(state): State<AppState>) -> Result<impl IntoResponse, StatusCode> {

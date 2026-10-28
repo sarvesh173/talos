@@ -163,28 +163,10 @@ fun OnboardingWizard(
         }
     }
 
-    fun generateOrPairToken() {
-        scope.launch {
-            isPairing = true
-            errorMessage = null
-            val generated = client.pairDevice()
-            if (!generated.isNullOrBlank()) {
-                token = generated
-            } else {
-                token = "talos_" + UUID.randomUUID().toString().replace("-", "").take(24)
-            }
-            isPairing = false
-        }
-    }
-
     // Step 2: verify the mesh over Tailscale WireGuard (auto-discovery)
     LaunchedEffect(step) {
         if (step == 1) {
             refreshMesh(autoPairKey = true)
-        }
-        // Step 3: mint an agent API token
-        if (step == 2 && token == null && !isPairing) {
-            generateOrPairToken()
         }
     }
 
@@ -320,7 +302,7 @@ fun OnboardingWizard(
                             onTokenChanged = { newToken ->
                                 token = newToken
                             },
-                            onGenerateToken = { generateOrPairToken() },
+                            onGenerateToken = {},
                             onCopyToken = { t ->
                                 clipboardManager.setText(AnnotatedString(t))
                                 copiedNotice = "Token copied to clipboard!"
@@ -385,18 +367,26 @@ fun OnboardingWizard(
                             }
                         }
                         2 -> {
-                            if (!hasToken) {
-                                generateOrPairToken()
+                            val t = token?.trim() ?: ""
+                            if (t.isNotBlank()) {
+                                scope.launch {
+                                    isPairing = true
+                                    errorMessage = null
+                                    val (ok, msg) = client.verifyAndConnect(client.baseUrl, t)
+                                    isPairing = false
+                                    if (ok) {
+                                        step = 3
+                                    } else {
+                                        errorMessage = msg
+                                    }
+                                }
                             } else {
-                                val t = token ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
-                                client.updateConfig(client.baseUrl, t)
-                                step = 3
+                                errorMessage = "Please enter the Host API Key generated on your laptop."
                             }
                         }
                         3 -> onComplete()
                     }
-                },
-                onBypass = { step = 2 },
+                }
             )
         }
     }
@@ -533,7 +523,6 @@ private fun WizardBottomBar(
     isMeshActive: Boolean,
     hasToken: Boolean,
     onPrimary: () -> Unit,
-    onBypass: (() -> Unit)? = null,
     compactHeight: Boolean = false,
 ) {
     val canProceed = when (step) {
@@ -575,20 +564,6 @@ private fun WizardBottomBar(
                 .fillMaxWidth()
                 .height(if (compactHeight) 44.dp else 52.dp)
         )
-
-        if (step == 1 && !isMeshActive && onBypass != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            TextButton(
-                onClick = onBypass,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = "Continue to Token Step Anyway",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
     }
 }
 

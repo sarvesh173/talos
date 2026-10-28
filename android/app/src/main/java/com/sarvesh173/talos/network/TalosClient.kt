@@ -547,30 +547,74 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
-    suspend fun pairDevice(): String? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val req = Request.Builder()
-                    .url("$baseUrl/api/auth/pair")
-                    .post(ByteArray(0).toRequestBody("application/json".toMediaTypeOrNull()))
-                    .build()
-                httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        val body = resp.body?.string() ?: "{}"
-                        val obj = json.parseToJsonElement(body).jsonObject
-                        val token = obj["token"]?.jsonPrimitive?.content
-                        if (!token.isNullOrBlank()) {
-                            updateConfig(baseUrl, token)
-                        }
-                        token
-                    } else null
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Pair device error: ${e.message}")
-                null
-            }
+    suspend fun verifyAndConnect(endpoint: String, token: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+        val cleanUrl = endpoint.trim().trimEnd('/')
+        val cleanToken = token.trim()
+
+        if (cleanUrl.isBlank()) {
+            return@withContext Pair(false, "Please enter your Core Tailscale address (e.g. http://100.x.y.z:8010)")
         }
-    }
+        if (cleanToken.isBlank()) {
+            return@withContext Pair(false, "Please enter the Host API Key generated on your laptop")
+        }
+
+        // 1. Health check to test Tailscale reachability
+        try {
+            val healthReq = Request.Builder()
+                .url("$cleanUrl/health")
+                .build()
+            probeClient.newCall(healthReq).execute().use { resp ->
+                if (!resp.isSuccessful) {
+                    return@withContext Pair(false, "Host responded with HTTP ${resp.code}. Verify Tailscale is active.")
+                }
+            }
+        } catch (e: Exception) {
+            return@withContext Pair(false, "Cannot reach host at $cleanUrl (${e.message ?: "Timeout"}). Make sure Tailscale is active on your phone and laptop.")
+        }
+
+        // 2. Auth check to verify host-minted token
+        try {
+            val payload = json.encodeToString(mapOf("token" to cleanToken))
+            val authReq = Request.Builder()
+                .url("$cleanUrl/api/auth/pair")
+                .post(payload.toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            probeClient.newCall(authReq).execute().use { resp ->
+                if (resp.code == 200) {
+                    updateConfig(cleanUrl, cleanToken)
+                    Pair(true, "Host Connected & API Key 200 OK")
+                } else if (resp.code == 401) {
+                    Pair(false, "Tailscale connected (laptop reached), but Host API Key was rejected (401 Unauthorized). Check key on laptop.")
+                } else {
+                    Pair(false, "Host returned HTTP ${resp.code} during authorization.")
+                }
+            }
+            } catch (e: Exception) {
+            Pair(false, "Authorization request failed: ${e.message}")
+            }
+            }
+
+            suspend fun pairDevice(): String? {
+            return withContext(Dispatchers.IO) {
+            try {
+            if (apiToken.isBlank()) return@withContext null
+            val payload = json.encodeToString(mapOf("token" to apiToken))
+            val req = Request.Builder()
+                .url("$baseUrl/api/auth/pair")
+                .post(payload.toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    _isPaired.value = true
+                    apiToken
+                } else null
+            }
+            } catch (e: Exception) {
+            Log.e(TAG, "Pair device error: ${e.message}")
+            null
+            }
+            }
+            }
 
     suspend fun generateQuickToken(): String? {
         return kotlinx.coroutines.withContext(Dispatchers.IO) {

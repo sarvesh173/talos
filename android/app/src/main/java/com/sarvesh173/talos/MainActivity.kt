@@ -190,16 +190,17 @@ class MainActivity : ComponentActivity() {
                         state = gateState,
                         onRetry = { gateNonce++ },
                         initialUrl = client.baseUrl,
+                        initialToken = client.apiToken,
                         onUpdateUrl = { newUrl ->
                             client.updateConfig(newUrl, client.apiToken)
+                        },
+                        onVerifyAndConnect = { endpoint, key ->
+                            client.verifyAndConnect(endpoint, key)
                         },
                         modifier = Modifier.fillMaxSize(),
                         onManualSetup = {
                             manualSetup = true
                             appScreen = "wizard"
-                        },
-                        onBypass = {
-                            manualSetup = true
                         }
                     )
                 } else {

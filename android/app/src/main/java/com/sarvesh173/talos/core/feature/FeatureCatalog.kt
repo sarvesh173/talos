@@ -4,8 +4,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.runtime.mutableStateListOf
+import com.sarvesh173.talos.ui.TalosBrowserScreen
 import com.sarvesh173.talos.ui.features.AgentFleetScreen
 import com.sarvesh173.talos.ui.features.ContextTelemetryScreen
 import com.sarvesh173.talos.ui.features.ProviderVaultScreen
@@ -67,6 +69,18 @@ object FeatureCatalog {
                 order = 30
             ) { scope ->
                 ContextTelemetryScreen(client = scope.client)
+            }
+        )
+
+        registerFeature(
+            featureSlot(
+                id = "browser",
+                title = "Browser",
+                summary = "Native in-app browser & local node portal",
+                icon = Icons.Default.Language,
+                order = 40
+            ) { scope ->
+                TalosBrowserScreen(initialUrl = scope.client.baseUrl)
             }
         )
     }

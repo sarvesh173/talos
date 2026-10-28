@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.core.motion.MotionTokens
 
+import kotlinx.coroutines.launch
+
 enum class ServiceGateState {
     Checking,
     Ready,
@@ -52,12 +54,14 @@ fun ServiceGateScreen(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     initialUrl: String = "",
+    initialToken: String = "",
     onUpdateUrl: ((String) -> Unit)? = null,
-    onManualSetup: (() -> Unit)? = null,
-    onBypass: (() -> Unit)? = null
+    onVerifyAndConnect: (suspend (String, String) -> Pair<Boolean, String>)? = null,
+    onManualSetup: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val motionOn = remember { systemAnimationsEnabled(context) }
     val scrollState = rememberScrollState()
 
@@ -77,6 +81,9 @@ fun ServiceGateScreen(
     val unreachable = state == ServiceGateState.NodeUnreachable
 
     var customEndpoint by remember(initialUrl) { mutableStateOf(initialUrl) }
+    var customApiKey by remember(initialToken) { mutableStateOf(initialToken) }
+    var verifyError by remember { mutableStateOf<String?>(null) }
+    var isVerifying by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -215,7 +222,7 @@ fun ServiceGateScreen(
             // Direct Address Configuration Card
             MetalCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Core Tailscale Address",
+                    text = "Core Tailscale Address & Host Key",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = scheme.onSurface
@@ -223,20 +230,51 @@ fun ServiceGateScreen(
                 Spacer(Modifier.height(6.dp))
                 OutlinedTextField(
                     value = customEndpoint,
-                    onValueChange = { customEndpoint = it },
+                    onValueChange = { customEndpoint = it; verifyError = null },
+                    label = { Text("Core Tailscale URL") },
                     placeholder = { Text("http://100.x.y.z:8010") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = customApiKey,
+                    onValueChange = { customApiKey = it; verifyError = null },
+                    label = { Text("Host API Key (talos_sk_...)") },
+                    placeholder = { Text("Paste key from laptop") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (verifyError != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = verifyError ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.error
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
                 MetalButton(
-                    text = "Save & Connect Endpoint",
+                    text = if (isVerifying) "Verifying..." else "Verify & Connect to Laptop",
+                    isLoading = isVerifying,
                     onClick = {
-                        if (customEndpoint.isNotBlank()) {
+                        if (customEndpoint.isNotBlank() && onVerifyAndConnect != null) {
+                            coroutineScope.launch {
+                                isVerifying = true
+                                val (ok, msg) = onVerifyAndConnect(customEndpoint, customApiKey)
+                                isVerifying = false
+                                if (ok) {
+                                    onRetry()
+                                } else {
+                                    verifyError = msg
+                                }
+                            }
+                        } else if (customEndpoint.isNotBlank()) {
                             onUpdateUrl?.invoke(customEndpoint.trim().trimEnd('/'))
                             onRetry()
                         }
                     },
+                    variant = MetalButtonVariant.Primary,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -265,20 +303,6 @@ fun ServiceGateScreen(
                         variant = MetalButtonVariant.Tonal,
                         modifier = Modifier.fillMaxWidth()
                     )
-                }
-
-                if (onBypass != null) {
-                    TextButton(
-                        onClick = onBypass,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Text(
-                            text = "Continue to Interface Anyway",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = scheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
                 }
             }
         }

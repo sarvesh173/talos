@@ -54,6 +54,9 @@ import androidx.lifecycle.lifecycleScope
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.Room
 import com.sarvesh173.talos.network.TalosClient
+import com.sarvesh173.talos.core.feature.FeatureCatalog
+import com.sarvesh173.talos.core.feature.FeatureScope
+import com.sarvesh173.talos.core.motion.MotionTokens
 import com.sarvesh173.talos.ui.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -306,6 +309,13 @@ fun MainScreen(
 
     var inputText by remember { mutableStateOf("") }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var activeSlotId by remember { mutableStateOf("chambers") }
+    val featureScope = remember(client, scope) {
+        object : FeatureScope {
+            override val coroutineScope = scope
+            override val client = client
+        }
+    }
 
     val activeRoom = rooms.firstOrNull { it.id == currentRoomId }
     val roomTitle = activeRoom?.name ?: "TALOS"
@@ -350,7 +360,7 @@ fun MainScreen(
 
                 LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
                     items(rooms) { room: Room ->
-                        val isSelected = room.id == currentRoomId
+                        val isSelected = room.id == currentRoomId && activeSlotId == "chambers"
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -359,6 +369,7 @@ fun MainScreen(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(if (isSelected) PrimaryAccent.copy(alpha = 0.15f) else Color.Transparent)
                                 .clickable {
+                                    activeSlotId = "chambers"
                                     client.switchRoom(room.id)
                                     scope.launch { drawerState.close() }
                                 }
@@ -385,6 +396,57 @@ fun MainScreen(
                                 Text(
                                     text = room.description,
                                     color = TextMuted,
+                                    fontSize = 11.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        HorizontalDivider(color = talosBorder, modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp))
+                        Text(
+                            text = "EXTENSIBLE MODULES",
+                            color = talosTextMuted,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.6.sp,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    items(FeatureCatalog.slots.filter { it.id != "chambers" }) { slot ->
+                        val isSlotSelected = slot.id == activeSlotId
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSlotSelected) PrimaryAccent.copy(alpha = 0.15f) else Color.Transparent)
+                                .clickable {
+                                    activeSlotId = slot.id
+                                    scope.launch { drawerState.close() }
+                                }
+                                .padding(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = slot.icon,
+                                contentDescription = slot.title,
+                                tint = if (isSlotSelected) PrimaryAccent else talosTextPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = slot.title,
+                                    color = if (isSlotSelected) PrimaryAccent else talosTextPrimary,
+                                    fontWeight = if (isSlotSelected) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    text = slot.summary,
+                                    color = talosTextMuted,
                                     fontSize = 11.sp,
                                     maxLines = 1
                                 )
@@ -530,8 +592,52 @@ fun MainScreen(
                         }
                     }
 
+                    // Extensible Feature Perspective Switcher
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(FeatureCatalog.slots) { slot ->
+                            val isSlotActive = slot.id == activeSlotId
+                            FilterChip(
+                                selected = isSlotActive,
+                                onClick = { activeSlotId = slot.id },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = slot.icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = slot.title,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSlotActive) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                },
+                                shape = ShapeLargeIncreased,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = PrimaryAccent,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    labelColor = talosTextPrimary,
+                                    iconColor = talosTextMuted
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = isSlotActive,
+                                    borderColor = MaterialTheme.colorScheme.outlineVariant
+                                )
+                            )
+                        }
+                    }
+
                     // Horizontal Chamber Quick Switcher Rail - canonical M3 FilterChips
-                    if (rooms.size > 1) {
+                    if (activeSlotId == "chambers" && rooms.size > 1) {
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -577,14 +683,15 @@ fun MainScreen(
                 }
             },
             bottomBar = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .imePadding()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
-                ) {
+                if (activeSlotId == "chambers") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .imePadding()
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
                     if (isTyping) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -689,29 +796,41 @@ fun MainScreen(
                         }
                     }
                 }
+                }
             },
             containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
-            if (messages.isEmpty()) {
-                ChamberHero(
-                    room = activeRoom,
-                    onPromptClick = { prompt -> inputText = prompt },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                )
+            if (activeSlotId == "chambers") {
+                if (messages.isEmpty()) {
+                    ChamberHero(
+                        room = activeRoom,
+                        onPromptClick = { prompt -> inputText = prompt },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    )
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    ) {
+                        items(messages, key = { it.id }) { msg: Message ->
+                            Box(modifier = Modifier.animateItem()) {
+                                MessageBubble(msg = msg)
+                            }
+                        }
+                    }
+                }
             } else {
-                LazyColumn(
-                    state = listState,
+                val slot = FeatureCatalog.slots.find { it.id == activeSlotId }
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    items(messages, key = { it.id }) { msg: Message ->
-                        Box(modifier = Modifier.animateItem()) {
-                            MessageBubble(msg = msg)
-                        }
-                    }
+                    slot?.Content(featureScope)
                 }
             }
         }

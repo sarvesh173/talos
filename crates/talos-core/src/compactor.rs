@@ -173,6 +173,7 @@ impl ContextCompactor {
         Self { config }
     }
 
+    #[allow(dead_code)]
     pub fn with_default_config() -> Self {
         Self::new(CompactorConfig::default())
     }

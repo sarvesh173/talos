@@ -34,6 +34,7 @@ impl ParticipantInfo {
 pub struct MentionParser;
 
 impl MentionParser {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self
     }
@@ -219,15 +220,19 @@ impl Default for RouterConfig {
 pub enum SenderRole {
     Human,
     Agent,
+    #[allow(dead_code)]
     System,
+    #[allow(dead_code)]
     Orchestrator,
 }
 
 /// Context representing an incoming message for routing.
 #[derive(Debug, Clone)]
 pub struct MessageContext {
+    #[allow(dead_code)]
     pub room_id: String,
     pub sender_id: String,
+    #[allow(dead_code)]
     pub sender_role: SenderRole,
     pub content: String,
     /// The hop / turn depth chain for this deliberation tree.
@@ -358,6 +363,7 @@ impl InterAgentRouter {
     }
 
     /// Resets chain depth for a room.
+    #[allow(dead_code)]
     pub fn reset_chain(&mut self, room_id: &str) {
         self.chain_depths.remove(room_id);
     }

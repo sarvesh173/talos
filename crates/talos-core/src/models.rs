@@ -194,8 +194,10 @@ pub struct TokenInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeshNodeStatus {
     #[serde(skip_serializing)]
+    #[allow(dead_code)]
     pub node_id: String,
     #[serde(skip_serializing)]
+    #[allow(dead_code)]
     pub hostname: String,
     #[serde(skip_serializing)]
     pub tailscale_ip: String,
@@ -218,12 +220,16 @@ pub struct MeshNodeStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeshPeer {
     #[serde(skip_serializing)]
+    #[allow(dead_code)]
     pub id: String,
     #[serde(skip_serializing)]
+    #[allow(dead_code)]
     pub name: String,
     #[serde(skip_serializing)]
+    #[allow(dead_code)]
     pub ip: String,
     #[serde(skip_serializing)]
+    #[allow(dead_code)]
     pub os: String,
     pub status: String,
     pub latency_ms: f64,

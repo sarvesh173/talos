@@ -1,220 +1,138 @@
-# AGENTS.md — TALOS
+# AGENTS.md — TALOS CENTRAL AGENT DIRECTORY & MASTER REPO MAP
 
-> TALOS is an **agent-only** system: an Android client that AI agents drive, plus a
-> Rust core (`crates/talos-core`) that runs on the user's machine. A human should
-> never have to wire this up manually — **you** (the agent) do it, and you only ask
-> the human for the one thing you cannot do for them: **signing in to Tailscale**
-> with their account.
-
-Read this whole file before touching the repo. It is short on purpose.
+> **TALOS is an agent-orchestrated system**: an Android companion client communicating with a high-performance Rust core (`crates/talos-core`) over an encrypted private Tailscale WireGuard overlay.
+> 
+> **Master Rule for AI Agents**: This repository is designed to be completely navigable by AI agents (OmniRush, Claude Code, Hermes, OpenCode, Codex). **Never guess procedures.** Use the specialized guides linked below to execute specific setup, networking, or development tasks.
 
 ---
 
-## 0. Non-negotiable rules
+## 🧭 Master Knowledge Index & Linked Setup Guides
+
+| Guide | File / Link | When to Check & What it Covers |
+|---|---|---|
+| **Host Setup & Pairing PRD** | [`INSTALLING.md`](./INSTALLING.md) | **MANDATORY FOR SETUP.** Complete PRD for booting the host daemon, managing the single persistent 16-digit API key, Tailscale IP output format, and user pairing lines. |
+| **Feature Catalog & Spec** | [`FEATURE.md`](./FEATURE.md) | Spec-first intake directory, active architecture layers, M3 Expressive tokens, native browser integration, and dynamic IP updating. |
+| **Tailscale & Network Architecture** | [`docs/MULTI_AGENT_MESH_ARCHITECTURE.md`](./docs/MULTI_AGENT_MESH_ARCHITECTURE.md) | Deep dive into WireGuard overlay topology, Tailscale daemon lifecycle, port resolution (`8010`/`8089`), and zero-trust auth. |
+| **Comprehensive Agent Onboarding** | [`docs/agent-setup-guide.md`](./docs/agent-setup-guide.md) | Step-by-step handbook for configuring subagents, multi-agent dispatch pipes, and prompt injection hardening. |
+| **Hermes Gateway & Tool Sync** | [`HERMES.md`](./HERMES.md) | Instructions for bridging Hermes Agent CLI, tool schemas, and local MCP nodes into TALOS. |
+| **Material 3 Expressive System** | [`docs/DESIGN_SYSTEM_M3.md`](./docs/DESIGN_SYSTEM_M3.md) | Strict guidelines for metallic styling, M3E container shapes, surface roles, and anti-slop mobile UX. |
+| **Motion & Animation Physics** | [`docs/MOTION_SPEC.md`](./docs/MOTION_SPEC.md) | Spring specs (`dampingRatio = 0.82f`, `stiffness = 380f`), gesture transitions, and drawer physics. |
+| **Split-Screen & Tablet Support** | [`docs/split-screen-android.md`](./docs/split-screen-android.md) | Android multi-window, OEM letterboxing fixes, and foldables adaptive geometry. |
+| **Rust Architectural Decisions** | [`docs/ADR-001-RUST-STACK-AND-M3E-SYSTEM.md`](./docs/ADR-001-RUST-STACK-AND-M3E-SYSTEM.md) | ADR outlining why Axum + SQLite + Tokio replaced the legacy Python engine for low latency. |
+
+---
+
+## 0. Non-Negotiable Operational Rules
 
 | Rule | Why |
 |---|---|
 | **Never hardcode an IP, hostname, device id or token** in code. Everything is discovered at runtime. | The owner's IPs change constantly (hotspot / Wi-Fi / cellular / Tailscale). Hardcoding breaks the product for every other user. |
+| **Single Host API Key Rule**: Only ONE persistent key per host. | Preserves credentials in `~/.config/talos/credentials.json` so mobile app uninstalls/reinstalls reuse the exact same key without minting duplicates. |
 | **Never leak host system information into the app UI.** Hostname, overlay IP, peer names, OS names, node ids are private data. The core must not serialize them. | Privacy: the phone app is a client surface, not a system monitor. |
 | **Check before installing.** Report what is missing, install only what is missing, never overwrite a working install. | The host may already have a working toolchain; clobbering it breaks unrelated work. |
-| **Never force-push to `main`/`dev`.** Small commits, push often, PR per phase. | Shared repo. |
-| **Never commit secrets** (Tailscale auth keys, tokens, `.env` contents). | Repo is on GitHub. |
-| **CI builds the APK.** Do not run `assembleRelease` on the user's laptop; it is a slow, low-RAM machine. Use `./gradlew :app:compileReleaseKotlin` as a local check only. | The user explicitly asked for cloud builds. |
+| **Never force-push to `main`/`dev`.** Small commits, push often, PR per phase via SSH. | Shared repo safety. |
+| **Never commit secrets** (Tailscale auth keys, tokens, `.env` contents). | Public GitHub security. |
+| **CI builds the APK.** Do not run `assembleRelease` on the user's laptop; it is a slow, low-RAM machine. Use `./gradlew :app:compileReleaseKotlin` as a local check only. | Preserves host battery and RAM. |
 
 ---
 
-## 1. Preflight — dependency check FIRST
+## 1. Quick Setup: How to Boot TALOS & Pair Mobile App
 
-Run this before installing anything:
-
-```bash
-for dep in git curl cargo rustc python3 pip sqlite3 tailscale; do
-  command -v "$dep" >/dev/null 2>&1 || echo "MISSING: $dep"
-done
-```
-
-What the project actually needs:
-
-| Dependency | Needed for | If missing |
-|---|---|---|
-| `git` | clone/pull | install |
-| `cargo` + `rustc` | building `talos-core` | install rustup (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`) |
-| `curl` | health checks + downloads | install |
-| `python3` | helper scripts, tests | install |
-| `sqlite3` | dev inspection of `talos.db` (runtime uses `rusqlite` — bundled) | optional |
-| `tailscale` | **the private overlay that carries TALOS traffic** | **ask the human to install it** (see §2) |
-
-**Invariant:** `check → report → install only what is missing → re-verify → continue`.
-Never run an installer that overwrites an existing working install without saying so first.
-
----
-
-## 2. Tailscale — the one dependency the human must own
-
-TALOS traffic travels over the Tailscale overlay. Without it there is **no encryption
-layer**, so the app refuses to run — this is deliberate, not a bug.
-
-### 2.1 Check
+Whenever the user asks to **"set up the app"**, **"run the host"**, or **"pair the phone"**, execute the universal host manager:
 
 ```bash
-command -v tailscale && tailscale status --json | head -40
+# Cross-platform one-liner (Linux, macOS, WSL, Windows):
+bash scripts/agent_setup.sh
+# or:
+python3 scripts/agent_setup.py
 ```
 
-`tailscale status --json` → `BackendState` must be `"Running"`.
-
-### 2.2 If Tailscale is missing
-
-Do **not** silently install it and move on. Tell the human exactly this:
-
-> TALOS needs Tailscale on both the phone and this machine — it carries the encrypted
-> link between your phone and the agents on this host.
-> 1. Download Tailscale on your phone (Google Play / App Store) and on this machine.
-> 2. Sign in with the **same account** on both.
-> 3. Tell me when you are signed in — I will do the rest.
-
-Then wait. Everything else in this file can be done before they answer.
-
-### 2.3 If Tailscale is installed but not authenticated
-
-```bash
-sudo tailscale up --qr     # prints a login URL / QR the human scans
-```
-
-Ask the human to open it, then re-check `BackendState`.
-
-### 2.4 Installing Tailscale without clobbering
-
-Only when it is genuinely absent, and only after the human approved:
-
-```bash
-# Debian/Ubuntu - official repo, does not touch other packages
-curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/tailscale.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
-curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/tailscale.list | sudo tee /etc/apt/sources.list.d/tailscale.list
-sudo apt-get update && sudo apt-get install -y tailscale
-sudo systemctl enable --now tailscaled
-```
-
-Never run an installer that removes or replaces an existing Tailscale package.
-
----
-
-## 3. Build and run the core
-
-```bash
-cd /home/kira/talos
-CARGO_BUILD_JOBS=2 cargo build --manifest-path crates/talos-core/Cargo.toml
-```
-
-Run it as a **long-lived background service** (it must survive your session):
-
-```bash
-# foreground test
-PORT=8010 crates/talos-core/target/debug/talos-core
-# background service (preferred)
-sudo systemctl --user enable --now talos-core.service   # see scripts/talos-core.service
-# or, without systemd
-setsid env PORT=8010 crates/talos-core/target/debug/talos-core \
-  > /tmp/talos-core.log 2>&1 < /dev/null &
-```
-
-### Verify (all three must pass)
-
-```bash
-curl -fsSL http://127.0.0.1:8010/health
-# {"status":"operational","engine":"talos-core-rust",...}
-
-curl -fsSL http://127.0.0.1:8010/api/mesh/status
-# {"is_online":true,"wireguard_active":true,"tailscale_enabled":true,"peers_count":N,...}
-
-# zero-config discovery beacon (the phone uses this)
-python3 - <<'PY'
-import socket, json
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.settimeout(3)
-s.sendto(b"TALOS_DISCOVER", ("127.0.0.1", 8089))
-print(json.loads(s.recvfrom(1024)[0]))
-PY
-# {"service":"talos-core","port":8010,"version":"0.2.0"}
-```
-
-If `tailscale_enabled` is `false`, the overlay is down — fix Tailscale (§2), do not
-work around it in code.
-
----
-
-## 4. Host-Authorized Pairing & Agent Behavioral Contract
-
-The laptop/computer host is the **sole authority** that mints, registers, and validates API keys. AI agents configuring or managing TALOS must adhere to the contract detailed in **`INSTALLING.md`**.
-
-1. **Universal Host Setup Command**: Run `bash scripts/agent_setup.sh` (or `python3 scripts/agent_setup.py`) to boot the daemon, resolve the host Tailscale IPv4, and manage the single persistent key across any OS (Linux, macOS, WSL, Windows).
-2. **Single API Key & Safe Storage**: Agents must maintain **only ONE persistent API key** per host. Store credentials safely at `~/.config/talos/credentials.json` (locked with `chmod 600`). Never mint duplicate tokens if a valid key already exists.
-3. **Mandatory Agent Output**: The agent must output these exact instructions to the user:
+### What this command guarantees:
+1. Checks preflight requirements (`cargo`, `tailscale`, `curl`, `python3`).
+2. Compiles and runs `talos-core` as a detached daemon on port `8010`.
+3. Resolves the active host **Tailscale IPv4 address** (`100.x.y.z`).
+4. Reuses the existing single key from `~/.config/talos/credentials.json` (or generates a random 16-digit key if fresh).
+5. **Mandatory Final Output**: The agent must finish with these exact two lines:
    ```text
    User please enter this in your Tailscale IP section: http://<tailscale-ip>:8010
    User please enter this in your Host API Key section: talos_sk_<token>
    ```
-4. **App Input & Verification**: The mobile app prompts the user for both values and validates them via `POST /api/auth/pair`. Only genuine HTTP 200 OK responses unlock the Council chamber.
-5. **Settings Dynamic Update**: If the host's Tailscale IP changes or the node roams, users update the IP directly in the mobile app's **Settings > Tailscale Host & Connection** without resetting the app.
-6. **No Client Fabrication**: The mobile app NEVER mints or fabricates tokens locally.
 
-For detailed PRD instructions, see **`INSTALLING.md`**.
+*(For full details on key rotation `--rotate` or custom key input `--key`, refer to [`INSTALLING.md`](./INSTALLING.md)).*
 
 ---
 
-## 5. Android build & ship
+## 2. How to Set Up Tailscale (The Mandatory Mesh Overlay)
 
+TALOS traffic travels over the Tailscale overlay. Without it there is **no encryption layer**, so the app refuses to run.
+
+### 2.1 Verify Tailscale State
 ```bash
-cd /home/kira/talos/android
-GRADLE_OPTS="-Xmx1024m -Dorg.gradle.workers.max=2" ./gradlew :app:compileReleaseKotlin
+tailscale status --json | grep -oP '(?<="BackendState":")[^"]*'
+# Must return: Running
 ```
 
-Toolchain is pinned (do not "upgrade" casually):
+### 2.2 If Tailscale is Missing on Host
+Do **not** silently install it and move on. Tell the human:
+> TALOS needs Tailscale on both the phone and this machine — it carries the encrypted link between your phone and the agents on this host.
+> 1. Download Tailscale on your phone and on this machine.
+> 2. Sign in with the **same account** on both.
+> 3. Tell me when you are signed in — I will do the rest.
 
-- AGP `8.9.1`, Gradle `8.11.1`, `compileSdk 36`, `minSdk 26`
-- `material3 1.5.0-alpha12` (explicit pin — the BOM alone resolves 1.3.2)
-- `graphics-shapes 1.1.0` for the M3E shape-morph engine
-
-Ship by pushing a version tag; GitHub Actions builds and publishes:
-
+### 2.3 If Tailscale Needs Authentication
 ```bash
-git checkout dev && git merge --ff-only feature/<branch>
-git push origin dev
-git tag -a v2.7.0 -m "..." && git push origin v2.7.0
+sudo tailscale up --qr     # prints a login URL / QR for the user
 ```
 
-Verify the release at `https://github.com/sarvesh173/talos/releases` — the rolling
-release **TALOS Latest Build** must expose `talos-latest.apk`.
+*(For deep network troubleshooting and routing topology, refer to [`docs/MULTI_AGENT_MESH_ARCHITECTURE.md`](./docs/MULTI_AGENT_MESH_ARCHITECTURE.md)).*
 
 ---
 
-## 6. Repo map
+## 3. How to Build & Verify the Core (`crates/talos-core`)
 
-| Path | What it is |
-|---|---|
-| `crates/talos-core/` | Rust core: axum HTTP API, SQLite, WebSocket bus, theme API, UDP discovery, Tailscale detection |
-| `android/app/src/main/java/com/sarvesh173/talos/ui/` | Compose UI: `Theme.kt`, `ExpressiveComponents.kt`, `DynamicTheme.kt`, `ServiceGate.kt`, `Adaptive.kt` |
-| `android/app/src/main/java/com/sarvesh173/talos/network/` | `TalosClient.kt` (HTTP/WS + endpoint resolution), `MeshDiscovery.kt` (UDP beacon) |
-| `server/main.py` | Legacy Python core — kept for reference/compat; the Rust core is the product |
-| `docs/` | Design specs, ADRs, split-screen and agent-setup research |
-| `scripts/` | systemd unit + helper scripts for running the core as a service |
-| `PLAN.md` | Phase plan and real completion percentages — keep it honest |
+```bash
+cd crates/talos-core
+cargo build --release --quiet
 
----
-
-## 7. Troubleshooting
-
-| Symptom | Cause | Fix |
-|---|---|---|
-| App shows "Tailscale required" but Tailscale is on | Core is too old / not reporting `tailscale_enabled`, or the app can't reach the core | Rebuild + restart the core; verify `curl /api/mesh/status` shows `tailscale_enabled: true` |
-| App shows "Node unreachable" | Node moved ports or discovery is blocked | The app retries stored endpoint → same host on standard ports → beacon. Confirm the core is listening and the beacon answers |
-| Wizard stuck on "Scanning private mesh..." | A probe hung (old client had no read timeout) | Client now has an 8s probe timeout and a 12s resolver ceiling — rebuild the app |
-| `cargo build` fails on `libsqlite3` | missing C toolchain | `sudo apt-get install -y build-essential pkg-config` |
-| CI fails on Gradle | lockfile/package.json drift | `npm ci` in CI requires `package-lock.json` to match `package.json` |
-| Android 16 letterboxes the app | `maxAspectRatio` / `minAspectRatio` set, or `resizeableActivity` missing | Keep `android:resizeableActivity="true"` and **omit** aspect-ratio attributes |
+# Verify running endpoints (all three must return HTTP 200 OK):
+curl -fsSL http://127.0.0.1:8010/health
+curl -fsSL http://127.0.0.1:8010/api/mesh/status
+curl -fsSL -X POST http://127.0.0.1:8010/api/auth/pair -H "Content-Type: application/json" -d '{"token":"<16_DIGIT_KEY>"}'
+```
 
 ---
 
-## 8. Reporting
+## 4. How to Verify Android Code Changes
 
-When you finish a phase, report: what changed, the real command output that proves it,
-what is still open. Use the repo's `PLAN.md` percentages honestly — a plausible claim
-without evidence is worse than an unfinished task.
+Before pushing any commit to GitHub:
+```bash
+cd android
+GRADLE_OPTS="-Xmx1024m -Dorg.gradle.workers.max=2" ./gradlew :app:compileReleaseKotlin --no-daemon
+```
+
+Push all verified changes to `feature/m3-expressive-rust-first`, merge into `dev` and `main` via fast-forward, tag a release (e.g. `v2.8.x`), and GitHub Actions will automatically compile the release APK and publish to releases.
+
+---
+
+## 5. Repository File Directory
+
+```text
+talos/
+├── AGENTS.md                  <-- Central directory and cross-linking index (Start Here)
+├── INSTALLING.md              <-- Host setup, 16-digit API keys & pairing PRD
+├── FEATURE.md                 <-- Live feature tracker, M3 tokens & spec intake
+├── HERMES.md                  <-- Hermes CLI integration & tool gateway
+├── docs/
+│   ├── MULTI_AGENT_MESH_ARCHITECTURE.md  <-- Tailscale overlay & network protocol
+│   ├── DESIGN_SYSTEM_M3.md               <-- Metallic styling & container specs
+│   ├── MOTION_SPEC.md                    <-- Animation curves, springs & physics
+│   ├── agent-setup-guide.md              <-- Agent dispatch & multi-agent handbook
+│   ├── split-screen-android.md           <-- Multi-window & adaptive layouts
+│   └── ADR-001-RUST-STACK-AND-M3E-SYSTEM.md <-- Rust core architecture decision
+├── crates/
+│   └── talos-core/            <-- Rust Axum service, SQLite DB & auth engine
+├── android/                   <-- Jetpack Compose Android companion application
+└── scripts/
+    ├── agent_setup.sh         <-- Universal POSIX shell setup wrapper
+    └── agent_setup.py         <-- Universal cross-platform setup & key manager
+```

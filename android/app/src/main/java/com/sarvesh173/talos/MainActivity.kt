@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LightMode
@@ -278,6 +280,9 @@ class MainActivity : ComponentActivity() {
                                 isDark = isCurrentlyDark,
                                 onToggleTheme = {
                                     client.toggleTheme()
+                                },
+                                onExitToLanding = {
+                                    appScreen = "landing"
                                 }
                             )
                         }
@@ -286,6 +291,9 @@ class MainActivity : ComponentActivity() {
                                 client = client,
                                 onToggleTheme = {
                                     client.toggleTheme()
+                                },
+                                onExitToLanding = {
+                                    appScreen = "landing"
                                 },
                                 onComplete = {
                                     client.markLaunched()
@@ -329,7 +337,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     client: TalosClient,
     isDark: Boolean = true,
-    onToggleTheme: () -> Unit = {}
+    onToggleTheme: () -> Unit = {},
+    onExitToLanding: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -343,6 +352,16 @@ fun MainScreen(
     var inputText by remember { mutableStateOf("") }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var activeSlotId by remember { mutableStateOf("chambers") }
+
+    BackHandler {
+        if (drawerState.isOpen) {
+            scope.launch { drawerState.close() }
+        } else if (activeSlotId != "chambers") {
+            activeSlotId = "chambers"
+        } else {
+            onExitToLanding()
+        }
+    }
     val featureScope = remember(client, scope) {
         object : FeatureScope {
             override val coroutineScope = scope
@@ -486,6 +505,43 @@ fun MainScreen(
                             }
                         }
                     }
+
+                    item {
+                        HorizontalDivider(color = talosBorder, modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    scope.launch { drawerState.close() }
+                                    onExitToLanding()
+                                }
+                                .padding(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Home,
+                                contentDescription = null,
+                                tint = PrimaryAccent,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Return to Landing",
+                                    color = PrimaryAccent,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "View overview and setup wizard",
+                                    color = talosTextMuted,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -617,6 +673,18 @@ fun MainScreen(
                                     Icon(
                                         imageVector = Icons.Default.Settings,
                                         contentDescription = "Settings",
+                                        tint = talosTextMuted,
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = onExitToLanding,
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Home,
+                                        contentDescription = "Return to Landing",
                                         tint = talosTextMuted,
                                         modifier = Modifier.size(17.dp)
                                     )

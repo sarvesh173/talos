@@ -1,34 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Official OpenClaw Mascot Emblem (from openclaw/openclaw repo) -->
+<!-- Official OpenClaw Mascot Emblem (Molty the Lobster from openclaw/openclaw) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="120"
     android:viewportHeight="120">
-    <!-- Antennae -->
+
+    <!-- Antennae / Feelers -->
     <path
-        android:pathData="M45,15 Q35,5 30,8 M75,15 Q85,5 90,8"
-        android:strokeColor="#FFFF4D4D"
+        android:pathData="M45,18 C38,8 30,6 22,8 M75,18 C82,8 90,6 98,8"
+        android:strokeColor="#FFFF3B30"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+
+    <!-- Walking Legs (Left) -->
+    <path
+        android:pathData="M24,70 C14,72 8,78 6,85 M28,80 C18,83 14,90 12,96 M34,88 C24,93 20,100 18,106"
+        android:strokeColor="#FFE11D48"
         android:strokeWidth="3.5"
         android:strokeLineCap="round" />
-    <!-- Lobster Body -->
+
+    <!-- Walking Legs (Right) -->
     <path
-        android:fillColor="#FFE11D48"
-        android:pathData="M60,10 C30,10 15,35 15,55 C15,75 30,95 45,100 L45,110 L55,110 L55,100 C55,100 60,102 65,100 L65,110 L75,110 L75,100 C90,95 105,75 105,55 C105,35 90,10 60,10Z" />
+        android:pathData="M96,70 C106,72 112,78 114,85 M92,80 C102,83 106,90 108,96 M86,88 C96,93 100,100 102,106"
+        android:strokeColor="#FFE11D48"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+
     <!-- Left Pincer Claw -->
     <path
-        android:fillColor="#FFFF4D4D"
-        android:pathData="M20,45 C5,40 0,50 5,60 C10,70 20,65 25,55 C28,48 25,45 20,45Z" />
+        android:fillColor="#FFFF3B30"
+        android:strokeColor="#FFBE123C"
+        android:strokeWidth="1.5"
+        android:pathData="M30,48 C12,40 2,48 4,64 C6,76 18,80 28,72 C34,67 36,54 30,48 Z M16,56 C14,50 18,46 22,50 C24,52 24,56 20,58 Z" />
+
     <!-- Right Pincer Claw -->
     <path
-        android:fillColor="#FFFF4D4D"
-        android:pathData="M100,45 C115,40 120,50 115,60 C110,70 100,65 95,55 C92,48 95,45 100,45Z" />
-    <!-- Outer Eye Sockets -->
+        android:fillColor="#FFFF3B30"
+        android:strokeColor="#FFBE123C"
+        android:strokeWidth="1.5"
+        android:pathData="M90,48 C108,40 118,48 116,64 C114,76 102,80 92,72 C86,67 84,54 90,48 Z M104,56 C106,50 102,46 98,50 C96,52 96,56 100,58 Z" />
+
+    <!-- Main Lobster Body -->
+    <path
+        android:fillColor="#FFE11D48"
+        android:strokeColor="#FF9F1239"
+        android:strokeWidth="1.5"
+        android:pathData="M60,12 C36,12 24,32 24,56 C24,76 34,94 44,100 L44,112 L54,112 L54,103 C56,104 60,104 60,104 C60,104 64,104 66,103 L66,112 L76,112 L76,100 C86,94 96,76 96,56 C96,32 84,12 60,12 Z" />
+
+    <!-- Belly / Tail Segments -->
+    <path
+        android:pathData="M38,78 Q60,86 82,78 M42,88 Q60,96 78,88 M46,98 Q60,104 74,98"
+        android:strokeColor="#FF9F1239"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Eye Sockets (Dark) -->
     <path
         android:fillColor="#FF0F172A"
-        android:pathData="M45,29 A6,6 0 1,0 45,41 A6,6 0 1,0 45,29 Z M75,29 A6,6 0 1,0 75,41 A6,6 0 1,0 75,29 Z" />
+        android:pathData="M45,28 A7,7 0 1,0 45,42 A7,7 0 1,0 45,28 Z M75,28 A7,7 0 1,0 75,42 A7,7 0 1,0 75,28 Z" />
+
+    <!-- Eye Whites / Sclera Glow -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M45,30 A5,5 0 1,0 45,40 A5,5 0 1,0 45,30 Z M75,30 A5,5 0 1,0 75,40 A5,5 0 1,0 75,30 Z" />
+
     <!-- Cyan Glowing Pupils -->
     <path
         android:fillColor="#FF00E5CC"
-        android:pathData="M46,31.5 A2.5,2.5 0 1,0 46,36.5 A2.5,2.5 0 1,0 46,31.5 Z M76,31.5 A2.5,2.5 0 1,0 76,36.5 A2.5,2.5 0 1,0 76,31.5 Z" />
+        android:pathData="M46,32 A3,3 0 1,0 46,38 A3,3 0 1,0 46,32 Z M76,32 A3,3 0 1,0 76,38 A3,3 0 1,0 76,32 Z" />
+
+    <!-- Cute Eye Catchlight / Twinkle -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M47,33 A1,1 0 1,0 47,35 A1,1 0 1,0 47,33 Z M77,33 A1,1 0 1,0 77,35 A1,1 0 1,0 77,33 Z" />
+
 </vector>

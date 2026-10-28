@@ -2,6 +2,7 @@
 
 package com.sarvesh173.talos.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -122,6 +123,7 @@ private val CyberOrange: Color @Composable get() = MaterialTheme.colorScheme.ter
 fun OnboardingWizard(
     client: TalosClient,
     onToggleTheme: (() -> Unit)? = null,
+    onExitToLanding: () -> Unit = {},
     onComplete: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -130,43 +132,37 @@ fun OnboardingWizard(
     var meshInfo by remember { mutableStateOf<MeshInfo?>(null) }
     var isChecking by remember { mutableStateOf(false) }
     var token by remember {
-        mutableStateOf<String?>(
-            client.apiToken.takeIf { it.isNotBlank() }
-                ?: ("talos_" + UUID.randomUUID().toString().replace("-", "").take(24))
-        )
+        mutableStateOf<String?>(client.apiToken.takeIf { it.isNotBlank() })
     }
     var isPairing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var copiedNotice by remember { mutableStateOf<String?>(null) }
 
-    fun refreshMesh(autoPairKey: Boolean = false) {
+    fun refreshMesh() {
         scope.launch {
             isChecking = true
             errorMessage = null
-
-            // Zero-config and bounded: resolveCore() tries the endpoint we
-            // already know, then the same host on the standard TALOS ports,
-            // then the LAN discovery beacon - and it always returns within a
-            // hard timeout, so the wizard can never sit in "Scanning" forever.
-            val status = client.resolveCore()
+            val status = client.checkMeshStatus(client.baseUrl)
             meshInfo = status
 
-            if (status != null && autoPairKey && client.apiToken.isBlank()) {
-                client.pairDevice()
-            }
-
             if (status == null) {
-                errorMessage = "No node answered. Make sure Tailscale is on and the " +
-                    "talos-core is running on your host, then scan again."
+                errorMessage = "No node answered at ${client.baseUrl}. Ensure Tailscale is active and talos-core is running."
             }
             isChecking = false
         }
     }
 
-    // Step 2: verify the mesh over Tailscale WireGuard (auto-discovery)
     LaunchedEffect(step) {
-        if (step == 1) {
-            refreshMesh(autoPairKey = true)
+        if (step == 1 && client.baseUrl.isNotBlank()) {
+            refreshMesh()
+        }
+    }
+
+    BackHandler {
+        if (step > 0) {
+            step -= 1
+        } else {
+            onExitToLanding()
         }
     }
 
@@ -223,16 +219,19 @@ fun OnboardingWizard(
             // ---------- TOP BAR: STEP X OF 4 + BACK NAV ----------
             WizardTopBar(
                 step = step,
-                canGoBack = step > 0,
+                canGoBack = true,
                 onBack = {
                     when (step) {
                         2 -> {
-                            // Leaving token step clears the pending token
                             token = null
                             errorMessage = null
                         }
                     }
-                    if (step > 0) step -= 1
+                    if (step > 0) {
+                        step -= 1
+                    } else {
+                        onExitToLanding()
+                    }
                 },
                 onToggleTheme = onToggleTheme
             )
@@ -288,7 +287,6 @@ fun OnboardingWizard(
                             initialToken = token ?: client.apiToken,
                             onUpdateEndpoint = { newUrl ->
                                 client.updateConfig(newUrl, token ?: client.apiToken)
-                                refreshMesh(autoPairKey = true)
                             },
                             onTokenChanged = { newToken ->
                                 token = newToken
@@ -365,10 +363,24 @@ fun OnboardingWizard(
                     when (step) {
                         0 -> step = 1
                         1 -> {
-                            if (isMeshActive) {
-                                step = 2
+                            val t = token?.trim() ?: ""
+                            if (t.isNotBlank()) {
+                                scope.launch {
+                                    isPairing = true
+                                    errorMessage = null
+                                    val (ok, msg) = client.verifyAndConnect(client.baseUrl, t)
+                                    isPairing = false
+                                    if (ok) {
+                                        step = 3
+                                    } else {
+                                        errorMessage = msg
+                                    }
+                                }
                             } else {
-                                refreshMesh(autoPairKey = true)
+                                refreshMesh()
+                                if (isMeshActive) {
+                                    step = 2
+                                }
                             }
                         }
                         2 -> {

@@ -90,12 +90,11 @@ fun AgentEmblemIcon(
     size: Dp = 20.dp,
     tint: Color? = null
 ) {
-    val effectiveTint = tint ?: emblem.accent
     Image(
         painter = painterResource(emblem.drawableRes),
         contentDescription = emblem.label,
         modifier = modifier.size(size),
-        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(effectiveTint)
+        colorFilter = tint?.let { androidx.compose.ui.graphics.ColorFilter.tint(it) }
     )
 }
 
@@ -118,9 +117,7 @@ fun AgentEmblemBadge(
             .border(1.dp, emblem.accent.copy(alpha = 0.55f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        // Accent tint: theme-safe on the surface container and consistent
-        // with the M3 color roles. Brand marks stay recognizable by shape.
-        AgentEmblemIcon(emblem = emblem, size = size, tint = emblem.accent)
+        AgentEmblemIcon(emblem = emblem, size = size, tint = null)
     }
 }
 

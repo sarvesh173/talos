@@ -436,20 +436,16 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             }
         }
 
-        // 5. LAN auto-discovery (UDP beacon) - works on local Wi-Fi.
-        val found = MeshDiscovery.discover()
-        if (found != null) {
-            val status = checkMeshStatus(found.baseUrl)
-            if (status != null) {
-                lanUrl = found.baseUrl
-                prefs.edit().putString(KEY_LAN_URL, lanUrl).apply()
-                // Never destroy a working overlayUrl when on Wi-Fi - keep overlayUrl
-                // intact so cellular mobile data remains functional when leaving Wi-Fi.
-                if (overlayUrl.isBlank()) {
-                    baseUrl = found.baseUrl
-                    prefs.edit().putString(KEY_BASE_URL, baseUrl).apply()
+        // 5. LAN auto-discovery (UDP beacon) - only as optional hint, never override Tailscale baseUrl
+        if (baseUrl.isBlank()) {
+            val found = MeshDiscovery.discover()
+            if (found != null) {
+                val status = checkMeshStatus(found.baseUrl)
+                if (status != null) {
+                    lanUrl = found.baseUrl
+                    prefs.edit().putString(KEY_LAN_URL, lanUrl).apply()
+                    return status
                 }
-                return status
             }
         }
         return null

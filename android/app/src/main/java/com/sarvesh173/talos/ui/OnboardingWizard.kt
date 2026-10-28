@@ -53,6 +53,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -301,6 +302,11 @@ fun OnboardingWizard(
                             meshInfo = meshInfo,
                             isChecking = isChecking,
                             errorMessage = errorMessage,
+                            initialEndpoint = client.baseUrl,
+                            onUpdateEndpoint = { newUrl ->
+                                client.updateConfig(newUrl, client.apiToken)
+                                refreshMesh(autoPairKey = true)
+                            },
                             onRefresh = { refreshMesh() },
                             onCopyPrompt = { prompt ->
                                 clipboardManager.setText(AnnotatedString(prompt))
@@ -371,6 +377,8 @@ fun OnboardingWizard(
                         1 -> {
                             if (isMeshActive) {
                                 step = 2
+                            } else {
+                                refreshMesh(autoPairKey = true)
                             }
                         }
                         2 -> {
@@ -385,6 +393,7 @@ fun OnboardingWizard(
                         3 -> onComplete()
                     }
                 },
+                onBypass = { step = 2 },
             )
         }
     }
@@ -521,11 +530,12 @@ private fun WizardBottomBar(
     isMeshActive: Boolean,
     hasToken: Boolean,
     onPrimary: () -> Unit,
+    onBypass: (() -> Unit)? = null,
     compactHeight: Boolean = false,
 ) {
     val canProceed = when (step) {
-        1 -> isMeshActive
-        2 -> true // Can always click to either generate or link
+        1 -> true // Always active: triggers rescan when inactive, confirms when active
+        2 -> true
         else -> true
     }
 
@@ -563,8 +573,19 @@ private fun WizardBottomBar(
                 .height(if (compactHeight) 44.dp else 52.dp)
         )
 
-        // No dev-only bypass in the shipping UI: every path goes through a
-        // real, verified node.
+        if (step == 1 && !isMeshActive && onBypass != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            TextButton(
+                onClick = onBypass,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text(
+                    text = "Continue to Token Step Anyway",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
 
@@ -766,6 +787,8 @@ private fun MeshStep(
     meshInfo: MeshInfo?,
     isChecking: Boolean,
     errorMessage: String? = null,
+    initialEndpoint: String = "",
+    onUpdateEndpoint: (String) -> Unit = {},
     onRefresh: () -> Unit = {},
     onCopyPrompt: (String) -> Unit = {}
 ) {
@@ -1101,18 +1124,41 @@ private fun MeshStep(
             }
         } else if (!active && !isChecking) {
             Spacer(modifier = Modifier.height(14.dp))
-            val errorColor = MaterialTheme.colorScheme.error
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Canvas(modifier = Modifier.size(14.dp)) {
-                    drawCircle(errorColor)
+            var endpointInput by remember(initialEndpoint) { mutableStateOf(initialEndpoint) }
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = WizardSurface,
+                border = BorderStroke(1.dp, talosBorder),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        text = "Or enter Core Tailscale Address directly:",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = endpointInput,
+                        onValueChange = { endpointInput = it },
+                        placeholder = { Text("http://100.x.y.z:8010", fontSize = 12.sp) },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            if (endpointInput.isNotBlank()) {
+                                onUpdateEndpoint(endpointInput.trim().trimEnd('/'))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Connect Node", fontSize = 12.sp)
+                    }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Mesh offline. You can still continue to generate your device token.",
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp
-                )
             }
         }
     }

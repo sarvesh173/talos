@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Official OpenCode Block Emblem (from anomalyco/opencode repo) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="512"
-    android:viewportHeight="512">
-    <!-- Official OpenCode 3D Isometric Terminal Monogram -->
-    <!-- Background Squircle / Tile -->
-    <path
-        android:fillColor="#FF18181B"
-        android:pathData="M96,32 h320 a64,64 0 0,1 64,64 v320 a64,64 0 0,1 -64,64 h-320 a64,64 0 0,1 -64,-64 v-320 a64,64 0 0,1 64,-64 z" />
-    <!-- Isometric Inner Shadow Depth -->
-    <path
-        android:fillColor="#FF2563EB"
-        android:pathData="M320,224 V352 H192 V224 H320 Z" />
-    <!-- Iconic OpenCode Outer Frame -->
-    <path
-        android:fillColor="#FF60A5FA"
-        android:fillType="evenOdd"
-        android:pathData="M384,416 H128 V96 H384 V416 Z M320,160 H192 V352 H320 V160 Z" />
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+    <group
+        android:translateX="30"
+        android:translateY="0">
+        <!-- Inner block fill -->
+        <path
+            android:fillColor="#803B82F6"
+            android:pathData="M180,240 H60 V120 H180 V240 Z" />
+        <!-- Outer block frame -->
+        <path
+            android:fillColor="#FF3B82F6"
+            android:fillType="evenOdd"
+            android:pathData="M180,60 H60 V240 H180 V60 Z M240,300 H0 V0 H240 V300 Z" />
+    </group>
 </vector>

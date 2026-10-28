@@ -42,11 +42,11 @@ val AgentEmblems: List<AgentEmblem> = listOf(
     AgentEmblem("anthropic", "Anthropic", "Anthropic AI", R.drawable.ic_anthropic, Color(0xFFD97757)),
     AgentEmblem("openai", "OpenAI", "OpenAI Family", R.drawable.ic_openai, Color(0xFF10A37F)),
     AgentEmblem("gemini", "Gemini", "Google · Multimodal Reasoning", R.drawable.ic_gemini, Color(0xFF3186FF)),
-    AgentEmblem("meta", "Meta AI", "Meta · Llama Family", R.drawable.ic_meta, Color(0xFF1877F2)),
-    AgentEmblem("mistral", "Mistral AI", "Mistral AI · Open Weights", R.drawable.ic_mistral, Color(0xFFF24E1E)),
-    AgentEmblem("deepseek", "DeepSeek", "DeepSeek · Reasoning", R.drawable.ic_deepseek, Color(0xFF0066FF)),
-    AgentEmblem("qwen", "Qwen", "Alibaba · Qwen Series", R.drawable.ic_qwen, Color(0xFF2563EB)),
-    AgentEmblem("openclaw", "OpenClaw", "Tools & Automation", R.drawable.ic_openclaw, Color(0xFFE11D48)),
+    AgentEmblem("meta", "Meta AI", "Meta · Llama Family", R.drawable.ic_meta, Color(0xFF0081FB)),
+    AgentEmblem("mistral", "Mistral AI", "Mistral AI · Open Weights", R.drawable.ic_mistral, Color(0xFFFF8205)),
+    AgentEmblem("deepseek", "DeepSeek", "DeepSeek · Reasoning", R.drawable.ic_deepseek, Color(0xFF4D6BFE)),
+    AgentEmblem("qwen", "Qwen", "Alibaba · Qwen Series", R.drawable.ic_qwen, Color(0xFF665CEE)),
+    AgentEmblem("openclaw", "OpenClaw", "Tools & Automation", R.drawable.ic_openclaw, Color(0xFFEF0011)),
     AgentEmblem("omnirush", "OmniRush", "High-Throughput Runner", R.drawable.ic_omnirush, Color(0xFFA855F7)),
     AgentEmblem("opencode", "OpenCode", "Open-Source Terminal CLI", R.drawable.ic_opencode, Color(0xFF3B82F6))
 )

@@ -937,7 +937,7 @@ fun MainScreen(
                         val sendInteraction = remember { MutableInteractionSource() }
                         val isSendPressed by sendInteraction.collectIsPressedAsState()
                         val sendScale by animateFloatAsState(
-                            targetValue = if (isSendPressed) 0.92f else 1.0f,
+                            targetValue = if (isSendPressed) 0.96f else 1.0f,
                             animationSpec = M3EMotion.fastSpatial(),
                             label = "sendScale"
                         )

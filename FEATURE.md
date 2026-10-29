@@ -658,3 +658,13 @@ Eliminated dual stacked horizontal scrollbars adhering to `anti-slop-ui-discipli
 - [x] **Unified Single-Row Contextual Navigation Rail**:
   - Removed the redundant secondary `LazyRow` that previously forced users to scroll two vertically stacked chip rails on mobile viewports.
   - Consolidated active chamber selectors (`Core DM`, `The Council`) and modular perspective switchers (`Fleet`, `Telemetry`, `Providers`, `Browser`) into a single, cohesive horizontal rail, saving **44dp of vertical viewport** on mobile screens.
+
+---
+
+## 34. Mobile Command Action Dial Press Physics Normalization
+
+Calibrated floating action dial haptic response according to `mobile-chat-architecture` Section 3.3 and `make-interfaces-feel-better` Rule 12.
+
+- [x] **Canonical 0.96f Action Dial Press Scale**:
+  - Replaced an exaggerated 0.92f deflation scale on the floating Action Dial (Mic / Send button) with standard `0.96f` tactile press feedback (`MotionTokens.PRESS_SCALE`).
+  - Achieved 100% tactile scale unification across all interactive elements in `MainActivity`, `OnboardingWizard`, and `LandingScreen`.

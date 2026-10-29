@@ -747,3 +747,15 @@ Applied Google Developer Expert benchmarks from `skydoves/compose-performance-sk
   - Supplied explicit content type discriminators to message feed `items(...)`, ensuring Compose reuses layout slots for identical message roles (User vs Agent) rather than rebuilding diverse composable trees on scroll ticks.
 - [x] **Allocation Hoisting in Command Autocomplete**:
   - Hoisted suggestions list allocation into `remember { listOf(...) }` outside the `LazyRow` DSL block, eliminating object churn per scroll tick.
+
+---
+
+## 42. Compose Component Design: Root Modifier Placement & Wrapper Node Pruning
+
+Refactored component signatures adhering to `chrisbanes/skills@compose-component-design` Rule 1 & Rule 2 ("Caller-placeable roots and modifier placement").
+
+- [x] **Root `modifier: Modifier = Modifier` in `MessageBubble`**:
+  - Added standard default modifier parameter to `MessageBubble` composable and bound it as the first element in the root `Row` modifier chain.
+- [x] **Pruning Artificial `Box` Wrapper Composables in Chat Feed**:
+  - Eliminated the redundant intermediate `Box(modifier = Modifier.animateItem())` wrapper around every message item in `MainActivity.kt`.
+  - Passed `Modifier.animateItem()` directly to `MessageBubble`, reducing the Compose layout tree depth by 1 full layer across every message item in the chat feed.

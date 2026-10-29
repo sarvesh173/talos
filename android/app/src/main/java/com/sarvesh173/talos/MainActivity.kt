@@ -1050,9 +1050,10 @@ fun MainScreen(
                             key = { it.id },
                             contentType = { it.sender_role }
                         ) { msg: Message ->
-                            Box(modifier = Modifier.animateItem()) {
-                                MessageBubble(msg = msg)
-                            }
+                            MessageBubble(
+                                msg = msg,
+                                modifier = Modifier.animateItem()
+                            )
                         }
                     }
                 }

@@ -136,11 +136,14 @@ fun ThreeDotTypingIndicator(
 }
 
 @Composable
-fun MessageBubble(msg: Message) {
+fun MessageBubble(
+    msg: Message,
+    modifier: Modifier = Modifier
+) {
     val isHuman = msg.sender_role == Role.human
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = if (isHuman) Arrangement.End else Arrangement.Start

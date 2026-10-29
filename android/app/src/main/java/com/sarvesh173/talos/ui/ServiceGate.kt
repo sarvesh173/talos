@@ -91,6 +91,7 @@ fun ServiceGateScreen(
             .background(scheme.background)
             .statusBarsPadding()
             .navigationBarsPadding()
+            .imePadding()
             .padding(horizontal = 24.dp, vertical = 20.dp),
         contentAlignment = Alignment.Center
     ) {

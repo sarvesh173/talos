@@ -759,3 +759,18 @@ Refactored component signatures adhering to `chrisbanes/skills@compose-component
 - [x] **Pruning Artificial `Box` Wrapper Composables in Chat Feed**:
   - Eliminated the redundant intermediate `Box(modifier = Modifier.animateItem())` wrapper around every message item in `MainActivity.kt`.
   - Passed `Modifier.animateItem()` directly to `MessageBubble`, reducing the Compose layout tree depth by 1 full layer across every message item in the chat feed.
+
+---
+
+## 43. Edge-to-Edge IME Keyboard Insets & Interactive Focus Navigation
+
+Resolved software keyboard layout occlusion identified in `OnboardingWizard` Step 2 ("Tailscale Mesh & Host Link") conforming to Google's `android/skills@edge-to-edge` and `chrisbanes/skills@compose-focus-navigation`.
+
+- [x] **IME Window Inset Padding in `OnboardingWizard` & `ServiceGate`**:
+  - Bound `.imePadding()` to the root container columns in `OnboardingWizard.kt` and `ServiceGate.kt`.
+  - Added `.imeNestedScroll()` on the scrollable step viewport, allowing the scroll container to shrink dynamically when Gboard opens and scroll the focused "Core Tailscale Address" and "Host API Key" text fields cleanly into view above the keyboard.
+- [x] **Tactile Focus Reaction on Command Capsule (`MainActivity.kt`)**:
+  - Bound `Modifier.onFocusChanged` to the chat message input field.
+  - Dynamically switches the outer metallic capsule stroke from resting machined grey to an active Molten Copper + Verdigris gradient highlight when focused.
+- [x] **Accessible Quick Command Chips (`Role.Button`)**:
+  - Added explicit semantic `Role.Button` and `onClickLabel` descriptors on command suggestion pills (`/consensus`, `/mesh`, `/status`), adhering to accessibility traversal standards.

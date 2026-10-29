@@ -46,7 +46,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -864,7 +867,10 @@ fun MainScreen(
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
                                     border = BorderStroke(1.dp, metallicBorderBrush()),
-                                    modifier = Modifier.clickable {
+                                    modifier = Modifier.clickable(
+                                        role = Role.Button,
+                                        onClickLabel = "Insert $cmd command"
+                                    ) {
                                         inputText = cmd
                                     }
                                 ) {
@@ -881,6 +887,20 @@ fun MainScreen(
                     }
 
                     // Floating Benchmark Metallic Command Dock (Apple Design + M3E)
+                    var isInputFocused by remember { mutableStateOf(false) }
+                    val activeHighlight = MaterialTheme.colorScheme.tertiary
+                    val capsuleBorderBrush = if (isInputFocused) {
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                PrimaryAccent,
+                                activeHighlight,
+                                PrimaryAccent
+                            )
+                        )
+                    } else {
+                        metallicBorderBrush()
+                    }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -889,7 +909,7 @@ fun MainScreen(
                         Surface(
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            border = BorderStroke(1.2.dp, metallicBorderBrush()),
+                            border = BorderStroke(if (isInputFocused) 1.5.dp else 1.2.dp, capsuleBorderBrush),
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp)
@@ -935,6 +955,7 @@ fun MainScreen(
                                     ),
                                     modifier = Modifier
                                         .weight(1f)
+                                        .onFocusChanged { isInputFocused = it.isFocused }
                                         .semantics {
                                             contentDescription = "Message composition input field for $roomTitle"
                                         }

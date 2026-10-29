@@ -24,6 +24,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.imeNestedScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -119,6 +122,7 @@ private val CyberOrange: Color @Composable get() = MaterialTheme.colorScheme.ter
 // MAIN WIZARD
 // ==========================================
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OnboardingWizard(
     client: TalosClient,
@@ -215,6 +219,7 @@ fun OnboardingWizard(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .imePadding()
         ) {
             // ---------- TOP BAR: STEP X OF 4 + BACK NAV ----------
             WizardTopBar(
@@ -271,6 +276,7 @@ fun OnboardingWizard(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .imeNestedScroll()
                         .verticalScroll(rememberScrollState())
                         .padding(
                             horizontal = if (compact) 12.dp else 20.dp,

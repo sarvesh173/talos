@@ -529,3 +529,21 @@ Eliminated the generic AI violet baseline in favor of an authentic machined inst
   - Replaced fixed-color status text and hardcoded tints with mode-aware `LocalTalosStatus` semantics and `EmblemSocket` substrates.
 - [x] **Dynamic Core Token Migration**:
   - Updated `talos-core` theme repository and runtime database migration to serve Molten Forge tokens over `GET /api/theme`.
+
+---
+
+## 23. Benchmark Command Dock Architecture (Apple Design & M3 Expressive Integration)
+
+Overhauled the mobile chat input bar inspired by Telegram and WhatsApp benchmark architectures, refined through Apple Design foundations and Anti-Slop UI discipline.
+
+- [x] **Calibrated Touch Geometry & Exact Proportions**:
+  - Anchored layout to exact 1080p mobile resolution (48dp / 84px capsule and action button heights).
+  - Standalone floating Molten Copper action button placed with 8dp optical clearance from input capsule.
+  - Symmetrical geometry across Dark (`#1E2024` on OLED `#121316`) and Light (`#FFFFFF` on `#FBF8F3`) modes.
+- [x] **System-Grade Tool Clustering**:
+  - Replaced generic payment/currency icons with professional system-grade vector icons: leading `(☺)` Agent mode toggle, trailing inline `(📎)` Attach Context, and `(🎙️)` Audio Prompt Mic.
+  - Eliminated rigid vertical jail-bar dividers in favor of natural optical breathing margins.
+- [x] **Apple Specular Catching & Zero-Glow Physics**:
+  - Replaced blurry neon halos and fuzzy dropshadows with tight physical contact shadows (`feDropShadow dx=0 dy=3 stdDeviation=4`).
+  - Added subtle 1px specular highlight along the top edge representing light catching the material edge.
+  - Preserved M3 Expressive 12-lobed scallop shape morph (`circle` -> `scallop12`) and spatial press spring feedback.

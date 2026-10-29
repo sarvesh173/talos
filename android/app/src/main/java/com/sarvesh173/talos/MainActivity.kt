@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Forum
@@ -31,7 +32,9 @@ import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Terminal
@@ -814,86 +817,137 @@ fun MainScreen(
                         }
                     }
 
-                    // Floating Metallic Command Dock
-                    Surface(
-                        shape = RoundedCornerShape(26.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.2.dp, metallicBorderBrush()),
+                    // Floating Benchmark Metallic Command Dock
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                        // (A) Input Capsule with Left Tool and Right Inline Actions
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            border = BorderStroke(1.2.dp, metallicBorderBrush()),
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .weight(1f)
+                                .height(48.dp)
                         ) {
-                            OutlinedTextField(
-                                value = inputText,
-                                onValueChange = { inputText = it },
-                                placeholder = {
-                                    Text(
-                                        text = "Command fleet or message $roomTitle...",
-                                        color = talosTextMuted,
-                                        fontSize = 14.sp
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 4.dp)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        if (inputText.isEmpty()) inputText = "/"
+                                    },
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.SentimentSatisfied,
+                                        contentDescription = "Agent & Tool Mode",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
                                     )
-                                },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedBorderColor = Color.Transparent,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedTextColor = talosTextPrimary,
-                                    unfocusedTextColor = talosTextPrimary
-                                ),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .semantics {
-                                        contentDescription = "Message composition input field for $roomTitle"
-                                    }
-                            )
+                                }
 
-                            val sendInteraction = remember { MutableInteractionSource() }
-                            val isSendPressed by sendInteraction.collectIsPressedAsState()
-                            val sendScale by animateFloatAsState(
-                                targetValue = if (isSendPressed) 0.90f else 1.0f,
-                                animationSpec = M3EMotion.fastSpatial(),
-                                label = "sendScale"
-                            )
-                            // M3E signature shape morph: circle -> 12-lobed scallop while pressed
-                            val sendMorphProgress by animateFloatAsState(
-                                targetValue = if (isSendPressed) 1f else 0f,
-                                animationSpec = M3EMotion.defaultSpatial(),
-                                label = "sendMorph"
-                            )
-                            val sendMorph = remember { Morph(M3EShapes.circle(), M3EShapes.scallop12()) }
+                                OutlinedTextField(
+                                    value = inputText,
+                                    onValueChange = { inputText = it },
+                                    placeholder = {
+                                        Text(
+                                            text = "Message $roomTitle...",
+                                            color = talosTextMuted,
+                                            fontSize = 14.sp
+                                        )
+                                    },
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedTextColor = talosTextPrimary,
+                                        unfocusedTextColor = talosTextPrimary
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .semantics {
+                                            contentDescription = "Message composition input field for $roomTitle"
+                                        }
+                                )
 
-                            Surface(
-                                shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
-                                color = if (inputText.isNotBlank()) PrimaryAccent else PrimaryAccent.copy(alpha = 0.35f),
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .scale(sendScale)
-                                    .clickable(
-                                        enabled = inputText.isNotBlank() && !isTyping,
-                                        interactionSource = sendInteraction,
-                                        indication = null
-                                    ) {
+                                IconButton(
+                                    onClick = { /* Attachment action */ },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AttachFile,
+                                        contentDescription = "Attach Context",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = { /* Audio / Mic action */ },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Mic,
+                                        contentDescription = "Audio Prompt",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // (B) Standalone Floating Molten Copper Action Button
+                        val sendInteraction = remember { MutableInteractionSource() }
+                        val isSendPressed by sendInteraction.collectIsPressedAsState()
+                        val sendScale by animateFloatAsState(
+                            targetValue = if (isSendPressed) 0.92f else 1.0f,
+                            animationSpec = M3EMotion.fastSpatial(),
+                            label = "sendScale"
+                        )
+                        val sendMorphProgress by animateFloatAsState(
+                            targetValue = if (isSendPressed) 1f else 0f,
+                            animationSpec = M3EMotion.defaultSpatial(),
+                            label = "sendMorph"
+                        )
+                        val sendMorph = remember { Morph(M3EShapes.circle(), M3EShapes.scallop12()) }
+
+                        Surface(
+                            shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
+                            color = PrimaryAccent,
+                            border = BorderStroke(1.dp, metallicBorderBrush()),
+                            modifier = Modifier
+                                .size(48.dp)
+                                .scale(sendScale)
+                                .clickable(
+                                    enabled = !isTyping,
+                                    interactionSource = sendInteraction,
+                                    indication = null
+                                ) {
+                                    if (inputText.isNotBlank()) {
                                         client.sendMessage(inputText)
                                         inputText = ""
                                     }
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Send,
-                                        contentDescription = "Send",
-                                        tint = if (inputText.isNotBlank()) MaterialTheme.colorScheme.onPrimary
-                                               else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                        modifier = Modifier.size(18.dp)
-                                    )
                                 }
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "Send Command",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
                     }

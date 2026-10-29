@@ -710,59 +710,16 @@ fun MainScreen(
                         }
                     }
 
-                    // Extensible Feature Perspective Switcher
+                    // Single Unified Contextual Navigation Rail (Anti-Slop: Zero Stacked Rows)
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp, vertical = 2.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(FeatureCatalog.slots) { slot ->
-                            val isSlotActive = slot.id == activeSlotId
-                            FilterChip(
-                                selected = isSlotActive,
-                                onClick = { activeSlotId = slot.id },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = slot.icon,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                },
-                                label = {
-                                    Text(
-                                        text = slot.title,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSlotActive) FontWeight.Bold else FontWeight.Medium
-                                    )
-                                },
-                                shape = ShapeLargeIncreased,
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = PrimaryAccent,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    labelColor = talosTextPrimary,
-                                    iconColor = talosTextMuted
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = isSlotActive,
-                                    borderColor = MaterialTheme.colorScheme.outlineVariant
-                                )
-                            )
-                        }
-                    }
-
-                    // Horizontal Chamber Quick Switcher Rail - canonical M3 FilterChips
-                    if (activeSlotId == "chambers" && rooms.size > 1) {
-                        LazyRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(rooms, key = { room -> room.id }) { room: Room ->
+                        if (activeSlotId == "chambers") {
+                            // Primary: Active Council Chambers
+                            items(rooms, key = { "room_${it.id}" }) { room: Room ->
                                 val isSelected = room.id == currentRoomId
                                 FilterChip(
                                     selected = isSelected,
@@ -796,6 +753,43 @@ fun MainScreen(
                                     )
                                 )
                             }
+                        }
+
+                        // Module Perspective Switches
+                        items(FeatureCatalog.slots.filter { activeSlotId != "chambers" || it.id != "chambers" }, key = { "slot_${it.id}" }) { slot ->
+                            val isSlotActive = slot.id == activeSlotId
+                            FilterChip(
+                                selected = isSlotActive,
+                                onClick = { activeSlotId = slot.id },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = slot.icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = slot.title,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSlotActive) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                },
+                                shape = ShapeLargeIncreased,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = PrimaryAccent,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    labelColor = talosTextPrimary,
+                                    iconColor = talosTextMuted
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = isSlotActive,
+                                    borderColor = MaterialTheme.colorScheme.outlineVariant
+                                )
+                            )
                         }
                     }
                 }

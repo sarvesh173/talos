@@ -648,3 +648,13 @@ Audited motion physics according to `m3-motion` and `frontend/multi-skill-ui-ref
 - [x] **Critically Damped Effects Spring for Opacity Crossfades**:
   - Identified and eliminated an M3 anti-pattern where an underdamped spatial spring (`damping = 0.6f`, `stiffness = 800f`) was driving an opacity `Crossfade` in `MainActivity.kt`.
   - Re-bound the Action Dial icon transition (Mic -> Send) to `M3EMotion.fastEffects()` (critically damped `zeta = 1.0f`), guaranteeing that opacity interpolations never bounce or overshoot past 1.0.
+
+---
+
+## 33. Anti-Slop Unification: Consolidation of Stacked Navigation Rails
+
+Eliminated dual stacked horizontal scrollbars adhering to `anti-slop-ui-discipline` Rule 1 and Rule 2 ("No Decorative Filler Elements").
+
+- [x] **Unified Single-Row Contextual Navigation Rail**:
+  - Removed the redundant secondary `LazyRow` that previously forced users to scroll two vertically stacked chip rails on mobile viewports.
+  - Consolidated active chamber selectors (`Core DM`, `The Council`) and modular perspective switchers (`Fleet`, `Telemetry`, `Providers`, `Browser`) into a single, cohesive horizontal rail, saving **44dp of vertical viewport** on mobile screens.

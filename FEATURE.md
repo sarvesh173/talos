@@ -679,3 +679,13 @@ Implemented deterministic lifecycle management conforming to `android-clean-arch
   - Added clean WebSocket closure method sending standard code 1000 (`Client disconnect`), setting `_isConnected` to false, and nulling the active socket.
 - [x] **Activity Lifecycle Teardown Hook in `MainActivity`**:
   - Overrode `onDestroy()` in `MainActivity` to invoke `client.disconnect()`, guaranteeing that socket connections and background reader threads do not linger or leak system resources when the Android Activity is closed or killed.
+
+---
+
+## 36. System Edge-to-Edge Navigation Architecture
+
+Implemented official Google `android/skills@edge-to-edge` patterns for Android 15 (SDK 35) system bar immersion.
+
+- [x] **Canonical `enableEdgeToEdge()` Initialization**:
+  - Bound `androidx.activity.enableEdgeToEdge()` immediately before `super.onCreate(savedInstanceState)` in `MainActivity.kt`.
+  - Allowed Compose scaffolds, top app bars, and bottom action dials to draw natively beneath system status and gesture navigation bars without letterboxing or black letterbox pillars.

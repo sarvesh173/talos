@@ -689,3 +689,14 @@ Implemented official Google `android/skills@edge-to-edge` patterns for Android 1
 - [x] **Canonical `enableEdgeToEdge()` Initialization**:
   - Bound `androidx.activity.enableEdgeToEdge()` immediately before `super.onCreate(savedInstanceState)` in `MainActivity.kt`.
   - Allowed Compose scaffolds, top app bars, and bottom action dials to draw natively beneath system status and gesture navigation bars without letterboxing or black letterbox pillars.
+
+---
+
+## 37. Landing Screen Accessible Touch Targets & Molten Forge Border Unification
+
+Aligned `LandingScreen.kt` header ergonomics with `ui-ux-pro-max` WCAG standards and Molten Forge hardware materials.
+
+- [x] **Universal 40dp Theme Toggle Target**:
+  - Upgraded landing screen theme toggle container from 38dp to standard `40.dp` with an optically balanced 19dp icon.
+- [x] **Molten Forge Brushed Rim**:
+  - Replaced low-contrast `outlineVariant` border with `metallicBorderBrush()`, matching the machined chamfer styling of the main chamber top bar.

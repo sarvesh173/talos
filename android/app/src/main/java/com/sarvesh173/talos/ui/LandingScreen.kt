@@ -380,10 +380,10 @@ fun LandingScreen(
                     IconButton(
                         onClick = onToggleTheme,
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceContainer)
-                            .border(1.dp, scheme.outlineVariant, CircleShape)
+                            .border(1.dp, metallicBorderBrush(), CircleShape)
                             .semantics {
                                 contentDescription = if (isCurrentDark) "Switch to Light Mode" else "Switch to Dark Mode"
                             }
@@ -393,7 +393,7 @@ fun LandingScreen(
                             contentDescription = null,
                             tint = PrimaryAccent,
                             modifier = Modifier
-                                .size(18.dp)
+                                .size(19.dp)
                                 .graphicsLayer {
                                     rotationZ = themeRot
                                     scaleX = themeScale

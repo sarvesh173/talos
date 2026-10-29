@@ -558,7 +558,7 @@ private fun WizardBottomBar(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1.0f,
+        targetValue = if (isPressed) 0.96f else 1.0f,
         animationSpec = spring(dampingRatio = 0.6f, stiffness = 800f),
         label = "wizard_btn_scale"
     )
@@ -697,7 +697,7 @@ private fun OverviewElevatedCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val cardScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1.0f,
+        targetValue = if (isPressed) 0.96f else 1.0f,
         animationSpec = spring(dampingRatio = 0.7f, stiffness = 600f),
         label = "card_scale"
     )

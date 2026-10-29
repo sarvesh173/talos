@@ -617,3 +617,13 @@ Implemented design engineering principles from `make-interfaces-feel-better` and
   - Styled mesh ping and live latency indicators (`MESH LINKED · 12ms`) with `FontFamily.Monospace`, eliminating horizontal layout jitter and width shifts as latency updates.
 - [x] **WCAG Accessible Touch Targets (40dp)**:
   - Scaled action button containers (`Theme Toggle`, `Settings`, `Return to Landing`) from cramped 34dp to 40dp with optically centered 19dp icons, fulfilling mobile touch target standards and preventing missed taps.
+
+---
+
+## 30. Tactile Press Feedback Calibration & MotionToken Normalization
+
+Calibrated touch physics across onboarding flow components according to `make-interfaces-feel-better` Rule 12 and `frontend/multi-skill-ui-refinement`.
+
+- [x] **Universal 0.96f Tactile Press Scale**:
+  - Replaced subtle, imperceptible 0.98f scale factors in `OnboardingWizard.kt` (`WizardBottomBar` CTA and `OverviewElevatedCard`) with canonical `0.96f` tactile press feedback.
+  - Aligned wizard touch targets with `MotionTokens.PRESS_SCALE` (`0.96f`), unifying tactile response across both onboarding cards and main chamber controls.

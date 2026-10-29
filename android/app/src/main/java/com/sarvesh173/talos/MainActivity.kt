@@ -430,11 +430,16 @@ fun MainScreen(
                 HorizontalDivider(color = talosBorder, modifier = Modifier.padding(top = 8.dp))
 
                 LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
-                    items(rooms) { room: Room ->
+                    items(
+                        items = rooms,
+                        key = { it.id },
+                        contentType = { "room_item" }
+                    ) { room: Room ->
                         val isSelected = room.id == currentRoomId && activeSlotId == "chambers"
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
+                                .animateItem()
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clip(RoundedCornerShape(12.dp))
@@ -499,11 +504,16 @@ fun MainScreen(
                         )
                     }
 
-                    items(FeatureCatalog.slots.filter { it.id != "chambers" }) { slot ->
+                    items(
+                        items = FeatureCatalog.slots.filter { it.id != "chambers" },
+                        key = { it.id },
+                        contentType = { "slot_item" }
+                    ) { slot ->
                         val isSlotSelected = slot.id == activeSlotId
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
+                                .animateItem()
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clip(RoundedCornerShape(8.dp))
@@ -842,14 +852,14 @@ fun MainScreen(
                     // Quick Command / Suggestion Strip (Apple HIG Proximity)
                     val showQuickChips = inputText.isEmpty() || inputText.startsWith("/")
                     if (showQuickChips && !isTyping) {
+                        val suggestions = remember { listOf("/consensus", "/mesh", "/clear", "/benchmark", "/status") }
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 6.dp)
                         ) {
-                            val suggestions = listOf("/consensus", "/mesh", "/clear", "/benchmark", "/status")
-                            items(suggestions) { cmd ->
+                            items(suggestions, key = { it }) { cmd ->
                                 Surface(
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
@@ -1035,7 +1045,11 @@ fun MainScreen(
                             .fillMaxSize()
                             .padding(paddingValues)
                     ) {
-                        items(messages, key = { it.id }) { msg: Message ->
+                        items(
+                            items = messages,
+                            key = { it.id },
+                            contentType = { it.sender_role }
+                        ) { msg: Message ->
                             Box(modifier = Modifier.animateItem()) {
                                 MessageBubble(msg = msg)
                             }

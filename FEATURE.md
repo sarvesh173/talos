@@ -734,3 +734,16 @@ Refactored side-effect lifecycle management conforming to `chrisbanes/skills@com
 - [x] **Instant Room Navigation vs Animated Incoming Messages**:
   - Switching rooms now executes immediate `listState.scrollToItem()`, eliminating disorienting multi-second animated flings across long message logs.
   - New incoming messages in the active room continue to smoothly call `listState.animateScrollToItem()`.
+
+---
+
+## 41. Lazy Layout Performance Optimization: Stable Keys, contentType, and animateItem
+
+Applied Google Developer Expert benchmarks from `skydoves/compose-performance-skills@optimizing-lazy-layouts` across all scrollable lists.
+
+- [x] **Stable Identity Keys on Drawer & Navigation Rails**:
+  - Added server-side ID keys (`key = { it.id }`) and `Modifier.animateItem()` to drawer rooms and feature slots, preventing whole-tree recomposition during room creation or reordering.
+- [x] **View-Type Recycling via `contentType = { it.sender_role }`**:
+  - Supplied explicit content type discriminators to message feed `items(...)`, ensuring Compose reuses layout slots for identical message roles (User vs Agent) rather than rebuilding diverse composable trees on scroll ticks.
+- [x] **Allocation Hoisting in Command Autocomplete**:
+  - Hoisted suggestions list allocation into `remember { listOf(...) }` outside the `LazyRow` DSL block, eliminating object churn per scroll tick.

@@ -108,19 +108,28 @@ fun ThreeDotTypingIndicator(
         Box(
             modifier = Modifier
                 .size(dotSize)
-                .graphicsLayer { alpha = dot1Alpha }
+                .graphicsLayer {
+                    alpha = dot1Alpha
+                    translationY = -(dot1Alpha - 0.3f) * 4f
+                }
                 .background(dotColor, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(dotSize)
-                .graphicsLayer { alpha = dot2Alpha }
+                .graphicsLayer {
+                    alpha = dot2Alpha
+                    translationY = -(dot2Alpha - 0.3f) * 4f
+                }
                 .background(dotColor, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(dotSize)
-                .graphicsLayer { alpha = dot3Alpha }
+                .graphicsLayer {
+                    alpha = dot3Alpha
+                    translationY = -(dot3Alpha - 0.3f) * 4f
+                }
                 .background(dotColor, CircleShape)
         )
     }
@@ -226,9 +235,9 @@ fun MessageBubble(msg: Message) {
                     Surface(
                         color = if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer,
                         shape = if (isHuman) {
-                            RoundedCornerShape(topStart = 18.dp, topEnd = 4.dp, bottomEnd = 18.dp, bottomStart = 18.dp)
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 4.dp, bottomStart = 18.dp)
                         } else {
-                            RoundedCornerShape(topStart = 4.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 18.dp)
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 4.dp)
                         },
                         border = BorderStroke(
                             width = 1.2.dp,
@@ -274,7 +283,10 @@ fun NativeAudioPlayerBubble(
     Surface(
         color = if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(
+            width = 1.2.dp,
+            brush = if (isHuman) Brush.linearGradient(listOf(Color.White.copy(alpha = 0.40f), Color.Transparent)) else metallicBorderBrush()
+        ),
         shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {

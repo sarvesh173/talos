@@ -583,3 +583,15 @@ Refined the multi-agent management console in `AgentFleetScreen.kt` adhering to 
   - Added a centered `CircularProgressIndicator` with `PrimaryAccent` while `client.fetchAgents()` queries the core daemon, eliminating empty screen flashes.
 - [x] **Apple Continuous Curvature Modal**:
   - Styled model switcher `AlertDialog` with continuous 22dp rounded corners (`RoundedCornerShape(22.dp)`), high-contrast dismiss typography, and unified metallic border framing.
+
+---
+
+## 27. Speech Bubble Natural Geometry & Dynamic Wave Typing Indicator
+
+Polished chat message components in `Components.kt` aligning with Apple iMessage and Telegram physical speech bubble ergonomics.
+
+- [x] **Natural Speech Bubble Anchor Geometry**:
+  - Reoriented message bubble tails to anchor naturally at the bottom baseline (`bottomEnd = 4.dp` for user, `bottomStart = 4.dp` for agents), replacing inverted top-tail corners.
+  - Aligned audio player bubble borders with metallic chamfer brushes.
+- [x] **Dynamic Wave Typing Motion**:
+  - Enhanced `ThreeDotTypingIndicator` with synchronized vertical wave bouncing (`translationY`) alongside alpha fades, matching Apple iMessage fluid conversation cues.

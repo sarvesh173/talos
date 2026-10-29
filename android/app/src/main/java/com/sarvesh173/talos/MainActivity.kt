@@ -108,6 +108,13 @@ class MainActivity : ComponentActivity() {
         handlePairingIntent(intent)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::client.isInitialized) {
+            client.disconnect()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

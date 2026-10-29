@@ -668,3 +668,14 @@ Calibrated floating action dial haptic response according to `mobile-chat-archit
 - [x] **Canonical 0.96f Action Dial Press Scale**:
   - Replaced an exaggerated 0.92f deflation scale on the floating Action Dial (Mic / Send button) with standard `0.96f` tactile press feedback (`MotionTokens.PRESS_SCALE`).
   - Achieved 100% tactile scale unification across all interactive elements in `MainActivity`, `OnboardingWizard`, and `LandingScreen`.
+
+---
+
+## 35. Clean Architecture Deterministic WebSocket Lifecycle Teardown
+
+Implemented deterministic lifecycle management conforming to `android-clean-architecture` resource management principles.
+
+- [x] **Public `disconnect()` in `TalosClient`**:
+  - Added clean WebSocket closure method sending standard code 1000 (`Client disconnect`), setting `_isConnected` to false, and nulling the active socket.
+- [x] **Activity Lifecycle Teardown Hook in `MainActivity`**:
+  - Overrode `onDestroy()` in `MainActivity` to invoke `client.disconnect()`, guaranteeing that socket connections and background reader threads do not linger or leak system resources when the Android Activity is closed or killed.

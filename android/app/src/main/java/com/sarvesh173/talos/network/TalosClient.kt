@@ -225,6 +225,12 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    fun disconnect() {
+        activeWebSocket?.close(1000, "Client disconnect")
+        activeWebSocket = null
+        _isConnected.value = false
+    }
+
     private fun connectWebSocket(roomId: String) {
         activeWebSocket?.close(1000, "Switching room")
         _isConnected.value = false

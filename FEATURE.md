@@ -796,3 +796,20 @@ Resolved generic artifact filename ambiguity in `.github/workflows/build-apk.yml
   - Eliminates filename collisions in Android downloads (`talos-latest (1).apk`, `(2).apk`) and gives instant clarity on the exact binary version installed on device.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21013` and `versionName` to `"2.10.13"`.
+
+---
+
+## 46. Official Material Design 3 Typescale Calibration
+
+Integrated Google's official Material Design 3 specifications discovered via `hamen/material-3-skill` (`github.com/hamen/material-3-skill`).
+
+- [x] **Calibrated `TalosTypography` to Exact MD3 Specification**:
+  - Replaced non-standard scaled type values with Google MD3 baseline standards across all 15 typographic roles:
+    - `Display`: Large (57sp/64sp), Medium (45sp/52sp), Small (36sp/44sp)
+    - `Headline`: Large (32sp/40sp), Medium (28sp/36sp), Small (24sp/32sp)
+    - `Title`: Large (22sp/28sp), Medium (16sp/24sp), Small (14sp/20sp)
+    - `Body`: Large (16sp/24sp), Medium (14sp/20sp), Small (12sp/16sp)
+    - `Label`: Large (14sp/20sp), Medium (12sp/16sp), Small (11sp/16sp)
+  - Eliminates artificial text compression in standard Compose components and establishes typographic balance across all screen densities.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21014` and `versionName` to `"2.10.14"`.

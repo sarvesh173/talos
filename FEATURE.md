@@ -711,3 +711,13 @@ Audited accessibility strings and container semantics adhering to `ibelick/ui-sk
   - Replaced ambiguous static noun content description (`"Theme"`) with explicit dynamic state descriptions (`if (isDark) "Switch to Light Mode" else "Switch to Dark Mode"`), aligning `MainActivity.kt` with `LandingScreen.kt`.
 - [x] **Action Dial Surface Semantics**:
   - Bound explicit accessibility semantics (`if (isSendMode) "Send message" else "Voice input"`) to the floating Action Dial container surface, ensuring screen readers announce the morphing intent prior to child icon traversal.
+
+---
+
+## 39. Synchronized updateTransition Frame Architecture
+
+Replaced fragmented multi-state animation drivers conforming to `chrisbanes/skills@compose-animations` Section 53 ("Coordinate multiple properties from one state").
+
+- [x] **Single-Clock `updateTransition` Coordination**:
+  - Replaced pairs of independent `animateFloatAsState` coroutine drivers with unified `updateTransition(targetState = isDark)` in both `MainActivity.kt` and `LandingScreen.kt`.
+  - Bound rotation (`themeRot`) and scale (`themeScale`) to the exact same frame-clock transition, eliminating frame-time phase drift, coroutine scheduling overhead, and multi-state race conditions during theme switching.

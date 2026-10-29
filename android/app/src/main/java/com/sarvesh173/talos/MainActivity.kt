@@ -664,16 +664,15 @@ fun MainScreen(
                             // Right: Action Capsule Controls (40dp Accessible Touch Targets)
                             Row(verticalAlignment = Alignment.CenterVertically) {
 
-                                val themeRot by animateFloatAsState(
-                                    targetValue = if (isDark) 0f else 180f,
-                                    animationSpec = M3EMotion.fastSpatial(),
+                                val themeTransition = updateTransition(targetState = isDark, label = "m_theme_transition")
+                                val themeRot by themeTransition.animateFloat(
+                                    transitionSpec = { M3EMotion.fastSpatial() },
                                     label = "m_theme_rot"
-                                )
-                                val themeScale by animateFloatAsState(
-                                    targetValue = if (isDark) 1.0f else 1.15f,
-                                    animationSpec = M3EMotion.fastSpatial(),
+                                ) { dark -> if (dark) 0f else 180f }
+                                val themeScale by themeTransition.animateFloat(
+                                    transitionSpec = { M3EMotion.fastSpatial() },
                                     label = "m_theme_scale"
-                                )
+                                ) { dark -> if (dark) 1.0f else 1.15f }
                                 IconButton(
                                     onClick = onToggleTheme,
                                     modifier = Modifier.size(40.dp)

@@ -367,16 +367,15 @@ fun LandingScreen(
                         }
                     }
 
-                    val themeRot by animateFloatAsState(
-                        targetValue = if (isCurrentDark) 0f else 180f,
-                        animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                    val themeTransition = updateTransition(targetState = isCurrentDark, label = "landing_theme_transition")
+                    val themeRot by themeTransition.animateFloat(
+                        transitionSpec = { spring(dampingRatio = 0.55f, stiffness = 500f) },
                         label = "landing_theme_rot"
-                    )
-                    val themeScale by animateFloatAsState(
-                        targetValue = if (isCurrentDark) 1.0f else 1.15f,
-                        animationSpec = spring(dampingRatio = 0.55f, stiffness = 500f),
+                    ) { dark -> if (dark) 0f else 180f }
+                    val themeScale by themeTransition.animateFloat(
+                        transitionSpec = { spring(dampingRatio = 0.55f, stiffness = 500f) },
                         label = "landing_theme_scale"
-                    )
+                    ) { dark -> if (dark) 1.0f else 1.15f }
                     IconButton(
                         onClick = onToggleTheme,
                         modifier = Modifier

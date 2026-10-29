@@ -981,7 +981,7 @@ fun MainScreen(
                             ) {
                                 Crossfade(
                                     targetState = isSendMode,
-                                    animationSpec = M3EMotion.fastSpatial(),
+                                    animationSpec = M3EMotion.fastEffects(),
                                     label = "ActionIconCrossfade"
                                 ) { sendState ->
                                     if (sendState) {

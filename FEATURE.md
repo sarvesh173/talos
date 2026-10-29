@@ -638,3 +638,13 @@ Refined drawer navigation and drawer toggle ergonomics adhering to `frontend/tou
   - Wrapped room and agent emblems in `ModalNavigationDrawer` inside dedicated 32dp `EmblemSocket` containers (`#101114`) with dynamic accent borders, preventing multi-colored vendor marks from washing out on light drawer sheets.
 - [x] **Tactile Chamber Selection State**:
   - Upgraded chamber item rows from basic 8dp rounded rectangles to 12dp concentric shapes with subtle 1dp Molten Copper highlight borders (`PrimaryAccent.copy(alpha = 0.35f)`) and 40dp drawer toggle hit area.
+
+---
+
+## 32. M3 Motion Effects Physics Alignment (Zero-Overshoot Crossfade)
+
+Audited motion physics according to `m3-motion` and `frontend/multi-skill-ui-refinement` guidelines regarding spatial vs effects spring separation.
+
+- [x] **Critically Damped Effects Spring for Opacity Crossfades**:
+  - Identified and eliminated an M3 anti-pattern where an underdamped spatial spring (`damping = 0.6f`, `stiffness = 800f`) was driving an opacity `Crossfade` in `MainActivity.kt`.
+  - Re-bound the Action Dial icon transition (Mic -> Send) to `M3EMotion.fastEffects()` (critically damped `zeta = 1.0f`), guaranteeing that opacity interpolations never bounce or overshoot past 1.0.

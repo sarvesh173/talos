@@ -833,3 +833,22 @@ Implemented user-requested gesture + animation upgrade on the command dock's Flo
   - In send mode, taps stay instant (no double-tap timeout delay); the double-tap detector is only active in mic mode.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21015` and `versionName` to `"2.10.15"`.
+
+---
+
+## 48. Gesture Patterns & Microinteractions Calibration: Hold-to-Camera & Rotational Switch Morph
+
+Calibrated action dial gesture engine and micro-interaction animations based on `owl-listener/designer-skills@gesture-patterns` and `wondelai/skills@microinteractions`.
+
+- [x] **Conflict-Free Long-Press (1000ms Threshold)**:
+  - Eliminated single-tap / double-tap ambiguity. Single tap strictly triggers voice consensus without any camera interference.
+  - Implemented 1000ms deliberate long-press trigger with immediate abort/cancel on early finger lift (<1000ms snaps back in 150ms with zero accidental triggers).
+- [x] **Progressive Microinteraction Feedback**:
+  - Added real-time 360° glowing Molten Copper + Verdigris sweep arc around the dial button during the 1-second hold.
+  - Button smoothly blooms from 0.94f to 1.10f scale under finger, providing visual and tactile charging momentum.
+  - Shutter snap and camera launch fire upon reaching full 1000ms completion.
+- [x] **360° Spring Spin Morph on Typing Switch**:
+  - Added full 360-degree rotational spring spin (`modeSpinAngle`) with `M3EMotion.defaultSpatial()` when switching between Mic and Send modes.
+  - Accompanied by scale (0.5f ↔ 1.0f) and fade transitions on the glyph, making typing onset and text clearance feel responsive and alive.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21016` and `versionName` to `"2.10.16"`.

@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +47,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
@@ -984,11 +989,30 @@ fun MainScreen(
                         // (B) Standalone Floating Action Dial (Morphs between Mic, Send & Camera)
                         val isSendMode = inputText.isNotBlank()
                         var isSendPressed by remember { mutableStateOf(false) }
+                        val holdProgress = remember { Animatable(0f) }
+                        val coroutineScope = rememberCoroutineScope()
+                        val context = LocalContext.current
+                        var isCameraTriggered by remember { mutableStateOf(false) }
+
+                        // Tactile button scale: builds up smoothly from 0.94f to 1.10f during hold
                         val sendScale by animateFloatAsState(
-                            targetValue = if (isSendPressed) 0.96f else 1.0f,
+                            targetValue = when {
+                                isCameraTriggered -> 1.18f
+                                isSendPressed && !isSendMode -> 0.94f + (holdProgress.value * 0.16f)
+                                isSendPressed -> 0.95f
+                                else -> 1.0f
+                            },
                             animationSpec = M3EMotion.fastSpatial(),
                             label = "sendScale"
                         )
+
+                        // 360-degree rotational spin on typing switch (Mic <-> Send)
+                        val modeSpinAngle by animateFloatAsState(
+                            targetValue = if (isSendMode) 360f else 0f,
+                            animationSpec = M3EMotion.defaultSpatial(),
+                            label = "modeSpinAngle"
+                        )
+
                         val sendMorphProgress by animateFloatAsState(
                             targetValue = if (isSendPressed) 1f else 0f,
                             animationSpec = M3EMotion.defaultSpatial(),
@@ -996,115 +1020,155 @@ fun MainScreen(
                         )
                         val sendMorph = remember { Morph(M3EShapes.circle(), M3EShapes.scallop12()) }
 
-                        // Double-tap on mic: glyph morphs to camera, then the system camera opens
-                        val context = LocalContext.current
-                        var cameraRevealTick by remember { mutableStateOf(0) }
-                        var cameraRevealed by remember { mutableStateOf(false) }
-                        LaunchedEffect(cameraRevealTick) {
-                            if (cameraRevealTick > 0) {
-                                cameraRevealed = true
-                                delay(700)
-                                runCatching {
-                                    context.startActivity(
-                                        Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    )
-                                }
-                                delay(150)
-                                cameraRevealed = false
-                            }
-                        }
-
-                        Surface(
-                            shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
-                            color = PrimaryAccent,
-                            border = BorderStroke(1.dp, metallicBorderBrush()),
-                            modifier = Modifier
-                                .size(48.dp)
-                                .scale(sendScale)
-                                .semantics {
-                                    contentDescription = when {
-                                        cameraRevealed -> "Opening camera"
-                                        isSendMode -> "Send message"
-                                        else -> "Voice input, double-tap for camera"
-                                    }
-                                }
-                                .pointerInput(isSendMode, isTyping) {
-                                    when {
-                                        isTyping -> {
-                                            // Agent busy: no gesture handling (matches previous enabled = false)
-                                        }
-                                        isSendMode -> detectTapGestures(
-                                            onPress = {
-                                                isSendPressed = true
-                                                try {
-                                                    tryAwaitRelease()
-                                                } finally {
-                                                    isSendPressed = false
-                                                }
-                                            },
-                                            onTap = {
-                                                client.sendMessage(inputText)
-                                                inputText = ""
-                                            }
-                                        )
-                                        else -> detectTapGestures(
-                                            onPress = {
-                                                isSendPressed = true
-                                                try {
-                                                    tryAwaitRelease()
-                                                } finally {
-                                                    isSendPressed = false
-                                                }
-                                            },
-                                            onTap = {
-                                                // Voice / Mic tap feedback
-                                                client.sendMessage("/consensus")
-                                            },
-                                            onDoubleTap = {
-                                                cameraRevealTick++
-                                            }
-                                        )
-                                    }
-                                }
+                        Box(
+                            modifier = Modifier.size(54.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                // Mic -> Send / Mic -> Camera switch morph (M3E scale + fade spring)
-                                val dialState = when {
-                                    cameraRevealed -> "camera"
-                                    isSendMode -> "send"
-                                    else -> "mic"
-                                }
-                                AnimatedContent(
-                                    targetState = dialState,
-                                    transitionSpec = {
-                                        (scaleIn(
-                                            initialScale = 0.55f,
-                                            animationSpec = M3EMotion.fastSpatial()
-                                        ) + fadeIn(animationSpec = M3EMotion.fastEffects()))
-                                            .togetherWith(
-                                                scaleOut(
-                                                    targetScale = 0.55f,
-                                                    animationSpec = M3EMotion.fastEffects()
-                                                ) + fadeOut(animationSpec = M3EMotion.fastEffects())
+                            // (1) Glowing charging arc around button during 1-second long-press
+                            val currentProgress = holdProgress.value
+                            val primaryAccentColor = PrimaryAccent
+                            val verdigrisColor = MaterialTheme.colorScheme.tertiary
+                            if (currentProgress > 0.01f && !isSendMode) {
+                                Canvas(modifier = Modifier.size(52.dp)) {
+                                    val strokeWidth = 2.5.dp.toPx()
+                                    val arcSize = size.width - strokeWidth
+                                    drawArc(
+                                        brush = Brush.sweepGradient(
+                                            listOf(
+                                                primaryAccentColor,
+                                                verdigrisColor,
+                                                primaryAccentColor
                                             )
-                                    },
-                                    label = "ActionDialMorph"
-                                ) { state ->
-                                    val (glyph, glyphDesc) = when (state) {
-                                        "camera" -> Icons.Default.PhotoCamera to "Camera"
-                                        "send" -> Icons.AutoMirrored.Filled.Send to "Send Command"
-                                        else -> Icons.Default.Mic to "Voice Prompt"
-                                    }
-                                    Icon(
-                                        imageVector = glyph,
-                                        contentDescription = glyphDesc,
-                                        tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(20.dp)
+                                        ),
+                                        startAngle = -90f,
+                                        sweepAngle = currentProgress * 360f,
+                                        useCenter = false,
+                                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                                        topLeft = Offset(strokeWidth / 2f, strokeWidth / 2f),
+                                        size = Size(arcSize, arcSize)
                                     )
+                                }
+                            }
+
+                            // (2) Floating Action Dial Surface
+                            Surface(
+                                shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
+                                color = PrimaryAccent,
+                                border = BorderStroke(1.dp, metallicBorderBrush()),
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .scale(sendScale)
+                                    .semantics {
+                                        contentDescription = when {
+                                            isCameraTriggered -> "Opening camera"
+                                            isSendMode -> "Send message"
+                                            else -> "Voice input, hold 1 second for camera"
+                                        }
+                                    }
+                                    .pointerInput(isSendMode, isTyping) {
+                                        if (isTyping) return@pointerInput
+                                        if (isSendMode) {
+                                            detectTapGestures(
+                                                onPress = {
+                                                    isSendPressed = true
+                                                    try {
+                                                        tryAwaitRelease()
+                                                    } finally {
+                                                        isSendPressed = false
+                                                    }
+                                                },
+                                                onTap = {
+                                                    client.sendMessage(inputText)
+                                                    inputText = ""
+                                                }
+                                            )
+                                        } else {
+                                            detectTapGestures(
+                                                onPress = {
+                                                    isSendPressed = true
+                                                    var holdFinished = false
+                                                    val holdJob = coroutineScope.launch {
+                                                        holdProgress.animateTo(
+                                                            targetValue = 1f,
+                                                            animationSpec = tween(durationMillis = 1000, easing = LinearEasing)
+                                                        )
+                                                        // 1-second hold threshold reached!
+                                                        holdFinished = true
+                                                        isCameraTriggered = true
+                                                        delay(350)
+                                                        runCatching {
+                                                            context.startActivity(
+                                                                Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                            )
+                                                        }
+                                                        delay(200)
+                                                        isCameraTriggered = false
+                                                        holdProgress.snapTo(0f)
+                                                    }
+                                                    try {
+                                                        tryAwaitRelease()
+                                                    } finally {
+                                                        isSendPressed = false
+                                                        if (!holdFinished) {
+                                                            holdJob.cancel()
+                                                            coroutineScope.launch {
+                                                                holdProgress.animateTo(0f, tween(150, easing = LinearEasing))
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                onTap = {
+                                                    // Only fire voice prompt if hold did NOT trigger camera
+                                                    if (!isCameraTriggered && holdProgress.value < 0.95f) {
+                                                        client.sendMessage("/consensus")
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .graphicsLayer {
+                                            rotationZ = modeSpinAngle
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    val dialState = when {
+                                        isCameraTriggered -> "camera"
+                                        isSendMode -> "send"
+                                        else -> "mic"
+                                    }
+                                    AnimatedContent(
+                                        targetState = dialState,
+                                        transitionSpec = {
+                                            (scaleIn(
+                                                initialScale = 0.5f,
+                                                animationSpec = M3EMotion.fastSpatial()
+                                            ) + fadeIn(animationSpec = M3EMotion.fastEffects()))
+                                                .togetherWith(
+                                                    scaleOut(
+                                                        targetScale = 0.5f,
+                                                        animationSpec = M3EMotion.fastEffects()
+                                                    ) + fadeOut(animationSpec = M3EMotion.fastEffects())
+                                                )
+                                        },
+                                        label = "ActionDialMorph"
+                                    ) { state ->
+                                        val (glyph, glyphDesc) = when (state) {
+                                            "camera" -> Icons.Default.PhotoCamera to "Camera"
+                                            "send" -> Icons.AutoMirrored.Filled.Send to "Send Command"
+                                            else -> Icons.Default.Mic to "Voice Prompt"
+                                        }
+                                        Icon(
+                                            imageVector = glyph,
+                                            contentDescription = glyphDesc,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

@@ -774,3 +774,13 @@ Resolved software keyboard layout occlusion identified in `OnboardingWizard` Ste
   - Dynamically switches the outer metallic capsule stroke from resting machined grey to an active Molten Copper + Verdigris gradient highlight when focused.
 - [x] **Accessible Quick Command Chips (`Role.Button`)**:
   - Added explicit semantic `Role.Button` and `onClickLabel` descriptors on command suggestion pills (`/consensus`, `/mesh`, `/status`), adhering to accessibility traversal standards.
+
+---
+
+## 44. Package Manifest Version Code & Name Parity
+
+Resolved Android package manager stale version stamp in `android/app/build.gradle.kts`.
+
+- [x] **Version Code & Name Synchronization**:
+  - Bumped `versionCode` from stagnant `103` to `21012` and `versionName` from legacy `"2.3.0"` to match release `"2.10.12"`.
+  - Ensures Android Package Installer immediately recognizes incoming releases as clean upgrades, overwriting older builds and accurately displaying `version 2.10.12` in system App Info settings.

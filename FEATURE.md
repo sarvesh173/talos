@@ -700,3 +700,14 @@ Aligned `LandingScreen.kt` header ergonomics with `ui-ux-pro-max` WCAG standards
   - Upgraded landing screen theme toggle container from 38dp to standard `40.dp` with an optically balanced 19dp icon.
 - [x] **Molten Forge Brushed Rim**:
   - Replaced low-contrast `outlineVariant` border with `metallicBorderBrush()`, matching the machined chamfer styling of the main chamber top bar.
+
+---
+
+## 38. WCAG Semantics & Actionable Accessibility Parity
+
+Audited accessibility strings and container semantics adhering to `ibelick/ui-skills@fixing-accessibility` Priority 1 ("Accessible Names").
+
+- [x] **Actionable Theme Toggle Semantics**:
+  - Replaced ambiguous static noun content description (`"Theme"`) with explicit dynamic state descriptions (`if (isDark) "Switch to Light Mode" else "Switch to Dark Mode"`), aligning `MainActivity.kt` with `LandingScreen.kt`.
+- [x] **Action Dial Surface Semantics**:
+  - Bound explicit accessibility semantics (`if (isSendMode) "Send message" else "Voice input"`) to the floating Action Dial container surface, ensuring screen readers announce the morphing intent prior to child icon traversal.

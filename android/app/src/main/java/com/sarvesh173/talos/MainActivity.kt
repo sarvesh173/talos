@@ -680,7 +680,7 @@ fun MainScreen(
                                 ) {
                                     Icon(
                                         imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                        contentDescription = "Theme",
+                                        contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode",
                                         tint = PrimaryAccent,
                                         modifier = Modifier
                                             .size(19.dp)
@@ -964,6 +964,9 @@ fun MainScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .scale(sendScale)
+                                .semantics {
+                                    contentDescription = if (isSendMode) "Send message" else "Voice input"
+                                }
                                 .clickable(
                                     enabled = !isTyping,
                                     interactionSource = sendInteraction,

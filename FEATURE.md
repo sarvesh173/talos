@@ -813,3 +813,23 @@ Integrated Google's official Material Design 3 specifications discovered via `ha
   - Eliminates artificial text compression in standard Compose components and establishes typographic balance across all screen densities.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21014` and `versionName` to `"2.10.14"`.
+
+---
+
+## 47. Action Dial Double-Tap Camera Reveal & Mode-Switch Morph
+
+Implemented user-requested gesture + animation upgrade on the command dock's Floating Action Dial (`MainActivity.kt`).
+
+- [x] **Double-Tap Mic → Camera Reveal**:
+  - Replaced the dial's plain `clickable` with `pointerInput` + `detectTapGestures` carrying `onTap`, `onDoubleTap`, and tactile `onPress` (press-scale + scallop morph physics preserved).
+  - Double-tap in mic mode morphs the glyph **Mic → Camera** via `AnimatedContent` (spring scale 0.55→1.0 + fade, M3E `fastSpatial`), holds 700 ms, then launches the system camera (`MediaStore.ACTION_IMAGE_CAPTURE`, `runCatching`-guarded).
+  - Glyph morphs back to Mic automatically after the camera hand-off.
+- [x] **Typing ↔ Mic Mode Switch Animation**:
+  - Upgraded the send/mic icon switch from a flat `Crossfade` to a full `AnimatedContent` morph: incoming glyph springs in with scale + fade (`fastSpatial` overshoot, `fastEffects` fade), outgoing glyph scales down and fades out.
+  - Both directions (finish typing → send glyph; clear text → mic glyph) now play the expressive transition.
+- [x] **Gesture Semantics & Availability**:
+  - Agent-busy state (`isTyping`) keeps the dial inert (no gesture handling), matching previous `enabled = false`.
+  - TalkBack descriptions updated: `"Voice input, double-tap for camera"` / `"Opening camera"` / `"Send message"`.
+  - In send mode, taps stay instant (no double-tap timeout delay); the double-tap detector is only active in mic mode.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21015` and `versionName` to `"2.10.15"`.

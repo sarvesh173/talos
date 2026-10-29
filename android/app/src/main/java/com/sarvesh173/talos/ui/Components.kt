@@ -287,7 +287,6 @@ fun NativeAudioPlayerBubble(
             width = 1.2.dp,
             brush = if (isHuman) Brush.linearGradient(listOf(Color.White.copy(alpha = 0.40f), Color.Transparent)) else metallicBorderBrush()
         ),
-        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -367,8 +366,7 @@ fun NativeVideoPreviewBubble(
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -383,7 +381,7 @@ fun NativeVideoPreviewBubble(
                     .heightIn(max = 160.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+                    .border(1.dp, metallicBorderBrush(), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -429,8 +427,7 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, metallicBorderBrush()),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { isExpanded = !isExpanded }
@@ -484,8 +481,7 @@ fun ToolCallItem(tool: ToolCall) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, metallicBorderBrush()),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { if (!tool.output.isNullOrBlank()) showOutput = !showOutput }

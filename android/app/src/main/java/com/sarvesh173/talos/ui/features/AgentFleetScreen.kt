@@ -78,7 +78,20 @@ fun AgentFleetScreen(client: TalosClient) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (agents.isEmpty() && !isLoading) {
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 2.5.dp,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+        } else if (agents.isEmpty()) {
             MetalCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "No agents discovered on the core mesh.",
@@ -177,9 +190,10 @@ fun AgentFleetScreen(client: TalosClient) {
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { selectedAgentForModel = null }) {
-                    Text("Close")
+                    Text("Close", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                 }
             },
+            shape = RoundedCornerShape(22.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }

@@ -572,3 +572,14 @@ Audited and eliminated all stray legacy slate and violet color tokens across her
   - Purged retired baseline-violet `Color(0xFF6750A4)` from `LandingScreen.kt` theme toggle button, harmonizing it with `PrimaryAccent` (`#E0A261`).
 - [x] **Dynamic Node Beam Accents**:
   - Connected landing page fluid conduit beams and particle photons directly to authentic brand emblems (`emblemByKey(key).accent`), removing hardcoded hex values across all 5 agent nodes.
+
+---
+
+## 26. Agent Fleet Dynamic Feedback & Apple Rounded Modal Polish
+
+Refined the multi-agent management console in `AgentFleetScreen.kt` adhering to Apple latency and modal sheet guidelines.
+
+- [x] **Zero-Latency Loading Feedback**:
+  - Added a centered `CircularProgressIndicator` with `PrimaryAccent` while `client.fetchAgents()` queries the core daemon, eliminating empty screen flashes.
+- [x] **Apple Continuous Curvature Modal**:
+  - Styled model switcher `AlertDialog` with continuous 22dp rounded corners (`RoundedCornerShape(22.dp)`), high-contrast dismiss typography, and unified metallic border framing.

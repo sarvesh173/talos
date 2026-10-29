@@ -889,8 +889,10 @@ Re-architecting the Command Dock Floating Action Dial to match Telegram / WhatsA
    - **Slide-to-Cancel**:
      - Dragging left (`dragX < -80.dp`) cancels recording with smooth fade-out.
 
-- [ ] **Implementation Plan**:
+- [x] **Implementation Plan**:
   - Add `VoiceRecordingState` (Idle, PressRecording, LockedRecording).
   - Build `SwipeUpLockTrack` overlay composable with spring physics.
   - Wire drag gestures on `pointerInput` tracking `awaitFirstDown` and pointer motion.
   - Implement hands-free locked recording control bar.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21017` and `versionName` to `"2.10.17"`.

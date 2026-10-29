@@ -13,7 +13,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,6 +35,10 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
@@ -40,6 +46,7 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -910,109 +917,235 @@ fun MainScreen(
                         metallicBorderBrush()
                     }
 
+                    // Bottom Message Command Dock States
+                    var isRecordingMode by remember { mutableStateOf(false) } // false = Camera (default), true = Recording Section
+                    var isRecordingActive by remember { mutableStateOf(false) } // Active recording (hold or locked)
+                    var isRecordingLocked by remember { mutableStateOf(false) } // Hands-free lock engaged
+                    var recordingDurationSeconds by remember { mutableIntStateOf(0) }
+                    var lastDialTapTime by remember { mutableLongStateOf(0L) }
+                    val context = LocalContext.current
+                    val coroutineScope = rememberCoroutineScope()
+                    var isSendPressed by remember { mutableStateOf(false) }
+
+                    // Live recording timer
+                    LaunchedEffect(isRecordingActive) {
+                        if (isRecordingActive) {
+                            recordingDurationSeconds = 0
+                            while (isRecordingActive) {
+                                delay(1000)
+                                recordingDurationSeconds++
+                            }
+                        }
+                    }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // (A) Input Capsule with Left Tool and Right Inline Actions
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            border = BorderStroke(if (isInputFocused) 1.5.dp else 1.2.dp, capsuleBorderBrush),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 4.dp)
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        inputText = if (inputText.startsWith("/")) "" else "/"
-                                    },
-                                    modifier = Modifier.size(38.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.SentimentSatisfied,
-                                        contentDescription = "Agent & Tool Mode",
-                                        tint = if (inputText.startsWith("/")) PrimaryAccent else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-
-                                OutlinedTextField(
-                                    value = inputText,
-                                    onValueChange = { inputText = it },
-                                    placeholder = {
-                                        Text(
-                                            text = "Message $roomTitle...",
-                                            color = talosTextMuted,
-                                            fontSize = 14.sp
-                                        )
-                                    },
-                                    singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedContainerColor = Color.Transparent,
-                                        unfocusedContainerColor = Color.Transparent,
-                                        focusedBorderColor = Color.Transparent,
-                                        unfocusedBorderColor = Color.Transparent,
-                                        focusedTextColor = talosTextPrimary,
-                                        unfocusedTextColor = talosTextPrimary
-                                    ),
+                        AnimatedContent(
+                            targetState = isRecordingLocked,
+                            transitionSpec = {
+                                (fadeIn(M3EMotion.fastEffects()) + slideInVertically { it / 2 })
+                                    .togetherWith(fadeOut(M3EMotion.fastEffects()) + slideOutVertically { -it / 2 })
+                            },
+                            label = "DockModeTransition",
+                            modifier = Modifier.weight(1f)
+                        ) { locked ->
+                            if (locked) {
+                                // (A-Locked) Hands-Free Recording Bar: Red dot, live counter, soundwaves, Trash button
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    border = BorderStroke(1.2.dp, capsuleBorderBrush),
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .onFocusChanged { isInputFocused = it.isFocused }
-                                        .semantics {
-                                            contentDescription = "Message composition input field for $roomTitle"
-                                        }
-                                )
-
-                                IconButton(
-                                    onClick = { /* Attachment action */ },
-                                    modifier = Modifier.size(38.dp)
+                                        .fillMaxWidth()
+                                        .height(48.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AttachFile,
-                                        contentDescription = "Attach Context",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 8.dp)
+                                    ) {
+                                        // Trash / Cancel button
+                                        IconButton(
+                                            onClick = {
+                                                isRecordingActive = false
+                                                isRecordingLocked = false
+                                                recordingDurationSeconds = 0
+                                            },
+                                            modifier = Modifier.size(38.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Cancel Recording",
+                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(4.dp))
+
+                                        // Pulsing Red Recording Dot
+                                        val infiniteTransition = rememberInfiniteTransition(label = "RecPulse")
+                                        val dotAlpha by infiniteTransition.animateFloat(
+                                            initialValue = 0.3f,
+                                            targetValue = 1f,
+                                            animationSpec = infiniteRepeatable(
+                                                animation = tween(600, easing = LinearEasing),
+                                                repeatMode = RepeatMode.Reverse
+                                            ),
+                                            label = "RecDotAlpha"
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .graphicsLayer { alpha = dotAlpha }
+                                                .background(Color(0xFFFF3B30), CircleShape)
+                                        )
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Timer Counter
+                                        val minutes = recordingDurationSeconds / 60
+                                        val seconds = recordingDurationSeconds % 60
+                                        Text(
+                                            text = "%02d:%02d".format(minutes, seconds),
+                                            color = talosTextPrimary,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+
+                                        Spacer(modifier = Modifier.weight(1f))
+
+                                        // Soundwave visualizer bars
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        ) {
+                                            val bar1Height by infiniteTransition.animateFloat(
+                                                initialValue = 6f, targetValue = 18f,
+                                                animationSpec = infiniteRepeatable(tween(400, easing = LinearEasing), RepeatMode.Reverse),
+                                                label = "b1"
+                                            )
+                                            val bar2Height by infiniteTransition.animateFloat(
+                                                initialValue = 16f, targetValue = 8f,
+                                                animationSpec = infiniteRepeatable(tween(350, easing = LinearEasing), RepeatMode.Reverse),
+                                                label = "b2"
+                                            )
+                                            val bar3Height by infiniteTransition.animateFloat(
+                                                initialValue = 8f, targetValue = 22f,
+                                                animationSpec = infiniteRepeatable(tween(450, easing = LinearEasing), RepeatMode.Reverse),
+                                                label = "b3"
+                                            )
+                                            val bar4Height by infiniteTransition.animateFloat(
+                                                initialValue = 20f, targetValue = 10f,
+                                                animationSpec = infiniteRepeatable(tween(380, easing = LinearEasing), RepeatMode.Reverse),
+                                                label = "b4"
+                                            )
+                                            listOf(bar1Height, bar2Height, bar3Height, bar4Height).forEach { h ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(3.dp)
+                                                        .height(h.dp)
+                                                        .background(PrimaryAccent, RoundedCornerShape(1.5.dp))
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                // (A) Normal Input Capsule with Left Tool and Right Inline Actions
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    border = BorderStroke(if (isInputFocused) 1.5.dp else 1.2.dp, capsuleBorderBrush),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 4.dp)
+                                    ) {
+                                        IconButton(
+                                            onClick = {
+                                                inputText = if (inputText.startsWith("/")) "" else "/"
+                                            },
+                                            modifier = Modifier.size(38.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.SentimentSatisfied,
+                                                contentDescription = "Agent & Tool Mode",
+                                                tint = if (inputText.startsWith("/")) PrimaryAccent else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+
+                                        OutlinedTextField(
+                                            value = inputText,
+                                            onValueChange = { inputText = it },
+                                            placeholder = {
+                                                Text(
+                                                    text = "Message $roomTitle...",
+                                                    color = talosTextMuted,
+                                                    fontSize = 14.sp
+                                                )
+                                            },
+                                            singleLine = true,
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedContainerColor = Color.Transparent,
+                                                unfocusedContainerColor = Color.Transparent,
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedTextColor = talosTextPrimary,
+                                                unfocusedTextColor = talosTextPrimary
+                                            ),
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .onFocusChanged { isInputFocused = it.isFocused }
+                                                .semantics {
+                                                    contentDescription = "Message composition input field for $roomTitle"
+                                                }
+                                        )
+
+                                        IconButton(
+                                            onClick = { /* Attachment action */ },
+                                            modifier = Modifier.size(38.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.AttachFile,
+                                                contentDescription = "Attach Context",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        // (B) Standalone Floating Action Dial (Morphs between Mic, Send & Camera)
-                        val isSendMode = inputText.isNotBlank()
-                        var isSendPressed by remember { mutableStateOf(false) }
-                        val holdProgress = remember { Animatable(0f) }
-                        val coroutineScope = rememberCoroutineScope()
-                        val context = LocalContext.current
-                        var isCameraTriggered by remember { mutableStateOf(false) }
-
-                        // Tactile button scale: builds up smoothly from 0.94f to 1.10f during hold
+                        // (B) Standalone Floating Action Dial (Camera / Mic / Send Mode with Swipe-Up Lock)
+                        val isSendMode = inputText.isNotBlank() || isRecordingLocked
                         val sendScale by animateFloatAsState(
-                            targetValue = when {
-                                isCameraTriggered -> 1.18f
-                                isSendPressed && !isSendMode -> 0.94f + (holdProgress.value * 0.16f)
-                                isSendPressed -> 0.95f
-                                else -> 1.0f
-                            },
+                            targetValue = if (isSendPressed || isRecordingActive) 1.08f else 1.0f,
                             animationSpec = M3EMotion.fastSpatial(),
                             label = "sendScale"
                         )
-
-                        // 360-degree rotational spin on typing switch (Mic <-> Send)
                         val modeSpinAngle by animateFloatAsState(
-                            targetValue = if (isSendMode) 360f else 0f,
+                            targetValue = when {
+                                isSendMode -> 360f
+                                isRecordingMode -> 180f
+                                else -> 0f
+                            },
                             animationSpec = M3EMotion.defaultSpatial(),
                             label = "modeSpinAngle"
                         )
-
                         val sendMorphProgress by animateFloatAsState(
                             targetValue = if (isSendPressed) 1f else 0f,
                             animationSpec = M3EMotion.defaultSpatial(),
@@ -1024,33 +1157,59 @@ fun MainScreen(
                             modifier = Modifier.size(54.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            // (1) Glowing charging arc around button during 1-second long-press
-                            val currentProgress = holdProgress.value
-                            val primaryAccentColor = PrimaryAccent
-                            val verdigrisColor = MaterialTheme.colorScheme.tertiary
-                            if (currentProgress > 0.01f && !isSendMode) {
-                                Canvas(modifier = Modifier.size(52.dp)) {
-                                    val strokeWidth = 2.5.dp.toPx()
-                                    val arcSize = size.width - strokeWidth
-                                    drawArc(
-                                        brush = Brush.sweepGradient(
-                                            listOf(
-                                                primaryAccentColor,
-                                                verdigrisColor,
-                                                primaryAccentColor
-                                            )
-                                        ),
-                                        startAngle = -90f,
-                                        sweepAngle = currentProgress * 360f,
-                                        useCenter = false,
-                                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                                        topLeft = Offset(strokeWidth / 2f, strokeWidth / 2f),
-                                        size = Size(arcSize, arcSize)
-                                    )
+                            // Floating Swipe-Up Lock Capsule Track (Appears above dial when holding to record)
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = isRecordingActive && !isRecordingLocked,
+                                enter = fadeIn(M3EMotion.fastEffects()) + slideInVertically { it / 2 },
+                                exit = fadeOut(M3EMotion.fastEffects()) + slideOutVertically { it / 2 },
+                                modifier = Modifier.offset(y = (-58).dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(22.dp),
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
+                                    border = BorderStroke(1.dp, metallicBorderBrush()),
+                                    shadowElevation = 8.dp,
+                                    modifier = Modifier
+                                        .width(44.dp)
+                                        .height(84.dp)
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(vertical = 8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Lock,
+                                            contentDescription = "Swipe up to lock",
+                                            tint = PrimaryAccent,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+
+                                        val pulseTransition = rememberInfiniteTransition(label = "ChevronPulse")
+                                        val chevronOffset by pulseTransition.animateFloat(
+                                            initialValue = 0f,
+                                            targetValue = -6f,
+                                            animationSpec = infiniteRepeatable(
+                                                animation = tween(500, easing = LinearEasing),
+                                                repeatMode = RepeatMode.Reverse
+                                            ),
+                                            label = "ChevronOffset"
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowUpward,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .graphicsLayer { translationY = chevronOffset }
+                                        )
+                                    }
                                 }
                             }
 
-                            // (2) Floating Action Dial Surface
+                            // Action Dial Surface
                             Surface(
                                 shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
                                 color = PrimaryAccent,
@@ -1060,14 +1219,24 @@ fun MainScreen(
                                     .scale(sendScale)
                                     .semantics {
                                         contentDescription = when {
-                                            isCameraTriggered -> "Opening camera"
+                                            isRecordingLocked -> "Send voice recording"
                                             isSendMode -> "Send message"
-                                            else -> "Voice input, hold 1 second for camera"
+                                            isRecordingMode -> "Voice recording mode, hold to record, swipe up to lock"
+                                            else -> "Camera mode, tap for camera, double tap for voice recording"
                                         }
                                     }
-                                    .pointerInput(isSendMode, isTyping) {
+                                    .pointerInput(isSendMode, isRecordingMode, isRecordingLocked, isTyping) {
                                         if (isTyping) return@pointerInput
-                                        if (isSendMode) {
+                                        if (isRecordingLocked) {
+                                            detectTapGestures(
+                                                onTap = {
+                                                    isRecordingActive = false
+                                                    isRecordingLocked = false
+                                                    recordingDurationSeconds = 0
+                                                    client.sendMessage("/consensus")
+                                                }
+                                            )
+                                        } else if (inputText.isNotBlank()) {
                                             detectTapGestures(
                                                 onPress = {
                                                     isSendPressed = true
@@ -1083,48 +1252,66 @@ fun MainScreen(
                                                 }
                                             )
                                         } else {
-                                            detectTapGestures(
-                                                onPress = {
-                                                    isSendPressed = true
-                                                    var holdFinished = false
-                                                    val holdJob = coroutineScope.launch {
-                                                        holdProgress.animateTo(
-                                                            targetValue = 1f,
-                                                            animationSpec = tween(durationMillis = 1000, easing = LinearEasing)
-                                                        )
-                                                        // 1-second hold threshold reached!
-                                                        holdFinished = true
-                                                        isCameraTriggered = true
-                                                        delay(350)
-                                                        runCatching {
-                                                            context.startActivity(
-                                                                Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                            )
+                                            awaitPointerEventScope {
+                                                val down = awaitFirstDown(requireUnconsumed = false)
+                                                val downTime = System.currentTimeMillis()
+                                                val timeSinceLast = downTime - lastDialTapTime
+                                                isSendPressed = true
+
+                                                if (timeSinceLast < 320) {
+                                                    // Double Tap: Switch between Camera Mode and Recording Mode!
+                                                    lastDialTapTime = 0L
+                                                    isRecordingMode = !isRecordingMode
+                                                    waitForUpOrCancellation()
+                                                    isSendPressed = false
+                                                } else {
+                                                    lastDialTapTime = downTime
+
+                                                    if (isRecordingMode) {
+                                                        // Recording Mode: Hold to record, swipe up to lock
+                                                        isRecordingActive = true
+                                                        var locked = false
+                                                        while (true) {
+                                                            val event = awaitPointerEvent()
+                                                            val change = event.changes.firstOrNull { it.id == down.id }
+                                                            if (change == null || !change.pressed) {
+                                                                break
+                                                            }
+                                                            val dragY = change.position.y - down.position.y
+                                                            if (dragY <= -120f) {
+                                                                locked = true
+                                                                isRecordingLocked = true
+                                                                break
+                                                            }
                                                         }
-                                                        delay(200)
-                                                        isCameraTriggered = false
-                                                        holdProgress.snapTo(0f)
-                                                    }
-                                                    try {
-                                                        tryAwaitRelease()
-                                                    } finally {
                                                         isSendPressed = false
-                                                        if (!holdFinished) {
-                                                            holdJob.cancel()
+                                                        if (!locked) {
+                                                            isRecordingActive = false
+                                                            val duration = System.currentTimeMillis() - downTime
+                                                            if (duration >= 350) {
+                                                                client.sendMessage("/consensus")
+                                                            }
+                                                        }
+                                                    } else {
+                                                        // Camera Mode: single tap opens camera
+                                                        val up = waitForUpOrCancellation()
+                                                        isSendPressed = false
+                                                        if (up != null) {
                                                             coroutineScope.launch {
-                                                                holdProgress.animateTo(0f, tween(150, easing = LinearEasing))
+                                                                delay(220)
+                                                                if (System.currentTimeMillis() - lastDialTapTime >= 300) {
+                                                                    runCatching {
+                                                                        context.startActivity(
+                                                                            Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                                                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                                        )
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
-                                                },
-                                                onTap = {
-                                                    // Only fire voice prompt if hold did NOT trigger camera
-                                                    if (!isCameraTriggered && holdProgress.value < 0.95f) {
-                                                        client.sendMessage("/consensus")
-                                                    }
                                                 }
-                                            )
+                                            }
                                         }
                                     }
                             ) {
@@ -1137,9 +1324,9 @@ fun MainScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     val dialState = when {
-                                        isCameraTriggered -> "camera"
                                         isSendMode -> "send"
-                                        else -> "mic"
+                                        isRecordingMode -> "mic"
+                                        else -> "camera"
                                     }
                                     AnimatedContent(
                                         targetState = dialState,
@@ -1158,9 +1345,9 @@ fun MainScreen(
                                         label = "ActionDialMorph"
                                     ) { state ->
                                         val (glyph, glyphDesc) = when (state) {
-                                            "camera" -> Icons.Default.PhotoCamera to "Camera"
                                             "send" -> Icons.AutoMirrored.Filled.Send to "Send Command"
-                                            else -> Icons.Default.Mic to "Voice Prompt"
+                                            "mic" -> Icons.Default.Mic to "Voice Recording"
+                                            else -> Icons.Default.PhotoCamera to "Camera Mode"
                                         }
                                         Icon(
                                             imageVector = glyph,

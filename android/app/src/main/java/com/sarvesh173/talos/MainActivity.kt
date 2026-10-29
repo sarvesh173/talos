@@ -595,7 +595,7 @@ fun MainScreen(
                                     modifier = Modifier
                                         .size(36.dp)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFF0F172A))
+                                        .background(EmblemSocket)
                                         .border(1.dp, PrimaryAccent.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -620,12 +620,12 @@ fun MainScreen(
                                             modifier = Modifier
                                                 .size(6.dp)
                                                 .clip(CircleShape)
-                                                .background(if (isConnected) StatusGreen else Color(0xFFEF4444))
+                                                .background(if (isConnected) StatusGreen else MaterialTheme.colorScheme.error)
                                         )
                                         Spacer(modifier = Modifier.width(5.dp))
                                         Text(
                                             text = if (isConnected) "MESH LINKED · 12ms" else "OFFLINE",
-                                            color = if (isConnected) StatusGreen else Color(0xFFEF4444),
+                                            color = if (isConnected) StatusGreen else MaterialTheme.colorScheme.error,
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 0.4.sp
@@ -655,7 +655,7 @@ fun MainScreen(
                                     Icon(
                                         imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                                         contentDescription = "Theme",
-                                        tint = if (isDark) Color(0xFFFFD54F) else Color(0xFF6750A4),
+                                        tint = PrimaryAccent,
                                         modifier = Modifier
                                             .size(18.dp)
                                             .graphicsLayer {
@@ -889,7 +889,8 @@ fun MainScreen(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.Send,
                                         contentDescription = "Send",
-                                        tint = Color.White,
+                                        tint = if (inputText.isNotBlank()) MaterialTheme.colorScheme.onPrimary
+                                               else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -1055,7 +1056,8 @@ fun SettingsDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Button(
+                M3EButton(
+                    text = if (isVerifying) "Verifying Handshake..." else "Verify & Update Connection",
                     onClick = {
                         scope.launch {
                             isVerifying = true
@@ -1075,24 +1077,9 @@ fun SettingsDialog(
                         }
                     },
                     enabled = !isVerifying,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(42.dp)
-                ) {
-                    if (isVerifying) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Verifying Handshake...", fontSize = 12.sp)
-                    } else {
-                        Text(text = "Verify & Update Connection", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
+                    loading = isVerifying,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {},
@@ -1240,7 +1227,7 @@ fun ChamberHero(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF0F172A))
+                                .background(EmblemSocket)
                                 .border(1.dp, emblem.accent.copy(alpha = 0.45f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {

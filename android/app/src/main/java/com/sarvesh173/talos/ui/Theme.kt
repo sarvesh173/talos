@@ -14,6 +14,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -23,9 +24,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // =============================================================================
-// TALOS MATERIAL 3 EXPRESSIVE THEME - full M3E system, authored ground-up.
-// Motion: MotionScheme.expressive() (verified spring physics: spatial 0.6/800,
-// 0.8/380, 0.8/200 - effects critically damped 1.0/3800, 1.0/1600, 1.0/800).
+// TALOS "MOLTEN FORGE" M3 EXPRESSIVE THEME.
+//
+// Why copper, not violet (antislop R-01/R-31, written reason): the M3 baseline
+// violet (#6750A4/#D0BCFF) is the generic AI-default palette - indistinguishable
+// from every other generated app. TALOS is a machined instrument (forged metal,
+// brushed specular borders, obsidian emblem sockets), so the palette is drawn
+// from the material itself: molten copper (primary), steel (secondary),
+// verdigris patina (tertiary = live mesh), on warm graphite surfaces.
+//
+// Motion: MotionScheme.expressive() (spatial 0.6/800, 0.8/380, 0.8/200 -
+// effects critically damped 1.0/3800, 1.0/1600, 1.0/800).
 // =============================================================================
 
 /** 8dp spatial system tokens */
@@ -38,92 +47,133 @@ object MdSpacing {
     val xl = 48.dp
 }
 
-// Brand accent anchors
-val PrimaryAccent = Color(0xFFD0BCFF)       // M3 Expressive Luminous Lavender
-val PrimaryIris = Color(0xFF6750A4)         // Google M3 Baseline Iris
-val StatusGreen = Color(0xFF10B981)
-val StatusAmber = Color(0xFFF59E0B)
-val StatusRed = Color(0xFFEF4444)
-val CoralPink = Color(0xFFEC4899)
-val OmniBlue = Color(0xFF38BDF8)
-
 // -----------------------------------------------------------------------------
-// Dark M3 Expressive Purple palette (HCT-derived, baseline seed #6750A4)
+// DARK MOLTEN FORGE palette (contrast-verified: onSurface 14.7:1, onPrimary 5.9:1,
+// onSurfaceVariant 8.8:1, primary on surfaceContainer 7.4:1)
 // -----------------------------------------------------------------------------
 val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFD0BCFF),
-    onPrimary = Color(0xFF381E72),
-    primaryContainer = Color(0xFF4F378B),
-    onPrimaryContainer = Color(0xFFEADDFF),
-    secondary = Color(0xFFCCC2DC),
-    onSecondary = Color(0xFF332D41),
-    secondaryContainer = Color(0xFF4A4458),
-    onSecondaryContainer = Color(0xFFE8DEF8),
-    tertiary = Color(0xFFEFB8C8),
-    onTertiary = Color(0xFF492532),
-    tertiaryContainer = Color(0xFF633B48),
-    onTertiaryContainer = Color(0xFFFFD8E4),
-    error = Color(0xFFF2B8B5),
-    onError = Color(0xFF601410),
-    errorContainer = Color(0xFF8C1D18),
-    onErrorContainer = Color(0xFFF9DEDC),
-    background = Color(0xFF141218),
-    onBackground = Color(0xFFE6E0E9),
-    surface = Color(0xFF141218),
-    onSurface = Color(0xFFE6E0E9),
-    onSurfaceVariant = Color(0xFFCAC4D0),
-    surfaceContainerLowest = Color(0xFF0F0D13),
-    surfaceContainerLow = Color(0xFF1D1B20),
-    surfaceContainer = Color(0xFF211F26),
-    surfaceContainerHigh = Color(0xFF2B2930),
-    surfaceContainerHighest = Color(0xFF36343B),
-    surfaceDim = Color(0xFF141218),
-    surfaceBright = Color(0xFF3B383E),
-    outline = Color(0xFF938F99),
-    outlineVariant = Color(0xFF49454F),
-    inverseSurface = Color(0xFFE6E0E9),
-    inverseOnSurface = Color(0xFF322F35),
-    inversePrimary = Color(0xFF6750A4)
+    primary = Color(0xFFE0A261),            // Molten Copper
+    onPrimary = Color(0xFF4A2A08),
+    primaryContainer = Color(0xFF6B4116),   // Bronze ingot
+    onPrimaryContainer = Color(0xFFFFDCC0),
+    secondary = Color(0xFFB9C0C8),          // Machined Steel
+    onSecondary = Color(0xFF242A31),
+    secondaryContainer = Color(0xFF3A4149),
+    onSecondaryContainer = Color(0xFFDCE2EA),
+    tertiary = Color(0xFF7FC8BB),           // Verdigris Patina (live mesh)
+    onTertiary = Color(0xFF00382F),
+    tertiaryContainer = Color(0xFF1E4E45),
+    onTertiaryContainer = Color(0xFF9CE8D9),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    background = Color(0xFF121316),         // Graphite casing
+    onBackground = Color(0xFFE8E4DE),
+    surface = Color(0xFF121316),
+    onSurface = Color(0xFFE8E4DE),
+    onSurfaceVariant = Color(0xFFB8B2AA),
+    surfaceContainerLowest = Color(0xFF0B0C0E),
+    surfaceContainerLow = Color(0xFF191A1E),
+    surfaceContainer = Color(0xFF1E2024),
+    surfaceContainerHigh = Color(0xFF282A2F),
+    surfaceContainerHighest = Color(0xFF33353B),
+    surfaceDim = Color(0xFF121316),
+    surfaceBright = Color(0xFF3A3D42),
+    outline = Color(0xFF8E8A84),
+    outlineVariant = Color(0xFF70747A),
+    inverseSurface = Color(0xFFE8E4DE),
+    inverseOnSurface = Color(0xFF2F3134),
+    inversePrimary = Color(0xFF6B4116)
 )
 
 // -----------------------------------------------------------------------------
-// Light palette (M3 Purple Lilac)
+// LIGHT MOLTEN FORGE palette (warm paper + bronze; onSurface 16.4:1,
+// onSurfaceVariant 8.6:1, primary on surfaceContainer 5.2:1)
 // -----------------------------------------------------------------------------
 val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF6750A4),
+    primary = Color(0xFF8A5524),            // Deep Bronze
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFEADDFF),
-    onPrimaryContainer = Color(0xFF21005D),
-    secondary = Color(0xFF625B71),
+    primaryContainer = Color(0xFFFFDCC0),
+    onPrimaryContainer = Color(0xFF2E1804),
+    secondary = Color(0xFF4E5A66),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFE8DEF8),
-    onSecondaryContainer = Color(0xFF1D192B),
-    tertiary = Color(0xFF7D5260),
+    secondaryContainer = Color(0xFFDCE2EA),
+    onSecondaryContainer = Color(0xFF222930),
+    tertiary = Color(0xFF2F6A60),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFFFD8E4),
-    onTertiaryContainer = Color(0xFF31111D),
+    tertiaryContainer = Color(0xFF9CE8D9),
+    onTertiaryContainer = Color(0xFF002019),
     error = Color(0xFFB3261E),
     onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFF9DEDC),
-    onErrorContainer = Color(0xFF410E0B),
-    background = Color(0xFFFEF7FF),
-    onBackground = Color(0xFF1D1B20),
-    surface = Color(0xFFFEF7FF),
-    onSurface = Color(0xFF1D1B20),
-    onSurfaceVariant = Color(0xFF49454F),
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    background = Color(0xFFFBF8F3),         // Warm bone paper
+    onBackground = Color(0xFF1B1A17),
+    surface = Color(0xFFFBF8F3),
+    onSurface = Color(0xFF1B1A17),
+    onSurfaceVariant = Color(0xFF4C4842),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF7F2FA),
-    surfaceContainer = Color(0xFFF3EDF7),
-    surfaceContainerHigh = Color(0xFFECE6F0),
-    surfaceContainerHighest = Color(0xFFE6E0E9),
-    surfaceDim = Color(0xFFDED8E1),
-    surfaceBright = Color(0xFFFEF7FF),
-    outline = Color(0xFF79747E),
-    outlineVariant = Color(0xFFCAC4D0),
-    inverseSurface = Color(0xFF322F35),
-    inverseOnSurface = Color(0xFFF5EFF7),
-    inversePrimary = Color(0xFFD0BCFF)
+    surfaceContainerLow = Color(0xFFF7F2EB),
+    surfaceContainer = Color(0xFFF1EBE3),
+    surfaceContainerHigh = Color(0xFFEBE5DC),
+    surfaceContainerHighest = Color(0xFFE5DFD6),
+    surfaceDim = Color(0xFFDED8CE),
+    surfaceBright = Color(0xFFFBF8F3),
+    outline = Color(0xFF7E7970),
+    outlineVariant = Color(0xFF8C8377),
+    inverseSurface = Color(0xFF303235),
+    inverseOnSurface = Color(0xFFF4EFE8),
+    inversePrimary = Color(0xFFE0A261)
 )
+
+// -----------------------------------------------------------------------------
+// Semantic status palette - mode-aware so text/icons clear 4.5:1 in BOTH modes.
+// Verified: dark #34D399 = 8.49:1 on surfaceContainer, light #047857 = 4.63:1.
+// Components read ONE code path (LocalTalosStatus) - no per-component isDark.
+// -----------------------------------------------------------------------------
+data class TalosStatusColors(
+    val success: Color,
+    val successContainer: Color,
+    val onSuccess: Color,
+    val warning: Color,
+    val warningContainer: Color,
+    val onWarning: Color,
+    val danger: Color
+)
+
+private val DarkStatusColors = TalosStatusColors(
+    success = Color(0xFF34D399),
+    successContainer = Color(0xFF0E3B2A),
+    onSuccess = Color(0xFFA7F3D0),
+    warning = Color(0xFFFBBF24),
+    warningContainer = Color(0xFF4A3208),
+    onWarning = Color(0xFFFEF3C7),
+    danger = Color(0xFFFF8A80)
+)
+
+private val LightStatusColors = TalosStatusColors(
+    success = Color(0xFF047857),
+    successContainer = Color(0xFFD1FAE5),
+    onSuccess = Color(0xFF064E3B),
+    warning = Color(0xFF92400E),
+    warningContainer = Color(0xFFFEF3C7),
+    onWarning = Color(0xFF78350F),
+    danger = Color(0xFFB3261E)
+)
+
+val LocalTalosStatus = staticCompositionLocalOf { DarkStatusColors }
+
+/** One fixed obsidian substrate for brand emblems in BOTH themes (M3E emblem-tile rule). */
+val EmblemSocket = Color(0xFF101114)
+
+// Legacy accent names now resolve as SCHEME ROLES - one code path, no hardcoded fills.
+val PrimaryAccent: Color @Composable get() = MaterialTheme.colorScheme.primary
+
+// Semantic status accessors (keep the historical call-site names).
+val StatusGreen: Color @Composable get() = LocalTalosStatus.current.success
+val StatusAmber: Color @Composable get() = LocalTalosStatus.current.warning
+val StatusRed: Color @Composable get() = LocalTalosStatus.current.danger
 
 // -----------------------------------------------------------------------------
 // M3 Shape Scale (10-level expressive scale)
@@ -198,32 +248,49 @@ fun metallicBorderBrush(): Brush {
 enum class AppThemeMode { DARK, LIGHT, SYSTEM }
 
 /**
- * Smoothly interpolates the color scheme across theme switches.
- * Uses M3E default effects spring (critically damped 1.0/1600) - color never overshoots.
+ * Smoothly interpolates the ENTIRE scheme across theme switches.
+ * M3E default effects spring (critically damped 1.0/1600) - color never overshoots.
  */
 @Composable
 private fun animatedColorSchemeOf(target: ColorScheme): ColorScheme {
     val spec = M3EMotion.defaultEffects<Color>()
+    @Composable
+    fun anim(label: String, value: Color) =
+        animateColorAsState(value, spec, label = label).value
     return target.copy(
-        primary = animateColorAsState(target.primary, spec, label = "th_primary").value,
-        onPrimary = animateColorAsState(target.onPrimary, spec, label = "th_onPrimary").value,
-        primaryContainer = animateColorAsState(target.primaryContainer, spec, label = "th_pc").value,
-        onPrimaryContainer = animateColorAsState(target.onPrimaryContainer, spec, label = "th_opc").value,
-        background = animateColorAsState(target.background, spec, label = "th_bg").value,
-        surface = animateColorAsState(target.surface, spec, label = "th_surface").value,
-        surfaceContainerLowest = animateColorAsState(target.surfaceContainerLowest, spec, label = "th_scl").value,
-        surfaceContainerLow = animateColorAsState(target.surfaceContainerLow, spec, label = "th_sclow").value,
-        surfaceContainer = animateColorAsState(target.surfaceContainer, spec, label = "th_sc").value,
-        surfaceContainerHigh = animateColorAsState(target.surfaceContainerHigh, spec, label = "th_sch").value,
-        surfaceContainerHighest = animateColorAsState(target.surfaceContainerHighest, spec, label = "th_schh").value,
-        onSurface = animateColorAsState(target.onSurface, spec, label = "th_onSurface").value,
-        onSurfaceVariant = animateColorAsState(target.onSurfaceVariant, spec, label = "th_osv").value,
-        outline = animateColorAsState(target.outline, spec, label = "th_outline").value,
-        outlineVariant = animateColorAsState(target.outlineVariant, spec, label = "th_ov").value,
-        secondaryContainer = animateColorAsState(target.secondaryContainer, spec, label = "th_sc2").value,
-        onSecondaryContainer = animateColorAsState(target.onSecondaryContainer, spec, label = "th_osc2").value,
-        tertiary = animateColorAsState(target.tertiary, spec, label = "th_ter").value,
-        tertiaryContainer = animateColorAsState(target.tertiaryContainer, spec, label = "th_tc").value
+        primary = anim("th_primary", target.primary),
+        onPrimary = anim("th_onPrimary", target.onPrimary),
+        primaryContainer = anim("th_pc", target.primaryContainer),
+        onPrimaryContainer = anim("th_opc", target.onPrimaryContainer),
+        secondary = anim("th_sec", target.secondary),
+        onSecondary = anim("th_onSec", target.onSecondary),
+        secondaryContainer = anim("th_sc2", target.secondaryContainer),
+        onSecondaryContainer = anim("th_osc2", target.onSecondaryContainer),
+        tertiary = anim("th_ter", target.tertiary),
+        onTertiary = anim("th_onTer", target.onTertiary),
+        tertiaryContainer = anim("th_tc", target.tertiaryContainer),
+        onTertiaryContainer = anim("th_otc", target.onTertiaryContainer),
+        error = anim("th_err", target.error),
+        onError = anim("th_onErr", target.onError),
+        errorContainer = anim("th_ec", target.errorContainer),
+        onErrorContainer = anim("th_oec", target.onErrorContainer),
+        background = anim("th_bg", target.background),
+        onBackground = anim("th_onBg", target.onBackground),
+        surface = anim("th_surface", target.surface),
+        onSurface = anim("th_onSurface", target.onSurface),
+        onSurfaceVariant = anim("th_osv", target.onSurfaceVariant),
+        surfaceContainerLowest = anim("th_scl", target.surfaceContainerLowest),
+        surfaceContainerLow = anim("th_sclow", target.surfaceContainerLow),
+        surfaceContainer = anim("th_sc", target.surfaceContainer),
+        surfaceContainerHigh = anim("th_sch", target.surfaceContainerHigh),
+        surfaceContainerHighest = anim("th_schh", target.surfaceContainerHighest),
+        surfaceDim = anim("th_sdim", target.surfaceDim),
+        surfaceBright = anim("th_sbright", target.surfaceBright),
+        outline = anim("th_outline", target.outline),
+        outlineVariant = anim("th_ov", target.outlineVariant),
+        inverseSurface = anim("th_is", target.inverseSurface),
+        inverseOnSurface = anim("th_ios", target.inverseOnSurface),
+        inversePrimary = anim("th_ip", target.inversePrimary)
     )
 }
 
@@ -249,8 +316,12 @@ fun TalosTheme(
         else -> LightColorScheme
     }
     val animatedScheme = animatedColorSchemeOf(targetScheme)
+    val statusColors = if (isDark) DarkStatusColors else LightStatusColors
 
-    CompositionLocalProvider(LocalIsDark provides isDark) {
+    CompositionLocalProvider(
+        LocalIsDark provides isDark,
+        LocalTalosStatus provides statusColors
+    ) {
         MaterialExpressiveTheme(
             colorScheme = animatedScheme,
             motionScheme = MotionScheme.expressive(),

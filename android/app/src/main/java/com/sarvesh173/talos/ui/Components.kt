@@ -143,7 +143,7 @@ fun MessageBubble(msg: Message) {
                 modifier = Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF0F172A))
+                    .background(EmblemSocket)
                     .border(1.dp, emblem.accent.copy(alpha = 0.55f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {

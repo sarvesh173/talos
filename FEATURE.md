@@ -513,3 +513,19 @@ Replaced custom hand-drawn SVG with the official brand asset fetched directly vi
 - [x] **Official SVG Extraction**: Retrieved official `openclaw` vector asset from `homarr-labs/dashboard-icons` via `mcp__dashboard_icons__get_icon_svg`.
 - [x] **VectorDrawable Precision Conversion**: Converted all 57 SVG paths (`viewBox 0 0 500 500`) with authentic styling classes into `ic_openclaw.xml` (`#EF0011`, `#BA000D`, `#0B0303`, `#F6F4F4`).
 - [x] **Seamless Agent Card Hierarchy**: OpenClaw card on Step 4 of the Onboarding Wizard and in the Council Chamber now renders with authentic brand quality identical to Hermes, Claude, Codex, Gemini, and OpenAI.
+
+---
+
+## 22. Anti-Slop Molten Forge Design Overhaul & M3 Expressive Motion Integration
+
+Eliminated the generic AI violet baseline in favor of an authentic machined instrument aesthetic: Molten Forge (Copper, Steel, and Verdigris Patina on Graphite).
+
+- [x] **Brand Palette Transformation**:
+  - Replaced generic AI-default purple (`#6750A4`/`#D0BCFF`) with Molten Copper (`#E0A261` Dark / `#8A5524` Light), Machined Steel (`#B9C0C8` / `#4E5A66`), and Verdigris Patina (`#7FC8BB` / `#2F6A60`).
+  - Verified WCAG AA contrast compliance across all 24 semantic roles in both Dark (OLED Graphite `#121316`) and Light (Bone Paper `#FBF8F3`) modes.
+- [x] **M3 Expressive Motion Polish**:
+  - Re-anchored all dialog confirmations and update actions to canonical `M3EButton` featuring spatial spring press physics and `LoadingIndicator` in-button loading states.
+  - Implemented critically-damped effects spring transitions (`animatedColorSchemeOf`) for theme interpolation without chromatic overshoot.
+  - Replaced fixed-color status text and hardcoded tints with mode-aware `LocalTalosStatus` semantics and `EmblemSocket` substrates.
+- [x] **Dynamic Core Token Migration**:
+  - Updated `talos-core` theme repository and runtime database migration to serve Molten Forge tokens over `GET /api/theme`.

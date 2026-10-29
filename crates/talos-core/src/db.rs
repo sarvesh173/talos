@@ -114,7 +114,7 @@ impl Database {
                     "The Council",
                     "Multi-agent democratic deliberation & strategic planning",
                     "group",
-                    r##"[{"id":"alya","name":"Alya","avatar":"","color":"#D0BCFF","model":"gemini-3.8-flash","role_description":"Strategic Leader & Anchor","system_prompt":"","is_active":true},{"id":"atlas","name":"Atlas","avatar":"","color":"#38BDF8","model":"codex-cli","role_description":"Systems Architect","system_prompt":"","is_active":true},{"id":"sentinel","name":"Sentinel","avatar":"","color":"#10B981","model":"security-auditor","role_description":"Security & Consensus Guard","system_prompt":"","is_active":true}]"##,
+                    r##"[{"id":"alya","name":"Alya","avatar":"","color":"#E0A261","model":"gemini-3.8-flash","role_description":"Strategic Leader & Anchor","system_prompt":"","is_active":true},{"id":"atlas","name":"Atlas","avatar":"","color":"#B9C0C8","model":"codex-cli","role_description":"Systems Architect","system_prompt":"","is_active":true},{"id":"sentinel","name":"Sentinel","avatar":"","color":"#10B981","model":"security-auditor","role_description":"Security & Consensus Guard","system_prompt":"","is_active":true}]"##,
                     r##"["alya","atlas","sentinel"]"##
                 ),
                 (
@@ -130,7 +130,7 @@ impl Database {
                     "Direct Comms",
                     "Private peer communication link with primary anchor",
                     "dm",
-                    r##"[{"id":"alya","name":"Alya","avatar":"","color":"#D0BCFF","model":"gemini-3.8-flash","role_description":"Personal Anchor","system_prompt":"","is_active":true}]"##,
+                    r##"[{"id":"alya","name":"Alya","avatar":"","color":"#E0A261","model":"gemini-3.8-flash","role_description":"Personal Anchor","system_prompt":"","is_active":true}]"##,
                     r##"["alya"]"##
                 )
             ];
@@ -189,13 +189,24 @@ impl Database {
     }
 
     /// Load the active theme config, falling back to built-in defaults.
+    /// Stored configs still carrying the retired baseline-violet theme are
+    /// migrated to the current default on read.
     pub fn get_theme(&self) -> crate::theme::ThemeConfig {
         let conn = self.conn.lock().unwrap();
         match conn.query_row("SELECT payload FROM theme_config WHERE id = 1", [], |r| {
             r.get::<_, String>(0)
         }) {
-            Ok(payload) => serde_json::from_str(&payload)
-                .unwrap_or_else(|_| crate::theme::ThemeConfig::default()),
+            Ok(payload) => {
+                let parsed = serde_json::from_str::<crate::theme::ThemeConfig>(&payload)
+                    .unwrap_or_else(|_| crate::theme::ThemeConfig::default());
+                if parsed.name == crate::theme::LEGACY_THEME_NAME {
+                    drop(conn);
+                    let fresh = crate::theme::ThemeConfig::default();
+                    let _ = self.save_theme(&fresh);
+                    return fresh;
+                }
+                parsed
+            }
             Err(_) => crate::theme::ThemeConfig::default(),
         }
     }

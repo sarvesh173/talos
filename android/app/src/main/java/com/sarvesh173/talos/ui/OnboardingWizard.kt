@@ -203,7 +203,7 @@ fun OnboardingWizard(
                 val x = seedX * w
 
                 drawCircle(
-                    color = if (i % 2 == 0) PrimaryAccent.copy(alpha = 0.14f) else particlePrimary.copy(alpha = 0.12f),
+                    color = particlePrimary.copy(alpha = if (i % 2 == 0) 0.14f else 0.12f),
                     radius = 1.5.dp.toPx(),
                     center = Offset(x, y)
                 )
@@ -481,7 +481,7 @@ private fun WizardTopBar(
                         Icon(
                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = if (isDark) Color(0xFFFFD54F) else Color(0xFF6750A4),
+                            tint = PrimaryAccent,
                             modifier = Modifier.graphicsLayer {
                                 rotationZ = themeRot
                                 scaleX = themeScale
@@ -1189,11 +1189,11 @@ private fun TokenStep(
                                 onCopyToken(token)
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isCopied) StatusGreen.copy(alpha = 0.20f) else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                contentColor = if (isCopied) StatusGreen else Color.White
+                                containerColor = if (isCopied) LocalTalosStatus.current.successContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = if (isCopied) LocalTalosStatus.current.onSuccess else MaterialTheme.colorScheme.onSurface
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            border = if (isCopied) BorderStroke(1.dp, StatusGreen.copy(alpha = 0.50f)) else null,
+                            border = if (isCopied) BorderStroke(1.dp, LocalTalosStatus.current.success.copy(alpha = 0.50f)) else null,
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(
@@ -1317,7 +1317,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Your mesh is live. All 10 registered agents are ready on the bus.",
+            text = "Your mesh is live. All ${AgentEmblems.size} registered agents are ready on the bus.",
             color = WizardMuted,
             fontSize = 14.sp,
             lineHeight = 20.sp

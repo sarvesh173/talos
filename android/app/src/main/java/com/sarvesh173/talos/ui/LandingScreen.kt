@@ -527,6 +527,8 @@ fun LandingScreen(
             // The dissolve overlay now lives at the window root (see ParticleDissolveOverlay)
             // so the micro-particles cover the entire application, edge to edge.
             // Fluid Material 3 Expressive Canvas
+            // (scheme colors are captured BEFORE the draw scope - DrawScope is not composable)
+            val canvasPrimary = MaterialTheme.colorScheme.primary
             Canvas(modifier = Modifier.fillMaxSize()) {
                 if (centerAnchor == Offset.Zero) return@Canvas
 
@@ -643,7 +645,7 @@ fun LandingScreen(
                     if (cardPos == Offset.Zero) continue
 
                     val isBeamActive = (key == activeSender || key == activeReceiver)
-                    val nodeAccent = baseNodes.firstOrNull { it.key == key }?.accent ?: PrimaryAccent
+                    val nodeAccent = baseNodes.firstOrNull { it.key == key }?.accent ?: canvasPrimary
 
                     val dx = centerAnchor.x - cardPos.x
                     val dy = centerAnchor.y - cardPos.y
@@ -1368,7 +1370,7 @@ private fun AgentNodeWithBubble(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF0F172A))
+                        .background(EmblemSocket)
                         .border(1.dp, node.accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {

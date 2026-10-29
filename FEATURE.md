@@ -606,3 +606,14 @@ Applied cross-cutting design rules from `ui-ux-pro-max`, `make-interfaces-feel-b
   - Eliminated hardware `shadowElevation = 1.dp` passes from nested cards (`NativeAudioPlayerBubble`, `NativeVideoPreviewBubble`, `CollapsibleThoughtBlock`, `ToolCallItem`), removing 40fps GPU blit stalls during rapid flings and message feeds.
 - [x] **Machined Metallic Chamfer Framing**:
   - Replaced flat `outlineVariant` strokes with brushed gradient `metallicBorderBrush()` across all nested reasoning and tool status items, unifying them with the Molten Forge hardware aesthetic.
+
+---
+
+## 29. Accessible Touch Target Geometry & Tabular Numerals Telemetry
+
+Implemented design engineering principles from `make-interfaces-feel-better` and `ui-ux-pro-max` on the chamber top bar and telemetry instrumentation.
+
+- [x] **Tabular Monospace Latency Telemetry**:
+  - Styled mesh ping and live latency indicators (`MESH LINKED · 12ms`) with `FontFamily.Monospace`, eliminating horizontal layout jitter and width shifts as latency updates.
+- [x] **WCAG Accessible Touch Targets (40dp)**:
+  - Scaled action button containers (`Theme Toggle`, `Settings`, `Return to Landing`) from cramped 34dp to 40dp with optically centered 19dp icons, fulfilling mobile touch target standards and preventing missed taps.

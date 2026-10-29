@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -631,15 +632,15 @@ fun MainScreen(
                                             color = if (isConnected) StatusGreen else MaterialTheme.colorScheme.error,
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
-                                            letterSpacing = 0.4.sp
+                                            fontFamily = FontFamily.Monospace,
+                                            letterSpacing = 0.5.sp
                                         )
                                     }
                                 }
                             }
 
-                            // Right: Action Capsule Controls
+                            // Right: Action Capsule Controls (40dp Accessible Touch Targets)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-
 
                                 val themeRot by animateFloatAsState(
                                     targetValue = if (isDark) 0f else 180f,
@@ -653,14 +654,14 @@ fun MainScreen(
                                 )
                                 IconButton(
                                     onClick = onToggleTheme,
-                                    modifier = Modifier.size(34.dp)
+                                    modifier = Modifier.size(40.dp)
                                 ) {
                                     Icon(
                                         imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                                         contentDescription = "Theme",
                                         tint = PrimaryAccent,
                                         modifier = Modifier
-                                            .size(18.dp)
+                                            .size(19.dp)
                                             .graphicsLayer {
                                                 rotationZ = themeRot
                                                 scaleX = themeScale
@@ -671,25 +672,25 @@ fun MainScreen(
 
                                 IconButton(
                                     onClick = { showSettingsDialog = true },
-                                    modifier = Modifier.size(34.dp)
+                                    modifier = Modifier.size(40.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Settings,
                                         contentDescription = "Settings",
                                         tint = talosTextMuted,
-                                        modifier = Modifier.size(17.dp)
+                                        modifier = Modifier.size(19.dp)
                                     )
                                 }
 
                                 IconButton(
                                     onClick = onExitToLanding,
-                                    modifier = Modifier.size(34.dp)
+                                    modifier = Modifier.size(40.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Home,
                                         contentDescription = "Return to Landing",
                                         tint = talosTextMuted,
-                                        modifier = Modifier.size(17.dp)
+                                        modifier = Modifier.size(19.dp)
                                     )
                                 }
                             }

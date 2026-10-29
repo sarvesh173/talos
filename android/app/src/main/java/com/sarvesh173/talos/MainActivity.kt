@@ -386,10 +386,16 @@ fun MainScreen(
     val roomTitle = activeRoom?.name ?: "TALOS"
 
     val listState = rememberLazyListState()
+    var previousRoomId by remember { mutableStateOf(currentRoomId) }
 
-    LaunchedEffect(messages.size) {
+    LaunchedEffect(currentRoomId, messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+            if (currentRoomId != previousRoomId) {
+                previousRoomId = currentRoomId
+                listState.scrollToItem(messages.size - 1)
+            } else {
+                listState.animateScrollToItem(messages.size - 1)
+            }
         }
     }
 

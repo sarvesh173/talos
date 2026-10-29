@@ -721,3 +721,16 @@ Replaced fragmented multi-state animation drivers conforming to `chrisbanes/skil
 - [x] **Single-Clock `updateTransition` Coordination**:
   - Replaced pairs of independent `animateFloatAsState` coroutine drivers with unified `updateTransition(targetState = isDark)` in both `MainActivity.kt` and `LandingScreen.kt`.
   - Bound rotation (`themeRot`) and scale (`themeScale`) to the exact same frame-clock transition, eliminating frame-time phase drift, coroutine scheduling overhead, and multi-state race conditions during theme switching.
+
+---
+
+## 40. Context-Aware Message Scroll Effect Keying & Instant Room Switching
+
+Refactored side-effect lifecycle management conforming to `chrisbanes/skills@compose-state-and-effects` Rule 2 ("Key an effect by the semantic input that should restart or dispose it").
+
+- [x] **Compound Effect Keying (`currentRoomId, messages.size`)**:
+  - Previously, `LaunchedEffect(messages.size)` failed to scroll to the bottom when switching between rooms that happened to possess identical message counts.
+  - Added `currentRoomId` to the effect key tuple so room transitions always guarantee the user lands at the most recent message.
+- [x] **Instant Room Navigation vs Animated Incoming Messages**:
+  - Switching rooms now executes immediate `listState.scrollToItem()`, eliminating disorienting multi-second animated flings across long message logs.
+  - New incoming messages in the active room continue to smoothly call `listState.animateScrollToItem()`.

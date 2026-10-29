@@ -784,3 +784,15 @@ Resolved Android package manager stale version stamp in `android/app/build.gradl
 - [x] **Version Code & Name Synchronization**:
   - Bumped `versionCode` from stagnant `103` to `21012` and `versionName` from legacy `"2.3.0"` to match release `"2.10.12"`.
   - Ensures Android Package Installer immediately recognizes incoming releases as clean upgrades, overwriting older builds and accurately displaying `version 2.10.12` in system App Info settings.
+
+---
+
+## 45. Release Artifact Dual-Naming Architecture
+
+Resolved generic artifact filename ambiguity in `.github/workflows/build-apk.yml`.
+
+- [x] **Tag-Specific Versioned Binary Uploads**:
+  - Tagged release builds now generate and publish both `talos-v${TAG}.apk` (e.g. `talos-v2.10.13.apk`) and `talos-latest.apk`.
+  - Eliminates filename collisions in Android downloads (`talos-latest (1).apk`, `(2).apk`) and gives instant clarity on the exact binary version installed on device.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21013` and `versionName` to `"2.10.13"`.

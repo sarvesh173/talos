@@ -560,3 +560,15 @@ Further refined the mobile chat input bar inspired by Apple Design interruptibil
 - [x] **Apple Proximity Quick Command Strip**:
   - Integrated an interactive horizontal command chip bar (`/consensus`, `/mesh`, `/clear`, `/benchmark`, `/status`) above the input capsule when typing or entering `/`.
   - Tapping any chip immediately fills the input field with haptic responsiveness.
+
+---
+
+## 25. Complete Legacy Token Purge & Authentic Brand Anchor Unification
+
+Audited and eliminated all stray legacy slate and violet color tokens across hero components and landing animations.
+
+- [x] **Full Legacy Token Eradication**:
+  - Replaced remaining `Color(0xFF0F172A)` slate surfaces in `MainActivity.kt` with theme-governed `EmblemSocket` (`#101114`).
+  - Purged retired baseline-violet `Color(0xFF6750A4)` from `LandingScreen.kt` theme toggle button, harmonizing it with `PrimaryAccent` (`#E0A261`).
+- [x] **Dynamic Node Beam Accents**:
+  - Connected landing page fluid conduit beams and particle photons directly to authentic brand emblems (`emblemByKey(key).accent`), removing hardcoded hex values across all 5 agent nodes.

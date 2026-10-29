@@ -1212,7 +1212,7 @@ fun ChamberHero(
         // M3E signature scallop badge: 12-lobed expressive flower portal
         Surface(
             shape = M3EPolygonShape(M3EShapes.scallop12()),
-            color = if (isDark) Color(0xFF0F172A) else MaterialTheme.colorScheme.surfaceContainerHigh,
+            color = if (isDark) EmblemSocket else MaterialTheme.colorScheme.surfaceContainerHigh,
             border = BorderStroke(1.5.dp, metallicBorderBrush()),
             modifier = Modifier
                 .size(76.dp)
@@ -1363,7 +1363,7 @@ fun ChamberHero(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF0F172A))
+                                .background(EmblemSocket)
                                 .border(1.dp, PrimaryAccent.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {

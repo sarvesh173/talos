@@ -178,11 +178,11 @@ fun LandingScreen(
 
     val baseNodes = remember {
         listOf(
-            AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), Color(0xFFEA580C)),
-            AgentNode("claude", "Claude Code", "Anthropic · Architecture", "Arch · Plan", emblemByKey("claude"), Color(0xFFD97757)),
-            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), Color(0xFFFFBF00)),
-            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), Color(0xFF7A9DFF)),
-            AgentNode("opencode", "OpenCode", "Open-Source Terminal", "CLI · Exec", emblemByKey("opencode"), Color(0xFF3B82F6))
+            AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), emblemByKey("openclaw").accent),
+            AgentNode("claude", "Claude Code", "Anthropic · Architecture", "Arch · Plan", emblemByKey("claude"), emblemByKey("claude").accent),
+            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), emblemByKey("hermes").accent),
+            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), emblemByKey("codex").accent),
+            AgentNode("opencode", "OpenCode", "Open-Source Terminal", "CLI · Exec", emblemByKey("opencode"), emblemByKey("opencode").accent)
         )
     }
 
@@ -391,7 +391,7 @@ fun LandingScreen(
                         Icon(
                             imageVector = if (isCurrentDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = if (isCurrentDark) Color(0xFFFFD54F) else Color(0xFF6750A4),
+                            tint = PrimaryAccent,
                             modifier = Modifier
                                 .size(18.dp)
                                 .graphicsLayer {
@@ -585,14 +585,17 @@ fun LandingScreen(
                         cubicTo(ctrlClaude1.x, ctrlClaude1.y, ctrlClaude2.x, ctrlClaude2.y, opencodeAnchor.x, opencodeAnchor.y)
                     }
 
+                    val claudeBeamColor = emblemByKey("claude").accent
+                    val opencodeBeamColor = emblemByKey("opencode").accent
+
                     // Soft ambient diffusion glow
                     drawPath(
                         path = directClaudePath,
                         brush = Brush.linearGradient(
                             colors = if (isDirectBeamActive) {
-                                listOf(Color(0xFFD97757).copy(alpha = 0.25f), Color(0xFF3B82F6).copy(alpha = 0.25f))
+                                listOf(claudeBeamColor.copy(alpha = 0.25f), opencodeBeamColor.copy(alpha = 0.25f))
                             } else {
-                                listOf(Color(0xFFD97757).copy(alpha = 0.10f), Color(0xFF3B82F6).copy(alpha = 0.10f))
+                                listOf(claudeBeamColor.copy(alpha = 0.10f), opencodeBeamColor.copy(alpha = 0.10f))
                             },
                             start = trAnchor,
                             end = opencodeAnchor
@@ -605,9 +608,9 @@ fun LandingScreen(
                         path = directClaudePath,
                         brush = Brush.linearGradient(
                             colors = if (isDirectBeamActive) {
-                                listOf(Color(0xFFD97757).copy(alpha = 0.90f), Color(0xFF3B82F6).copy(alpha = 0.90f))
+                                listOf(claudeBeamColor.copy(alpha = 0.90f), opencodeBeamColor.copy(alpha = 0.90f))
                             } else {
-                                listOf(Color(0xFFD97757).copy(alpha = 0.35f), Color(0xFF3B82F6).copy(alpha = 0.35f))
+                                listOf(claudeBeamColor.copy(alpha = 0.35f), opencodeBeamColor.copy(alpha = 0.35f))
                             },
                             start = trAnchor,
                             end = opencodeAnchor
@@ -627,7 +630,7 @@ fun LandingScreen(
 
                         // Outer luminous halo
                         drawCircle(
-                            color = Color(0xFF3B82F6).copy(alpha = 0.35f),
+                            color = opencodeBeamColor.copy(alpha = 0.35f),
                             radius = 7.dp.toPx(),
                             center = Offset(px, py)
                         )

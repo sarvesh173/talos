@@ -422,25 +422,38 @@ fun MainScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) PrimaryAccent.copy(alpha = 0.15f) else Color.Transparent)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) PrimaryAccent.copy(alpha = 0.12f) else Color.Transparent)
+                                .then(
+                                    if (isSelected) Modifier.border(1.dp, PrimaryAccent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                                    else Modifier
+                                )
                                 .clickable {
                                     activeSlotId = "chambers"
                                     client.switchRoom(room.id)
                                     scope.launch { drawerState.close() }
                                 }
-                                .padding(12.dp)
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             val roomEmblem = when {
                                 room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
                                 room.id == "the-council" -> emblemByKey("omnirush")
                                 else -> emblemBySender(room.name)
                             }
-                            AgentEmblemIcon(
-                                emblem = roomEmblem,
-                                size = 20.dp,
-                                tint = null
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(EmblemSocket)
+                                    .border(1.dp, if (isSelected) PrimaryAccent.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AgentEmblemIcon(
+                                    emblem = roomEmblem,
+                                    size = 18.dp,
+                                    tint = null
+                                )
+                            }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
@@ -578,13 +591,13 @@ fun MainScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(
                                     onClick = { scope.launch { drawerState.open() } },
-                                    modifier = Modifier.size(34.dp)
+                                    modifier = Modifier.size(40.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Menu,
                                         contentDescription = "Chambers Menu",
                                         tint = talosTextPrimary,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(6.dp))

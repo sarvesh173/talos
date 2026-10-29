@@ -627,3 +627,14 @@ Calibrated touch physics across onboarding flow components according to `make-in
 - [x] **Universal 0.96f Tactile Press Scale**:
   - Replaced subtle, imperceptible 0.98f scale factors in `OnboardingWizard.kt` (`WizardBottomBar` CTA and `OverviewElevatedCard`) with canonical `0.96f` tactile press feedback.
   - Aligned wizard touch targets with `MotionTokens.PRESS_SCALE` (`0.96f`), unifying tactile response across both onboarding cards and main chamber controls.
+
+---
+
+## 31. Navigation Drawer Emblem Sockets & Tactile Selection State
+
+Refined drawer navigation and drawer toggle ergonomics adhering to `frontend/touch-gestures-and-vector-craft` and `frontend/multi-skill-ui-refinement`.
+
+- [x] **Machined Drawer Emblem Sockets**:
+  - Wrapped room and agent emblems in `ModalNavigationDrawer` inside dedicated 32dp `EmblemSocket` containers (`#101114`) with dynamic accent borders, preventing multi-colored vendor marks from washing out on light drawer sheets.
+- [x] **Tactile Chamber Selection State**:
+  - Upgraded chamber item rows from basic 8dp rounded rectangles to 12dp concentric shapes with subtle 1dp Molten Copper highlight borders (`PrimaryAccent.copy(alpha = 0.35f)`) and 40dp drawer toggle hit area.

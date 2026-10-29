@@ -547,3 +547,16 @@ Overhauled the mobile chat input bar inspired by Telegram and WhatsApp benchmark
   - Replaced blurry neon halos and fuzzy dropshadows with tight physical contact shadows (`feDropShadow dx=0 dy=3 stdDeviation=4`).
   - Added subtle 1px specular highlight along the top edge representing light catching the material edge.
   - Preserved M3 Expressive 12-lobed scallop shape morph (`circle` -> `scallop12`) and spatial press spring feedback.
+
+---
+
+## 24. Fluid Dynamic Mic-to-Send Morph & Quick Command Strip
+
+Further refined the mobile chat input bar inspired by Apple Design interruptibility and Telegram/WhatsApp seamless tool switching.
+
+- [x] **Dynamic Standalone Action Dial**:
+  - Standalone Molten Copper floating button now automatically morphs between Audio/Mic Mode (`Icons.Default.Mic` when input is empty) and Send Command Mode (`Icons.AutoMirrored.Filled.Send` when text is present) via M3 Expressive fast spatial `Crossfade`.
+  - Eliminated the redundant inside mic button, keeping the input capsule interior clean with only `AttachFile` on the right.
+- [x] **Apple Proximity Quick Command Strip**:
+  - Integrated an interactive horizontal command chip bar (`/consensus`, `/mesh`, `/clear`, `/benchmark`, `/status`) above the input capsule when typing or entering `/`.
+  - Tapping any chip immediately fills the input field with haptic responsiveness.

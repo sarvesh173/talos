@@ -817,7 +817,38 @@ fun MainScreen(
                         }
                     }
 
-                    // Floating Benchmark Metallic Command Dock
+                    // Quick Command / Suggestion Strip (Apple HIG Proximity)
+                    val showQuickChips = inputText.isEmpty() || inputText.startsWith("/")
+                    if (showQuickChips && !isTyping) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 6.dp)
+                        ) {
+                            val suggestions = listOf("/consensus", "/mesh", "/clear", "/benchmark", "/status")
+                            items(suggestions) { cmd ->
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
+                                    border = BorderStroke(1.dp, metallicBorderBrush()),
+                                    modifier = Modifier.clickable {
+                                        inputText = cmd
+                                    }
+                                ) {
+                                    Text(
+                                        text = cmd,
+                                        color = PrimaryAccent,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Floating Benchmark Metallic Command Dock (Apple Design + M3E)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -839,14 +870,14 @@ fun MainScreen(
                             ) {
                                 IconButton(
                                     onClick = {
-                                        if (inputText.isEmpty()) inputText = "/"
+                                        inputText = if (inputText.startsWith("/")) "" else "/"
                                     },
                                     modifier = Modifier.size(38.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.SentimentSatisfied,
                                         contentDescription = "Agent & Tool Mode",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        tint = if (inputText.startsWith("/")) PrimaryAccent else MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -879,25 +910,13 @@ fun MainScreen(
 
                                 IconButton(
                                     onClick = { /* Attachment action */ },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(38.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.AttachFile,
                                         contentDescription = "Attach Context",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(19.dp)
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = { /* Audio / Mic action */ },
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Mic,
-                                        contentDescription = "Audio Prompt",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(19.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
@@ -905,7 +924,8 @@ fun MainScreen(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        // (B) Standalone Floating Molten Copper Action Button
+                        // (B) Standalone Floating Action Dial (Morphs between Mic & Send)
+                        val isSendMode = inputText.isNotBlank()
                         val sendInteraction = remember { MutableInteractionSource() }
                         val isSendPressed by sendInteraction.collectIsPressedAsState()
                         val sendScale by animateFloatAsState(
@@ -932,9 +952,12 @@ fun MainScreen(
                                     interactionSource = sendInteraction,
                                     indication = null
                                 ) {
-                                    if (inputText.isNotBlank()) {
+                                    if (isSendMode) {
                                         client.sendMessage(inputText)
                                         inputText = ""
+                                    } else {
+                                        // Voice / Mic tap feedback
+                                        client.sendMessage("/consensus")
                                     }
                                 }
                         ) {
@@ -942,12 +965,27 @@ fun MainScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = "Send Command",
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Crossfade(
+                                    targetState = isSendMode,
+                                    animationSpec = M3EMotion.fastSpatial(),
+                                    label = "ActionIconCrossfade"
+                                ) { sendState ->
+                                    if (sendState) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Send,
+                                            contentDescription = "Send Command",
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Mic,
+                                            contentDescription = "Voice Prompt",
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

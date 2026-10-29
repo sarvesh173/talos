@@ -852,3 +852,45 @@ Calibrated action dial gesture engine and micro-interaction animations based on 
   - Accompanied by scale (0.5f ↔ 1.0f) and fade transitions on the glyph, making typing onset and text clearance feel responsive and alive.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21016` and `versionName` to `"2.10.16"`.
+
+---
+
+## 49. Action Dial Architecture: Single-Tap Camera, Double-Tap Recording Dial & Swipe-Up Lock Interaction
+
+Re-architecting the Command Dock Floating Action Dial to match Telegram / WhatsApp style camera and voice note mechanics as requested.
+
+### Specification & State Machine
+1. **Default Mode (Camera Action Dial)**:
+   - **Glyph**: Camera icon (`Icons.Default.PhotoCamera`).
+   - **Single Tap**: Instantly launches system camera (`Intent(MediaStore.ACTION_IMAGE_CAPTURE)`).
+   - **Double Tap**: Expressive rotational morph into **Audio Recording Section** (glyph morphs smoothly to `Icons.Default.Mic`).
+   - **Text Typing Override**: When user types (`inputText.isNotBlank()`), dial morphs into `Icons.AutoMirrored.Filled.Send` with 360° spring spin.
+
+2. **Audio Recording Section**:
+   - **Glyph**: Mic icon (`Icons.Default.Mic`).
+   - **Double Tap** (when idle): Toggles back to **Camera Mode**.
+   - **Hold-to-Record (Press Down)**:
+     - Holding initiates recording state (`isRecording = true`).
+     - A vertical floating **Swipe-Up Lock Capsule** animates above the mic button:
+       - Glowing track with upward pulsing animated chevrons (`↑`).
+       - Padlock glyph (`Lock` / `LockOpen`) with spring scale.
+     - **Swipe Up Gesture Detection**:
+       - While holding, vertical finger displacement (`dragY < -60.dp`) pulls the slider towards the lock target.
+       - Reaching the threshold triggers **Hands-Free Lock (`isLocked = true`)** with tactile haptic snap.
+   - **Locked Recording Bar (Hands-Free)**:
+     - User releases finger; recording continues uninterrupted.
+     - Input dock transitions into live recording telemetry:
+       - Blinking red recording indicator + elapsed time counter (`00:01`, `00:02`...).
+       - Animated audio waveform bars.
+       - Discard / Cancel button (`Delete`) to abort recording.
+       - Send button (`Send`) to finish and transmit audio command.
+   - **Non-Locked Release**:
+     - Lifting finger before locking stops and sends recording (or discards if < 300ms).
+   - **Slide-to-Cancel**:
+     - Dragging left (`dragX < -80.dp`) cancels recording with smooth fade-out.
+
+- [ ] **Implementation Plan**:
+  - Add `VoiceRecordingState` (Idle, PressRecording, LockedRecording).
+  - Build `SwipeUpLockTrack` overlay composable with spring physics.
+  - Wire drag gestures on `pointerInput` tracking `awaitFirstDown` and pointer motion.
+  - Implement hands-free locked recording control bar.

@@ -113,6 +113,29 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val _galleryImages = MutableStateFlow<List<GeneratedImageDto>>(emptyList())
     val galleryImages: StateFlow<List<GeneratedImageDto>> = _galleryImages.asStateFlow()
 
+    private val _gitDiff = MutableStateFlow<GitDiffSummaryDto?>(null)
+    val gitDiff: StateFlow<GitDiffSummaryDto?> = _gitDiff.asStateFlow()
+
+    fun fetchGitDiff() {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/git/diff")
+                    .get()
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: return@use
+                        val parsed = json.decodeFromString<GitDiffSummaryDto>(body)
+                        _gitDiff.value = parsed
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to fetch git diff: ${e.message}")
+            }
+        }
+    }
+
     fun fetchDelegationHierarchy() {
         scope.launch(Dispatchers.IO) {
             runCatching {
@@ -375,6 +398,16 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     fun toggleTheme() {
         val next = if (_themeMode.value == "DARK") "LIGHT" else "DARK"
         setThemeMode(next)
+    }
+
+    private val _themePreset = MutableStateFlow(
+        prefs.getString("KEY_THEME_PRESET", "PURPLE_IRIS") ?: "PURPLE_IRIS"
+    )
+    val themePreset: StateFlow<String> = _themePreset.asStateFlow()
+
+    fun setThemePreset(presetName: String) {
+        _themePreset.value = presetName
+        prefs.edit().putString("KEY_THEME_PRESET", presetName).apply()
     }
 
     private val _isAgentTyping = MutableStateFlow(false)
@@ -1075,4 +1108,29 @@ data class GenerateImageRequestDto(
     val prompt: String,
     val style: String = "cinematic",
     val aspect_ratio: String = "1:1"
+)
+
+@kotlinx.serialization.Serializable
+data class GitDiffLineDto(
+    val line_type: String,
+    val old_num: Int? = null,
+    val new_num: Int? = null,
+    val content: String
+)
+
+@kotlinx.serialization.Serializable
+data class GitFileDiffDto(
+    val filename: String,
+    val path: String,
+    val additions: Int,
+    val deletions: Int,
+    val lines: List<GitDiffLineDto> = emptyList()
+)
+
+@kotlinx.serialization.Serializable
+data class GitDiffSummaryDto(
+    val branch: String,
+    val total_additions: Int,
+    val total_deletions: Int,
+    val files: List<GitFileDiffDto> = emptyList()
 )

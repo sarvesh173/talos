@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
@@ -159,6 +160,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val storedTheme by client.themeMode.collectAsState()
             val activeThemeMode = if (storedTheme == "LIGHT") AppThemeMode.LIGHT else AppThemeMode.DARK
+            val storedPresetName by client.themePreset.collectAsState()
+            val activePreset = MaterialThemePreset.values().find { it.name == storedPresetName } ?: MaterialThemePreset.PURPLE_IRIS
+            var showThemeDialog by remember { mutableStateOf(false) }
             var appScreen by remember { mutableStateOf(if (client.hasLaunched || client.isPaired.value) "main" else "landing") }
 
             // Flexible theming: tokens from talos-core /api/theme (cached),
@@ -218,7 +222,22 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            TalosTheme(themeMode = activeThemeMode, remoteConfig = remoteTheme) {
+            TalosTheme(
+                themeMode = activeThemeMode,
+                preset = activePreset,
+                remoteConfig = remoteTheme
+            ) {
+                if (showThemeDialog) {
+                    ThemeSelectionDialog(
+                        currentPreset = activePreset,
+                        onSelectPreset = {
+                            client.setThemePreset(it.name)
+                            showThemeDialog = false
+                        },
+                        onDismiss = { showThemeDialog = false }
+                    )
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -337,6 +356,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenCliManager = {
                                     appScreen = "cli_manager"
+                                },
+                                onOpenThemeSelector = {
+                                    showThemeDialog = true
                                 }
                             )
                         }
@@ -369,7 +391,11 @@ class MainActivity : ComponentActivity() {
                                 client = client,
                                 onBack = { appScreen = "main" },
                                 onNavigate = { targetScreen ->
-                                    appScreen = targetScreen
+                                    if (targetScreen == "themes") {
+                                        showThemeDialog = true
+                                    } else {
+                                        appScreen = targetScreen
+                                    }
                                 }
                             )
                         }
@@ -442,7 +468,8 @@ fun MainScreen(
     onOpenDiff: () -> Unit = {},
     onOpenHub: () -> Unit = {},
     onOpenGallery: () -> Unit = {},
-    onOpenCliManager: () -> Unit = {}
+    onOpenCliManager: () -> Unit = {},
+    onOpenThemeSelector: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -831,6 +858,19 @@ fun MainScreen(
                                         imageVector = Icons.Default.Dashboard,
                                         contentDescription = "Activity Hub",
                                         tint = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+
+                                // Material UI 3 Themes Selector
+                                IconButton(
+                                    onClick = onOpenThemeSelector,
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Palette,
+                                        contentDescription = "Material UI Themes",
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(19.dp)
                                     )
                                 }

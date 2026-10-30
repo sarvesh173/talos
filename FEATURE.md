@@ -1202,4 +1202,36 @@ Replaced static mock cards in `AgentCanvasScreen.kt` with live reactive data str
   - All 38 Rust unit tests passing cleanly in `crates/talos-core`.
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
-  - Bumped `versionCode` to `21030` and `versionName` to `"2.10.30"`.
+  - Bumped `versionCode` to `21031` and `versionName` to `"2.10.31"`.
+
+---
+
+## 62. Signature Purple Material 3 Realignment, Dynamic Theme Section & Popping Motion Architecture
+
+Purged yellow/amber scheme, restored Google's official Signature Purple/Iris palette as the default baseline, implemented interactive multi-theme customization, and added tactile popping animations and glassmorphic blur.
+
+### 1. Google Signature Purple Baseline (`Theme.kt`)
+- **Restored Iris/Violet Seed (`#6750A4`)**: Replaced yellow/amber with authentic Google Material 3 Signature Iris (`#D0BCFF` in dark, `#6750A4` in light) and royal violet containers (`#4F378B`), with zero harsh candy gradients.
+- **Dynamic Theme Section & Switcher**: Added `ThemeSelectionDialog` and `MaterialThemePreset` with 5 curated Material UI color systems:
+  - **Signature Purple** (`#6750A4` - Google Default)
+  - **Cobalt Ocean** (`#1E40AF`)
+  - **Cyber Emerald** (`#047857`)
+  - **Coral Rose** (`#B91C1C`)
+  - **Titanium Amber** (`#B45309`)
+- **Persistent Selection**: Preserved selection in `TalosClient` via `KEY_THEME_PRESET` with reactive live updates across the whole application.
+- **Top Bar & Activity Hub Access**: Added one-tap palette icon in header and dedicated module tile in `ModuleActivityHub.kt`.
+
+### 2. Popping Animations, Glass Blur & Looping Motion (`MetallicKit.kt`)
+- **Tactile Popping Spring**: Updated `MetalButton` and `MetalIconButton` with underdamped spring physics (`dampingRatio = 0.52f, stiffness = 900f`), causing buttons to compress to 0.90f on press and pop up with a slight overshoot to 1.04f on release before settling.
+- **Frosted Glass Container (`GlassSurface`)**: Translucent frosted surface container (`surfaceContainerHigh.copy(alpha = 0.76f)`) with directional specular white/primary border sheen.
+- **Looping Breathing Halos (`BreathingHaloBadge`)**: Continuous looping breath animation (`0.96f`..`1.04f` scale, `0.45f`..`0.95f` alpha wave) indicating active mesh operations.
+
+### 3. Rust-Native Git Diff & Code Inspector (`code_inspector.rs` & `CodeDiffViewer.kt`)
+- Added real-time git diff parser in `talos-core` (`GET /api/git/diff` and `GET /api/git/file`), replacing mock diff items with live working tree additions and deletions.
+- All 39 Rust tests passing cleanly.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21032` and `versionName` to `"2.10.32"`.

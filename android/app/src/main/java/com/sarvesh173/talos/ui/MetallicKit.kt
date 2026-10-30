@@ -59,9 +59,12 @@ fun MetalButton(
     val haptic = LocalHapticFeedback.current
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled && !isLoading) MotionTokens.PRESS_SCALE else 1.0f,
-        animationSpec = MotionTokens.fastSpatial(),
-        label = "MetalButtonScale"
+        targetValue = if (isPressed && enabled && !isLoading) 0.90f else 1.0f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = 0.52f,
+            stiffness = 900f
+        ),
+        label = "MetalButtonPoppingScale"
     )
 
     val containerColor = when (variant) {
@@ -148,9 +151,12 @@ fun MetalIconButton(
     val haptic = LocalHapticFeedback.current
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.92f else 1.0f,
-        animationSpec = MotionTokens.fastSpatial(),
-        label = "MetalIconButtonScale"
+        targetValue = if (isPressed && enabled) 0.88f else 1.0f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = 0.52f,
+            stiffness = 900f
+        ),
+        label = "MetalIconButtonPoppingScale"
     )
 
     Box(
@@ -442,6 +448,96 @@ fun MetallicCircularLoader(
                 sweepAngle = 270f,
                 useCenter = false,
                 style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
+            )
+        }
+    }
+}
+
+/**
+ * TALOS Material UI 3 Glass Surface.
+ * Translucent frosted glass container with specular hairline sheen border.
+ */
+@Composable
+fun GlassSurface(
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(20.dp),
+    borderWidth: Dp = 1.2.dp,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.76f))
+            .border(
+                BorderStroke(
+                    borderWidth,
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.28f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                            Color.White.copy(alpha = 0.08f)
+                        )
+                    )
+                ),
+                shape
+            ),
+        content = content
+    )
+}
+
+/**
+ * TALOS Material UI 3 Breathing Halo Badge.
+ * Continuous looping pulse animation indicating live agent activity.
+ */
+@Composable
+fun BreathingHaloBadge(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "HaloBreath")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.96f,
+        targetValue = 1.04f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "HaloScale"
+    )
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "HaloAlpha"
+    )
+
+    Surface(
+        shape = CircleShape,
+        color = color.copy(alpha = 0.15f),
+        border = BorderStroke(1.dp, color.copy(alpha = alpha)),
+        modifier = modifier.scale(scale)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = alpha))
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+                text = text.uppercase(),
+                color = color,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
             )
         }
     }

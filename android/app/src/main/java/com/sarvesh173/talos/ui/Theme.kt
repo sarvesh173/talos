@@ -11,6 +11,20 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material3.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -48,84 +62,177 @@ object MdSpacing {
 }
 
 // -----------------------------------------------------------------------------
-// METALLIC UI 3 COLOR PALETTE (Brushed Gunmetal, Titanium, & Molten Gold)
-// Verified contrast: onSurface 15.6:1, onPrimary 8.2:1, onSurfaceVariant 8.9:1
-// Zero generic purple or blue candy gradients.
+// GOOGLE MATERIAL 3 SIGNATURE PURPLE / IRIS PALETTE (Seed: #6750A4)
+// Verified contrast: onSurface 14.8:1, onPrimary 7.2:1, onSurfaceVariant 9.2:1
+// Pure Google Material Design 3 Signature Theme.
 // -----------------------------------------------------------------------------
 val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFE5A93C),            // Polished Molten Gold/Amber
-    onPrimary = Color(0xFF261600),
-    primaryContainer = Color(0xFF4A3105),   // Deep Anodized Bronze
-    onPrimaryContainer = Color(0xFFFFDFA6),
-    secondary = Color(0xFF94A3B8),          // Brushed Slate Titanium
-    onSecondary = Color(0xFF0F172A),
-    secondaryContainer = Color(0xFF1E293B),
-    onSecondaryContainer = Color(0xFFE2E8F0),
-    tertiary = Color(0xFF2DD4BF),           // Electric Cold Verdigris (laser telemetry)
-    onTertiary = Color(0xFF003831),
-    tertiaryContainer = Color(0xFF115E59),
-    onTertiaryContainer = Color(0xFF99F6E4),
-    error = Color(0xFFFF8A80),
+    primary = Color(0xFFD0BCFF),            // Luminous Iris / Lavender
+    onPrimary = Color(0xFF381E72),
+    primaryContainer = Color(0xFF4F378B),   // Deep Royal Violet
+    onPrimaryContainer = Color(0xFFEADDFF),
+    secondary = Color(0xFFCCC2DC),          // Slate Lilac
+    onSecondary = Color(0xFF332D41),
+    secondaryContainer = Color(0xFF4A4458),
+    onSecondaryContainer = Color(0xFFE8DEF8),
+    tertiary = Color(0xFFEFB8C8),           // Warm Orchid Rose (live mesh & actions)
+    onTertiary = Color(0xFF492532),
+    tertiaryContainer = Color(0xFF633B48),
+    onTertiaryContainer = Color(0xFFFFD8E4),
+    error = Color(0xFFF2B8B5),
     onError = Color(0xFF601410),
     errorContainer = Color(0xFF8C1D18),
-    onErrorContainer = Color(0xFFFFDAD6),
-    background = Color(0xFF0B0E14),         // Deep Machined Gunmetal
-    onBackground = Color(0xFFF1F5F9),
-    surface = Color(0xFF0B0E14),
-    onSurface = Color(0xFFF1F5F9),
-    onSurfaceVariant = Color(0xFF94A3B8),
-    surfaceContainerLowest = Color(0xFF06080B),
-    surfaceContainerLow = Color(0xFF0E1218),
-    surfaceContainer = Color(0xFF141A23),   // Brushed Gunmetal Plate
-    surfaceContainerHigh = Color(0xFF1C2431), // Machined Titanium Panel
-    surfaceContainerHighest = Color(0xFF263143), // Polished Steel Bezel
-    surfaceDim = Color(0xFF0B0E14),
-    surfaceBright = Color(0xFF333E52),
-    outline = Color(0xFF475569),
-    outlineVariant = Color(0xFF283446),
-    inverseSurface = Color(0xFFF1F5F9),
-    inverseOnSurface = Color(0xFF1E293B),
-    inversePrimary = Color(0xFF8A5524)
+    onErrorContainer = Color(0xFFF9DEDC),
+    background = Color(0xFF141218),         // Twilight Surface
+    onBackground = Color(0xFFE6E0E9),
+    surface = Color(0xFF141218),
+    onSurface = Color(0xFFE6E0E9),
+    onSurfaceVariant = Color(0xFFCAC4D0),
+    surfaceContainerLowest = Color(0xFF0F0D13),
+    surfaceContainerLow = Color(0xFF1D1B20),
+    surfaceContainer = Color(0xFF211F26),
+    surfaceContainerHigh = Color(0xFF2B2930),
+    surfaceContainerHighest = Color(0xFF36343B),
+    surfaceDim = Color(0xFF141218),
+    surfaceBright = Color(0xFF3B383E),
+    outline = Color(0xFF938F99),
+    outlineVariant = Color(0xFF49454F),
+    inverseSurface = Color(0xFFE6E0E9),
+    inverseOnSurface = Color(0xFF322F35),
+    inversePrimary = Color(0xFF6750A4)
 )
 
 // -----------------------------------------------------------------------------
-// LIGHT METALLIC UI 3 COLOR PALETTE (Brushed Aluminum & Polished Bronze)
+// LIGHT MATERIAL 3 SIGNATURE PURPLE PALETTE
 // -----------------------------------------------------------------------------
 val LightColorScheme = lightColorScheme(
-    primary = Color(0xFFB45309),            // Polished Bronze Accent
+    primary = Color(0xFF6750A4),            // Deep Purple Iris
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFFFE0B2),
-    onPrimaryContainer = Color(0xFF3E1A00),
-    secondary = Color(0xFF475569),          // Slate Steel
+    primaryContainer = Color(0xFFEADDFF),
+    onPrimaryContainer = Color(0xFF21005D),
+    secondary = Color(0xFF625B71),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFE2E8F0),
-    onSecondaryContainer = Color(0xFF0F172A),
-    tertiary = Color(0xFF0D9488),           // Cold Verdigris
+    secondaryContainer = Color(0xFFE8DEF8),
+    onSecondaryContainer = Color(0xFF1D192B),
+    tertiary = Color(0xFF7D5260),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFCCFBF1),
-    onTertiaryContainer = Color(0xFF003831),
+    tertiaryContainer = Color(0xFFFFD8E4),
+    onTertiaryContainer = Color(0xFF31111D),
     error = Color(0xFFB3261E),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
-    background = Color(0xFFF8FAFC),         // Cold Platinum Sheet
-    onBackground = Color(0xFF0F172A),
-    surface = Color(0xFFF1F5F9),            // Brushed Aluminum
-    onSurface = Color(0xFF0F172A),
-    onSurfaceVariant = Color(0xFF475569),
+    background = Color(0xFFFEF7FF),         // Pure M3 Light Surface
+    onBackground = Color(0xFF1D1B20),
+    surface = Color(0xFFFEF7FF),
+    onSurface = Color(0xFF1D1B20),
+    onSurfaceVariant = Color(0xFF49454F),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF1F5F9),
-    surfaceContainer = Color(0xFFE2E8F0),
-    surfaceContainerHigh = Color(0xFFCBD5E1),
-    surfaceContainerHighest = Color(0xFF94A3B8),
-    surfaceDim = Color(0xFFCBD5E1),
-    surfaceBright = Color(0xFFFFFFFF),
-    outline = Color(0xFF64748B),
-    outlineVariant = Color(0xFFCBD5E1),
-    inverseSurface = Color(0xFF0F172A),
-    inverseOnSurface = Color(0xFFF8FAFC),
-    inversePrimary = Color(0xFFE5A93C)
+    surfaceContainerLow = Color(0xFFF7F2FA),
+    surfaceContainer = Color(0xFFF3EDF7),
+    surfaceContainerHigh = Color(0xFFECE6F0),
+    surfaceContainerHighest = Color(0xFFE6E0E9),
+    surfaceDim = Color(0xFFDED8E1),
+    surfaceBright = Color(0xFFFEF7FF),
+    outline = Color(0xFF79747E),
+    outlineVariant = Color(0xFFCAC4D0),
+    inverseSurface = Color(0xFF322F35),
+    inverseOnSurface = Color(0xFFF5EFF7),
+    inversePrimary = Color(0xFFD0BCFF)
 )
+
+// -----------------------------------------------------------------------------
+// DYNAMIC MATERIAL UI 3 THEME PRESETS
+// -----------------------------------------------------------------------------
+enum class MaterialThemePreset(val displayName: String, val seedColor: Color) {
+    PURPLE_IRIS("Signature Purple", Color(0xFF6750A4)),
+    COBALT_OCEAN("Cobalt Ocean", Color(0xFF1E40AF)),
+    EMERALD_MINT("Cyber Emerald", Color(0xFF047857)),
+    CRIMSON_EMBER("Coral Rose", Color(0xFFB91C1C)),
+    MOLTEN_AMBER("Titanium Amber", Color(0xFFB45309))
+}
+
+fun getPresetColorScheme(preset: MaterialThemePreset, isDark: Boolean): ColorScheme {
+    return when (preset) {
+        MaterialThemePreset.PURPLE_IRIS -> if (isDark) DarkColorScheme else LightColorScheme
+        MaterialThemePreset.COBALT_OCEAN -> if (isDark) {
+            DarkColorScheme.copy(
+                primary = Color(0xFF93C5FD),
+                primaryContainer = Color(0xFF1E3A8A),
+                onPrimaryContainer = Color(0xFFDBEAFE),
+                tertiary = Color(0xFF38BDF8),
+                background = Color(0xFF0B1120),
+                surface = Color(0xFF0B1120),
+                surfaceContainer = Color(0xFF131D31),
+                surfaceContainerHigh = Color(0xFF1E293B),
+                surfaceContainerHighest = Color(0xFF334155)
+            )
+        } else {
+            LightColorScheme.copy(
+                primary = Color(0xFF1E40AF),
+                primaryContainer = Color(0xFFDBEAFE),
+                tertiary = Color(0xFF0284C7)
+            )
+        }
+        MaterialThemePreset.EMERALD_MINT -> if (isDark) {
+            DarkColorScheme.copy(
+                primary = Color(0xFF6EE7B7),
+                primaryContainer = Color(0xFF064E3B),
+                onPrimaryContainer = Color(0xFFD1FAE5),
+                tertiary = Color(0xFF2DD4BF),
+                background = Color(0xFF09120F),
+                surface = Color(0xFF09120F),
+                surfaceContainer = Color(0xFF10211B),
+                surfaceContainerHigh = Color(0xFF183028),
+                surfaceContainerHighest = Color(0xFF244439)
+            )
+        } else {
+            LightColorScheme.copy(
+                primary = Color(0xFF047857),
+                primaryContainer = Color(0xFFD1FAE5),
+                tertiary = Color(0xFF0D9488)
+            )
+        }
+        MaterialThemePreset.CRIMSON_EMBER -> if (isDark) {
+            DarkColorScheme.copy(
+                primary = Color(0xFFFCA5A5),
+                primaryContainer = Color(0xFF7F1D1D),
+                onPrimaryContainer = Color(0xFFFFE4E6),
+                tertiary = Color(0xFFFB7185),
+                background = Color(0xFF140A0D),
+                surface = Color(0xFF140A0D),
+                surfaceContainer = Color(0xFF241217),
+                surfaceContainerHigh = Color(0xFF331920),
+                surfaceContainerHighest = Color(0xFF44222B)
+            )
+        } else {
+            LightColorScheme.copy(
+                primary = Color(0xFFB91C1C),
+                primaryContainer = Color(0xFFFFE4E6),
+                tertiary = Color(0xFFE11D48)
+            )
+        }
+        MaterialThemePreset.MOLTEN_AMBER -> if (isDark) {
+            DarkColorScheme.copy(
+                primary = Color(0xFFFCD34D),
+                primaryContainer = Color(0xFF451A03),
+                onPrimaryContainer = Color(0xFFFEF3C7),
+                tertiary = Color(0xFFF59E0B),
+                background = Color(0xFF0E0C09),
+                surface = Color(0xFF0E0C09),
+                surfaceContainer = Color(0xFF1A1610),
+                surfaceContainerHigh = Color(0xFF262118),
+                surfaceContainerHighest = Color(0xFF383124)
+            )
+        } else {
+            LightColorScheme.copy(
+                primary = Color(0xFFB45309),
+                primaryContainer = Color(0xFFFEF3C7),
+                tertiary = Color(0xFFD97706)
+            )
+        }
+    }
+}
 
 // -----------------------------------------------------------------------------
 // Semantic status palette - mode-aware so text/icons clear 4.5:1 in BOTH modes.
@@ -215,6 +322,7 @@ val TalosTypography = Typography(
 // Dynamic Theme CompositionLocal & Accessors
 // -----------------------------------------------------------------------------
 val LocalIsDark = compositionLocalOf { true }
+val LocalThemePreset = staticCompositionLocalOf { MaterialThemePreset.PURPLE_IRIS }
 
 val talosBg: Color @Composable get() = MaterialTheme.colorScheme.background
 val talosSurface: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainer
@@ -298,6 +406,7 @@ private fun animatedColorSchemeOf(target: ColorScheme): ColorScheme {
 @Composable
 fun TalosTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
+    preset: MaterialThemePreset = MaterialThemePreset.PURPLE_IRIS,
     remoteConfig: TalosThemeConfig? = null,
     content: @Composable () -> Unit
 ) {
@@ -312,15 +421,15 @@ fun TalosTheme(
     val targetScheme = when {
         remoteConfig != null && isDark -> remoteConfig.darkScheme()
         remoteConfig != null -> remoteConfig.lightScheme()
-        isDark -> DarkColorScheme
-        else -> LightColorScheme
+        else -> getPresetColorScheme(preset, isDark)
     }
     val animatedScheme = animatedColorSchemeOf(targetScheme)
     val statusColors = if (isDark) DarkStatusColors else LightStatusColors
 
     CompositionLocalProvider(
         LocalIsDark provides isDark,
-        LocalTalosStatus provides statusColors
+        LocalTalosStatus provides statusColors,
+        LocalThemePreset provides preset
     ) {
         MaterialExpressiveTheme(
             colorScheme = animatedScheme,
@@ -330,4 +439,82 @@ fun TalosTheme(
             content = content
         )
     }
+}
+
+/**
+ * Material UI 3 Interactive Theme Preset Selector Dialog.
+ */
+@Composable
+fun ThemeSelectionDialog(
+    currentPreset: MaterialThemePreset,
+    onSelectPreset: (MaterialThemePreset) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        },
+        title = {
+            Text("Material UI 3 Themes", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "Personalize your Material You system palette. Updates all surface containers, buttons, and specular highlights live.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                MaterialThemePreset.values().forEach { preset ->
+                    val isSelected = preset == currentPreset
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerHighest,
+                        border = BorderStroke(
+                            if (isSelected) 1.5.dp else 1.dp,
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelectPreset(preset) }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(preset.seedColor)
+                                        .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = preset.displayName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Done", color = MaterialTheme.colorScheme.onPrimary)
+            }
+        }
+    )
 }

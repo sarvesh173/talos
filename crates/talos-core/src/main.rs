@@ -15,6 +15,7 @@ mod agents;
 mod delegation_mesh;
 mod browser_bridge;
 mod image_studio;
+mod code_inspector;
 
 use auth::AuthEngine;
 use axum::{
@@ -61,6 +62,7 @@ pub struct AppState {
     pub delegation_mesh: Arc<delegation_mesh::DelegationMesh>,
     pub browser_bridge: Arc<browser_bridge::BrowserBridge>,
     pub image_studio: Arc<image_studio::ImageStudio>,
+    pub code_inspector: Arc<code_inspector::CodeInspector>,
 }
 
 #[tokio::main]
@@ -83,6 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let delegation_mesh = Arc::new(delegation_mesh::DelegationMesh::new());
     let browser_bridge = Arc::new(browser_bridge::BrowserBridge::new());
     let image_studio = Arc::new(image_studio::ImageStudio::new());
+    let code_inspector = Arc::new(code_inspector::CodeInspector::new());
 
     let state = AppState {
         db,
@@ -95,6 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         delegation_mesh,
         browser_bridge,
         image_studio,
+        code_inspector,
     };
 
     let cors = CorsLayer::new()
@@ -170,6 +174,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/image/generate", post(generate_image_handler))
         .route("/api/image/gallery", get(get_image_gallery_handler))
         .route("/api/image/gallery/:id", delete(delete_image_handler))
+        // Feature 61: Git Working Tree & Code Diff Inspector
+        .route("/api/git/diff", get(get_git_diff_handler))
+        .route("/api/git/file", get(get_git_file_handler))
         .layer(cors)
         .with_state(state);
 
@@ -1170,5 +1177,30 @@ async fn delete_image_handler(
         .image_studio
         .delete(&id, &state.db)
         .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
+}
+
+// ==========================================
+// Feature 61: Git & Code Diff Handlers
+// ==========================================
+
+async fn get_git_diff_handler(
+    State(state): State<AppState>,
+) -> Json<code_inspector::GitDiffSummary> {
+    Json(state.code_inspector.get_diff())
+}
+
+#[derive(serde::Deserialize)]
+struct GitFileQuery {
+    path: String,
+}
+
+async fn get_git_file_handler(
+    State(state): State<AppState>,
+    Query(query): Query<GitFileQuery>,
+) -> Result<String, (StatusCode, String)> {
+    state
+        .code_inspector
+        .read_file_content(&query.path)
         .map_err(|e| (StatusCode::NOT_FOUND, e))
 }

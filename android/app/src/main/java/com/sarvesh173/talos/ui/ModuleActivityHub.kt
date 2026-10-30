@@ -96,6 +96,15 @@ fun ModuleActivityHub(
                 icon = Icons.Default.Language,
                 category = "System & Gateway",
                 color = secondaryColor
+            ),
+            ActivityModuleItem(
+                id = "themes",
+                title = "Material UI Themes",
+                subtitle = "Switch between Signature Purple, Cobalt Blue, Cyber Mint, and Amber presets",
+                icon = Icons.Default.Palette,
+                category = "System & Gateway",
+                color = primaryColor,
+                badge = "NEW"
             )
         )
     }

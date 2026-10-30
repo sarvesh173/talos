@@ -13,10 +13,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.filled.*
+import kotlin.math.abs
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,7 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 
 enum class OpenBoardTool {
-    PEN, HIGHLIGHTER, ERASER
+    PEN, HIGHLIGHTER, LINE, RECTANGLE, CIRCLE, ERASER
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,8 +51,17 @@ fun WhiteboardScreen(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val paths = remember { mutableStateListOf<StrokePath>() }
-    val redoPaths = remember { mutableStateListOf<StrokePath>() }
+    val pages = remember { mutableStateListOf(mutableStateListOf<StrokePath>()) }
+    val redoPages = remember { mutableStateListOf(mutableStateListOf<StrokePath>()) }
+    var currentPageIndex by remember { mutableIntStateOf(0) }
+
+    if (pages.isEmpty()) {
+        pages.add(mutableStateListOf())
+        redoPages.add(mutableStateListOf())
+    }
+    val safeIndex = currentPageIndex.coerceIn(0, pages.size - 1)
+    val paths = pages[safeIndex]
+    val redoPaths = redoPages[safeIndex]
     var currentPoints = remember { mutableStateListOf<Offset>() }
     val defaultColor = MaterialTheme.colorScheme.primary
     var currentColor by remember { mutableStateOf(defaultColor) }
@@ -67,7 +78,7 @@ fun WhiteboardScreen(
     )
 
     val effectiveColor = when (activeTool) {
-        OpenBoardTool.PEN -> currentColor
+        OpenBoardTool.PEN, OpenBoardTool.LINE, OpenBoardTool.RECTANGLE, OpenBoardTool.CIRCLE -> currentColor
         OpenBoardTool.HIGHLIGHTER -> currentColor.copy(alpha = 0.35f)
         OpenBoardTool.ERASER -> when (canvasBackground) {
             "DarkSlate" -> Color(0xFF1E293B)
@@ -75,7 +86,7 @@ fun WhiteboardScreen(
         }
     }
     val effectiveWidth = when (activeTool) {
-        OpenBoardTool.PEN -> strokeWidth
+        OpenBoardTool.PEN, OpenBoardTool.LINE, OpenBoardTool.RECTANGLE, OpenBoardTool.CIRCLE -> strokeWidth
         OpenBoardTool.HIGHLIGHTER -> 24f
         OpenBoardTool.ERASER -> 32f
     }
@@ -92,9 +103,9 @@ fun WhiteboardScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${paths.size} strokes committed • ${activeTool.name}",
+                            text = "Page ${safeIndex + 1}/${pages.size} • ${paths.size} strokes • ${activeTool.name}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrimaryAccent
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -108,6 +119,42 @@ fun WhiteboardScreen(
                     }
                 },
                 actions = {
+                    // Previous Page
+                    IconButton(
+                        onClick = {
+                            if (currentPageIndex > 0) {
+                                currentPageIndex--
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                        },
+                        enabled = currentPageIndex > 0
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Prev Page", modifier = Modifier.size(18.dp))
+                    }
+                    // Next Page
+                    IconButton(
+                        onClick = {
+                            if (currentPageIndex < pages.size - 1) {
+                                currentPageIndex++
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                        },
+                        enabled = currentPageIndex < pages.size - 1
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Page", modifier = Modifier.size(18.dp))
+                    }
+                    // Add Page
+                    IconButton(
+                        onClick = {
+                            pages.add(mutableStateListOf())
+                            redoPages.add(mutableStateListOf())
+                            currentPageIndex = pages.size - 1
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            Toast.makeText(context, "Page ${pages.size} added!", Toast.LENGTH_SHORT).show()
+                        }
+                    ) {
+                        Icon(Icons.Default.PostAdd, contentDescription = "Add Page", tint = MaterialTheme.colorScheme.primary)
+                    }
                     // Undo
                     IconButton(
                         onClick = {
@@ -163,7 +210,7 @@ fun WhiteboardScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = PrimaryAccent)
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -188,21 +235,57 @@ fun WhiteboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.PEN,
-                                onClick = { activeTool = OpenBoardTool.PEN },
-                                label = { Text("Pen", fontSize = 11.sp) }
+                                onClick = {
+                                    activeTool = OpenBoardTool.PEN
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text("Pen", fontSize = 10.sp) }
                             )
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.HIGHLIGHTER,
-                                onClick = { activeTool = OpenBoardTool.HIGHLIGHTER },
-                                label = { Text("Highlighter", fontSize = 11.sp) }
+                                onClick = {
+                                    activeTool = OpenBoardTool.HIGHLIGHTER
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text("High", fontSize = 10.sp) }
+                            )
+                            FilterChip(
+                                selected = activeTool == OpenBoardTool.LINE,
+                                onClick = {
+                                    activeTool = OpenBoardTool.LINE
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text("Line", fontSize = 10.sp) }
+                            )
+                            FilterChip(
+                                selected = activeTool == OpenBoardTool.RECTANGLE,
+                                onClick = {
+                                    activeTool = OpenBoardTool.RECTANGLE
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text("Rect", fontSize = 10.sp) }
+                            )
+                            FilterChip(
+                                selected = activeTool == OpenBoardTool.CIRCLE,
+                                onClick = {
+                                    activeTool = OpenBoardTool.CIRCLE
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text("Oval", fontSize = 10.sp) }
                             )
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.ERASER,
-                                onClick = { activeTool = OpenBoardTool.ERASER },
-                                label = { Text("Eraser", fontSize = 11.sp) }
+                                onClick = {
+                                    activeTool = OpenBoardTool.ERASER
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text("Eraser", fontSize = 10.sp) }
                             )
                         }
 
@@ -290,11 +373,23 @@ fun WhiteboardScreen(
                             },
                             onDragEnd = {
                                 if (currentPoints.isNotEmpty()) {
+                                    val shapeType = when (activeTool) {
+                                        OpenBoardTool.LINE -> ShapeType.LINE
+                                        OpenBoardTool.RECTANGLE -> ShapeType.RECTANGLE
+                                        OpenBoardTool.CIRCLE -> ShapeType.CIRCLE
+                                        else -> ShapeType.FREEHAND
+                                    }
+                                    val committedPoints = if (shapeType == ShapeType.FREEHAND) {
+                                        currentPoints.toList()
+                                    } else {
+                                        listOf(currentPoints.first(), currentPoints.last())
+                                    }
                                     paths.add(
                                         StrokePath(
-                                            points = currentPoints.toList(),
+                                            points = committedPoints,
                                             color = effectiveColor,
-                                            strokeWidth = effectiveWidth
+                                            strokeWidth = effectiveWidth,
+                                            shapeType = shapeType
                                         )
                                     )
                                     redoPaths.clear()
@@ -362,42 +457,134 @@ fun WhiteboardScreen(
 
                 // Render committed paths
                 paths.forEach { strokePath ->
-                    if (strokePath.points.size > 1) {
-                        val path = Path().apply {
-                            moveTo(strokePath.points.first().x, strokePath.points.first().y)
-                            for (i in 1 until strokePath.points.size) {
-                                lineTo(strokePath.points[i].x, strokePath.points[i].y)
+                    when (strokePath.shapeType) {
+                        ShapeType.FREEHAND -> {
+                            if (strokePath.points.size > 1) {
+                                val path = Path().apply {
+                                    moveTo(strokePath.points.first().x, strokePath.points.first().y)
+                                    for (i in 1 until strokePath.points.size) {
+                                        lineTo(strokePath.points[i].x, strokePath.points[i].y)
+                                    }
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = strokePath.color,
+                                    style = Stroke(
+                                        width = strokePath.strokeWidth,
+                                        cap = StrokeCap.Round,
+                                        join = StrokeJoin.Round
+                                    )
+                                )
                             }
                         }
-                        drawPath(
-                            path = path,
-                            color = strokePath.color,
-                            style = Stroke(
-                                width = strokePath.strokeWidth,
-                                cap = StrokeCap.Round,
-                                join = StrokeJoin.Round
-                            )
-                        )
+                        ShapeType.LINE -> {
+                            if (strokePath.points.size >= 2) {
+                                drawLine(
+                                    color = strokePath.color,
+                                    start = strokePath.points.first(),
+                                    end = strokePath.points.last(),
+                                    strokeWidth = strokePath.strokeWidth,
+                                    cap = StrokeCap.Round
+                                )
+                            }
+                        }
+                        ShapeType.RECTANGLE -> {
+                            if (strokePath.points.size >= 2) {
+                                val start = strokePath.points.first()
+                                val end = strokePath.points.last()
+                                val topLeft = Offset(minOf(start.x, end.x), minOf(start.y, end.y))
+                                val rectSize = androidx.compose.ui.geometry.Size(
+                                    abs(start.x - end.x),
+                                    abs(start.y - end.y)
+                                )
+                                drawRect(
+                                    color = strokePath.color,
+                                    topLeft = topLeft,
+                                    size = rectSize,
+                                    style = Stroke(width = strokePath.strokeWidth)
+                                )
+                            }
+                        }
+                        ShapeType.CIRCLE -> {
+                            if (strokePath.points.size >= 2) {
+                                val start = strokePath.points.first()
+                                val end = strokePath.points.last()
+                                val topLeft = Offset(minOf(start.x, end.x), minOf(start.y, end.y))
+                                val ovalSize = androidx.compose.ui.geometry.Size(
+                                    abs(start.x - end.x),
+                                    abs(start.y - end.y)
+                                )
+                                drawOval(
+                                    color = strokePath.color,
+                                    topLeft = topLeft,
+                                    size = ovalSize,
+                                    style = Stroke(width = strokePath.strokeWidth)
+                                )
+                            }
+                        }
                     }
                 }
 
                 // Render active in-progress stroke
                 if (currentPoints.size > 1) {
-                    val activePath = Path().apply {
-                        moveTo(currentPoints.first().x, currentPoints.first().y)
-                        for (i in 1 until currentPoints.size) {
-                            lineTo(currentPoints[i].x, currentPoints[i].y)
+                    when (activeTool) {
+                        OpenBoardTool.PEN, OpenBoardTool.HIGHLIGHTER, OpenBoardTool.ERASER -> {
+                            val activePath = Path().apply {
+                                moveTo(currentPoints.first().x, currentPoints.first().y)
+                                for (i in 1 until currentPoints.size) {
+                                    lineTo(currentPoints[i].x, currentPoints[i].y)
+                                }
+                            }
+                            drawPath(
+                                path = activePath,
+                                color = effectiveColor,
+                                style = Stroke(
+                                    width = effectiveWidth,
+                                    cap = StrokeCap.Round,
+                                    join = StrokeJoin.Round
+                                )
+                            )
+                        }
+                        OpenBoardTool.LINE -> {
+                            drawLine(
+                                color = effectiveColor,
+                                start = currentPoints.first(),
+                                end = currentPoints.last(),
+                                strokeWidth = effectiveWidth,
+                                cap = StrokeCap.Round
+                            )
+                        }
+                        OpenBoardTool.RECTANGLE -> {
+                            val start = currentPoints.first()
+                            val end = currentPoints.last()
+                            val topLeft = Offset(minOf(start.x, end.x), minOf(start.y, end.y))
+                            val rectSize = androidx.compose.ui.geometry.Size(
+                                abs(start.x - end.x),
+                                abs(start.y - end.y)
+                            )
+                            drawRect(
+                                color = effectiveColor,
+                                topLeft = topLeft,
+                                size = rectSize,
+                                style = Stroke(width = effectiveWidth)
+                            )
+                        }
+                        OpenBoardTool.CIRCLE -> {
+                            val start = currentPoints.first()
+                            val end = currentPoints.last()
+                            val topLeft = Offset(minOf(start.x, end.x), minOf(start.y, end.y))
+                            val ovalSize = androidx.compose.ui.geometry.Size(
+                                abs(start.x - end.x),
+                                abs(start.y - end.y)
+                            )
+                            drawOval(
+                                color = effectiveColor,
+                                topLeft = topLeft,
+                                size = ovalSize,
+                                style = Stroke(width = effectiveWidth)
+                            )
                         }
                     }
-                    drawPath(
-                        path = activePath,
-                        color = effectiveColor,
-                        style = Stroke(
-                            width = effectiveWidth,
-                            cap = StrokeCap.Round,
-                            join = StrokeJoin.Round
-                        )
-                    )
                 }
             }
         }
@@ -473,13 +660,31 @@ fun exportStrokesToPngBase64(paths: List<StrokePath>, width: Int = 720, height: 
                 val b = (c.blue * 255).toInt()
                 paint.color = android.graphics.Color.argb(a, r, g, b)
                 paint.strokeWidth = stroke.strokeWidth
-                val path = android.graphics.Path().apply {
-                    moveTo(stroke.points[0].x, stroke.points[0].y)
-                    for (i in 1 until stroke.points.size) {
-                        lineTo(stroke.points[i].x, stroke.points[i].y)
+
+                when (stroke.shapeType) {
+                    ShapeType.FREEHAND -> {
+                        val path = android.graphics.Path().apply {
+                            moveTo(stroke.points[0].x, stroke.points[0].y)
+                            for (i in 1 until stroke.points.size) {
+                                lineTo(stroke.points[i].x, stroke.points[i].y)
+                            }
+                        }
+                        canvas.drawPath(path, paint)
+                    }
+                    ShapeType.LINE -> {
+                        canvas.drawLine(stroke.points.first().x, stroke.points.first().y, stroke.points.last().x, stroke.points.last().y, paint)
+                    }
+                    ShapeType.RECTANGLE -> {
+                        val start = stroke.points.first()
+                        val end = stroke.points.last()
+                        canvas.drawRect(minOf(start.x, end.x), minOf(start.y, end.y), maxOf(start.x, end.x), maxOf(start.y, end.y), paint)
+                    }
+                    ShapeType.CIRCLE -> {
+                        val start = stroke.points.first()
+                        val end = stroke.points.last()
+                        canvas.drawOval(minOf(start.x, end.x), minOf(start.y, end.y), maxOf(start.x, end.x), maxOf(start.y, end.y), paint)
                     }
                 }
-                canvas.drawPath(path, paint)
             }
         }
         val bytes = java.io.ByteArrayOutputStream()

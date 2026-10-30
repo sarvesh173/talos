@@ -32,10 +32,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+enum class ShapeType {
+    FREEHAND, LINE, RECTANGLE, CIRCLE
+}
+
 data class StrokePath(
     val points: List<Offset>,
     val color: Color,
-    val strokeWidth: Float
+    val strokeWidth: Float,
+    val shapeType: ShapeType = ShapeType.FREEHAND
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +68,7 @@ fun WhiteboardSheet(
     )
 
     val effectiveColor = when (activeTool) {
-        OpenBoardTool.PEN -> currentColor
+        OpenBoardTool.PEN, OpenBoardTool.LINE, OpenBoardTool.RECTANGLE, OpenBoardTool.CIRCLE -> currentColor
         OpenBoardTool.HIGHLIGHTER -> currentColor.copy(alpha = 0.35f)
         OpenBoardTool.ERASER -> when (canvasBackground) {
             "DarkSlate" -> Color(0xFF1E293B)
@@ -71,7 +76,7 @@ fun WhiteboardSheet(
         }
     }
     val effectiveWidth = when (activeTool) {
-        OpenBoardTool.PEN -> strokeWidth
+        OpenBoardTool.PEN, OpenBoardTool.LINE, OpenBoardTool.RECTANGLE, OpenBoardTool.CIRCLE -> strokeWidth
         OpenBoardTool.HIGHLIGHTER -> 24f
         OpenBoardTool.ERASER -> 32f
     }

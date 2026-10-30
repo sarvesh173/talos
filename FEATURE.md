@@ -1562,3 +1562,29 @@ Applied M3 Expressive tactile feedback guidelines (`material-3-expressive`, `mic
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21047` and `versionName` to `"2.10.47"`.
+
+---
+
+## 78. OpenBoard Desktop Whiteboard Parity: Multi-Page Slides & Geometric Shapes
+
+Elevated `WhiteboardScreen.kt` and `WhiteboardSheet.kt` to desktop interactive whiteboard parity (OpenBoard / GCompris) with multi-page slide management and geometric vector shapes.
+
+### 1. Multi-Page Slides Management (`WhiteboardScreen.kt`)
+- **Slide Navigation Controls**: Integrated top bar pagination dock with `<` (Previous Page), `>` (Next Page), and `+` (Add Page) actions.
+- **Independent Page Memory**: Each page maintains its own isolated `paths` and `redoPaths` history stack.
+- **Dynamic Slide Counter**: Real-time counter reflects `Page X/N • S strokes` in Material 3 Signature Iris.
+
+### 2. Geometric Vector Shape Engines (`ShapeType`)
+- **Shapes Supported**:
+  - `LINE`: Interactive straight line geometry with end-point clamping.
+  - `RECTANGLE`: Dynamic 2D bounding rectangle calculation.
+  - `CIRCLE`: Smooth oval/ellipse bounding stroke engine.
+  - `FREEHAND`: Organic stylus/finger strokes with bezier smoothing.
+- **Live In-Progress Shape Previews**: Renders real-time shape projections during active touch gestures before commit.
+- **Bitmap PNG Exporter Parity**: Updated `exportStrokesToPngBase64` to cleanly render lines, rectangles, and ellipses directly to exported base64 bitmaps.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21048` and `versionName` to `"2.10.48"`.

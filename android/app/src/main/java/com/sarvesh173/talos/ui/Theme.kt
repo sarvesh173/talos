@@ -426,7 +426,8 @@ fun TalosTheme(
     CompositionLocalProvider(
         LocalIsDark provides isDark,
         LocalTalosStatus provides statusColors,
-        LocalThemePreset provides preset
+        LocalThemePreset provides preset,
+        LocalTalosMotion provides (remoteConfig?.motion ?: MotionConfig())
     ) {
         MaterialExpressiveTheme(
             colorScheme = animatedScheme,

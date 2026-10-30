@@ -4,12 +4,30 @@ import android.content.Context
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.sarvesh173.talos.network.TalosClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+
+/**
+ * Material 3 Expressive Motion Physics tokens (damping ratio + stiffness).
+ */
+data class MotionConfig(
+    val spatialFastDamping: Float = 0.52f,
+    val spatialFastStiffness: Float = 900f,
+    val spatialDefaultDamping: Float = 0.75f,
+    val spatialDefaultStiffness: Float = 400f,
+    val spatialSlowDamping: Float = 0.80f,
+    val spatialSlowStiffness: Float = 200f,
+    val effectsFastStiffness: Float = 3800f,
+    val effectsDefaultStiffness: Float = 1600f,
+    val effectsSlowStiffness: Float = 800f
+)
+
+val LocalTalosMotion = staticCompositionLocalOf { MotionConfig() }
 
 /**
  * Dynamic theme tokens served by the Rust core (`GET /api/theme`).
@@ -22,6 +40,7 @@ data class TalosThemeConfig(
     val name: String,
     val dark: Map<String, Color>,
     val light: Map<String, Color>,
+    val motion: MotionConfig = MotionConfig()
 ) {
     companion object {
         private val REQUIRED_DARK = listOf(
@@ -48,7 +67,28 @@ data class TalosThemeConfig(
             val dark = roles(root.optJSONObject("dark")) ?: return null
             val light = roles(root.optJSONObject("light")) ?: return null
             val name = root.optString("name", "Remote Theme")
-            return TalosThemeConfig(name, dark, light)
+
+            val motion = root.optJSONObject("motion")?.let { mObj ->
+                val spFast = mObj.optJSONArray("spatial_fast")
+                val spDef = mObj.optJSONArray("spatial_default")
+                val spSlow = mObj.optJSONArray("spatial_slow")
+                val efFast = mObj.optJSONArray("effects_fast")
+                val efDef = mObj.optJSONArray("effects_default")
+                val efSlow = mObj.optJSONArray("effects_slow")
+                MotionConfig(
+                    spatialFastDamping = spFast?.optDouble(0, 0.52)?.toFloat() ?: 0.52f,
+                    spatialFastStiffness = spFast?.optDouble(1, 900.0)?.toFloat() ?: 900f,
+                    spatialDefaultDamping = spDef?.optDouble(0, 0.75)?.toFloat() ?: 0.75f,
+                    spatialDefaultStiffness = spDef?.optDouble(1, 400.0)?.toFloat() ?: 400f,
+                    spatialSlowDamping = spSlow?.optDouble(0, 0.80)?.toFloat() ?: 0.80f,
+                    spatialSlowStiffness = spSlow?.optDouble(1, 200.0)?.toFloat() ?: 200f,
+                    effectsFastStiffness = efFast?.optDouble(1, 3800.0)?.toFloat() ?: 3800f,
+                    effectsDefaultStiffness = efDef?.optDouble(1, 1600.0)?.toFloat() ?: 1600f,
+                    effectsSlowStiffness = efSlow?.optDouble(1, 800.0)?.toFloat() ?: 800f
+                )
+            } ?: MotionConfig()
+
+            return TalosThemeConfig(name, dark, light, motion)
         }
 
         fun parseHex(hex: String): Color? {

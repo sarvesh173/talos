@@ -1446,3 +1446,23 @@ Expanded OpenBoard whiteboard capabilities with multi-mode geometry paper, senso
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21042` and `versionName` to `"2.10.42"`.
+
+---
+
+## 73. Material 3 Expressive Motion Physics Propagation & Local Composition Bridge
+
+Grounded in Google Material 3 Expressive and motion specifications (`m3.material.io/styles/motion`), bridging Rust backend spring physics tokens directly to Jetpack Compose runtime.
+
+### 1. Motion Physics Specification Model (`DynamicTheme.kt`)
+- **Spring Physics Parameterization (`MotionConfig`)**: Modeled damping ratios and stiffness constants across spatial movement (`fast`, `default`, `slow`) and effect transitions (`effects_fast`, `effects_default`, `effects_slow`) matching Material 3 Expressive standards.
+- **REST Token Ingestion (`fromJson`)**: Parses real-time `motion` object from `GET /api/theme` (Rust core), guaranteeing parity without hardcoded frontend discrepancies.
+- **Ambient Composition Provider (`LocalTalosMotion`)**: Exposed `staticCompositionLocalOf { MotionConfig() }` bound inside `TalosTheme`'s `CompositionLocalProvider`.
+
+### 2. Microinteraction & Fluid Spring Physics Handover
+- Components throughout the client can now dynamically reference `LocalTalosMotion.current` to derive physics-driven spring specs (`spring(dampingRatio, stiffness)`) for spatial cards, sheets, dialogs, and button press scaling.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21043` and `versionName` to `"2.10.43"`.

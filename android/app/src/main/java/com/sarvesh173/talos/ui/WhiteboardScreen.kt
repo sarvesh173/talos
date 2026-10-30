@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +48,7 @@ fun WhiteboardScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val paths = remember { mutableStateListOf<StrokePath>() }
     val redoPaths = remember { mutableStateListOf<StrokePath>() }
     var currentPoints = remember { mutableStateListOf<Offset>() }
@@ -111,6 +114,7 @@ fun WhiteboardScreen(
                             if (paths.isNotEmpty()) {
                                 val last = paths.removeAt(paths.size - 1)
                                 redoPaths.add(last)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             }
                         },
                         enabled = paths.isNotEmpty()
@@ -123,6 +127,7 @@ fun WhiteboardScreen(
                             if (redoPaths.isNotEmpty()) {
                                 val last = redoPaths.removeAt(redoPaths.size - 1)
                                 paths.add(last)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             }
                         },
                         enabled = redoPaths.isNotEmpty()
@@ -134,6 +139,7 @@ fun WhiteboardScreen(
                         onClick = {
                             redoPaths.clear()
                             paths.clear()
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                         enabled = paths.isNotEmpty()
                     ) {
@@ -143,7 +149,8 @@ fun WhiteboardScreen(
                     IconButton(
                         onClick = {
                             if (paths.isNotEmpty()) {
-                                val b64 = exportStrokesToPngBase64(paths)
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val b64 = exportStrokesToPngBase64(paths, background = canvasBackground)
                                 if (b64 != null) {
                                     client.sendMessage("📐 [OpenBoard Sketch: ${paths.size} strokes]\ndata:image/png;base64,$b64")
                                 } else {
@@ -210,10 +217,15 @@ fun WhiteboardScreen(
                                 onClick = { strokeWidth = 8f },
                                 label = { Text("Bold", fontSize = 10.sp) }
                             )
+                            val backgrounds = listOf("DotGrid", "GraphGrid", "Ruled", "Obsidian")
+                            val nextBg = backgrounds[(backgrounds.indexOf(canvasBackground) + 1).coerceAtLeast(0) % backgrounds.size]
                             FilterChip(
-                                selected = canvasBackground == "DotGrid",
-                                onClick = { canvasBackground = if (canvasBackground == "DotGrid") "DarkSlate" else "DotGrid" },
-                                label = { Text(if (canvasBackground == "DotGrid") "Grid" else "Slate", fontSize = 10.sp) }
+                                selected = canvasBackground != "Obsidian",
+                                onClick = {
+                                    canvasBackground = nextBg
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text(canvasBackground, fontSize = 10.sp) }
                             )
                         }
                     }
@@ -292,21 +304,59 @@ fun WhiteboardScreen(
                         )
                     }
             ) {
-                // OpenBoard dot grid
-                if (canvasBackground == "DotGrid") {
-                    val spacing = 28.dp.toPx()
-                    var x = spacing
-                    while (x < size.width) {
+                // OpenBoard canvas background styles
+                when (canvasBackground) {
+                    "DotGrid" -> {
+                        val spacing = 28.dp.toPx()
+                        var x = spacing
+                        while (x < size.width) {
+                            var y = spacing
+                            while (y < size.height) {
+                                drawCircle(
+                                    color = Color(0xFF334155),
+                                    radius = 1.5f,
+                                    center = Offset(x, y)
+                                )
+                                y += spacing
+                            }
+                            x += spacing
+                        }
+                    }
+                    "GraphGrid" -> {
+                        val spacing = 24.dp.toPx()
+                        var x = spacing
+                        while (x < size.width) {
+                            drawLine(
+                                color = Color(0xFF263045),
+                                start = Offset(x, 0f),
+                                end = Offset(x, size.height),
+                                strokeWidth = 1f
+                            )
+                            x += spacing
+                        }
                         var y = spacing
                         while (y < size.height) {
-                            drawCircle(
-                                color = Color(0xFF334155),
-                                radius = 1.5f,
-                                center = Offset(x, y)
+                            drawLine(
+                                color = Color(0xFF263045),
+                                start = Offset(0f, y),
+                                end = Offset(size.width, y),
+                                strokeWidth = 1f
                             )
                             y += spacing
                         }
-                        x += spacing
+                    }
+                    "Ruled" -> {
+                        val spacing = 32.dp.toPx()
+                        var y = spacing
+                        while (y < size.height) {
+                            drawLine(
+                                color = Color(0xFF2B3648),
+                                start = Offset(0f, y),
+                                end = Offset(size.width, y),
+                                strokeWidth = 1f
+                            )
+                            y += spacing
+                        }
                     }
                 }
 
@@ -357,7 +407,7 @@ fun WhiteboardScreen(
 /**
  * OpenBoard Canvas Exporter: renders committed vector strokes to PNG Base64.
  */
-fun exportStrokesToPngBase64(paths: List<StrokePath>, width: Int = 720, height: Int = 480): String? {
+fun exportStrokesToPngBase64(paths: List<StrokePath>, width: Int = 720, height: Int = 480, background: String = "DotGrid"): String? {
     if (paths.isEmpty()) return null
     return try {
         val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
@@ -371,20 +421,47 @@ fun exportStrokesToPngBase64(paths: List<StrokePath>, width: Int = 720, height: 
             strokeJoin = android.graphics.Paint.Join.ROUND
         }
 
-        // Draw dot grid
-        val dotPaint = android.graphics.Paint().apply {
+        // Draw canvas background grid
+        val gridPaint = android.graphics.Paint().apply {
             color = 0xFF2B3245.toInt()
             isAntiAlias = true
+            strokeWidth = 1f
         }
-        val spacing = 28f
-        var x = spacing
-        while (x < width) {
-            var y = spacing
-            while (y < height) {
-                canvas.drawCircle(x, y, 1.5f, dotPaint)
-                y += spacing
+
+        when (background) {
+            "DotGrid" -> {
+                val spacing = 28f
+                var x = spacing
+                while (x < width) {
+                    var y = spacing
+                    while (y < height) {
+                        canvas.drawCircle(x, y, 1.5f, gridPaint)
+                        y += spacing
+                    }
+                    x += spacing
+                }
             }
-            x += spacing
+            "GraphGrid" -> {
+                val spacing = 24f
+                var x = spacing
+                while (x < width) {
+                    canvas.drawLine(x, 0f, x, height.toFloat(), gridPaint)
+                    x += spacing
+                }
+                var y = spacing
+                while (y < height) {
+                    canvas.drawLine(0f, y, width.toFloat(), y, gridPaint)
+                    y += spacing
+                }
+            }
+            "Ruled" -> {
+                val spacing = 32f
+                var y = spacing
+                while (y < height) {
+                    canvas.drawLine(0f, y, width.toFloat(), y, gridPaint)
+                    y += spacing
+                }
+            }
         }
 
         paths.forEach { stroke ->

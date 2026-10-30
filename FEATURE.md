@@ -1426,3 +1426,23 @@ Benchmarked against open-source desktop whiteboards (OpenBoard, GCompris) to int
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21041` and `versionName` to `"2.10.41"`.
+
+---
+
+## 72. Quad-Canvas Geometry Grid Modes, Tactile Haptic Pulses & Background-Aware Raster Exporter
+
+Expanded OpenBoard whiteboard capabilities with multi-mode geometry paper, sensory haptic pulses on user actions, and background-aware PNG rasterization.
+
+### 1. Quad-Canvas Geometry Background Modes (`WhiteboardScreen.kt`)
+- **4 Grid Configurations**: Added `DotGrid` (discrete coordinates), `GraphGrid` (engineering math coordinate lines), `Ruled` (notebook ruled lines), and `Obsidian` (deep matte dark canvas).
+- **Dynamic Render Pipeline**: `Canvas` dynamically renders mathematical grid lines and points with minimal GPU overhead and instant cycle switching.
+
+### 2. Sensory Haptic Pulses & Export Synchronization
+- **Tactile Haptic Feedback**: Integrated `LocalHapticFeedback` providing light tactile tick pulses (`TextHandleMove`) on undo/redo/grid switches and firm confirmation pulses (`LongPress`) on canvas clear and council dispatch.
+- **Background-Aware Raster Exporter**: `exportStrokesToPngBase64` now accurately paints the selected geometry pattern (Dot Grid, Graph Grid, or Ruled Lines) directly onto the 720x480 PNG bitmap payload before sending.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21042` and `versionName` to `"2.10.42"`.

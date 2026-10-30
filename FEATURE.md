@@ -1257,3 +1257,28 @@ Implemented hardware-level camera capture flow with native `TakePicturePreview` 
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21033` and `versionName` to `"2.10.33"`.
+
+---
+
+## 64. Root-Cause Purple Theme Persistence, Motion Blur Track & Complete Yellow Deprecation
+
+Fixed the 1-second theme reversion bug caused by backend `/api/theme` Molten Forge tokens, stripped all hardcoded yellow from loading bars, and built multi-stage motion blur animations.
+
+### 1. Root Cause Resolution of Theme Reversion (`crates/talos-core` & `DynamicTheme.kt`)
+- **Backend Rust Realignment (`crates/talos-core/src/theme.rs`)**: Replaced default "Molten Forge" (`0xE0A261`) with Google M3 Signature Purple seed (`0x6750A4`) and Iris/Lavender palettes (`0xD0BCFF` primary, `0x4F378B` container, `0x141218` surface).
+- **SQLite Database Auto-Migration (`crates/talos-core/src/db.rs`)**: Automatically migrates any previously stored "Molten Forge" rows in `theme_config` table to the new Signature Purple default.
+- **Client Cache Purging (`DynamicTheme.kt`)**: Added automatic purging of legacy "Molten Forge" SharedPreferences on startup.
+- **Authoritative Presets (`Theme.kt`)**: Made `getPresetColorScheme(preset, isDark)` the authoritative root so background theme sync cannot overwrite the user's selected palette.
+
+### 2. Stripped Yellow & Multi-Stage Motion Blur Loading (`MetallicKit.kt`)
+- **Eliminated `0xFFFFD580`**: Completely removed all amber/yellow color constants from `MetallicLoadingBar` and `MetallicCircularLoader`.
+- **Motion Blur Sweep Trail**: Built two-layer motion blur sweep:
+  - Layer 1 (Broad Motion Wake): Soft trailing blur brush (`0.70f` width, `0.18f`..`0.32f` alpha) simulating camera shutter blur along the sweep trajectory.
+  - Layer 2 (Specular Beam Core): Focused beam (`0.35f` width) with pure white center (`0.95f` alpha) and iris violet glow.
+- **Rotating Bezel Ring**: Upgraded `MetallicCircularLoader` with pure white specular head and iris sweep.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21034` and `versionName` to `"2.10.34"`.

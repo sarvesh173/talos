@@ -416,13 +416,10 @@ fun TalosTheme(
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
 
-    // Remote tokens (talos-core /api/theme) override the built-in scheme -
-    // same runtime-swap pattern ReadYou uses for its tonal palettes.
-    val targetScheme = when {
-        remoteConfig != null && isDark -> remoteConfig.darkScheme()
-        remoteConfig != null -> remoteConfig.lightScheme()
-        else -> getPresetColorScheme(preset, isDark)
-    }
+    // User's chosen preset is the single source of truth.
+    // Built-in presets (Signature Purple default, Cobalt, Emerald, etc.)
+    // will never be hijacked by stale legacy cache.
+    val targetScheme = getPresetColorScheme(preset, isDark)
     val animatedScheme = animatedColorSchemeOf(targetScheme)
     val statusColors = if (isDark) DarkStatusColors else LightStatusColors
 

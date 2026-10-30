@@ -209,7 +209,7 @@ impl Database {
             Ok(payload) => {
                 let parsed = serde_json::from_str::<crate::theme::ThemeConfig>(&payload)
                     .unwrap_or_else(|_| crate::theme::ThemeConfig::default());
-                if parsed.name == crate::theme::LEGACY_THEME_NAME {
+                if parsed.name == crate::theme::LEGACY_THEME_NAME || parsed.name == "Molten Forge" {
                     drop(conn);
                     let fresh = crate::theme::ThemeConfig::default();
                     let _ = self.save_theme(&fresh);

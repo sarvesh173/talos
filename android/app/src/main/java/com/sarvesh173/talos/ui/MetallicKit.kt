@@ -368,8 +368,8 @@ fun MetallicLoadingBar(
                 if (fillWidth > 0) {
                     val brush = Brush.horizontalGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = 0.85f),
-                            Color(0xFFFFD580),
+                            accentColor.copy(alpha = 0.80f),
+                            Color.White.copy(alpha = 0.92f),
                             accentColor
                         ),
                         startX = 0f,
@@ -382,21 +382,43 @@ fun MetallicLoadingBar(
                     )
                 }
             } else {
-                val bandWidth = totalWidth * 0.45f
-                val startX = totalWidth * sheenOffset
-                val brush = Brush.horizontalGradient(
+                // Multi-stage Motion Blur Trail:
+                // 1. Broad soft motion blur wake
+                val blurWakeWidth = totalWidth * 0.70f
+                val blurWakeStart = totalWidth * (sheenOffset - 0.15f)
+                val blurWakeBrush = Brush.horizontalGradient(
                     colors = listOf(
                         Color.Transparent,
-                        accentColor.copy(alpha = 0.3f),
-                        Color(0xFFFFD580),
-                        accentColor.copy(alpha = 0.3f),
+                        accentColor.copy(alpha = 0.18f),
+                        accentColor.copy(alpha = 0.32f),
+                        accentColor.copy(alpha = 0.18f),
                         Color.Transparent
                     ),
-                    startX = startX,
-                    endX = startX + bandWidth
+                    startX = blurWakeStart,
+                    endX = blurWakeStart + blurWakeWidth
                 )
                 drawRoundRect(
-                    brush = brush,
+                    brush = blurWakeBrush,
+                    size = Size(totalWidth, totalHeight),
+                    cornerRadius = CornerRadius(totalHeight / 2, totalHeight / 2)
+                )
+
+                // 2. Focused luminous core band with specular sheen
+                val coreWidth = totalWidth * 0.35f
+                val coreStartX = totalWidth * sheenOffset
+                val coreBrush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        accentColor.copy(alpha = 0.65f),
+                        Color.White.copy(alpha = 0.95f),
+                        accentColor.copy(alpha = 0.65f),
+                        Color.Transparent
+                    ),
+                    startX = coreStartX,
+                    endX = coreStartX + coreWidth
+                )
+                drawRoundRect(
+                    brush = coreBrush,
                     size = Size(totalWidth, totalHeight),
                     cornerRadius = CornerRadius(totalHeight / 2, totalHeight / 2)
                 )
@@ -431,8 +453,8 @@ fun MetallicCircularLoader(
         val sweepBrush = Brush.sweepGradient(
             colors = listOf(
                 accentColor.copy(alpha = 0.1f),
-                accentColor.copy(alpha = 0.4f),
-                Color(0xFFFFD580),
+                accentColor.copy(alpha = 0.45f),
+                Color.White.copy(alpha = 0.95f),
                 accentColor,
                 accentColor.copy(alpha = 0.1f)
             )

@@ -74,9 +74,18 @@ object ThemeRepository {
 
     /** Try network, then cache. Null = use built-in defaults. */
     fun load(baseUrl: String, context: Context): TalosThemeConfig? {
+        // Clear any old legacy yellow cache
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).let { sp ->
+            val raw = sp.getString(KEY_THEME_JSON, null)
+            if (raw != null && raw.contains("Molten Forge")) {
+                sp.edit().clear().apply()
+            }
+        }
         fetch(baseUrl)?.let { cfg ->
-            cache(context, cfg)
-            return cfg
+            if (cfg.name != "Molten Forge") {
+                cache(context, cfg)
+                return cfg
+            }
         }
         return cached(context)
     }
@@ -90,7 +99,8 @@ object ThemeRepository {
         httpClient.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) return null
             val body = resp.body?.string() ?: return null
-            TalosThemeConfig.fromJson(JSONObject(body))
+            val cfg = TalosThemeConfig.fromJson(JSONObject(body))
+            if (cfg?.name == "Molten Forge") null else cfg
         }
     } catch (_: Exception) {
         null

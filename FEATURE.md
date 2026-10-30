@@ -1364,3 +1364,20 @@ Integrated cross-registry skill intelligence via `find-skills` (`npx skills`) an
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21038` and `versionName` to `"2.10.38"`.
+
+---
+
+## 69. Android Hardware GPS Proximity Sharing & Live Telemetry Map Rendering
+
+Harmonized location sharing in `AttachmentBottomSheet.kt` with live GPS sensor polling and in-chamber `GeolocationBubble` visual map cards.
+
+### 1. Accurate GPS Location Polling (`AttachmentBottomSheet.kt`)
+- **Single Source of Truth (`shareCurrentLocation()`)**: Consolidated location polling across fine/coarse GPS and network providers.
+- **Accurate Formatted Telemetry**: Emits high-precision coordinates (`Latitude`, `Longitude`, `Accuracy: ±Xm`, `Network: Tailscale Encrypted`) both upon initial permission grant and subsequent immediate taps.
+- **In-Chamber Telemetry Mapping (`Components.kt`)**: Renders verified node proximity cards with direct "VIEW ON MAP" geo-intent launcher for Android Google Maps / OpenStreetMap.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21039` and `versionName` to `"2.10.39"`.

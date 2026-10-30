@@ -925,10 +925,10 @@ Comprehensive system upgrade implementing Hermes Dashboard style multi-agent can
 - **Molten Obsidian & Electric Patina**: Deep tonal surfaces (`0xFF0D0F12` to `0xFF242830`), luminous copper primary (`0xFFF59E0B`), electric verdigris (`0xFF2DD4BF`), and emerald health accents (`0xFF10B981`).
 - Eliminates dull / generic flat backgrounds with dynamic elevation layers and specular border gradients.
 
-- [ ] **Implementation Steps**:
-  - [ ] Implement `AgentCanvasScreen.kt` with SVG/Canvas leader lines and agent hierarchy.
-  - [ ] Implement `CodeDiffViewer.kt` with syntax highlighting and file tree.
-  - [ ] Implement `AttachmentBottomSheet.kt` with runtime permission launchers.
-  - [ ] Elevate `Theme.kt` with M3 Expressive palette and tonal containers.
-  - [ ] Wire top bar and navigation in `MainActivity.kt`.
-  - [ ] Increment version to `2.10.18`, compile release APK, test, and push.
+- [x] **Implementation Steps**:
+  - [x] Implement `AgentCanvasScreen.kt` with SVG/Canvas leader lines and agent hierarchy.
+  - [x] Implement `CodeDiffViewer.kt` with syntax highlighting and file tree.
+  - [x] Implement `AttachmentBottomSheet.kt` with runtime permission launchers.
+  - [x] Elevate `Theme.kt` with M3 Expressive palette and tonal containers.
+  - [x] Wire top bar and navigation in `MainActivity.kt`.
+  - [x] Increment version to `2.10.18`, compile release APK, test, and push.

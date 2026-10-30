@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
@@ -315,7 +316,25 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onExitToLanding = {
                                     appScreen = "landing"
+                                },
+                                onOpenCanvas = {
+                                    appScreen = "canvas"
+                                },
+                                onOpenDiff = {
+                                    appScreen = "diff"
                                 }
+                            )
+                        }
+                        "canvas" -> {
+                            AgentCanvasScreen(
+                                client = client,
+                                onBack = { appScreen = "main" }
+                            )
+                        }
+                        "diff" -> {
+                            CodeDiffViewer(
+                                client = client,
+                                onBack = { appScreen = "main" }
                             )
                         }
                         "wizard" -> {
@@ -370,7 +389,9 @@ fun MainScreen(
     client: TalosClient,
     isDark: Boolean = true,
     onToggleTheme: () -> Unit = {},
-    onExitToLanding: () -> Unit = {}
+    onExitToLanding: () -> Unit = {},
+    onOpenCanvas: () -> Unit = {},
+    onOpenDiff: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -383,6 +404,7 @@ fun MainScreen(
 
     var inputText by remember { mutableStateOf("") }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showAttachmentSheet by remember { mutableStateOf(false) }
     var activeSlotId by remember { mutableStateOf("chambers") }
 
     BackHandler {
@@ -698,6 +720,31 @@ fun MainScreen(
 
                             // Right: Action Capsule Controls (40dp Accessible Touch Targets)
                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                // Agent Canvas View
+                                IconButton(
+                                    onClick = onOpenCanvas,
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Hub,
+                                        contentDescription = "Agent Canvas",
+                                        tint = PrimaryAccent,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+
+                                // Code Changes Diff Viewer
+                                IconButton(
+                                    onClick = onOpenDiff,
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Code,
+                                        contentDescription = "Code Changes",
+                                        tint = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
 
                                 val themeTransition = updateTransition(targetState = isDark, label = "m_theme_transition")
                                 val themeRot by themeTransition.animateFloat(
@@ -1113,7 +1160,7 @@ fun MainScreen(
                                         )
 
                                         IconButton(
-                                            onClick = { /* Attachment action */ },
+                                            onClick = { showAttachmentSheet = true },
                                             modifier = Modifier.size(38.dp)
                                         ) {
                                             Icon(
@@ -1414,6 +1461,14 @@ fun MainScreen(
                 client.updateConfig(newUrl, newToken)
                 showSettingsDialog = false
             }
+        )
+    }
+
+    if (showAttachmentSheet) {
+        AttachmentBottomSheet(
+            client = client,
+            onDismiss = { showAttachmentSheet = false },
+            onSendText = { client.sendMessage(it) }
         )
     }
 }

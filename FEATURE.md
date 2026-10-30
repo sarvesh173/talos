@@ -975,3 +975,27 @@ Advancing autonomous multi-agent engineering by integrating Hermes image generat
   - [x] Implement `ModuleActivityHub.kt` with categorized activity tiles.
   - [x] Wire navigation in `MainActivity.kt`.
   - [x] Increment version to `2.10.20`, compile release APK, verify, and push.
+
+---
+
+## 53. Rust-First Hierarchical Delegation Mesh & Quota Controller (`crates/talos-core`)
+
+Engineered full backend support in `talos-core` for hierarchical agent delegation trees, live quota enforcement, and REST endpoints for subagent lifecycle management.
+
+### 1. Hierarchy & Quota Engine (`delegation_mesh.rs`)
+- **Three-Tier Architecture**: Engine Nodes (`OmniRush`, `OpenCode`, `Claude Code`) -> Delegate Lead Nodes -> Child Subagent Nodes.
+- **Custom Turn Limits (10..100) & Clamping**: Dynamically bounds turn consumption; halts runaway loops with status preservation.
+- **Reasoning Effort Allocation**: Per-delegate reasoning tier (`Low`, `Medium`, `High`) mapped to model lanes.
+- **Subagent Lifecycle Guard**: Enforces pause state and prevents child spawning when turns exceed allocated budget.
+
+### 2. REST Endpoints in `talos-core` (`main.rs`)
+- `GET /api/delegation/tree`: Real-time snapshot of all registered CLI engines, delegates, and active children.
+- `PATCH /api/delegates/:id/quota`: Updates turn limit and reasoning effort on the fly.
+- `POST /api/delegates/:id/pause` & `POST /api/delegates/:id/resume`: Live pause/resume state management.
+- `POST /api/delegates/:id/children`: Dynamically spawns child subagents under a delegate lead.
+
+- [x] **Test Suite & Verification**:
+  - Added 4 unit tests in `delegation_mesh::tests` covering snapshotting, quota clamping, child spawning, and pause gating.
+  - All 34 tests passing cleanly (`cargo test`).
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21021` and `versionName` to `"2.10.21"`.

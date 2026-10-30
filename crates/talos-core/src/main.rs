@@ -12,6 +12,7 @@ mod providers;
 mod room_bus;
 mod theme;
 mod agents;
+mod delegation_mesh;
 
 use auth::AuthEngine;
 use axum::{
@@ -55,6 +56,7 @@ pub struct AppState {
     pub vault: Arc<providers::ProviderVault>,
     pub telemetry_tracker: Arc<tokio::sync::Mutex<telemetry::TokenVelocityTracker>>,
     pub telemetry_config: Arc<tokio::sync::RwLock<telemetry::TelemetryConfig>>,
+    pub delegation_mesh: Arc<delegation_mesh::DelegationMesh>,
 }
 
 #[tokio::main]
@@ -74,6 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vault = Arc::new(providers::ProviderVault::new());
     let telemetry_tracker = Arc::new(tokio::sync::Mutex::new(telemetry::TokenVelocityTracker::new()));
     let telemetry_config = Arc::new(tokio::sync::RwLock::new(telemetry::TelemetryConfig::default()));
+    let delegation_mesh = Arc::new(delegation_mesh::DelegationMesh::new());
 
     let state = AppState {
         db,
@@ -83,6 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         vault,
         telemetry_tracker,
         telemetry_config,
+        delegation_mesh,
     };
 
     let cors = CorsLayer::new()
@@ -142,6 +146,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/telemetry/config", get(get_telemetry_config).post(update_telemetry_config))
         .route("/api/agents/:id/context", get(get_agent_context_telemetry))
         .route("/api/rooms/:id/context-breakdown", get(get_room_context_breakdown))
+        // Feature 52: Hierarchical Delegation Mesh & Quota Controller
+        .route("/api/delegation/tree", get(get_delegation_tree))
+        .route("/api/delegates/:id/quota", route_patch(update_delegate_quota))
+        .route("/api/delegates/:id/pause", post(pause_delegate))
+        .route("/api/delegates/:id/resume", post(resume_delegate))
+        .route("/api/delegates/:id/children", post(spawn_delegate_child))
         .layer(cors)
         .with_state(state);
 
@@ -994,4 +1004,64 @@ async fn get_room_context_breakdown(
     );
 
     Ok(Json(breakdown))
+}
+
+// ==========================================
+// Feature 52: Delegation Mesh Handlers
+// ==========================================
+
+async fn get_delegation_tree(
+    State(state): State<AppState>,
+) -> Json<delegation_mesh::DelegationHierarchySnapshot> {
+    Json(state.delegation_mesh.snapshot_hierarchy().await)
+}
+
+async fn update_delegate_quota(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(payload): Json<delegation_mesh::UpdateQuotaRequest>,
+) -> Result<Json<delegation_mesh::DelegateLeadNode>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .update_delegate_quota(&id, payload)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
+}
+
+async fn pause_delegate(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .toggle_delegate_pause(&id, true)
+        .await
+        .map(|p| Json(serde_json::json!({ "id": id, "paused": p })))
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
+}
+
+async fn resume_delegate(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .toggle_delegate_pause(&id, false)
+        .await
+        .map(|p| Json(serde_json::json!({ "id": id, "paused": p })))
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
+}
+
+async fn spawn_delegate_child(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(payload): Json<delegation_mesh::SpawnSubagentRequest>,
+) -> Result<Json<delegation_mesh::SubagentChildNode>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .spawn_child(&id, payload)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
 }

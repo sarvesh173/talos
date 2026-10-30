@@ -1,13 +1,12 @@
 package com.sarvesh173.talos.ui
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,14 +21,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,17 +32,19 @@ data class CanvasAgentNode(
     val id: String,
     val name: String,
     val role: String,
+    val tier: String,
     val cliEngine: String,
     val model: String,
     val reasoningEffort: String,
     val status: AgentStatus,
     val turnsUsed: Int,
     var commandLimit: Int,
+    val isPaused: Boolean = false,
     val parentId: String? = null
 )
 
 enum class AgentStatus {
-    RUNNING, IDLE, THINKING, VERIFYING
+    RUNNING, IDLE, THINKING, VERIFYING, PAUSED
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,83 +53,96 @@ fun AgentCanvasScreen(
     client: TalosClient,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val hierarchy by client.delegationHierarchy.collectAsState()
     var selectedNode by remember { mutableStateOf<CanvasAgentNode?>(null) }
     var selectedFilter by remember { mutableStateOf("All") }
+    var showSpawnDialog by remember { mutableStateOf(false) }
 
-    val agents = remember {
-        mutableStateListOf(
-            CanvasAgentNode(
-                id = "root",
-                name = "TALOS Core Orchestrator",
-                role = "Gateway Parent",
-                cliEngine = "Hermes Daemon",
-                model = "agy/gemini-3.8-flash-tiered",
-                reasoningEffort = "Medium",
-                status = AgentStatus.RUNNING,
-                turnsUsed = 14,
-                commandLimit = 50
-            ),
-            CanvasAgentNode(
-                id = "omnirush",
-                name = "OmniRush Runner",
-                role = "Delegate Engine",
-                cliEngine = "OmniRush CLI",
-                model = "agy/gemini-3.8-flash-tiered",
-                reasoningEffort = "Medium",
-                status = AgentStatus.RUNNING,
-                turnsUsed = 22,
-                commandLimit = 50,
-                parentId = "root"
-            ),
-            CanvasAgentNode(
-                id = "opencode",
-                name = "OpenCode Zen Bridge",
-                role = "Coding Specialist",
-                cliEngine = "OpenCode CLI",
-                model = "space-bunny-free",
-                reasoningEffort = "High",
-                status = AgentStatus.THINKING,
-                turnsUsed = 8,
-                commandLimit = 40,
-                parentId = "root"
-            ),
-            CanvasAgentNode(
-                id = "sub_compose",
-                name = "Compose Motion Subagent",
-                role = "Child Worker",
-                cliEngine = "OmniRush",
-                model = "agy/gemini-3.8-flash-tiered",
-                reasoningEffort = "Medium",
-                status = AgentStatus.RUNNING,
-                turnsUsed = 18,
-                commandLimit = 50,
-                parentId = "omnirush"
-            ),
-            CanvasAgentNode(
-                id = "sub_verifier",
-                name = "Adversarial Verifier",
-                role = "QA & CI Gate",
-                cliEngine = "OpenCode",
-                model = "nemotron-3-ultra-free",
-                reasoningEffort = "High",
-                status = AgentStatus.VERIFYING,
-                turnsUsed = 5,
-                commandLimit = 30,
-                parentId = "opencode"
-            ),
-            CanvasAgentNode(
-                id = "sub_rust",
-                name = "Rust Core Engine",
-                role = "Child Worker",
-                cliEngine = "Hermes Subagent",
-                model = "agy/gemini-3.8-flash-tiered",
-                reasoningEffort = "Medium",
-                status = AgentStatus.IDLE,
-                turnsUsed = 12,
-                commandLimit = 50,
-                parentId = "root"
+    LaunchedEffect(Unit) {
+        client.fetchDelegationHierarchy()
+    }
+
+    // Build flattened active canvas nodes from live Rust delegation hierarchy
+    val activeNodes = remember(hierarchy) {
+        val list = mutableListOf<CanvasAgentNode>()
+
+        hierarchy?.engines?.forEach { engine ->
+            list.add(
+                CanvasAgentNode(
+                    id = engine.id,
+                    name = engine.name,
+                    role = "CLI Execution Engine",
+                    tier = "Tier 1: Engine",
+                    cliEngine = engine.command_binary,
+                    model = "Host Environment",
+                    reasoningEffort = "Native",
+                    status = if (engine.is_available) AgentStatus.RUNNING else AgentStatus.IDLE,
+                    turnsUsed = engine.delegates.sumOf { it.turns_consumed },
+                    commandLimit = engine.delegates.sumOf { it.command_turn_limit },
+                    parentId = null
+                )
             )
-        )
+
+            engine.delegates.forEach { delegate ->
+                list.add(
+                    CanvasAgentNode(
+                        id = delegate.id,
+                        name = delegate.name,
+                        role = "Delegate Lead Orchestrator",
+                        tier = "Tier 2: Delegate Lead",
+                        cliEngine = engine.name,
+                        model = delegate.assigned_model,
+                        reasoningEffort = delegate.reasoning_effort,
+                        status = if (delegate.is_paused) AgentStatus.PAUSED else AgentStatus.RUNNING,
+                        turnsUsed = delegate.turns_consumed,
+                        commandLimit = delegate.command_turn_limit,
+                        isPaused = delegate.is_paused,
+                        parentId = engine.id
+                    )
+                )
+
+                delegate.children.forEach { child ->
+                    val isChildPaused = child.state.equals("paused", ignoreCase = true)
+                    list.add(
+                        CanvasAgentNode(
+                            id = child.id,
+                            name = child.name,
+                            role = child.task_goal,
+                            tier = "Tier 3: Child Worker",
+                            cliEngine = engine.name,
+                            model = delegate.assigned_model,
+                            reasoningEffort = delegate.reasoning_effort,
+                            status = if (isChildPaused) AgentStatus.PAUSED else AgentStatus.RUNNING,
+                            turnsUsed = child.turns_used,
+                            commandLimit = delegate.command_turn_limit,
+                            isPaused = isChildPaused,
+                            parentId = delegate.id
+                        )
+                    )
+                }
+            }
+        }
+
+        // Fallback default node if hierarchy is initializing
+        if (list.isEmpty()) {
+            list.add(
+                CanvasAgentNode(
+                    id = "root",
+                    name = "TALOS Orchestrator",
+                    role = "Core Daemon Lead",
+                    tier = "Tier 1: Engine",
+                    cliEngine = "talos-core",
+                    model = "agy/gemini-3.8-flash-tiered",
+                    reasoningEffort = "Medium",
+                    status = AgentStatus.RUNNING,
+                    turnsUsed = 12,
+                    commandLimit = 50,
+                    parentId = null
+                )
+            )
+        }
+        list
     }
 
     Scaffold(
@@ -143,15 +151,15 @@ fun AgentCanvasScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Agent Canvas",
+                            text = "Multi-Agent Canvas",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "6 active agents in parallel mesh",
+                            text = "${activeNodes.size} agents in live parallel mesh",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrimaryAccent
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -165,28 +173,18 @@ fun AgentCanvasScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        // Spawn new subagent node
-                        val newId = "agent_${System.currentTimeMillis() % 1000}"
-                        agents.add(
-                            CanvasAgentNode(
-                                id = newId,
-                                name = "Delegated Worker #$newId",
-                                role = "Child Subagent",
-                                cliEngine = "OmniRush",
-                                model = "agy/gemini-3.8-flash-tiered",
-                                reasoningEffort = "Medium",
-                                status = AgentStatus.RUNNING,
-                                turnsUsed = 1,
-                                commandLimit = 50,
-                                parentId = "omnirush"
-                            )
+                    IconButton(onClick = { client.fetchDelegationHierarchy() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }) {
+                    }
+                    IconButton(onClick = { showSpawnDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.AddCircleOutline,
-                            contentDescription = "Spawn Agent",
-                            tint = PrimaryAccent
+                            contentDescription = "Spawn Subagent",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -207,27 +205,26 @@ fun AgentCanvasScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(listOf("All", "Running", "Thinking", "Verifying", "Idle")) { filter ->
+                items(listOf("All", "Tier 1: Engine", "Tier 2: Delegate Lead", "Tier 3: Child Worker", "Paused")) { filter ->
                     val isSelected = selectedFilter == filter
                     FilterChip(
                         selected = isSelected,
                         onClick = { selectedFilter = filter },
-                        label = { Text(filter) },
+                        label = { Text(filter, fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = PrimaryAccent.copy(alpha = 0.2f),
-                            selectedLabelColor = PrimaryAccent
+                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            selectedLabelColor = MaterialTheme.colorScheme.primary
                         )
                     )
                 }
             }
 
-            // Spatial Agent Cards Feed with Leader Connectors
-            val filteredAgents = when (selectedFilter) {
-                "Running" -> agents.filter { it.status == AgentStatus.RUNNING }
-                "Thinking" -> agents.filter { it.status == AgentStatus.THINKING }
-                "Verifying" -> agents.filter { it.status == AgentStatus.VERIFYING }
-                "Idle" -> agents.filter { it.status == AgentStatus.IDLE }
-                else -> agents
+            val filteredNodes = when (selectedFilter) {
+                "Tier 1: Engine" -> activeNodes.filter { it.tier.startsWith("Tier 1") }
+                "Tier 2: Delegate Lead" -> activeNodes.filter { it.tier.startsWith("Tier 2") }
+                "Tier 3: Child Worker" -> activeNodes.filter { it.tier.startsWith("Tier 3") }
+                "Paused" -> activeNodes.filter { it.isPaused }
+                else -> activeNodes
             }
 
             LazyColumn(
@@ -235,7 +232,7 @@ fun AgentCanvasScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(filteredAgents, key = { it.id }) { agent ->
+                items(filteredNodes, key = { it.id }) { agent ->
                     AgentNodeCard(
                         agent = agent,
                         isSelected = selectedNode?.id == agent.id,
@@ -246,7 +243,7 @@ fun AgentCanvasScreen(
         }
     }
 
-    // Node Inspector & Custom Command Limits Modal
+    // Node Inspector & Governance Bottom Sheet
     selectedNode?.let { node ->
         ModalBottomSheet(
             onDismissRequest = { selectedNode = null },
@@ -264,7 +261,7 @@ fun AgentCanvasScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = node.name,
                             style = MaterialTheme.typography.titleLarge,
@@ -272,9 +269,9 @@ fun AgentCanvasScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${node.role} • ${node.cliEngine}",
+                            text = "${node.tier} • ${node.cliEngine}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrimaryAccent
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -283,7 +280,7 @@ fun AgentCanvasScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Custom Command Limit Slider
+                // Custom Command Turn Quota Slider
                 var commandLimit by remember(node.id) { mutableFloatStateOf(node.commandLimit.toFloat()) }
                 Text(
                     text = "Custom Command Limit: ${commandLimit.toInt()} Turns",
@@ -292,7 +289,7 @@ fun AgentCanvasScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Bounds agent execution loop before auto-pause or consensus check.",
+                    text = "Bounds execution loop before automatic consensus check or pause.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -305,14 +302,14 @@ fun AgentCanvasScreen(
                     valueRange = 10f..100f,
                     steps = 17,
                     colors = SliderDefaults.colors(
-                        thumbColor = PrimaryAccent,
-                        activeTrackColor = PrimaryAccent
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
                     )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Model & Reasoning Effort Information
+                // Metadata Card
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -333,32 +330,154 @@ fun AgentCanvasScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Reasoning Effort", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(node.reasoningEffort, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryAccent)
+                            Text(node.reasoningEffort, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Turn Budget Used", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${node.turnsUsed} / ${node.commandLimit}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Turns Used / Cap", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${node.turnsUsed} / ${commandLimit.toInt()}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Button(
-                    onClick = { selectedNode = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                // Actions Row
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Apply & Close", color = MaterialTheme.colorScheme.onPrimary)
+                    if (node.tier.startsWith("Tier 3")) {
+                        // Pause / Resume Toggle for Child Subagents
+                        Button(
+                            onClick = {
+                                client.toggleChildPause(node.id, node.isPaused)
+                                selectedNode = null
+                                Toast.makeText(context, if (node.isPaused) "Child Resumed" else "Child Paused", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = if (node.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(if (node.isPaused) "Resume" else "Pause", color = MaterialTheme.colorScheme.onSurface)
+                        }
+
+                        // Terminate Action
+                        OutlinedButton(
+                            onClick = {
+                                client.terminateChildSubagent(node.id)
+                                selectedNode = null
+                                Toast.makeText(context, "Child Terminated", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Terminate", color = MaterialTheme.colorScheme.error)
+                        }
+                    } else if (node.tier.startsWith("Tier 2")) {
+                        // Apply Quota for Delegate Leads
+                        Button(
+                            onClick = {
+                                client.updateDelegateQuota(node.id, commandLimit.toInt(), node.reasoningEffort)
+                                selectedNode = null
+                                Toast.makeText(context, "Quota updated to ${commandLimit.toInt()} turns!", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Apply Quota Changes", color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    } else {
+                        Button(
+                            onClick = { selectedNode = null },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Close Inspector", color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    // Spawn Subagent Dialog
+    if (showSpawnDialog) {
+        var subagentName by remember { mutableStateOf("") }
+        var taskGoal by remember { mutableStateOf("") }
+        var selectedEngineId by remember { mutableStateOf("omnirush") }
+
+        AlertDialog(
+            onDismissRequest = { showSpawnDialog = false },
+            icon = {
+                Icon(Icons.Default.AddCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            },
+            title = {
+                Text("Spawn Delegated Subagent", style = MaterialTheme.typography.titleMedium)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = subagentName,
+                        onValueChange = { subagentName = it },
+                        label = { Text("Subagent Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = taskGoal,
+                        onValueChange = { taskGoal = it },
+                        label = { Text("Task Goal") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 3
+                    )
+                    Text("Host CLI Engine", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("omnirush", "opencode", "codex").forEach { engineId ->
+                            FilterChip(
+                                selected = selectedEngineId == engineId,
+                                onClick = { selectedEngineId = engineId },
+                                label = { Text(engineId.uppercase(), fontSize = 10.sp) }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (subagentName.isNotBlank() && taskGoal.isNotBlank()) {
+                            val delegateId = hierarchy?.engines?.find { it.id == selectedEngineId }?.delegates?.firstOrNull()?.id
+                                ?: "lead-$selectedEngineId-main"
+                            client.spawnChildSubagent(delegateId, subagentName, taskGoal)
+                            showSpawnDialog = false
+                            Toast.makeText(context, "Subagent spawned under $selectedEngineId!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = subagentName.isNotBlank() && taskGoal.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Spawn", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSpawnDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -384,7 +503,7 @@ private fun AgentNodeCard(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         border = BorderStroke(
             if (isSelected) 1.5.dp else 1.dp,
-            if (isSelected) PrimaryAccent else MaterialTheme.colorScheme.outlineVariant
+            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
         ),
         tonalElevation = if (isSelected) 4.dp else 1.dp,
         modifier = Modifier
@@ -405,9 +524,10 @@ private fun AgentNodeCard(
                             .background(
                                 when (agent.status) {
                                     AgentStatus.RUNNING -> Color(0xFF10B981).copy(alpha = pulseGlow)
-                                    AgentStatus.THINKING -> PrimaryAccent.copy(alpha = pulseGlow)
+                                    AgentStatus.THINKING -> MaterialTheme.colorScheme.primary.copy(alpha = pulseGlow)
                                     AgentStatus.VERIFYING -> Color(0xFF2DD4BF).copy(alpha = pulseGlow)
                                     AgentStatus.IDLE -> Color(0xFF64748B)
+                                    AgentStatus.PAUSED -> Color(0xFFF59E0B)
                                 }
                             )
                     )
@@ -423,30 +543,37 @@ private fun AgentNodeCard(
                 StatusPill(status = agent.status)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "${agent.role} • ${agent.cliEngine}",
+                text = "${agent.tier} • ${agent.cliEngine}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            if (agent.role.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = agent.role,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Progress bar representing command limit quota
-            val progress = (agent.turnsUsed.toFloat() / agent.commandLimit.toFloat()).coerceIn(0f, 1f)
+            // Metallic Progress Indicator for Command Limit Quota
+            val progress = (agent.turnsUsed.toFloat() / agent.commandLimit.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(6.dp)
-                        .clip(CircleShape),
-                    color = PrimaryAccent,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                MetallicLoadingBar(
+                    progress = progress,
+                    height = 6.dp,
+                    accentColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
@@ -463,9 +590,10 @@ private fun AgentNodeCard(
 private fun StatusPill(status: AgentStatus) {
     val (label, bg, fg) = when (status) {
         AgentStatus.RUNNING -> Triple("RUNNING", Color(0xFF10B981).copy(alpha = 0.15f), Color(0xFF10B981))
-        AgentStatus.THINKING -> Triple("THINKING", PrimaryAccent.copy(alpha = 0.15f), PrimaryAccent)
+        AgentStatus.THINKING -> Triple("THINKING", Color(0xFFE5A93C).copy(alpha = 0.15f), Color(0xFFE5A93C))
         AgentStatus.VERIFYING -> Triple("VERIFYING", Color(0xFF2DD4BF).copy(alpha = 0.15f), Color(0xFF2DD4BF))
         AgentStatus.IDLE -> Triple("IDLE", Color(0xFF64748B).copy(alpha = 0.15f), Color(0xFF94A3B8))
+        AgentStatus.PAUSED -> Triple("PAUSED", Color(0xFFF59E0B).copy(alpha = 0.15f), Color(0xFFF59E0B))
     }
 
     Box(

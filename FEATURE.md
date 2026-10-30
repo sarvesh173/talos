@@ -1178,3 +1178,28 @@ Implemented true device GPS location acquisition over encrypted Tailscale mesh w
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21029` and `versionName` to `"2.10.29"`.
+
+---
+
+## 61. Reactive Spatial Canvas Integration with Live Rust Delegation Mesh
+
+Replaced static mock cards in `AgentCanvasScreen.kt` with live reactive data streams from `crates/talos-core` delegation hierarchy and embedded real-time subagent governance.
+
+### 1. Live 3-Tier Hierarchy Mapping (`AgentCanvasScreen.kt`)
+- **Real-Time Mesh Feed**: Connected `AgentCanvasScreen.kt` directly to `client.delegationHierarchy` StateFlow (`GET /api/delegation/tree`).
+- **Dynamic Tier Categorization**: Automatically transforms live Rust daemon entities into visual canvas nodes:
+  - **Tier 1 (Engines)**: Host CLI execution runtimes (`OmniRush`, `OpenCode`, `Codex`, `Claude Code`).
+  - **Tier 2 (Delegate Leads)**: Orchestration controllers with assigned models (`agy/gemini-3.8-flash-tiered`) and reasoning effort metrics.
+  - **Tier 3 (Child Subagents)**: Bounded task workers displaying specific goals and pause/run state.
+
+### 2. Embedded Governance & Command Limit Sliders
+- **Live Turn Quota Controller**: Delegate Lead inspector offers interactive command limit slider (10 to 100 turns), calling `client.updateDelegateQuota(...)` with immediate backend synchronization.
+- **Child Subagent Action Controls**: One-tap pause/resume toggle (`client.toggleChildPause`) and terminate action (`client.terminateChildSubagent`).
+- **Dynamic Subagent Spawning**: Added interactive modal to spawn new child subagents under any active CLI engine (`client.spawnChildSubagent`).
+- **Metallic UI 3 Polish**: Embedded `MetallicLoadingBar` with animated specular sheen pulse for turn quota consumption.
+
+- [x] **Verification & Tests**:
+  - All 38 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21030` and `versionName` to `"2.10.30"`.

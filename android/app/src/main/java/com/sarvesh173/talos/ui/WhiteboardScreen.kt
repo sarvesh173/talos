@@ -43,15 +43,16 @@ fun WhiteboardScreen(
     val context = LocalContext.current
     val paths = remember { mutableStateListOf<StrokePath>() }
     var currentPoints = remember { mutableStateListOf<Offset>() }
-    var currentColor by remember { mutableStateOf(Color(0xFFF59E0B)) }
+    val defaultColor = MaterialTheme.colorScheme.primary
+    var currentColor by remember { mutableStateOf(defaultColor) }
     var strokeWidth by remember { mutableFloatStateOf(6f) }
     var canvasBackground by remember { mutableStateOf("DotGrid") }
 
     val colorPalette = listOf(
-        Color(0xFFF59E0B), // Molten Amber
-        Color(0xFF2DD4BF), // Electric Verdigris
+        MaterialTheme.colorScheme.primary, // Signature Iris Purple
         Color(0xFF60A5FA), // Azure Blue
-        Color(0xFFF87171), // Laser Red
+        Color(0xFF34D399), // Mint Emerald
+        Color(0xFFF87171), // Coral Rose
         Color(0xFFFFFFFF)  // Chalk White
     )
 
@@ -97,11 +98,16 @@ fun WhiteboardScreen(
                     ) {
                         Icon(Icons.Default.DeleteSweep, contentDescription = "Clear All", tint = MaterialTheme.colorScheme.error)
                     }
-                    // Send to Council
+                    // Send to Council / Chamber with rendered bitmap
                     IconButton(
                         onClick = {
                             if (paths.isNotEmpty()) {
-                                client.sendMessage("📐 [OpenBoard Sketch Attached: ${paths.size} strokes]")
+                                val b64 = exportStrokesToPngBase64(paths)
+                                if (b64 != null) {
+                                    client.sendMessage("📐 [OpenBoard Sketch: ${paths.size} strokes]\ndata:image/png;base64,$b64")
+                                } else {
+                                    client.sendMessage("📐 [OpenBoard Sketch Attached: ${paths.size} strokes]")
+                                }
                                 Toast.makeText(context, "Sketch attached to Council Room!", Toast.LENGTH_SHORT).show()
                                 onBack()
                             } else {
@@ -276,5 +282,64 @@ fun WhiteboardScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * OpenBoard Canvas Exporter: renders committed vector strokes to PNG Base64.
+ */
+fun exportStrokesToPngBase64(paths: List<StrokePath>, width: Int = 720, height: Int = 480): String? {
+    if (paths.isEmpty()) return null
+    return try {
+        val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        canvas.drawColor(0xFF0F1117.toInt())
+
+        val paint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+            strokeCap = android.graphics.Paint.Cap.ROUND
+            strokeJoin = android.graphics.Paint.Join.ROUND
+        }
+
+        // Draw dot grid
+        val dotPaint = android.graphics.Paint().apply {
+            color = 0xFF2B3245.toInt()
+            isAntiAlias = true
+        }
+        val spacing = 28f
+        var x = spacing
+        while (x < width) {
+            var y = spacing
+            while (y < height) {
+                canvas.drawCircle(x, y, 1.5f, dotPaint)
+                y += spacing
+            }
+            x += spacing
+        }
+
+        paths.forEach { stroke ->
+            if (stroke.points.size > 1) {
+                val c = stroke.color
+                val a = (c.alpha * 255).toInt()
+                val r = (c.red * 255).toInt()
+                val g = (c.green * 255).toInt()
+                val b = (c.blue * 255).toInt()
+                paint.color = android.graphics.Color.argb(a, r, g, b)
+                paint.strokeWidth = stroke.strokeWidth
+                val path = android.graphics.Path().apply {
+                    moveTo(stroke.points[0].x, stroke.points[0].y)
+                    for (i in 1 until stroke.points.size) {
+                        lineTo(stroke.points[i].x, stroke.points[i].y)
+                    }
+                }
+                canvas.drawPath(path, paint)
+            }
+        }
+        val bytes = java.io.ByteArrayOutputStream()
+        bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 95, bytes)
+        android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP)
+    } catch (_: Exception) {
+        null
     }
 }

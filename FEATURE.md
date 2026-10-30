@@ -1320,3 +1320,23 @@ Implemented full end-to-end hardware voice note recording via Android `MediaReco
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21036` and `versionName` to `"2.10.36"`.
+
+---
+
+## 67. OpenBoard Vector-to-Raster Engine & In-Chamber Visual Sketch Card
+
+Exported interactive OpenBoard digital whiteboard strokes to PNG Base64 and upgraded chamber presentation with high-res rendered canvas previews.
+
+### 1. Vector-to-Raster PNG Exporter (`WhiteboardScreen.kt`)
+- **Android Graphics Canvas**: Implemented `exportStrokesToPngBase64` which renders vector strokes with anti-aliasing, rounded stroke caps/joins, and OpenBoard dot-grid pattern onto a 720x480 bitmap.
+- **Base64 Compressed Payload**: Compresses the canvas to PNG (95% quality) and attaches formatted `📐 [OpenBoard Sketch: N strokes]\ndata:image/png;base64,...` payload to active chamber conversations.
+- **M3 Signature Purple Palette**: Replaced hardcoded amber with Google Material 3 Signature Iris (`PrimaryAccent`), Azure Blue, Mint Emerald, Coral Rose, and Chalk White.
+
+### 2. High-Resolution In-Chamber Sketch Card (`Components.kt`)
+- **Visual Sketch Card Preview**: `SketchAttachmentBubble` now decodes Base64 payloads and displays the user's drawing directly inside a rounded container with dark canvas background and stroke count metadata badge.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21037` and `versionName` to `"2.10.37"`.

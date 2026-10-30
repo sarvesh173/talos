@@ -322,6 +322,15 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenDiff = {
                                     appScreen = "diff"
+                                },
+                                onOpenHub = {
+                                    appScreen = "hub"
+                                },
+                                onOpenGallery = {
+                                    appScreen = "gallery"
+                                },
+                                onOpenCliManager = {
+                                    appScreen = "cli_manager"
                                 }
                             )
                         }
@@ -335,6 +344,27 @@ class MainActivity : ComponentActivity() {
                             CodeDiffViewer(
                                 client = client,
                                 onBack = { appScreen = "main" }
+                            )
+                        }
+                        "gallery" -> {
+                            ImageGalleryScreen(
+                                client = client,
+                                onBack = { appScreen = "main" }
+                            )
+                        }
+                        "cli_manager" -> {
+                            CliToolManagerScreen(
+                                client = client,
+                                onBack = { appScreen = "main" }
+                            )
+                        }
+                        "hub" -> {
+                            ModuleActivityHub(
+                                client = client,
+                                onBack = { appScreen = "main" },
+                                onNavigate = { targetScreen ->
+                                    appScreen = targetScreen
+                                }
                             )
                         }
                         "wizard" -> {
@@ -391,7 +421,10 @@ fun MainScreen(
     onToggleTheme: () -> Unit = {},
     onExitToLanding: () -> Unit = {},
     onOpenCanvas: () -> Unit = {},
-    onOpenDiff: () -> Unit = {}
+    onOpenDiff: () -> Unit = {},
+    onOpenHub: () -> Unit = {},
+    onOpenGallery: () -> Unit = {},
+    onOpenCliManager: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -742,6 +775,19 @@ fun MainScreen(
                                         imageVector = Icons.Default.Code,
                                         contentDescription = "Code Changes",
                                         tint = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+
+                                // GCompris-Inspired Activity Hub
+                                IconButton(
+                                    onClick = onOpenHub,
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Dashboard,
+                                        contentDescription = "Activity Hub",
+                                        tint = Color(0xFF60A5FA),
                                         modifier = Modifier.size(19.dp)
                                     )
                                 }

@@ -969,9 +969,9 @@ Advancing autonomous multi-agent engineering by integrating Hermes image generat
 - **Tactile Activity Matrix**: Categorized system modules (`Intelligence & Coding`, `Sensory & Hardware`, `Creative & Canvas`, `System & Telemetry`).
 - **One-Tap Actions**: Quick launchers for Whiteboard, Code Diff, Agent Canvas, Browser, Image Studio, and Mesh Telemetry.
 
-- [ ] **Implementation Steps**:
-  - [ ] Implement `ImageGalleryScreen.kt` with bento gallery and lightbox zoom.
-  - [ ] Implement `CliToolManager.kt` with hierarchy tree and command limits.
-  - [ ] Implement `ModuleActivityHub.kt` with categorized activity tiles.
-  - [ ] Wire navigation in `MainActivity.kt`.
-  - [ ] Increment version to `2.10.20`, compile release APK, verify, and push.
+- [x] **Implementation Steps**:
+  - [x] Implement `ImageGalleryScreen.kt` with bento gallery and lightbox zoom.
+  - [x] Implement `CliToolManager.kt` with hierarchy tree and command limits.
+  - [x] Implement `ModuleActivityHub.kt` with categorized activity tiles.
+  - [x] Wire navigation in `MainActivity.kt`.
+  - [x] Increment version to `2.10.20`, compile release APK, verify, and push.

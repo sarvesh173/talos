@@ -18,6 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -107,7 +110,7 @@ fun CliToolManagerScreen(
                         Text(
                             text = "$totalActiveChildren subagents active across ${displayEngines.size} CLI engines",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrimaryAccent
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -125,7 +128,7 @@ fun CliToolManagerScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh",
-                            tint = PrimaryAccent
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -174,7 +177,7 @@ fun CliToolManagerScreen(
         AlertDialog(
             onDismissRequest = { spawningDelegateId = null },
             icon = {
-                Icon(Icons.Default.PersonAdd, contentDescription = null, tint = PrimaryAccent)
+                Icon(Icons.Default.PersonAdd, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             title = {
                 Text("Spawn Child Subagent", style = MaterialTheme.typography.titleMedium)
@@ -205,7 +208,7 @@ fun CliToolManagerScreen(
                             spawningDelegateId = null
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text("Spawn", color = MaterialTheme.colorScheme.onPrimary)
                 }
@@ -336,21 +339,25 @@ private fun DelegateLeadCard(
                     Text(
                         text = "${delegate.assigned_model} • Reasoning: $reasoning",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrimaryAccent
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val haptic = LocalHapticFeedback.current
                     // Pause / Resume Toggle
                     IconButton(
-                        onClick = { onTogglePause(!delegate.is_paused) },
-                        modifier = Modifier.size(28.dp)
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onTogglePause(!delegate.is_paused)
+                        },
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = if (delegate.is_paused) Icons.Default.PlayArrow else Icons.Default.Pause,
                             contentDescription = if (delegate.is_paused) "Resume" else "Pause",
                             tint = if (delegate.is_paused) Color(0xFF10B981) else MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
 
@@ -358,6 +365,7 @@ private fun DelegateLeadCard(
                     FilterChip(
                         selected = reasoning.equals("High", ignoreCase = true),
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             val newEffort = if (reasoning.equals("High", ignoreCase = true)) "Medium" else "High"
                             reasoning = newEffort
                             onUpdateQuota(commandLimit.toInt(), newEffort)
@@ -381,28 +389,31 @@ private fun DelegateLeadCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val haptic = LocalHapticFeedback.current
                     IconButton(
                         onClick = {
                             if (commandLimit > 10f) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 commandLimit -= 5f
                                 onUpdateQuota(commandLimit.toInt(), reasoning)
                             }
                         },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
-                        Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                     }
                     IconButton(
                         onClick = {
                             if (commandLimit < 100f) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 commandLimit += 5f
                                 onUpdateQuota(commandLimit.toInt(), reasoning)
                             }
                         },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Increase", tint = PrimaryAccent)
+                        Icon(Icons.Default.Add, contentDescription = "Increase", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -427,12 +438,12 @@ private fun DelegateLeadCard(
 
                     TextButton(
                         onClick = onSpawnChild,
-                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
-                        modifier = Modifier.height(26.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = PrimaryAccent, modifier = Modifier.size(12.dp))
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Text("Spawn", fontSize = 10.sp, color = PrimaryAccent)
+                        Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Spawn", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }
 
@@ -452,8 +463,8 @@ private fun DelegateLeadCard(
                             Icon(
                                 imageVector = Icons.Default.SubdirectoryArrowRight,
                                 contentDescription = null,
-                                tint = PrimaryAccent,
-                                modifier = Modifier.size(14.dp)
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Column {
@@ -483,27 +494,34 @@ private fun DelegateLeadCard(
                                 color = if (child.state.equals("running", ignoreCase = true)) Color(0xFF10B981) else Color(0xFF94A3B8)
                             )
 
+                            val haptic = LocalHapticFeedback.current
                             IconButton(
-                                onClick = { onToggleChildPause(child.id, isChildPaused) },
-                                modifier = Modifier.size(28.dp)
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onToggleChildPause(child.id, isChildPaused)
+                                },
+                                modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(
                                     imageVector = if (isChildPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
                                     contentDescription = if (isChildPaused) "Resume" else "Pause",
-                                    tint = PrimaryAccent,
-                                    modifier = Modifier.size(14.dp)
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
 
                             IconButton(
-                                onClick = { onTerminateChild(child.id) },
-                                modifier = Modifier.size(28.dp)
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onTerminateChild(child.id)
+                                },
+                                modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Terminate",
                                     tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
@@ -513,11 +531,11 @@ private fun DelegateLeadCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 TextButton(
                     onClick = onSpawnChild,
-                    modifier = Modifier.align(Alignment.End)
+                    modifier = Modifier.align(Alignment.End).defaultMinSize(minHeight = 48.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = PrimaryAccent, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Spawn Subagent", fontSize = 11.sp, color = PrimaryAccent)
+                    Text("Spawn Subagent", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                 }
             }
         }

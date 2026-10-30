@@ -1667,3 +1667,25 @@ Upgraded `AttachmentBottomSheet.kt` sensory context tools with real bitmap photo
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21051` and `versionName` to `"2.10.51"`.
+
+---
+
+## 82. CLI & Agent Governance: 48dp Touch Bounds, Haptic Tactile Engine & Zero-Amber Adherence
+
+Refactored `CliToolManager.kt` to enforce Material 3 Expressive touch ergonomics, tactile haptic feedback on all lifecycle mutations, and complete elimination of legacy amber accents.
+
+### 1. 48dp Ergonomic Touch Target Enforcement
+- Expanded all quota adjustment buttons (`Increase` / `Decrease`), subagent pause/resume triggers, and termination icon buttons to meet or exceed `48x48dp` touch targets per WCAG 2.2 AA and M3 guidelines.
+- Standardized `TextButton` spawn triggers with `defaultMinSize(minHeight = 48.dp)`.
+
+### 2. Tactile Haptic Engine
+- **Turn Quota Adjustments**: Bound `TextHandleMove` haptics to `+5` / `-5` quota increments.
+- **Subagent Lifecycle State**: Applied `LongPress` haptic pulses to subagent pause, resume, and process termination actions.
+
+### 3. Pure Material 3 Signature Iris Palette
+- Replaced all 12 occurrences of legacy `PrimaryAccent` with `MaterialTheme.colorScheme.primary`.
+
+- [x] **Verification & Tests**:
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21052` and `versionName` to `"2.10.52"`.

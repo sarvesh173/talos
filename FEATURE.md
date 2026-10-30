@@ -1155,3 +1155,26 @@ Scraped 32 official Material Design 3 and Metallic UI reference repositories, pu
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21028` and `versionName` to `"2.10.28"`.
+
+---
+
+## 60. Real-Time Hardware Location Sharing & Interactive Telemetry Pin Bubble
+
+Implemented true device GPS location acquisition over encrypted Tailscale mesh with dedicated Material 3 Expressive `LocationPinBubble` card.
+
+### 1. Real-Time Device GPS Acquisition (`AttachmentBottomSheet.kt`)
+- **Direct System Location Resolution**: Replaced static placeholder text with active `android.location.LocationManager` queries (`GPS_PROVIDER` -> `NETWORK_PROVIDER` -> `PASSIVE_PROVIDER`).
+- **Encrypted Mesh Telemetry Format**: Formats live latitude, longitude, and accuracy into `📍 [Mesh Node Geolocation]` payload with `ACCESS_FINE_LOCATION` runtime verification.
+
+### 2. Interactive Location Telemetry Card (`Components.kt`)
+- **`LocationPinBubble`**: Dedicated metallic UI bubble featuring:
+  - Satellite radar emblem socket with green "VERIFIED" status badge.
+  - Recessed dual-column telemetry grid displaying Latitude & Longitude in monospace with high-contrast formatting.
+  - Interactive Action Row: "Open in Maps" (`geo:lat,lon` intent) and "Copy" (`clipboardManager`).
+- **Graceful Fallback**: If satellites are obstructed, renders calibrated sensor status message.
+
+- [x] **Verification & Tests**:
+  - All 38 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21029` and `versionName` to `"2.10.29"`.

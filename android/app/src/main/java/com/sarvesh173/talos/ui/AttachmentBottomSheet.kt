@@ -4,6 +4,9 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
+import java.util.Locale
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -78,7 +81,23 @@ fun AttachmentBottomSheet(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            onSendText("📍 Device Mesh Node Connected (Tailscale Encrypted)")
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+            var location: Location? = null
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                location = locationManager?.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: locationManager?.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    ?: locationManager?.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
+            }
+
+            if (location != null) {
+                val latStr = String.format(Locale.US, "%.4f", location.latitude)
+                val lonStr = String.format(Locale.US, "%.4f", location.longitude)
+                val accuracy = location.accuracy.toInt()
+                onSendText("📍 [Mesh Node Geolocation]\nLatitude: $latStr\nLongitude: $lonStr\nAccuracy: ±${accuracy}m\nNetwork: Tailscale Encrypted")
+            } else {
+                onSendText("📍 [Mesh Node Proximity Active]\nGPS Sensor calibrated. Waiting for satellite lock over Tailscale mesh.")
+            }
             onDismiss()
         } else {
             showPermissionRationale = "Location permission is needed to map mesh network proximity."

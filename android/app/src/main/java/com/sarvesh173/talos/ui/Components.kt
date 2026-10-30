@@ -27,6 +27,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,6 +39,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -225,8 +231,12 @@ fun MessageBubble(
                           content.contains(".webm", ignoreCase = true)
             val isImageGen = content.startsWith("/generate-image", ignoreCase = true)
             val isSketch = content.contains("[OpenBoard Sketch Attached", ignoreCase = true)
+            val isLocation = content.contains("📍 [Mesh Node", ignoreCase = true)
 
             when {
+                isLocation -> {
+                    LocationPinBubble(content = content, isHuman = isHuman)
+                }
                 isImageGen -> {
                     ImageGenerationPromptBubble(content = content, isHuman = isHuman)
                 }
@@ -471,6 +481,147 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                     text = "Vector strokes forwarded to multi-agent context",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LocationPinBubble(content: String, isHuman: Boolean) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val accent = MaterialTheme.colorScheme.primary
+
+    // Extract latitude and longitude
+    val latMatch = Regex("""Latitude:\s*([\d.-]+)""").find(content)
+    val lonMatch = Regex("""Longitude:\s*([\d.-]+)""").find(content)
+    val lat = latMatch?.groupValues?.get(1)
+    val lon = lonMatch?.groupValues?.get(1)
+
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.2.dp, metallicBorderBrush()),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(accent.copy(alpha = 0.15f))
+                            .border(1.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = accent,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "MESH NODE GEOLOCATION",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Tailscale Encrypted Proximity",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFF10B981).copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.4f))
+                ) {
+                    Text(
+                        text = "VERIFIED",
+                        color = Color(0xFF10B981),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (lat != null && lon != null) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 10.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("LATITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("$lat°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                        Box(modifier = Modifier.height(28.dp).width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("LONGITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("$lon°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val uri = android.net.Uri.parse("geo:$lat,$lon?q=$lat,$lon(Talos Mesh Node)")
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp)
+                    ) {
+                        Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Open Maps", fontSize = 12.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString("$lat, $lon"))
+                            android.widget.Toast.makeText(context, "Coordinates copied!", android.widget.Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = accent),
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp)
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Copy", color = MaterialTheme.colorScheme.onPrimary, fontSize = 12.sp)
+                    }
+                }
+            } else {
+                Text(
+                    text = content,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

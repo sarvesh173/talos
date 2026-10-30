@@ -107,6 +107,89 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val _rooms = MutableStateFlow<List<Room>>(emptyList())
     val rooms: StateFlow<List<Room>> = _rooms.asStateFlow()
 
+    private val _delegationHierarchy = MutableStateFlow<DelegationHierarchyDto?>(null)
+    val delegationHierarchy: StateFlow<DelegationHierarchyDto?> = _delegationHierarchy.asStateFlow()
+
+    fun fetchDelegationHierarchy() {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/delegation/tree")
+                    .get()
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: return@use
+                        val parsed = json.decodeFromString<DelegationHierarchyDto>(body)
+                        _delegationHierarchy.value = parsed
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to fetch delegation hierarchy: ${e.message}")
+            }
+        }
+    }
+
+    fun updateDelegateQuota(delegateId: String, newLimit: Int?, reasoningEffort: String?) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val payload = json.encodeToString(UpdateQuotaRequestDto(newLimit, reasoningEffort))
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/delegates/$delegateId/quota")
+                    .patch(payload.toRequestBody(mediaType))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        fetchDelegationHierarchy()
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to update delegate quota: ${e.message}")
+            }
+        }
+    }
+
+    fun toggleDelegatePause(delegateId: String, pause: Boolean) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val endpoint = if (pause) "pause" else "resume"
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/delegates/$delegateId/$endpoint")
+                    .post("{}".toRequestBody(mediaType))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        fetchDelegationHierarchy()
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to toggle delegate pause: ${e.message}")
+            }
+        }
+    }
+
+    fun spawnChildSubagent(delegateId: String, name: String, goal: String) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val payload = json.encodeToString(SpawnSubagentRequestDto(name, goal))
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/delegates/$delegateId/children")
+                    .post(payload.toRequestBody(mediaType))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        fetchDelegationHierarchy()
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to spawn child subagent: ${e.message}")
+            }
+        }
+    }
+
     private val _currentRoomId = MutableStateFlow("the-council")
     val currentRoomId: StateFlow<String> = _currentRoomId.asStateFlow()
 
@@ -730,4 +813,57 @@ data class MeshPeerInfo(
     val online: Boolean,
     val os: String,
     val direct: Boolean = true
+)
+
+@kotlinx.serialization.Serializable
+data class SubagentChildDto(
+    val id: String,
+    val name: String,
+    val parent_delegate_id: String,
+    val task_goal: String,
+    val state: String,
+    val turns_used: Int,
+    val created_at: Double = 0.0
+)
+
+@kotlinx.serialization.Serializable
+data class DelegateLeadDto(
+    val id: String,
+    val name: String,
+    val engine_id: String,
+    val assigned_model: String,
+    val reasoning_effort: String,
+    val command_turn_limit: Int,
+    val turns_consumed: Int,
+    val is_paused: Boolean = false,
+    val children: List<SubagentChildDto> = emptyList()
+)
+
+@kotlinx.serialization.Serializable
+data class CliEngineDto(
+    val id: String,
+    val name: String,
+    val command_binary: String,
+    val is_available: Boolean,
+    val delegates: List<DelegateLeadDto> = emptyList()
+)
+
+@kotlinx.serialization.Serializable
+data class DelegationHierarchyDto(
+    val total_engines: Int,
+    val total_delegates: Int,
+    val total_active_children: Int,
+    val engines: List<CliEngineDto> = emptyList()
+)
+
+@kotlinx.serialization.Serializable
+data class UpdateQuotaRequestDto(
+    val command_turn_limit: Int? = null,
+    val reasoning_effort: String? = null
+)
+
+@kotlinx.serialization.Serializable
+data class SpawnSubagentRequestDto(
+    val name: String,
+    val task_goal: String
 )

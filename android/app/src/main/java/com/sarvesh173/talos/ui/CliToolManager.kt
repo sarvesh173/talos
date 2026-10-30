@@ -21,33 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sarvesh173.talos.network.CliEngineDto
+import com.sarvesh173.talos.network.DelegateLeadDto
+import com.sarvesh173.talos.network.SubagentChildDto
 import com.sarvesh173.talos.network.TalosClient
-
-data class SubagentChild(
-    val id: String,
-    val name: String,
-    val role: String,
-    val status: String,
-    val turnsUsed: Int
-)
-
-data class DelegateAgent(
-    val id: String,
-    val name: String,
-    val model: String,
-    var reasoningEffort: String,
-    var commandLimit: Int,
-    var turnsSpent: Int,
-    val children: MutableList<SubagentChild>
-)
-
-data class CliEngineEntry(
-    val id: String,
-    val name: String,
-    val command: String,
-    val isOnline: Boolean,
-    val delegates: List<DelegateAgent>
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,77 +32,65 @@ fun CliToolManagerScreen(
     client: TalosClient,
     onBack: () -> Unit
 ) {
-    val engines = remember {
-        mutableStateListOf(
-            CliEngineEntry(
+    val hierarchyDto by client.delegationHierarchy.collectAsState()
+    var spawningDelegateId by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        client.fetchDelegationHierarchy()
+    }
+
+    // Default fallback engines if offline / connecting
+    val fallbackEngines = remember {
+        listOf(
+            CliEngineDto(
                 id = "omnirush",
                 name = "OmniRush Engine",
-                command = "omnirush",
-                isOnline = true,
+                command_binary = "omnirush",
+                is_available = true,
                 delegates = listOf(
-                    DelegateAgent(
-                        id = "del_1",
+                    DelegateLeadDto(
+                        id = "del_omni_ui",
                         name = "UI Refactoring Lead",
-                        model = "agy/gemini-3.8-flash-tiered",
-                        reasoningEffort = "Medium",
-                        commandLimit = 50,
-                        turnsSpent = 24,
-                        children = mutableStateListOf(
-                            SubagentChild("c_1", "Motion Token Validator", "Physics & Easing", "RUNNING", 14),
-                            SubagentChild("c_2", "Color Contrast Auditor", "WCAG 2.2 Gate", "IDLE", 10)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "del_2",
-                        name = "Hardware Bridge Agent",
-                        model = "agy/gemini-3.8-flash-tiered",
-                        reasoningEffort = "Medium",
-                        commandLimit = 40,
-                        turnsSpent = 16,
-                        children = mutableStateListOf(
-                            SubagentChild("c_3", "Camera & Mic Harness", "Sensor Introspection", "IDLE", 8)
+                        engine_id = "omnirush",
+                        assigned_model = "agy/gemini-3.8-flash-tiered",
+                        reasoning_effort = "Medium",
+                        command_turn_limit = 50,
+                        turns_consumed = 24,
+                        is_paused = false,
+                        children = listOf(
+                            SubagentChildDto("c_1", "Motion Token Validator", "del_omni_ui", "Physics & Easing", "running", 14),
+                            SubagentChildDto("c_2", "Color Contrast Auditor", "del_omni_ui", "WCAG 2.2 Gate", "completed", 10)
                         )
                     )
                 )
             ),
-            CliEngineEntry(
+            CliEngineDto(
                 id = "opencode",
                 name = "OpenCode Zen Bridge",
-                command = "opencode serve",
-                isOnline = true,
+                command_binary = "opencode serve",
+                is_available = true,
                 delegates = listOf(
-                    DelegateAgent(
-                        id = "del_3",
+                    DelegateLeadDto(
+                        id = "del_open_rust",
                         name = "Rust Core Maintainer",
-                        model = "space-bunny-free",
-                        reasoningEffort = "High",
-                        commandLimit = 60,
-                        turnsSpent = 32,
-                        children = mutableStateListOf(
-                            SubagentChild("c_4", "Tokio Runtime Watcher", "Async Threading", "RUNNING", 20),
-                            SubagentChild("c_5", "Memory Leak Sanitizer", "Valgrind & ASAN", "IDLE", 12)
+                        engine_id = "opencode",
+                        assigned_model = "space-bunny-free",
+                        reasoning_effort = "High",
+                        command_turn_limit = 60,
+                        turns_consumed = 32,
+                        is_paused = false,
+                        children = listOf(
+                            SubagentChildDto("c_3", "Tokio Runtime Watcher", "del_open_rust", "Async Threading", "running", 20)
                         )
-                    )
-                )
-            ),
-            CliEngineEntry(
-                id = "claude_code",
-                name = "Claude Code CLI",
-                command = "claude",
-                isOnline = false,
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "del_4",
-                        name = "Architecture Reviewer",
-                        model = "claude-opus-5.5",
-                        reasoningEffort = "High",
-                        commandLimit = 30,
-                        turnsSpent = 5,
-                        children = mutableStateListOf()
                     )
                 )
             )
         )
+    }
+
+    val displayEngines = hierarchyDto?.engines ?: fallbackEngines
+    val totalActiveChildren = hierarchyDto?.total_active_children ?: displayEngines.sumOf { eng ->
+        eng.delegates.sumOf { del -> del.children.count { it.state.equals("running", ignoreCase = true) } }
     }
 
     Scaffold(
@@ -140,7 +105,7 @@ fun CliToolManagerScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Manage multi-CLI delegates & command quotas",
+                            text = "$totalActiveChildren subagents active across ${displayEngines.size} CLI engines",
                             style = MaterialTheme.typography.bodySmall,
                             color = PrimaryAccent
                         )
@@ -152,6 +117,15 @@ fun CliToolManagerScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { client.fetchDelegationHierarchy() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = PrimaryAccent
                         )
                     }
                 },
@@ -169,15 +143,84 @@ fun CliToolManagerScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            items(engines, key = { it.id }) { engine ->
-                CliEngineCard(engine = engine)
+            items(displayEngines, key = { it.id }) { engine ->
+                CliEngineCard(
+                    engine = engine,
+                    onUpdateQuota = { delegateId, limit, effort ->
+                        client.updateDelegateQuota(delegateId, limit, effort)
+                    },
+                    onTogglePause = { delegateId, paused ->
+                        client.toggleDelegatePause(delegateId, paused)
+                    },
+                    onStartSpawnChild = { delegateId ->
+                        spawningDelegateId = delegateId
+                    }
+                )
             }
         }
+    }
+
+    // Spawn Subagent Dialog
+    spawningDelegateId?.let { delegateId ->
+        var subagentName by remember { mutableStateOf("") }
+        var subagentGoal by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { spawningDelegateId = null },
+            icon = {
+                Icon(Icons.Default.PersonAdd, contentDescription = null, tint = PrimaryAccent)
+            },
+            title = {
+                Text("Spawn Child Subagent", style = MaterialTheme.typography.titleMedium)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = subagentName,
+                        onValueChange = { subagentName = it },
+                        placeholder = { Text("Subagent name (e.g. AST Linter)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = subagentGoal,
+                        onValueChange = { subagentGoal = it },
+                        placeholder = { Text("Task goal / responsibility...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 3
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (subagentName.isNotBlank() && subagentGoal.isNotBlank()) {
+                            client.spawnChildSubagent(delegateId, subagentName, subagentGoal)
+                            spawningDelegateId = null
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
+                ) {
+                    Text("Spawn", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { spawningDelegateId = null }) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
     }
 }
 
 @Composable
-private fun CliEngineCard(engine: CliEngineEntry) {
+private fun CliEngineCard(
+    engine: CliEngineDto,
+    onUpdateQuota: (String, Int, String) -> Unit,
+    onTogglePause: (String, Boolean) -> Unit,
+    onStartSpawnChild: (String) -> Unit
+) {
     var isExpanded by remember { mutableStateOf(true) }
 
     Surface(
@@ -199,7 +242,7 @@ private fun CliEngineCard(engine: CliEngineEntry) {
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(if (engine.isOnline) Color(0xFF10B981) else Color(0xFF64748B))
+                            .background(if (engine.is_available) Color(0xFF10B981) else Color(0xFF64748B))
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -210,7 +253,7 @@ private fun CliEngineCard(engine: CliEngineEntry) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "command: ${engine.command}",
+                            text = "binary: ${engine.command_binary}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -230,7 +273,18 @@ private fun CliEngineCard(engine: CliEngineEntry) {
                     modifier = Modifier.padding(top = 16.dp)
                 ) {
                     engine.delegates.forEach { delegate ->
-                        DelegateAgentRow(delegate = delegate)
+                        DelegateLeadCard(
+                            delegate = delegate,
+                            onUpdateQuota = { limit, effort ->
+                                onUpdateQuota(delegate.id, limit, effort)
+                            },
+                            onTogglePause = { paused ->
+                                onTogglePause(delegate.id, paused)
+                            },
+                            onSpawnChild = {
+                                onStartSpawnChild(delegate.id)
+                            }
+                        )
                     }
                 }
             }
@@ -239,9 +293,14 @@ private fun CliEngineCard(engine: CliEngineEntry) {
 }
 
 @Composable
-private fun DelegateAgentRow(delegate: DelegateAgent) {
-    var commandLimit by remember { mutableFloatStateOf(delegate.commandLimit.toFloat()) }
-    var reasoning by remember { mutableStateOf(delegate.reasoningEffort) }
+private fun DelegateLeadCard(
+    delegate: DelegateLeadDto,
+    onUpdateQuota: (Int, String) -> Unit,
+    onTogglePause: (Boolean) -> Unit,
+    onSpawnChild: () -> Unit
+) {
+    var commandLimit by remember(delegate.command_turn_limit) { mutableFloatStateOf(delegate.command_turn_limit.toFloat()) }
+    var reasoning by remember(delegate.reasoning_effort) { mutableStateOf(delegate.reasoning_effort) }
 
     Surface(
         shape = RoundedCornerShape(14.dp),
@@ -249,7 +308,7 @@ private fun DelegateAgentRow(delegate: DelegateAgent) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -263,24 +322,40 @@ private fun DelegateAgentRow(delegate: DelegateAgent) {
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "${delegate.model} • Reasoning: $reasoning",
+                        text = "${delegate.assigned_model} • Reasoning: $reasoning",
                         style = MaterialTheme.typography.bodySmall,
                         color = PrimaryAccent
                     )
                 }
 
-                // Reasoning Effort Toggle Pill
-                FilterChip(
-                    selected = reasoning == "High",
-                    onClick = {
-                        reasoning = if (reasoning == "High") "Medium" else "High"
-                        delegate.reasoningEffort = reasoning
-                    },
-                    label = { Text(reasoning, fontSize = 10.sp) }
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Pause / Resume Toggle
+                    IconButton(
+                        onClick = { onTogglePause(!delegate.is_paused) },
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (delegate.is_paused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                            contentDescription = if (delegate.is_paused) "Resume" else "Pause",
+                            tint = if (delegate.is_paused) Color(0xFF10B981) else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Reasoning Toggle Chip
+                    FilterChip(
+                        selected = reasoning.equals("High", ignoreCase = true),
+                        onClick = {
+                            val newEffort = if (reasoning.equals("High", ignoreCase = true)) "Medium" else "High"
+                            reasoning = newEffort
+                            onUpdateQuota(commandLimit.toInt(), newEffort)
+                        },
+                        label = { Text(reasoning, fontSize = 10.sp) }
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Command limit progress and control
             Row(
@@ -289,20 +364,20 @@ private fun DelegateAgentRow(delegate: DelegateAgent) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Quota: ${delegate.turnsSpent} / ${commandLimit.toInt()} turns",
+                    text = "Turns: ${delegate.turns_consumed} / ${commandLimit.toInt()} limit",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = {
                             if (commandLimit > 10f) {
                                 commandLimit -= 5f
-                                delegate.commandLimit = commandLimit.toInt()
+                                onUpdateQuota(commandLimit.toInt(), reasoning)
                             }
                         },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp)
                     ) {
                         Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.onSurface)
                     }
@@ -310,10 +385,10 @@ private fun DelegateAgentRow(delegate: DelegateAgent) {
                         onClick = {
                             if (commandLimit < 100f) {
                                 commandLimit += 5f
-                                delegate.commandLimit = commandLimit.toInt()
+                                onUpdateQuota(commandLimit.toInt(), reasoning)
                             }
                         },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Increase", tint = PrimaryAccent)
                     }
@@ -326,12 +401,28 @@ private fun DelegateAgentRow(delegate: DelegateAgent) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(6.dp))
 
-                Text(
-                    text = "DELEGATED SUBAGENTS (${delegate.children.size})",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "DELEGATED SUBAGENTS (${delegate.children.size})",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+
+                    TextButton(
+                        onClick = onSpawnChild,
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                        modifier = Modifier.height(26.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = PrimaryAccent, modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("Spawn", fontSize = 10.sp, color = PrimaryAccent)
+                    }
+                }
 
                 delegate.children.forEach { child ->
                     Row(
@@ -357,12 +448,22 @@ private fun DelegateAgentRow(delegate: DelegateAgent) {
                         }
 
                         Text(
-                            text = child.status,
+                            text = child.state.uppercase(),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (child.status == "RUNNING") Color(0xFF10B981) else Color(0xFF94A3B8)
+                            color = if (child.state.equals("running", ignoreCase = true)) Color(0xFF10B981) else Color(0xFF94A3B8)
                         )
                     }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(6.dp))
+                TextButton(
+                    onClick = onSpawnChild,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, tint = PrimaryAccent, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Spawn Subagent", fontSize = 11.sp, color = PrimaryAccent)
                 }
             }
         }

@@ -999,3 +999,24 @@ Engineered full backend support in `talos-core` for hierarchical agent delegatio
   - All 34 tests passing cleanly (`cargo test`).
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21021` and `versionName` to `"2.10.21"`.
+
+---
+
+## 54. Real-time Android Delegation Mesh Sync & Interactive Subagent Lifecycle Controller
+
+Wired the Android companion client directly to the live `talos-core` delegation endpoints to enable bidirectional hierarchy synchronization, live turn quota management, and on-demand child subagent spawning.
+
+### 1. Reactive Client Synchronization (`TalosClient.kt`)
+- Added `delegationHierarchy` StateFlow consuming `GET /api/delegation/tree`.
+- Implemented `updateDelegateQuota()` calling `PATCH /api/delegates/:id/quota` with automatic tree re-fetch.
+- Implemented `toggleDelegatePause()` for immediate thread/loop suspension.
+- Implemented `spawnChildSubagent()` posting dynamic subagent task goals directly into the active engine.
+
+### 2. Interactive CLI Governance UI (`CliToolManager.kt`)
+- Real-time engine health status capsules (Green = available, Grey = offline).
+- Live turn quota progress meters (`turns_consumed / command_turn_limit`).
+- One-tap Pause / Resume button with immediate visual feedback.
+- Interactive **"Spawn Child Subagent"** modal dialog with goal specification.
+
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21022` and `versionName` to `"2.10.22"`.

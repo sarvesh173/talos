@@ -1402,3 +1402,27 @@ Integrated backend SVG vector synthesis in `image_studio.rs` with Material 3 Sig
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21040` and `versionName` to `"2.10.40"`.
+
+---
+
+## 71. OpenBoard Desktop Benchmark Suite: Redo Stack, Tool Toggles & Highlighter Mode
+
+Benchmarked against open-source desktop whiteboards (OpenBoard, GCompris) to integrate multi-tool drawing mechanics into `WhiteboardScreen.kt`.
+
+### 1. Multi-Tool Architectural State (`WhiteboardScreen.kt`)
+- **Tool Spectrum (`OpenBoardTool`)**: Added `PEN`, `HIGHLIGHTER` (translucent `alpha = 0.35f`, `24f` width), and `ERASER` (`32f` background-colored stroke).
+- **Undo / Redo History Stack (`redoPaths`)**:
+  - Committed strokes can be reversed step-by-step (`Undo`) and reapplied (`Redo`).
+  - New manual inputs automatically reset forward redo states to maintain immutable canvas integrity.
+
+### 2. Expressive Tool Dock & Tactile Swatches
+- **Dual-Tier Dock Controls**:
+  - Top row: Tool mode chips (`Pen`, `Highlighter`, `Eraser`) paired with stroke thickness (`Thin`, `Bold`) and canvas theme toggles (`DotGrid`, `DarkSlate`).
+  - Bottom row: High-contrast M3 Signature Iris swatches with 48dp touch bounds.
+- **High-Fidelity Raster Export**: Vector strokes across all tools — including semi-transparent highlighter layers — are rasterized onto the 720x480 PNG bitmap on send.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21041` and `versionName` to `"2.10.41"`.

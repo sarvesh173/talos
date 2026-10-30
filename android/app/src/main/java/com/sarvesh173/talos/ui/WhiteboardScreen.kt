@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 
+enum class OpenBoardTool {
+    PEN, HIGHLIGHTER, ERASER
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WhiteboardScreen(
@@ -42,10 +47,12 @@ fun WhiteboardScreen(
 ) {
     val context = LocalContext.current
     val paths = remember { mutableStateListOf<StrokePath>() }
+    val redoPaths = remember { mutableStateListOf<StrokePath>() }
     var currentPoints = remember { mutableStateListOf<Offset>() }
     val defaultColor = MaterialTheme.colorScheme.primary
     var currentColor by remember { mutableStateOf(defaultColor) }
     var strokeWidth by remember { mutableFloatStateOf(6f) }
+    var activeTool by remember { mutableStateOf(OpenBoardTool.PEN) }
     var canvasBackground by remember { mutableStateOf("DotGrid") }
 
     val colorPalette = listOf(
@@ -55,6 +62,20 @@ fun WhiteboardScreen(
         Color(0xFFF87171), // Coral Rose
         Color(0xFFFFFFFF)  // Chalk White
     )
+
+    val effectiveColor = when (activeTool) {
+        OpenBoardTool.PEN -> currentColor
+        OpenBoardTool.HIGHLIGHTER -> currentColor.copy(alpha = 0.35f)
+        OpenBoardTool.ERASER -> when (canvasBackground) {
+            "DarkSlate" -> Color(0xFF1E293B)
+            else -> Color(0xFF0A0C10)
+        }
+    }
+    val effectiveWidth = when (activeTool) {
+        OpenBoardTool.PEN -> strokeWidth
+        OpenBoardTool.HIGHLIGHTER -> 24f
+        OpenBoardTool.ERASER -> 32f
+    }
 
     Scaffold(
         topBar = {
@@ -68,7 +89,7 @@ fun WhiteboardScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${paths.size} strokes committed",
+                            text = "${paths.size} strokes committed • ${activeTool.name}",
                             style = MaterialTheme.typography.bodySmall,
                             color = PrimaryAccent
                         )
@@ -86,14 +107,34 @@ fun WhiteboardScreen(
                 actions = {
                     // Undo
                     IconButton(
-                        onClick = { if (paths.isNotEmpty()) paths.removeAt(paths.size - 1) },
+                        onClick = {
+                            if (paths.isNotEmpty()) {
+                                val last = paths.removeAt(paths.size - 1)
+                                redoPaths.add(last)
+                            }
+                        },
                         enabled = paths.isNotEmpty()
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
                     }
+                    // Redo
+                    IconButton(
+                        onClick = {
+                            if (redoPaths.isNotEmpty()) {
+                                val last = redoPaths.removeAt(redoPaths.size - 1)
+                                paths.add(last)
+                            }
+                        },
+                        enabled = redoPaths.isNotEmpty()
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Redo")
+                    }
                     // Clear
                     IconButton(
-                        onClick = { paths.clear() },
+                        onClick = {
+                            redoPaths.clear()
+                            paths.clear()
+                        },
                         enabled = paths.isNotEmpty()
                     ) {
                         Icon(Icons.Default.DeleteSweep, contentDescription = "Clear All", tint = MaterialTheme.colorScheme.error)
@@ -129,26 +170,72 @@ fun WhiteboardScreen(
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
+                    // Tool Selection & Grid Row
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            FilterChip(
+                                selected = activeTool == OpenBoardTool.PEN,
+                                onClick = { activeTool = OpenBoardTool.PEN },
+                                label = { Text("Pen", fontSize = 11.sp) }
+                            )
+                            FilterChip(
+                                selected = activeTool == OpenBoardTool.HIGHLIGHTER,
+                                onClick = { activeTool = OpenBoardTool.HIGHLIGHTER },
+                                label = { Text("Highlighter", fontSize = 11.sp) }
+                            )
+                            FilterChip(
+                                selected = activeTool == OpenBoardTool.ERASER,
+                                onClick = { activeTool = OpenBoardTool.ERASER },
+                                label = { Text("Eraser", fontSize = 11.sp) }
+                            )
+                        }
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            FilterChip(
+                                selected = strokeWidth == 4f,
+                                onClick = { strokeWidth = 4f },
+                                label = { Text("Thin", fontSize = 10.sp) }
+                            )
+                            FilterChip(
+                                selected = strokeWidth == 8f,
+                                onClick = { strokeWidth = 8f },
+                                label = { Text("Bold", fontSize = 10.sp) }
+                            )
+                            FilterChip(
+                                selected = canvasBackground == "DotGrid",
+                                onClick = { canvasBackground = if (canvasBackground == "DotGrid") "DarkSlate" else "DotGrid" },
+                                label = { Text(if (canvasBackground == "DotGrid") "Grid" else "Slate", fontSize = 10.sp) }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
                     // Color Palette with 48dp minimum touch bounds
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         colorPalette.forEach { color ->
                             val isSelected = currentColor == color
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
-                                    .size(44.dp)
+                                    .size(40.dp)
                                     .clickable { currentColor = color }
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(28.dp)
+                                        .size(26.dp)
                                         .clip(CircleShape)
                                         .background(color)
                                         .border(
@@ -159,25 +246,6 @@ fun WhiteboardScreen(
                                 )
                             }
                         }
-                    }
-
-                    // Stroke & Background controls
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        FilterChip(
-                            selected = strokeWidth == 4f,
-                            onClick = { strokeWidth = 4f },
-                            label = { Text("Thin", fontSize = 10.sp) }
-                        )
-                        FilterChip(
-                            selected = strokeWidth == 8f,
-                            onClick = { strokeWidth = 8f },
-                            label = { Text("Bold", fontSize = 10.sp) }
-                        )
-                        FilterChip(
-                            selected = canvasBackground == "DotGrid",
-                            onClick = { canvasBackground = if (canvasBackground == "DotGrid") "DarkSlate" else "DotGrid" },
-                            label = { Text(if (canvasBackground == "DotGrid") "Grid" else "Slate", fontSize = 10.sp) }
-                        )
                     }
                 }
             }
@@ -199,7 +267,7 @@ fun WhiteboardScreen(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(currentColor, strokeWidth) {
+                    .pointerInput(activeTool, currentColor, strokeWidth, canvasBackground) {
                         detectDragGestures(
                             onDragStart = { offset ->
                                 currentPoints = mutableStateListOf(offset)
@@ -213,10 +281,11 @@ fun WhiteboardScreen(
                                     paths.add(
                                         StrokePath(
                                             points = currentPoints.toList(),
-                                            color = currentColor,
-                                            strokeWidth = strokeWidth
+                                            color = effectiveColor,
+                                            strokeWidth = effectiveWidth
                                         )
                                     )
+                                    redoPaths.clear()
                                     currentPoints = mutableStateListOf()
                                 }
                             }
@@ -272,9 +341,9 @@ fun WhiteboardScreen(
                     }
                     drawPath(
                         path = activePath,
-                        color = currentColor,
+                        color = effectiveColor,
                         style = Stroke(
-                            width = strokeWidth,
+                            width = effectiveWidth,
                             cap = StrokeCap.Round,
                             join = StrokeJoin.Round
                         )

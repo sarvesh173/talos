@@ -1744,3 +1744,31 @@ Full graphical-interface redesign initiated. Phase 1: zero-emoji protocol enforc
   - `:app:compileReleaseKotlin` BUILD SUCCESSFUL post-sweep.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21054` and `versionName` to `"2.10.54"`.
+
+---
+
+## 85. Design System Contract, Contrast Repair & Animated Vector Icons
+
+Redesign Phase 2: the design system is now a written contract (`DESIGN.md`), and the first two items from the community-research backlog are implemented.
+
+### 1. DESIGN.md — Implementation Contract
+- Written at repo root, sourced from the 40-page M3 Expressive corpus plus community research (r/androiddev, r/MaterialDesign, r/UXDesign, HN/X).
+- Defines: spring table (spatial may overshoot / effects never), shape scale (6-12-14-16-24dp), 26-role color discipline, surface ramp with numeric steps, dark-mode tonal behavior, icon rules, 48dp touch rule, screen-by-screen redesign order, and the per-screen merge gate.
+
+### 2. Contrast Repair — "Pastel Washout" Fix (Theme.kt)
+- Community research ranked flat surface ramps as the #1 Material You complaint: `surfaceContainerLow → surfaceContainer` measured only **1.048:1** — nested containers were visually indistinguishable.
+- Rebalanced the dark ramp so every adjacent step is ≥1.07:1 (Lowest→Low 1.13, Low→Container 1.10, Container→High 1.08, High→Highest 1.17).
+- `surfaceContainer` `#211F26` → `#25232B`; `outlineVariant` `#49454F` → `#55515C` (border definition 1.74:1 → 2.01:1).
+- All text/UI contrast ratios re-verified numerically: onSurface 14.4:1, onSurfaceVariant 10.9:1, primary 10.9:1, onPrimary 7.7:1 — all above WCAG AA floors.
+
+### 3. Animated Vector Icons (AnimatedTalosIcon.kt)
+- New icon animation system built on the motion contract: **spatial springs overshoot, effects springs do not**.
+- Three modes: `IDLE` (ambient 0.97↔1.03 breath — never a dead frame), `RECORDING` (two expanding emission rings + 1.06 body scale), `ACTIVATE` (one-shot 1.22 spring pop).
+- Convenience wrappers `TalosRecordingMic` and `TalosActivatingCamera`.
+- Wired into LandingScreen hardware tiles: the mic now emits live pulses while recording and the camera blips on hold-activation.
+
+- [x] **Verification & Tests**:
+  - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
+  - Contrast audit script: all ratios ≥ WCAG AA floors; all ramp steps ≥1.07:1.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21055` and `versionName` to `"2.10.55"`.

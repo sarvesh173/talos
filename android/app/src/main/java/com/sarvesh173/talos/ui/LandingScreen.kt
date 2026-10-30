@@ -637,11 +637,12 @@ fun LandingScreen(
                                         .background(scheme.primary.copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(
+                                    AnimatedTalosIcon(
                                         imageVector = TalosIcons.TalosCamera,
                                         contentDescription = "Camera",
                                         tint = scheme.primary,
-                                        modifier = Modifier.size(15.dp)
+                                        size = 15.dp,
+                                        mode = if (cameraHighlighted) TalosIconMode.ACTIVATE else TalosIconMode.IDLE
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -740,11 +741,12 @@ fun LandingScreen(
                                         .background(scheme.tertiary.copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(
+                                    AnimatedTalosIcon(
                                         imageVector = TalosIcons.TalosMic,
-                                        contentDescription = "Microphone",
+                                        contentDescription = if (isRecordingActive || isRecordingLocked) "Recording" else "Microphone",
                                         tint = scheme.tertiary,
-                                        modifier = Modifier.size(15.dp)
+                                        size = 15.dp,
+                                        mode = if (isRecordingActive || isRecordingLocked) TalosIconMode.RECORDING else TalosIconMode.IDLE
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))

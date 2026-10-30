@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,9 +23,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -38,9 +43,12 @@ fun CodeDiffViewer(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val motion = LocalTalosMotion.current
     val clipboardManager = LocalClipboardManager.current
     val diffSummary by client.gitDiff.collectAsState()
     var selectedFileIndex by remember { mutableIntStateOf(0) }
+    var showOnlyChanges by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         client.fetchGitDiff()
@@ -91,6 +99,7 @@ fun CodeDiffViewer(
                     }
                     if (currentFile != null) {
                         IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             val fullDiff = currentFile.lines.joinToString("\n") { it.content }
                             clipboardManager.setText(AnnotatedString(fullDiff))
                             Toast.makeText(context, "File diff copied to clipboard!", Toast.LENGTH_SHORT).show()
@@ -188,6 +197,14 @@ fun CodeDiffViewer(
                         items(files.indices.toList()) { index ->
                             val file = files[index]
                             val isSelected = index == selectedFileIndex
+                            val scale by animateFloatAsState(
+                                targetValue = if (isSelected) 1.02f else 1.0f,
+                                animationSpec = spring(
+                                    dampingRatio = motion.spatialFastDamping,
+                                    stiffness = motion.spatialFastStiffness
+                                ),
+                                label = "fileTabScale"
+                            )
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -195,7 +212,12 @@ fun CodeDiffViewer(
                                     1.dp,
                                     if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
                                 ),
-                                modifier = Modifier.clickable { selectedFileIndex = index }
+                                modifier = Modifier
+                                    .scale(scale)
+                                    .clickable {
+                                        selectedFileIndex = index
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -226,6 +248,33 @@ fun CodeDiffViewer(
                         }
                     }
 
+                    // Diff Display Filter Row (All Lines vs Changes Only)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        FilterChip(
+                            selected = !showOnlyChanges,
+                            onClick = {
+                                showOnlyChanges = false
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            },
+                            label = { Text("All Lines (${currentFile.lines.size})", fontSize = 11.sp) }
+                        )
+                        val changeCount = currentFile.lines.count { it.line_type == "added" || it.line_type == "deleted" }
+                        FilterChip(
+                            selected = showOnlyChanges,
+                            onClick = {
+                                showOnlyChanges = true
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            },
+                            label = { Text("Changes Only ($changeCount)", fontSize = 11.sp) }
+                        )
+                    }
+
                     // Path Indicator
                     Text(
                         text = currentFile.path,
@@ -246,6 +295,11 @@ fun CodeDiffViewer(
                             .padding(16.dp)
                     ) {
                         val horizontalScroll = rememberScrollState()
+                        val displayedLines = if (showOnlyChanges) {
+                            currentFile.lines.filter { it.line_type == "added" || it.line_type == "deleted" || it.line_type == "header" }
+                        } else {
+                            currentFile.lines
+                        }
 
                         LazyColumn(
                             modifier = Modifier
@@ -253,11 +307,11 @@ fun CodeDiffViewer(
                                 .padding(vertical = 8.dp)
                                 .horizontalScroll(horizontalScroll)
                         ) {
-                            items(currentFile.lines) { line ->
+                            items(displayedLines) { line ->
                                 val (bgColor, textColor) = when (line.line_type) {
                                     "added" -> Color(0xFF0F291E) to Color(0xFF4ADE80)
                                     "deleted" -> Color(0xFF331518) to Color(0xFFF87171)
-                                    "header" -> Color(0xFF1C2431) to Color(0xFFE5A93C)
+                                    "header" -> Color(0xFF261D36) to MaterialTheme.colorScheme.primary
                                     else -> Color.Transparent to MaterialTheme.colorScheme.onSurfaceVariant
                                 }
 

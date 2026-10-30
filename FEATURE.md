@@ -1492,3 +1492,26 @@ Scraped and synthesized the full 45-site Material Design 3 and Material UI speci
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21044` and `versionName` to `"2.10.44"`.
+
+---
+
+## 75. ChatGPT-Grade File Inspection: Selective Changes Filter, M3 Hunk Shading & Scale Springs
+
+Elevated `CodeDiffViewer.kt` to ChatGPT/GitHub desktop inspection parity with selective changes-only filtering, spring-animated file tabs, and Material 3 Iris hunk header styling.
+
+### 1. Selective Diff Filtering (`CodeDiffViewer.kt`)
+- **"All Lines" vs "Changes Only"**: Added interactive Material 3 filter chips allowing users to toggle between viewing the entire contextual file or isolating strictly modified/added/deleted lines (`+` and `-`).
+- **Dynamic Change Count Badges**: Real-time counter reflects exact addition/deletion counts for the active file.
+
+### 2. Spring Physics Motion & Sensory Haptics
+- **File Tab Scale Springs**: Integrated `LocalTalosMotion.current` to animate selected file chips with spatial spring physics (`animateFloatAsState(scale)`).
+- **Tactile Pulses**: Integrated `LocalHapticFeedback` on tab switches (`TextHandleMove`) and full diff clipboard copying (`LongPress`).
+
+### 3. Material 3 Tonal Color Harmonization
+- **Iris Diff Hunk Headers**: Replaced legacy amber `0xFFE5A93C` headers with Material 3 Signature Iris (`#D0BCFF` / `MaterialTheme.colorScheme.primary`) on deep purple container background (`0xFF261D36`).
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21045` and `versionName` to `"2.10.45"`.

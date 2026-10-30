@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,9 +55,11 @@ fun AgentCanvasScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val hierarchy by client.delegationHierarchy.collectAsState()
     var selectedNode by remember { mutableStateOf<CanvasAgentNode?>(null) }
     var selectedFilter by remember { mutableStateOf("All") }
+    var selectedCli by remember { mutableStateOf("All CLI") }
     var showSpawnDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -200,9 +203,29 @@ fun AgentCanvasScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Filter Pills Row
+            // CLI Category Filters Row
+            val cliCategories = listOf("All CLI", "hermes", "opencode", "omnirush", "codex", "cline", "talos-core")
             LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(cliCategories) { cli ->
+                    val isSelected = selectedCli == cli
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { selectedCli = cli },
+                        label = { Text(cli.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                            selectedLabelColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+            }
+
+            // Tier & State Filter Pills Row
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(listOf("All", "Tier 1: Engine", "Tier 2: Delegate Lead", "Tier 3: Child Worker", "Paused")) { filter ->
@@ -212,19 +235,25 @@ fun AgentCanvasScreen(
                         onClick = { selectedFilter = filter },
                         label = { Text(filter, fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                            selectedLabelColor = MaterialTheme.colorScheme.primary
+                            selectedContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+                            selectedLabelColor = MaterialTheme.colorScheme.secondary
                         )
                     )
                 }
             }
 
-            val filteredNodes = when (selectedFilter) {
-                "Tier 1: Engine" -> activeNodes.filter { it.tier.startsWith("Tier 1") }
-                "Tier 2: Delegate Lead" -> activeNodes.filter { it.tier.startsWith("Tier 2") }
-                "Tier 3: Child Worker" -> activeNodes.filter { it.tier.startsWith("Tier 3") }
-                "Paused" -> activeNodes.filter { it.isPaused }
-                else -> activeNodes
+            val filteredNodes = activeNodes.filter { node ->
+                val matchesTier = when (selectedFilter) {
+                    "Tier 1: Engine" -> node.tier.startsWith("Tier 1")
+                    "Tier 2: Delegate Lead" -> node.tier.startsWith("Tier 2")
+                    "Tier 3: Child Worker" -> node.tier.startsWith("Tier 3")
+                    "Paused" -> node.isPaused
+                    else -> true
+                }
+                val matchesCli = if (selectedCli == "All CLI") true else {
+                    node.cliEngine.contains(selectedCli, ignoreCase = true) || node.id.contains(selectedCli, ignoreCase = true)
+                }
+                matchesTier && matchesCli
             }
 
             LazyColumn(
@@ -306,6 +335,32 @@ fun AgentCanvasScreen(
                         activeTrackColor = MaterialTheme.colorScheme.primary
                     )
                 )
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    FilledTonalButton(
+                        onClick = {
+                            scope.launch {
+                                val ok = client.setAgentCommandLimit(node.id, commandLimit.toInt())
+                                if (ok) {
+                                    Toast.makeText(context, "Command limit saved (${commandLimit.toInt()} turns)!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Limit updated locally (${commandLimit.toInt()} turns)", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    ) {
+                        Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Apply Command Limit", fontSize = 12.sp)
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 

@@ -48,6 +48,22 @@ pub struct AgentInfo {
     pub supported_models: Vec<String>,
     pub model_flag: Option<String>,
     pub model_env_var: Option<String>,
+    #[serde(default = "default_cli_type")]
+    pub cli_type: String,
+    #[serde(default = "default_command_limit")]
+    pub command_limit: u32,
+    #[serde(default)]
+    pub parent_agent_id: Option<String>,
+    #[serde(default)]
+    pub child_agent_ids: Vec<String>,
+}
+
+fn default_cli_type() -> String {
+    "general".to_string()
+}
+
+fn default_command_limit() -> u32 {
+    25
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,6 +79,28 @@ pub struct CustomAgentManifest {
     pub supported_models: Option<Vec<String>>,
     pub model_flag: Option<String>,
     pub model_env_var: Option<String>,
+    pub cli_type: Option<String>,
+    pub command_limit: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SetCommandLimitRequest {
+    pub command_limit: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DelegateChildRequest {
+    pub name: String,
+    pub description: Option<String>,
+    pub task: String,
+    pub command_limit: Option<u32>,
+    pub model: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentHierarchyNode {
+    pub agent: AgentInfo,
+    pub children: Vec<AgentHierarchyNode>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -130,6 +168,7 @@ struct KnownAgentSpec {
     supported_models: &'static [&'static str],
     model_flag: Option<&'static str>,
     model_env_var: Option<&'static str>,
+    cli_type: &'static str,
 }
 
 const KNOWN_AGENTS: &[KnownAgentSpec] = &[
@@ -145,6 +184,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["custom/agy/gemini-3.8-flash-tiered", "nousresearch/hermes-3-llama-3.1-405b", "mistralai/mistral-large-2411"],
         model_flag: None,
         model_env_var: Some("HERMES_MODEL"),
+        cli_type: "hermes",
     },
     KnownAgentSpec {
         id: "opencode",
@@ -158,6 +198,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["claude-3-5-sonnet", "gpt-4o", "deepseek-coder", "gemini-2.0-flash"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "opencode",
     },
     KnownAgentSpec {
         id: "omnirush",
@@ -171,6 +212,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["gpt-6-astra:max", "gpt-6-sol", "claude-3-7-sonnet", "deepseek-r1"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "omnirush",
     },
     KnownAgentSpec {
         id: "codex",
@@ -184,6 +226,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["o3-mini", "o1", "gpt-4o"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "codex",
     },
     KnownAgentSpec {
         id: "cline",
@@ -197,6 +240,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["claude-3-7-sonnet", "gemini-2.5-pro", "deepseek-v3"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "cline",
     },
     KnownAgentSpec {
         id: "opencli",
@@ -210,6 +254,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["gpt-4o", "claude-3-5-sonnet", "llama3.3"],
         model_flag: Some("-m"),
         model_env_var: None,
+        cli_type: "opencli",
     },
     KnownAgentSpec {
         id: "koda",
@@ -223,6 +268,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["default", "gpt-4o", "claude-3-5-sonnet"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "koda",
     },
     KnownAgentSpec {
         id: "atlarix",
@@ -236,6 +282,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["deepseek-v3", "gpt-4o"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "atlarix",
     },
     KnownAgentSpec {
         id: "darce",
@@ -249,6 +296,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["default", "gpt-4o"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "darce",
     },
     KnownAgentSpec {
         id: "supercode",
@@ -262,6 +310,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["claude-3-7-sonnet", "gpt-4o"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "supercode",
     },
     KnownAgentSpec {
         id: "zcode",
@@ -275,6 +324,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["glm-4-plus", "glm-4-long", "deepseek-coder"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "zcode",
     },
     KnownAgentSpec {
         id: "gemini",
@@ -288,6 +338,7 @@ const KNOWN_AGENTS: &[KnownAgentSpec] = &[
         supported_models: &["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"],
         model_flag: Some("--model"),
         model_env_var: None,
+        cli_type: "gemini",
     },
 ];
 
@@ -347,6 +398,10 @@ impl AgentSupervisor {
                 supported_models: spec.supported_models.iter().map(|s| s.to_string()).collect(),
                 model_flag: spec.model_flag.map(|s| s.to_string()),
                 model_env_var: spec.model_env_var.map(|s| s.to_string()),
+                cli_type: spec.cli_type.to_string(),
+                command_limit: 25,
+                parent_agent_id: None,
+                child_agent_ids: Vec::new(),
             };
             map.insert(spec.id.to_string(), info);
         }
@@ -392,6 +447,10 @@ impl AgentSupervisor {
                                     supported_models: manifest.supported_models.unwrap_or_default(),
                                     model_flag: manifest.model_flag,
                                     model_env_var: manifest.model_env_var,
+                                    cli_type: manifest.cli_type.unwrap_or_else(|| "custom".to_string()),
+                                    command_limit: manifest.command_limit.unwrap_or(25),
+                                    parent_agent_id: None,
+                                    child_agent_ids: Vec::new(),
                                 };
                                 map.insert(manifest.id, info);
                             }
@@ -455,6 +514,88 @@ impl AgentSupervisor {
         agent.current_model = Some(new_model.clone());
         info!("Switched model for agent '{}' to '{}'", id, new_model);
         Ok(agent.clone())
+    }
+
+    /// Set dynamic command limit for an agent (1..200)
+    pub async fn set_command_limit(&self, id: &str, limit: u32) -> Result<AgentInfo, String> {
+        let mut lock = self.agents.lock().await;
+        if let Some(agent) = lock.get_mut(id) {
+            agent.command_limit = limit.clamp(1, 200);
+            info!("Agent '{}' command limit set to {}", id, agent.command_limit);
+            Ok(agent.clone())
+        } else {
+            Err(format!("Agent '{}' not found", id))
+        }
+    }
+
+    /// Delegate a child subagent under a parent agent
+    pub async fn delegate_child(&self, parent_id: &str, req: DelegateChildRequest) -> Result<AgentInfo, String> {
+        let mut lock = self.agents.lock().await;
+        let parent = lock.get(parent_id).cloned().ok_or_else(|| format!("Parent agent '{}' not found", parent_id))?;
+
+        let child_suffix: String = uuid::Uuid::new_v4().to_string().chars().take(8).collect();
+        let child_id = format!("{}-child-{}", parent_id, child_suffix);
+        let child_info = AgentInfo {
+            id: child_id.clone(),
+            name: req.name,
+            description: req.description.unwrap_or_else(|| format!("Delegated subagent of {}", parent.name)),
+            binary: parent.binary.clone(),
+            is_custom: true,
+            status: AgentStatus::Running,
+            version: parent.version.clone(),
+            capabilities: parent.capabilities.clone(),
+            setup_cmd: None,
+            default_args: parent.default_args.clone(),
+            current_model: req.model.or(parent.current_model.clone()),
+            supported_models: parent.supported_models.clone(),
+            model_flag: parent.model_flag.clone(),
+            model_env_var: parent.model_env_var.clone(),
+            cli_type: parent.cli_type.clone(),
+            command_limit: req.command_limit.unwrap_or(parent.command_limit).clamp(1, 200),
+            parent_agent_id: Some(parent_id.to_string()),
+            child_agent_ids: Vec::new(),
+        };
+
+        if let Some(p) = lock.get_mut(parent_id) {
+            p.child_agent_ids.push(child_id.clone());
+        }
+
+        lock.insert(child_id.clone(), child_info.clone());
+        info!("Delegated child subagent '{}' under parent '{}'", child_id, parent_id);
+        Ok(child_info)
+    }
+
+    /// Retrieve full CLI / multi-agent hierarchy tree
+    pub async fn get_hierarchy(&self) -> Vec<AgentHierarchyNode> {
+        let lock = self.agents.lock().await;
+        let mut roots = Vec::new();
+
+        for agent in lock.values() {
+            if agent.parent_agent_id.is_none() {
+                let children = self.build_children_tree(&lock, &agent.id);
+                roots.push(AgentHierarchyNode {
+                    agent: agent.clone(),
+                    children,
+                });
+            }
+        }
+        roots.sort_by(|a, b| a.agent.name.cmp(&b.agent.name));
+        roots
+    }
+
+    fn build_children_tree(&self, map: &HashMap<String, AgentInfo>, parent_id: &str) -> Vec<AgentHierarchyNode> {
+        let mut nodes = Vec::new();
+        for child_agent in map.values() {
+            if child_agent.parent_agent_id.as_deref() == Some(parent_id) {
+                let grandchildren = self.build_children_tree(map, &child_agent.id);
+                nodes.push(AgentHierarchyNode {
+                    agent: child_agent.clone(),
+                    children: grandchildren,
+                });
+            }
+        }
+        nodes.sort_by(|a, b| a.agent.name.cmp(&b.agent.name));
+        nodes
     }
 
     pub async fn get_pool_status(&self) -> PoolStatus {
@@ -679,12 +820,36 @@ mod tests {
             supported_models: None,
             model_flag: None,
             model_env_var: None,
+            cli_type: Some("custom-cli".to_string()),
+            command_limit: Some(50),
         };
 
         let registered = supervisor.register_custom(manifest).await.unwrap();
         assert_eq!(registered.id, "my-custom-cli");
         assert_eq!(registered.name, "My Custom Bot");
         assert_eq!(registered.status, AgentStatus::Installed); // 'echo' is installed on Linux
+        assert_eq!(registered.command_limit, 50);
+
+        // Test dynamic command limit update
+        let updated = supervisor.set_command_limit("my-custom-cli", 75).await.unwrap();
+        assert_eq!(updated.command_limit, 75);
+
+        // Test delegating child
+        let child = supervisor.delegate_child("my-custom-cli", DelegateChildRequest {
+            name: "Child Bot".to_string(),
+            description: None,
+            task: "Inspect logs".to_string(),
+            command_limit: Some(15),
+            model: None,
+        }).await.unwrap();
+        assert_eq!(child.parent_agent_id, Some("my-custom-cli".to_string()));
+        assert_eq!(child.command_limit, 15);
+
+        // Test hierarchy
+        let hierarchy = supervisor.get_hierarchy().await;
+        let root = hierarchy.iter().find(|n| n.agent.id == "my-custom-cli").unwrap();
+        assert_eq!(root.children.len(), 1);
+        assert_eq!(root.children[0].agent.id, child.id);
 
         // Clean up
         let _ = tokio::fs::remove_dir_all(&temp_dir).await;

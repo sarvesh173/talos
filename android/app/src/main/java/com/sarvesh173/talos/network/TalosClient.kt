@@ -920,6 +920,42 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    suspend fun setAgentCommandLimit(agentId: String, commandLimit: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val payload = org.json.JSONObject().put("command_limit", commandLimit).toString()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/$agentId/command-limit")
+                    .post(payload.toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            } catch (e: Exception) {
+                Log.e(TAG, "setAgentCommandLimit error: ${e.message}")
+                false
+            }
+        }
+    }
+
+    suspend fun delegateChildAgent(parentId: String, name: String, task: String, limit: Int = 25): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val payload = org.json.JSONObject().apply {
+                    put("name", name)
+                    put("task", task)
+                    put("command_limit", limit)
+                }.toString()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/$parentId/delegate")
+                    .post(payload.toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            } catch (e: Exception) {
+                Log.e(TAG, "delegateChildAgent error: ${e.message}")
+                false
+            }
+        }
+    }
+
     fun sendMessage(text: String) {
         if (text.isBlank()) return
         val currentRoom = _currentRoomId.value

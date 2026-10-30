@@ -1340,3 +1340,27 @@ Exported interactive OpenBoard digital whiteboard strokes to PNG Base64 and upgr
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21037` and `versionName` to `"2.10.37"`.
+
+---
+
+## 68. Multi-CLI Tool Governance, Subagent Delegation Hierarchy & Dynamic Command Quotas
+
+Integrated cross-registry skill intelligence via `find-skills` (`npx skills`) and `hermes-universal-skill-finder`, establishing dynamic command quota sliders and multi-CLI subagent hierarchy governance.
+
+### 1. Multi-CLI Tool Architecture & Delegation Endpoints (`crates/talos-core`)
+- **CLI Classification & Registry Models (`agents.rs`)**: Categorized agents by runtime CLI (`hermes`, `opencode`, `omnirush`, `codex`, `cline`, `zcode`, `gemini`), adding `parent_agent_id`, `child_agent_ids`, and clamped `command_limit` (`1..200`).
+- **Dynamic Limit & Delegation Endpoints (`main.rs`)**:
+  - `POST /api/agents/:id/command-limit`: Dynamically adjusts execution turn budgets with bounds clamping.
+  - `POST /api/agents/:id/delegate`: Spawns subagents with parent-child linkage and dedicated goals.
+  - `GET /api/agents/hierarchy`: Returns recursive multi-agent hierarchy tree for canvas visualization.
+- **Unit Verification**: Built test `test_custom_agent_registration` verifying limit updates and child delegation.
+
+### 2. Dual-Axis Filter Canvas & Interactive Quota Sliders (`AgentCanvasScreen.kt`)
+- **Dual-Axis Filter Chips**: Added dual-axis filtering for CLI categories (`All CLI`, `hermes`, `opencode`, `omnirush`, `codex`, `cline`, `talos-core`) alongside execution tiers.
+- **Interactive Quota Adjustment**: Added a live command limit slider (`10..100` turns) with "Apply Command Limit" button communicating directly with `client.setAgentCommandLimit()`.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21038` and `versionName` to `"2.10.38"`.

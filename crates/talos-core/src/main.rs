@@ -144,6 +144,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/agents/:id/model", post(switch_agent_model))
         .route("/api/agents/:id/run", post(run_agent_task))
         .route("/api/agents/:id/setup", post(setup_agent))
+        .route("/api/agents/:id/command-limit", post(set_agent_command_limit))
+        .route("/api/agents/:id/delegate", post(delegate_child_agent))
+        .route("/api/agents/hierarchy", get(get_agent_hierarchy))
         // Realtime WebSocket Room Event Bus
         .route("/ws/:room_id/:client_id", get(ws_handler))
         // Feature 8 & 11: Universal Custom Provider Management, Vault & Fallbacks
@@ -786,6 +789,36 @@ async fn switch_agent_model(
         .await
         .map(Json)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn set_agent_command_limit(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+    Json(req): Json<agents::SetCommandLimitRequest>,
+) -> Result<Json<agents::AgentInfo>, (StatusCode, String)> {
+    state
+        .supervisor
+        .set_command_limit(&id, req.command_limit)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn delegate_child_agent(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+    Json(req): Json<agents::DelegateChildRequest>,
+) -> Result<Json<agents::AgentInfo>, (StatusCode, String)> {
+    state
+        .supervisor
+        .delegate_child(&id, req)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn get_agent_hierarchy(State(state): State<AppState>) -> Json<Vec<agents::AgentHierarchyNode>> {
+    Json(state.supervisor.get_hierarchy().await)
 }
 
 // -----------------------------------------------------------------------------

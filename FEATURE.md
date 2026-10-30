@@ -949,3 +949,29 @@ Ported desktop whiteboard architecture inspired by OpenBoard directly into TALOS
   - Seamlessly launched from the M3 Expressive `AttachmentBottomSheet`.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21019` and `versionName` to `"2.10.19"`.
+
+---
+
+## 52. Hermes AI Image Generation Studio, Multi-CLI Hierarchy Governance & GCompris Modular Activity Hub
+
+Advancing autonomous multi-agent engineering by integrating Hermes image generation gallery, multi-CLI delegate hierarchy with custom command limits, and GCompris-style modular activity dispatching.
+
+### 1. Hermes AI Image Studio & Lightbox Gallery (`ImageGalleryScreen.kt`)
+- **Hermes Image Generation**: Dedicated prompt composer with aspect ratios (1:1, 16:9, 9:16) and styling presets.
+- **Bento Gallery & Lightbox**: Responsive grid showing generated artwork, metadata (seed, model, prompt, time), full-screen pinch-to-zoom Lightbox, and one-tap download.
+
+### 2. Multi-CLI Hierarchy & Command Quota Governance (`CliToolManager.kt`)
+- **CLI Tool Federation**: Unified management of registered CLI engines: `OmniRush`, `OpenCode`, `Codex CLI`, `Claude Code`, and `Hermes Gateway`.
+- **Parent -> Delegate -> Child Hierarchy**: Interactive tree displaying subagents, live turn consumption, and memory footprint.
+- **Command Limit Controls**: Configurable per-agent quotas (10–100 turns) and reasoning effort adjustments.
+
+### 3. GCompris-Inspired Modular Activity Hub (`ModuleActivityHub.kt`)
+- **Tactile Activity Matrix**: Categorized system modules (`Intelligence & Coding`, `Sensory & Hardware`, `Creative & Canvas`, `System & Telemetry`).
+- **One-Tap Actions**: Quick launchers for Whiteboard, Code Diff, Agent Canvas, Browser, Image Studio, and Mesh Telemetry.
+
+- [ ] **Implementation Steps**:
+  - [ ] Implement `ImageGalleryScreen.kt` with bento gallery and lightbox zoom.
+  - [ ] Implement `CliToolManager.kt` with hierarchy tree and command limits.
+  - [ ] Implement `ModuleActivityHub.kt` with categorized activity tiles.
+  - [ ] Wire navigation in `MainActivity.kt`.
+  - [ ] Increment version to `2.10.20`, compile release APK, verify, and push.

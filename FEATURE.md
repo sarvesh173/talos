@@ -1515,3 +1515,30 @@ Elevated `CodeDiffViewer.kt` to ChatGPT/GitHub desktop inspection parity with se
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21045` and `versionName` to `"2.10.45"`.
+
+---
+
+## 76. Multi-CLI Swarm Pause/Resume Governance & Canvas Swarm Control
+
+Implemented full swarm execution governance in `talos-core` and wired interactive top bar and sheet actions in `AgentCanvasScreen.kt`.
+
+### 1. Rust Swarm Supervisor State Machine (`crates/talos-core/src/agents.rs`)
+- **`AgentStatus::Paused`**: Added first-class `Paused` state variant to the supervisor registry.
+- **Swarm Control Primitives**:
+  - `pause_agent(id)` & `resume_agent(id)`: Atomic lifecycle transitions for individual execution nodes.
+  - `pause_all()` & `resume_all()`: Swarm-wide batch operations affecting all running nodes in parallel.
+- **REST API Routes (`crates/talos-core/src/main.rs`)**:
+  - `POST /api/agents/:id/pause`
+  - `POST /api/agents/:id/resume`
+  - `POST /api/agents/pause-all`
+  - `POST /api/agents/resume-all`
+
+### 2. Android Swarm Governance Dock (`AgentCanvasScreen.kt`)
+- **Top Bar Swarm Action Pill**: Added a one-tap Swarm Pause/Resume button in the top app bar with tactile `LongPress` haptic feedback, allowing users to pause or resume all background agents with one tap.
+- **Node Inspector Execution Controls**: Replaced static placeholders with live `client.pauseAgent(node.id)` and `client.resumeAgent(node.id)` toggles across all agent tiers (Engines, Leads, and Child Subagents).
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21046` and `versionName` to `"2.10.46"`.

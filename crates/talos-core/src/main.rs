@@ -146,6 +146,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/agents/:id/setup", post(setup_agent))
         .route("/api/agents/:id/command-limit", post(set_agent_command_limit))
         .route("/api/agents/:id/delegate", post(delegate_child_agent))
+        .route("/api/agents/:id/pause", post(pause_agent_handler))
+        .route("/api/agents/:id/resume", post(resume_agent_handler))
+        .route("/api/agents/pause-all", post(pause_all_agents_handler))
+        .route("/api/agents/resume-all", post(resume_all_agents_handler))
         .route("/api/agents/hierarchy", get(get_agent_hierarchy))
         // Realtime WebSocket Room Event Bus
         .route("/ws/:room_id/:client_id", get(ws_handler))
@@ -815,6 +819,42 @@ async fn delegate_child_agent(
         .await
         .map(Json)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn pause_agent_handler(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<agents::AgentInfo>, (StatusCode, String)> {
+    state
+        .supervisor
+        .pause_agent(&id)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn resume_agent_handler(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<agents::AgentInfo>, (StatusCode, String)> {
+    state
+        .supervisor
+        .resume_agent(&id)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn pause_all_agents_handler(
+    State(state): State<AppState>,
+) -> Json<Vec<agents::AgentInfo>> {
+    Json(state.supervisor.pause_all().await)
+}
+
+async fn resume_all_agents_handler(
+    State(state): State<AppState>,
+) -> Json<Vec<agents::AgentInfo>> {
+    Json(state.supervisor.resume_all().await)
 }
 
 async fn get_agent_hierarchy(State(state): State<AppState>) -> Json<Vec<agents::AgentHierarchyNode>> {

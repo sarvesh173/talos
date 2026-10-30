@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,12 +57,14 @@ fun AgentCanvasScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val hierarchy by client.delegationHierarchy.collectAsState()
     var selectedNode by remember { mutableStateOf<CanvasAgentNode?>(null) }
     var selectedFilter by remember { mutableStateOf("All") }
     var selectedCli by remember { mutableStateOf("All CLI") }
     var showSpawnDialog by remember { mutableStateOf(false) }
+    var isSwarmPaused by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         client.fetchDelegationHierarchy()
@@ -176,6 +180,26 @@ fun AgentCanvasScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        scope.launch {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            if (isSwarmPaused) {
+                                val ok = client.resumeAllAgents()
+                                if (ok) isSwarmPaused = false
+                                Toast.makeText(context, if (ok) "Swarm Resumed!" else "Resume failed", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val ok = client.pauseAllAgents()
+                                if (ok) isSwarmPaused = true
+                                Toast.makeText(context, if (ok) "Swarm Paused!" else "Pause failed", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }) {
+                        Icon(
+                            imageVector = if (isSwarmPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                            contentDescription = if (isSwarmPaused) "Resume Swarm" else "Pause Swarm",
+                            tint = if (isSwarmPaused) Color(0xFF34D399) else MaterialTheme.colorScheme.secondary
+                        )
+                    }
                     IconButton(onClick = { client.fetchDelegationHierarchy() }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -405,28 +429,35 @@ fun AgentCanvasScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (node.tier.startsWith("Tier 3")) {
-                        // Pause / Resume Toggle for Child Subagents
-                        Button(
-                            onClick = {
-                                client.toggleChildPause(node.id, node.isPaused)
+                    val isPaused = node.status == AgentStatus.PAUSED || node.isPaused
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (isPaused) {
+                                    client.resumeAgent(node.id)
+                                } else {
+                                    client.pauseAgent(node.id)
+                                }
                                 selectedNode = null
-                                Toast.makeText(context, if (node.isPaused) "Child Resumed" else "Child Paused", Toast.LENGTH_SHORT).show()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = if (node.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (node.isPaused) "Resume" else "Pause", color = MaterialTheme.colorScheme.onSurface)
-                        }
+                                Toast.makeText(context, if (isPaused) "${node.name} Resumed" else "${node.name} Paused", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(if (isPaused) "Resume" else "Pause", color = MaterialTheme.colorScheme.onSurface)
+                    }
 
-                        // Terminate Action
+                    if (node.tier.startsWith("Tier 3")) {
+                        // Terminate Action for Child Subagents
                         OutlinedButton(
                             onClick = {
                                 client.terminateChildSubagent(node.id)
@@ -448,9 +479,9 @@ fun AgentCanvasScreen(
                                 Toast.makeText(context, "Quota updated to ${commandLimit.toInt()} turns!", Toast.LENGTH_SHORT).show()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text("Apply Quota Changes", color = MaterialTheme.colorScheme.onPrimary)
+                            Text("Apply Quota", color = MaterialTheme.colorScheme.onPrimary)
                         }
                     } else {
                         Button(

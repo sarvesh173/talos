@@ -20,6 +20,7 @@ pub enum AgentStatus {
     Installed,
     Available,
     Running,
+    Paused,
     Error,
 }
 
@@ -526,6 +527,58 @@ impl AgentSupervisor {
         } else {
             Err(format!("Agent '{}' not found", id))
         }
+    }
+
+    /// Pause an agent's execution loop
+    pub async fn pause_agent(&self, id: &str) -> Result<AgentInfo, String> {
+        let mut lock = self.agents.lock().await;
+        if let Some(agent) = lock.get_mut(id) {
+            agent.status = AgentStatus::Paused;
+            info!("Agent '{}' execution paused", id);
+            Ok(agent.clone())
+        } else {
+            Err(format!("Agent '{}' not found", id))
+        }
+    }
+
+    /// Resume an agent's execution loop
+    pub async fn resume_agent(&self, id: &str) -> Result<AgentInfo, String> {
+        let mut lock = self.agents.lock().await;
+        if let Some(agent) = lock.get_mut(id) {
+            agent.status = AgentStatus::Running;
+            info!("Agent '{}' execution resumed", id);
+            Ok(agent.clone())
+        } else {
+            Err(format!("Agent '{}' not found", id))
+        }
+    }
+
+    /// Pause all running agents across the swarm
+    pub async fn pause_all(&self) -> Vec<AgentInfo> {
+        let mut lock = self.agents.lock().await;
+        let mut affected = Vec::new();
+        for agent in lock.values_mut() {
+            if agent.status == AgentStatus::Running {
+                agent.status = AgentStatus::Paused;
+                affected.push(agent.clone());
+            }
+        }
+        info!("Paused {} agents across swarm", affected.len());
+        affected
+    }
+
+    /// Resume all paused agents across the swarm
+    pub async fn resume_all(&self) -> Vec<AgentInfo> {
+        let mut lock = self.agents.lock().await;
+        let mut affected = Vec::new();
+        for agent in lock.values_mut() {
+            if agent.status == AgentStatus::Paused {
+                agent.status = AgentStatus::Running;
+                affected.push(agent.clone());
+            }
+        }
+        info!("Resumed {} agents across swarm", affected.len());
+        affected
     }
 
     /// Delegate a child subagent under a parent agent

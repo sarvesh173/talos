@@ -956,6 +956,74 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    suspend fun pauseAgent(agentId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/$agentId/pause")
+                    .post("{}".toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                val ok = httpClient.newCall(req).execute().use { it.isSuccessful }
+                if (ok) fetchDelegationHierarchy()
+                ok
+            } catch (e: Exception) {
+                Log.e(TAG, "pauseAgent error: ${e.message}")
+                false
+            }
+        }
+    }
+
+    suspend fun resumeAgent(agentId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/$agentId/resume")
+                    .post("{}".toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                val ok = httpClient.newCall(req).execute().use { it.isSuccessful }
+                if (ok) fetchDelegationHierarchy()
+                ok
+            } catch (e: Exception) {
+                Log.e(TAG, "resumeAgent error: ${e.message}")
+                false
+            }
+        }
+    }
+
+    suspend fun pauseAllAgents(): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/pause-all")
+                    .post("{}".toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                val ok = httpClient.newCall(req).execute().use { it.isSuccessful }
+                if (ok) fetchDelegationHierarchy()
+                ok
+            } catch (e: Exception) {
+                Log.e(TAG, "pauseAllAgents error: ${e.message}")
+                false
+            }
+        }
+    }
+
+    suspend fun resumeAllAgents(): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/resume-all")
+                    .post("{}".toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                val ok = httpClient.newCall(req).execute().use { it.isSuccessful }
+                if (ok) fetchDelegationHierarchy()
+                ok
+            } catch (e: Exception) {
+                Log.e(TAG, "resumeAllAgents error: ${e.message}")
+                false
+            }
+        }
+    }
+
     fun sendMessage(text: String) {
         if (text.isBlank()) return
         val currentRoom = _currentRoomId.value

@@ -110,6 +110,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val _delegationHierarchy = MutableStateFlow<DelegationHierarchyDto?>(null)
     val delegationHierarchy: StateFlow<DelegationHierarchyDto?> = _delegationHierarchy.asStateFlow()
 
+    private val _galleryImages = MutableStateFlow<List<GeneratedImageDto>>(emptyList())
+    val galleryImages: StateFlow<List<GeneratedImageDto>> = _galleryImages.asStateFlow()
+
     fun fetchDelegationHierarchy() {
         scope.launch(Dispatchers.IO) {
             runCatching {
@@ -224,6 +227,75 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 }
             }.onFailure { e ->
                 Log.w(TAG, "Failed to terminate child subagent: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchImageGallery() {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/image/gallery")
+                    .get()
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: return@use
+                        val parsed = json.decodeFromString<List<GeneratedImageDto>>(body)
+                        _galleryImages.value = parsed
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to fetch gallery images: ${e.message}")
+            }
+        }
+    }
+
+    fun generateImage(
+        prompt: String,
+        style: String = "cinematic",
+        aspectRatio: String = "1:1",
+        onComplete: ((GeneratedImageDto?) -> Unit)? = null
+    ) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val payload = json.encodeToString(GenerateImageRequestDto(prompt, style, aspectRatio))
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/image/generate")
+                    .post(payload.toRequestBody(mediaType))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: return@use
+                        val parsed = json.decodeFromString<GeneratedImageDto>(body)
+                        fetchImageGallery()
+                        withContext(Dispatchers.Main) { onComplete?.invoke(parsed) }
+                    } else {
+                        withContext(Dispatchers.Main) { onComplete?.invoke(null) }
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to generate image: ${e.message}")
+                withContext(Dispatchers.Main) { onComplete?.invoke(null) }
+            }
+        }
+    }
+
+    fun deleteGalleryImage(id: String) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/image/gallery/$id")
+                    .delete()
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        fetchImageGallery()
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to delete gallery image: ${e.message}")
             }
         }
     }
@@ -986,4 +1058,21 @@ data class BrowserFetchResultDto(
     val duration_ms: Long,
     val success: Boolean,
     val error: String? = null
+)
+
+@kotlinx.serialization.Serializable
+data class GeneratedImageDto(
+    val id: String,
+    val prompt: String,
+    val style: String,
+    val aspect_ratio: String,
+    val image_url: String,
+    val created_at: Double
+)
+
+@kotlinx.serialization.Serializable
+data class GenerateImageRequestDto(
+    val prompt: String,
+    val style: String = "cinematic",
+    val aspect_ratio: String = "1:1"
 )

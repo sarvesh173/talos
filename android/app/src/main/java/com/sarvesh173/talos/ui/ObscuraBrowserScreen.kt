@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -203,13 +204,13 @@ fun ObscuraBrowserScreen(
                         modifier = Modifier.size(36.dp)
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
+                            MetallicCircularLoader(
+                                size = 18.dp,
                                 strokeWidth = 2.dp,
-                                color = PrimaryAccent
+                                accentColor = PrimaryAccent
                             )
                         } else {
-                            Icon(Icons.Default.ArrowForward, contentDescription = "Go", tint = PrimaryAccent)
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Go", tint = PrimaryAccent)
                         }
                     }
                 }
@@ -297,8 +298,12 @@ fun ObscuraBrowserScreen(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator(color = PrimaryAccent)
-                                Spacer(modifier = Modifier.height(12.dp))
+                                MetallicCircularLoader(
+                                    size = 44.dp,
+                                    strokeWidth = 3.5.dp,
+                                    accentColor = PrimaryAccent
+                                )
+                                Spacer(modifier = Modifier.height(14.dp))
                                 Text(
                                     text = "Obscura rendering DOM over V8...",
                                     style = MaterialTheme.typography.bodySmall,

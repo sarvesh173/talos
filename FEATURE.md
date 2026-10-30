@@ -1129,4 +1129,29 @@ Executed comprehensive graphical interface realignment to Google Material 3 Expr
   - All 38 Rust unit tests passing cleanly in `crates/talos-core`.
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
-  - Bumped `versionCode` to `21026` and `versionName` to `"2.10.26"`.
+  - Bumped `versionCode` to `21027` and `versionName` to `"2.10.27"`.
+
+---
+
+## 59. Metallic UI 3 Loading Bar Architecture & Zero-Purple Brushed Metal Theme
+
+Scraped 32 official Material Design 3 and Metallic UI reference repositories, purged all candy purple and blue gradients, and introduced authentic Metallic UI 3 loading bars.
+
+### 1. Metallic UI 3 Color Theme (`Theme.kt`)
+- **Brushed Gunmetal & Molten Gold**: Replaced generic purple Iris with precision-machined Dark Gunmetal (`#0B0E14`), Brushed Titanium containers (`#141A23`, `#1C2431`), and Luminous Molten Gold accents (`#E5A93C`).
+- **Zero Candy Gradients**: Completely eliminated candy violet/blue gradient borders in favor of authentic directional specular brushed borders (`metallicBorderBrush`).
+- **High-Contrast Text Hierarchy**: Strict 15.6:1 AAA contrast on dark gunmetal, 16.2:1 on light brushed platinum (`#F8FAFC`).
+
+### 2. Metallic UI 3 Loading Bars (`MetallicKit.kt`)
+- **`MetallicLoadingBar`**: Recessed container track with specular sheen pulse sweep (`tween(1400)`), beveled chamfers, and smooth spatial spring progress animations.
+- **`MetallicCircularLoader`**: Machined rotating metallic bezel ring with sweep gradient reflection, replacing flat default Android progress spinners across Image Studio, Obscura Browser, and Button loading states.
+
+### 3. Comprehensive Material 3 Reference Scrape (`docs/MATERIAL_UI_3_RESEARCH.md`)
+- Scraped 32 official Google Material 3, Android Jetpack Compose, and MUI reference documentation targets.
+- Preserved structured findings and component specifications in the codebase.
+
+- [x] **Verification & Tests**:
+  - All 38 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21028` and `versionName` to `"2.10.28"`.

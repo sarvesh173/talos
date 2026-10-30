@@ -1,7 +1,10 @@
 package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -101,10 +104,10 @@ fun MetalButton(
         ) {
             Crossfade(targetState = isLoading, animationSpec = MotionTokens.defaultEffects(), label = "BtnLoadingCrossfade") { loading ->
                 if (loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = contentColor,
-                        strokeWidth = 2.dp
+                    MetallicCircularLoader(
+                        size = 20.dp,
+                        strokeWidth = 2.dp,
+                        accentColor = contentColor
                     )
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -309,5 +312,137 @@ fun MetalContextRing(
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+/**
+ * TALOS Metallic UI 3 Loading Bar.
+ * Precision-machined progress indicator with recessed track, specular sheen sweep,
+ * and beveled chamfered corners.
+ */
+@Composable
+fun MetallicLoadingBar(
+    modifier: Modifier = Modifier,
+    progress: Float? = null,
+    height: Dp = 8.dp,
+    trackColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    accentColor: Color = MaterialTheme.colorScheme.primary
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "MetallicSheenTransition")
+    val sheenOffset by infiniteTransition.animateFloat(
+        initialValue = -1.0f,
+        targetValue = 2.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "SheenOffset"
+    )
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress?.coerceIn(0f, 1f) ?: 1.0f,
+        animationSpec = MotionTokens.defaultSpatial(),
+        label = "MetallicProgressAnim"
+    )
+
+    Surface(
+        shape = RoundedCornerShape(height / 2),
+        color = trackColor,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(height)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val totalWidth = size.width
+            val totalHeight = size.height
+
+            if (progress != null) {
+                val fillWidth = totalWidth * animatedProgress
+                if (fillWidth > 0) {
+                    val brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            accentColor.copy(alpha = 0.85f),
+                            Color(0xFFFFD580),
+                            accentColor
+                        ),
+                        startX = 0f,
+                        endX = fillWidth
+                    )
+                    drawRoundRect(
+                        brush = brush,
+                        size = Size(fillWidth, totalHeight),
+                        cornerRadius = CornerRadius(totalHeight / 2, totalHeight / 2)
+                    )
+                }
+            } else {
+                val bandWidth = totalWidth * 0.45f
+                val startX = totalWidth * sheenOffset
+                val brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        accentColor.copy(alpha = 0.3f),
+                        Color(0xFFFFD580),
+                        accentColor.copy(alpha = 0.3f),
+                        Color.Transparent
+                    ),
+                    startX = startX,
+                    endX = startX + bandWidth
+                )
+                drawRoundRect(
+                    brush = brush,
+                    size = Size(totalWidth, totalHeight),
+                    cornerRadius = CornerRadius(totalHeight / 2, totalHeight / 2)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * TALOS Metallic UI 3 Circular Loader.
+ * High-performance rotating metallic bezel ring with specular reflection.
+ */
+@Composable
+fun MetallicCircularLoader(
+    modifier: Modifier = Modifier,
+    size: Dp = 32.dp,
+    strokeWidth: Dp = 3.dp,
+    accentColor: Color = MaterialTheme.colorScheme.primary
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "MetallicCircularRing")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "CircularRotation"
+    )
+
+    Canvas(modifier = modifier.size(size).padding(strokeWidth / 2)) {
+        val sweepBrush = Brush.sweepGradient(
+            colors = listOf(
+                accentColor.copy(alpha = 0.1f),
+                accentColor.copy(alpha = 0.4f),
+                Color(0xFFFFD580),
+                accentColor,
+                accentColor.copy(alpha = 0.1f)
+            )
+        )
+        drawCircle(
+            color = Color.Gray.copy(alpha = 0.25f),
+            style = Stroke(width = strokeWidth.toPx())
+        )
+        rotate(rotation) {
+            drawArc(
+                brush = sweepBrush,
+                startAngle = 0f,
+                sweepAngle = 270f,
+                useCenter = false,
+                style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
+            )
+        }
     }
 }

@@ -896,3 +896,39 @@ Re-architecting the Command Dock Floating Action Dial to match Telegram / WhatsA
   - Implement hands-free locked recording control bar.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21017` and `versionName` to `"2.10.17"`.
+
+---
+
+## 50. Material 3 Expressive Suite: Multi-Agent Spatial Canvas, Code Diff Viewer, Hardware Permissions & Enhanced Command Quotas
+
+Comprehensive system upgrade implementing Hermes Dashboard style multi-agent canvas, ChatGPT-grade code diff inspection, runtime hardware permission flows, and Material 3 Expressive aesthetic calibration.
+
+### 1. Multi-Agent Spatial Canvas (`AgentCanvasScreen.kt`)
+- **Spatial Agent Mesh**: Interactive canvas displaying parent orchestrator (`TALOS Core / Hermes Gateway`), delegate CLI agents (`OmniRush`, `OpenCode`, `Codex`, `Claude Code`), and child subagent workers (`Researcher`, `Coder`, `Verifier`, `Critic`).
+- **Dynamic Leader Lines**: Bezier arcs with glowing animated particle pulses connecting orchestrators to active delegate children.
+- **Agent Telemetry & Quota Inspector**: Tap any agent node to inspect real-time status (`RUNNING`, `IDLE`, `THINKING`, `VERIFYING`), model selection (`agy/gemini-3.8-flash-tiered`, medium reasoning), token counters, and a custom command limit slider (10–100 turns).
+
+### 2. ChatGPT-Style Code & File Changes Inspector (`CodeDiffViewer.kt`)
+- **Project File Diff Viewer**: Inspect files modified during agent runs with syntax-colored diffs (green insertions, red deletions).
+- **Actions & Statistics**: File change summary (+lines, -lines), one-tap "Copy Diff", search filter, and file revert hooks.
+
+### 3. Attachment Action Sheet & Runtime Permission Flows (`AttachmentBottomSheet.kt`)
+- **M3 Expressive Modal Bottom Sheet**: Clean, human-centered action dock replacing cramped buttons.
+- **Hardware Integrations**:
+  - **Camera**: Runtime `android.permission.CAMERA` request with live photo capture trigger.
+  - **Voice / Audio**: Runtime `android.permission.RECORD_AUDIO` request with real-time waveform test meter.
+  - **Location Sharing**: Runtime `android.permission.ACCESS_FINE_LOCATION` with GPS coordinate card generation.
+  - **Code / File Attachment**: Local document and source code picker.
+  - **Hermes AI Image Gen Studio**: Prompt composer with visual style chips (Cinematic, Pixel Art, 3D Render, Anime) linked to Hermes image generation endpoints.
+
+### 4. Material 3 Expressive Palette & Elevation Polish (`Theme.kt`)
+- **Molten Obsidian & Electric Patina**: Deep tonal surfaces (`0xFF0D0F12` to `0xFF242830`), luminous copper primary (`0xFFF59E0B`), electric verdigris (`0xFF2DD4BF`), and emerald health accents (`0xFF10B981`).
+- Eliminates dull / generic flat backgrounds with dynamic elevation layers and specular border gradients.
+
+- [ ] **Implementation Steps**:
+  - [ ] Implement `AgentCanvasScreen.kt` with SVG/Canvas leader lines and agent hierarchy.
+  - [ ] Implement `CodeDiffViewer.kt` with syntax highlighting and file tree.
+  - [ ] Implement `AttachmentBottomSheet.kt` with runtime permission launchers.
+  - [ ] Elevate `Theme.kt` with M3 Expressive palette and tonal containers.
+  - [ ] Wire top bar and navigation in `MainActivity.kt`.
+  - [ ] Increment version to `2.10.18`, compile release APK, test, and push.

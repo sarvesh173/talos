@@ -369,7 +369,7 @@ private fun DelegateLeadCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = {
                             if (commandLimit > 10f) {
@@ -377,7 +377,7 @@ private fun DelegateLeadCard(
                                 onUpdateQuota(commandLimit.toInt(), reasoning)
                             }
                         },
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.onSurface)
                     }
@@ -388,7 +388,7 @@ private fun DelegateLeadCard(
                                 onUpdateQuota(commandLimit.toInt(), reasoning)
                             }
                         },
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Increase", tint = PrimaryAccent)
                     }

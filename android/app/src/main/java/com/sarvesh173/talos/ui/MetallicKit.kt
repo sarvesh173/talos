@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -51,6 +53,7 @@ fun MetalButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val haptic = LocalHapticFeedback.current
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed && enabled && !isLoading) MotionTokens.PRESS_SCALE else 1.0f,
@@ -77,7 +80,10 @@ fun MetalButton(
     }
 
     Surface(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         enabled = enabled && !isLoading,
         shape = RoundedCornerShape(14.dp),
         color = if (enabled) containerColor else containerColor.copy(alpha = 0.38f),
@@ -85,7 +91,7 @@ fun MetalButton(
         border = borderStroke,
         interactionSource = interactionSource,
         modifier = modifier
-            .height(48.dp)
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .scale(scale)
     ) {
         Row(
@@ -132,10 +138,11 @@ fun MetalIconButton(
     contentDescription: String? = null,
     tint: Color = MaterialTheme.colorScheme.onSurface,
     enabled: Boolean = true,
-    size: Dp = 40.dp
+    size: Dp = 48.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val haptic = LocalHapticFeedback.current
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed && enabled) 0.92f else 1.0f,
@@ -145,16 +152,20 @@ fun MetalIconButton(
 
     Box(
         modifier = modifier
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .size(size)
             .scale(scale)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .border(BorderStroke(1.dp, metallicBorderBrush()), RoundedCornerShape(12.dp))
+            .border(BorderStroke(1.dp, metallicBorderBrush()), RoundedCornerShape(14.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 enabled = enabled,
-                onClick = onClick
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClick()
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -162,7 +173,7 @@ fun MetalIconButton(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = tint,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(20.dp)
         )
     }
 }

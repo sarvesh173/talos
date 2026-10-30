@@ -1047,3 +1047,30 @@ Integrated the Rust-native Obscura headless browser (`obscura 0.2.5`) with anti-
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21023` and `versionName` to `"2.10.23"`.
+
+---
+
+## 56. Agency Specialist Audit Remediation: Haptic Feedback, 48dp Touch Targets, Fullscreen Whiteboard, and Hardware Permissions
+
+Implemented comprehensive design and architectural improvements surfaced by the `ui-finish-gate-reviewer` and `mobile-app-builder` Agency specialists.
+
+### 1. Mechanical Haptic Feedback & Accessible Touch Targets (`MetallicKit.kt`)
+- **Tactile Reality**: Injected `LocalHapticFeedback` into `MetalButton` and `MetalIconButton`, firing tactile pulses (`HapticFeedbackType.LongPress`) on click.
+- **48dp Physical Hitbox Compliance**: Raised default icon button targets to 48dp with `.defaultMinSize(48.dp, 48.dp)` across interactive components.
+
+### 2. Elimination of Slop & Contrast Fixes (`Components.kt`)
+- Replaced hardcoded purple/indigo gradients in `ImageGenerationPromptBubble` with semantic `MaterialTheme.colorScheme.tertiary` and `metallicBorderBrush()`.
+- Standardized `SketchAttachmentBubble` to derive colors from `MaterialTheme.colorScheme.primary`, ensuring 4.5:1 text contrast in both light and dark modes.
+
+### 3. Full-Screen OpenBoard Whiteboard Mode (`WhiteboardScreen.kt`)
+- Dedicated full-screen drawing canvas accessible directly from `ModuleActivityHub` and `MainActivity`.
+- Dot-grid and dark-slate background modes, multi-level undo, brush widths, and direct agent council dispatch.
+
+### 4. Hardware Permissions Flow (`MainActivity.kt`)
+- Bound Camera and Microphone action dials to `rememberLauncherForActivityResult` with graceful permission rationale toasts and fallback intent launchers.
+
+- [x] **Verification & Tests**:
+  - All 36 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21024` and `versionName` to `"2.10.24"`.

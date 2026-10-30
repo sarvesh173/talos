@@ -377,14 +377,15 @@ fun NativeAudioPlayerBubble(
 fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
     val style = content.substringAfter("[Style: ").substringBefore("]").ifBlank { "Cinematic" }
     val prompt = content.substringAfter("] ").ifBlank { content }
+    val accent = MaterialTheme.colorScheme.tertiary
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.2.dp, Brush.linearGradient(listOf(Color(0xFFA855F7), Color(0xFF6366F1)))),
+        border = BorderStroke(1.2.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -394,7 +395,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = Color(0xFFA855F7),
+                        tint = accent,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -402,23 +403,24 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                         text = "Hermes Image Gen",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFA855F7)
+                        color = accent
                     )
                 }
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFA855F7).copy(alpha = 0.15f)
+                    color = accent.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, accent.copy(alpha = 0.35f))
                 ) {
                     Text(
                         text = style,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFA855F7),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        color = accent,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = prompt,
                 style = MaterialTheme.typography.bodySmall,
@@ -430,10 +432,12 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
 
 @Composable
 fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
+    val amber = MaterialTheme.colorScheme.primary
+
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.2.dp, Color(0xFFFBBF24).copy(alpha = 0.6f)),
+        border = BorderStroke(1.2.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -443,18 +447,19 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFFBBF24).copy(alpha = 0.2f))
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(amber.copy(alpha = 0.15f))
+                    .border(BorderStroke(1.dp, amber.copy(alpha = 0.4f)), RoundedCornerShape(12.dp))
             ) {
                 Icon(
                     imageVector = Icons.Default.Brush,
                     contentDescription = null,
-                    tint = Color(0xFFFBBF24),
+                    tint = amber,
                     modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
                     text = "OpenBoard Sketch Attached",

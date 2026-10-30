@@ -1,11 +1,17 @@
 package com.sarvesh173.talos
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -373,6 +379,12 @@ class MainActivity : ComponentActivity() {
                                 onBack = { appScreen = "main" }
                             )
                         }
+                        "whiteboard" -> {
+                            WhiteboardScreen(
+                                client = client,
+                                onBack = { appScreen = "main" }
+                            )
+                        }
                         "wizard" -> {
                             OnboardingWizard(
                                 client = client,
@@ -445,6 +457,31 @@ fun MainScreen(
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAttachmentSheet by remember { mutableStateOf(false) }
     var activeSlotId by remember { mutableStateOf("chambers") }
+
+    val context = LocalContext.current
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            runCatching {
+                context.startActivity(
+                    Intent(MediaStore.ACTION_IMAGE_CAPTURE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
+        } else {
+            Toast.makeText(context, "Camera permission needed to capture photos", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val audioPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            Toast.makeText(context, "Microphone enabled. Hold dial to record voice note.", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Microphone permission needed for audio recordings", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     BackHandler {
         if (drawerState.isOpen) {
@@ -1367,43 +1404,63 @@ fun MainScreen(
                                                     lastDialTapTime = downTime
 
                                                     if (isRecordingMode) {
-                                                        // Recording Mode: Hold to record, swipe up to lock
-                                                        isRecordingActive = true
-                                                        var locked = false
-                                                        while (true) {
-                                                            val event = awaitPointerEvent()
-                                                            val change = event.changes.firstOrNull { it.id == down.id }
-                                                            if (change == null || !change.pressed) {
-                                                                break
+                                                        // Recording Mode: Check permission and hold to record
+                                                        val hasAudio = ContextCompat.checkSelfPermission(
+                                                            context,
+                                                            Manifest.permission.RECORD_AUDIO
+                                                        ) == PackageManager.PERMISSION_GRANTED
+
+                                                        if (!hasAudio) {
+                                                            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                                            waitForUpOrCancellation()
+                                                            isSendPressed = false
+                                                        } else {
+                                                            isRecordingActive = true
+                                                            var locked = false
+                                                            while (true) {
+                                                                val event = awaitPointerEvent()
+                                                                val change = event.changes.firstOrNull { it.id == down.id }
+                                                                if (change == null || !change.pressed) {
+                                                                    break
+                                                                }
+                                                                val dragY = change.position.y - down.position.y
+                                                                if (dragY <= -120f) {
+                                                                    locked = true
+                                                                    isRecordingLocked = true
+                                                                    break
+                                                                }
                                                             }
-                                                            val dragY = change.position.y - down.position.y
-                                                            if (dragY <= -120f) {
-                                                                locked = true
-                                                                isRecordingLocked = true
-                                                                break
-                                                            }
-                                                        }
-                                                        isSendPressed = false
-                                                        if (!locked) {
-                                                            isRecordingActive = false
-                                                            val duration = System.currentTimeMillis() - downTime
-                                                            if (duration >= 350) {
-                                                                client.sendMessage("/consensus")
+                                                            isSendPressed = false
+                                                            if (!locked) {
+                                                                isRecordingActive = false
+                                                                val duration = System.currentTimeMillis() - downTime
+                                                                if (duration >= 350) {
+                                                                    client.sendMessage("🎙️ [Voice Note Recorded: ${duration / 1000}s]")
+                                                                }
                                                             }
                                                         }
                                                     } else {
-                                                        // Camera Mode: single tap opens camera
+                                                        // Camera Mode: check permission and single tap opens camera
                                                         val up = waitForUpOrCancellation()
                                                         isSendPressed = false
                                                         if (up != null) {
                                                             coroutineScope.launch {
                                                                 delay(220)
                                                                 if (System.currentTimeMillis() - lastDialTapTime >= 300) {
-                                                                    runCatching {
-                                                                        context.startActivity(
-                                                                            Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                                                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                                        )
+                                                                    val hasCam = ContextCompat.checkSelfPermission(
+                                                                        context,
+                                                                        Manifest.permission.CAMERA
+                                                                    ) == PackageManager.PERMISSION_GRANTED
+
+                                                                    if (!hasCam) {
+                                                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                                                    } else {
+                                                                        runCatching {
+                                                                            context.startActivity(
+                                                                                Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                                                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                                            )
+                                                                        }
                                                                     }
                                                                 }
                                                             }

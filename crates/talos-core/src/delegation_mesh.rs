@@ -41,6 +41,10 @@ pub struct SubagentChildNode {
     pub state: SubagentState,
     pub turns_used: usize,
     pub created_at: f64,
+    #[serde(default)]
+    pub assigned_model: Option<String>,
+    #[serde(default)]
+    pub fallback_models: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,6 +53,8 @@ pub struct DelegateLeadNode {
     pub name: String,
     pub engine_id: String,
     pub assigned_model: String,
+    #[serde(default)]
+    pub supported_models: Vec<String>,
     pub reasoning_effort: ReasoningEffort,
     pub command_turn_limit: usize,
     pub turns_consumed: usize,
@@ -77,12 +83,16 @@ pub struct DelegationHierarchySnapshot {
 pub struct UpdateQuotaRequest {
     pub command_turn_limit: Option<usize>,
     pub reasoning_effort: Option<ReasoningEffort>,
+    pub assigned_model: Option<String>,
+    pub supported_models: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpawnSubagentRequest {
     pub name: String,
     pub task_goal: String,
+    pub model: Option<String>,
+    pub fallback_models: Option<Vec<String>>,
 }
 
 /// In-memory Delegation Mesh Coordinator.
@@ -94,6 +104,17 @@ pub struct DelegationMesh {
 impl DelegationMesh {
     pub fn new() -> Self {
         let mut map = HashMap::new();
+        let filtered_models = vec![
+            "glm-5.3-flash:vendouple".to_string(),
+            "deepseek-v4.1-flash-1017".to_string(),
+            "gpt-6-luna:vendouple".to_string(),
+            "grok-4.7".to_string(),
+            "mercury".to_string(),
+            "minimax-m3.1".to_string(),
+            "glm-5.3".to_string(),
+            "diffusion-gemma".to_string(),
+            "qwen-3.8-flash".to_string(),
+        ];
 
         // 1. OmniRush CLI Engine
         map.insert(
@@ -108,7 +129,8 @@ impl DelegationMesh {
                         id: "del_omni_ui".to_string(),
                         name: "UI Refactoring Lead".to_string(),
                         engine_id: "omnirush".to_string(),
-                        assigned_model: "agy/gemini-3.8-flash-tiered".to_string(),
+                        assigned_model: "glm-5.3-flash:vendouple".to_string(),
+                        supported_models: filtered_models.clone(),
                         reasoning_effort: ReasoningEffort::Medium,
                         command_turn_limit: 50,
                         turns_consumed: 24,
@@ -122,6 +144,8 @@ impl DelegationMesh {
                                 state: SubagentState::Running,
                                 turns_used: 14,
                                 created_at: 1730270000.0,
+                                assigned_model: Some("glm-5.3-flash:vendouple".to_string()),
+                                fallback_models: filtered_models.clone(),
                             },
                             SubagentChildNode {
                                 id: "sub_contrast".to_string(),
@@ -131,6 +155,8 @@ impl DelegationMesh {
                                 state: SubagentState::Completed,
                                 turns_used: 10,
                                 created_at: 1730269000.0,
+                                assigned_model: Some("deepseek-v4.1-flash-1017".to_string()),
+                                fallback_models: filtered_models.clone(),
                             },
                         ],
                     },
@@ -138,7 +164,8 @@ impl DelegationMesh {
                         id: "del_omni_hw".to_string(),
                         name: "Hardware Bridge Lead".to_string(),
                         engine_id: "omnirush".to_string(),
-                        assigned_model: "agy/gemini-3.8-flash-tiered".to_string(),
+                        assigned_model: "deepseek-v4.1-flash-1017".to_string(),
+                        supported_models: filtered_models.clone(),
                         reasoning_effort: ReasoningEffort::Medium,
                         command_turn_limit: 40,
                         turns_consumed: 16,
@@ -151,6 +178,8 @@ impl DelegationMesh {
                             state: SubagentState::Completed,
                             turns_used: 8,
                             created_at: 1730268000.0,
+                            assigned_model: Some("gpt-6-luna:vendouple".to_string()),
+                            fallback_models: filtered_models.clone(),
                         }],
                     },
                 ],
@@ -169,7 +198,8 @@ impl DelegationMesh {
                     id: "del_open_rust".to_string(),
                     name: "Rust Core Maintainer".to_string(),
                     engine_id: "opencode".to_string(),
-                    assigned_model: "space-bunny-free".to_string(),
+                    assigned_model: "gpt-6-luna:vendouple".to_string(),
+                    supported_models: filtered_models.clone(),
                     reasoning_effort: ReasoningEffort::High,
                     command_turn_limit: 60,
                     turns_consumed: 32,
@@ -183,6 +213,8 @@ impl DelegationMesh {
                             state: SubagentState::Running,
                             turns_used: 20,
                             created_at: 1730271000.0,
+                            assigned_model: Some("grok-4.7".to_string()),
+                            fallback_models: filtered_models.clone(),
                         },
                         SubagentChildNode {
                             id: "sub_asan".to_string(),
@@ -192,6 +224,8 @@ impl DelegationMesh {
                             state: SubagentState::Completed,
                             turns_used: 12,
                             created_at: 1730267000.0,
+                            assigned_model: Some("mercury".to_string()),
+                            fallback_models: filtered_models.clone(),
                         },
                     ],
                 }],
@@ -210,7 +244,8 @@ impl DelegationMesh {
                     id: "del_claude_arch".to_string(),
                     name: "Architecture Reviewer".to_string(),
                     engine_id: "claude_code".to_string(),
-                    assigned_model: "claude-opus-5.5".to_string(),
+                    assigned_model: "grok-4.7".to_string(),
+                    supported_models: filtered_models.clone(),
                     reasoning_effort: ReasoningEffort::High,
                     command_turn_limit: 30,
                     turns_consumed: 5,
@@ -275,11 +310,39 @@ impl DelegationMesh {
                     if let Some(new_effort) = req.reasoning_effort {
                         del.reasoning_effort = new_effort;
                     }
+                    if let Some(new_model) = req.assigned_model {
+                        del.assigned_model = new_model;
+                    }
+                    if let Some(models) = req.supported_models {
+                        del.supported_models = models;
+                    }
                     return Ok(del.clone());
                 }
             }
         }
 
+        Err(format!("Delegate '{}' not found", delegate_id))
+    }
+
+    /// Switch assigned model on a delegate lead
+    pub async fn update_delegate_model(
+        &self,
+        delegate_id: &str,
+        new_model: &str,
+    ) -> Result<DelegateLeadNode, String> {
+        let mut guard = self.engines.write().await;
+        for eng in guard.values_mut() {
+            for del in &mut eng.delegates {
+                if del.id == delegate_id {
+                    del.assigned_model = new_model.to_string();
+                    if !del.supported_models.contains(&new_model.to_string()) {
+                        del.supported_models.push(new_model.to_string());
+                    }
+                    info!("Delegate {} model switched to {}", del.id, new_model);
+                    return Ok(del.clone());
+                }
+            }
+        }
         Err(format!("Delegate '{}' not found", delegate_id))
     }
 
@@ -337,6 +400,8 @@ impl DelegationMesh {
                             .duration_since(std::time::UNIX_EPOCH)
                             .unwrap_or_default()
                             .as_secs_f64(),
+                        assigned_model: req.model.or(Some(del.assigned_model.clone())),
+                        fallback_models: req.fallback_models.unwrap_or_else(|| del.supported_models.clone()),
                     };
 
                     del.turns_consumed += 1;
@@ -418,6 +483,8 @@ mod tests {
                 UpdateQuotaRequest {
                     command_turn_limit: Some(85),
                     reasoning_effort: Some(ReasoningEffort::High),
+                    assigned_model: None,
+                    supported_models: None,
                 },
             )
             .await
@@ -433,6 +500,8 @@ mod tests {
                 UpdateQuotaRequest {
                     command_turn_limit: Some(500),
                     reasoning_effort: None,
+                    assigned_model: None,
+                    supported_models: None,
                 },
             )
             .await
@@ -449,6 +518,8 @@ mod tests {
                 SpawnSubagentRequest {
                     name: "Live CSS Inspector".to_string(),
                     task_goal: "Verify flexbox and grid layouts".to_string(),
+                    model: None,
+                    fallback_models: None,
                 },
             )
             .await
@@ -471,6 +542,8 @@ mod tests {
                 SpawnSubagentRequest {
                     name: "Should Fail".to_string(),
                     task_goal: "None".to_string(),
+                    model: None,
+                    fallback_models: None,
                 },
             )
             .await;
@@ -487,6 +560,8 @@ mod tests {
                 SpawnSubagentRequest {
                     name: "Test Runner".to_string(),
                     task_goal: "Run test suite".to_string(),
+                    model: None,
+                    fallback_models: None,
                 },
             )
             .await

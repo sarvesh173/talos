@@ -196,6 +196,28 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    fun switchDelegateModel(delegateId: String, newModel: String) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val payload = org.json.JSONObject().apply {
+                    put("model", newModel)
+                }.toString()
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/delegates/$delegateId/model")
+                    .post(payload.toRequestBody(mediaType))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        fetchDelegationHierarchy()
+                    }
+                }
+            }.onFailure { e ->
+                Log.e(TAG, "switchDelegateModel error: ${e.message}")
+            }
+        }
+    }
+
     fun spawnChildSubagent(delegateId: String, name: String, goal: String) {
         scope.launch(Dispatchers.IO) {
             runCatching {
@@ -1134,6 +1156,7 @@ data class DelegateLeadDto(
     val name: String,
     val engine_id: String,
     val assigned_model: String,
+    val supported_models: List<String> = emptyList(),
     val reasoning_effort: String,
     val command_turn_limit: Int,
     val turns_consumed: Int,

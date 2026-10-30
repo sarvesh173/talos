@@ -1588,3 +1588,32 @@ Elevated `WhiteboardScreen.kt` and `WhiteboardSheet.kt` to desktop interactive w
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21048` and `versionName` to `"2.10.48"`.
+
+---
+
+## 79. Multi-Model Swarm Calibration: Filtered Model Pools & Dynamic Model Switching
+
+Calibrated `talos-core` hierarchical delegation mesh and `AgentCanvasScreen.kt` to bind multiple filtered models across all delegate leads and child workers.
+
+### 1. Filtered Model Mesh Architecture (`crates/talos-core/src/delegation_mesh.rs`)
+- **Multi-Model Pools (`supported_models`)**: Every delegate lead and child worker is assigned the exact verified healthy model pool:
+  - `glm-5.3-flash:vendouple` (1226ms ping, 98.4% uptime)
+  - `deepseek-v4.1-flash-1017` (1396ms ping, 100.0% uptime)
+  - `gpt-6-luna:vendouple` (1604ms ping, 98.4% uptime)
+  - `grok-4.7` (5874ms ping, 100.0% uptime)
+  - `mercury` (1398ms ping, 100.0% uptime)
+  - `minimax-m3.1` (5700ms ping, 100.0% uptime)
+  - `glm-5.3` (6054ms ping, 98.4% uptime)
+  - `diffusion-gemma` (4415ms ping, 98.4% uptime)
+  - `qwen-3.8-flash` (100.0% uptime)
+- **Dynamic Model Switching Endpoint**: Added `POST /api/delegates/:id/model` allowing zero-downtime model switches on running delegate leads.
+
+### 2. Android Swarm Model Selector Dock (`AgentCanvasScreen.kt`)
+- **Dynamic Model Switcher Row**: Node inspector sheet features an interactive FilterChip row displaying all supported filtered models for the selected agent.
+- **Instant Model Reassignment**: Single tap switches the agent's active model over the mesh API with sensory haptic feedback (`TextHandleMove`).
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21049` and `versionName` to `"2.10.49"`.

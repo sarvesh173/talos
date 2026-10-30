@@ -168,6 +168,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Feature 52: Hierarchical Delegation Mesh & Quota Controller
         .route("/api/delegation/tree", get(get_delegation_tree))
         .route("/api/delegates/:id/quota", route_patch(update_delegate_quota))
+        .route("/api/delegates/:id/model", post(switch_delegate_model))
         .route("/api/delegates/:id/pause", post(pause_delegate))
         .route("/api/delegates/:id/resume", post(resume_delegate))
         .route("/api/delegates/:id/children", post(spawn_delegate_child))
@@ -1122,6 +1123,24 @@ async fn update_delegate_quota(
     state
         .delegation_mesh
         .update_delegate_quota(&id, payload)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SwitchDelegateModelRequest {
+    pub model: String,
+}
+
+async fn switch_delegate_model(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(payload): Json<SwitchDelegateModelRequest>,
+) -> Result<Json<delegation_mesh::DelegateLeadNode>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .update_delegate_model(&id, &payload.model)
         .await
         .map(Json)
         .map_err(|e| (StatusCode::NOT_FOUND, e))

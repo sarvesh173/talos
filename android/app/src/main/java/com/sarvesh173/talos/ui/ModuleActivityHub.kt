@@ -42,8 +42,10 @@ fun ModuleActivityHub(
     onBack: () -> Unit,
     onNavigate: (String) -> Unit
 ) {
-    val primaryColor = PrimaryAccent
-    val modules = remember(primaryColor) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary
+    val modules = remember(primaryColor, secondaryColor, tertiaryColor) {
         listOf(
             ActivityModuleItem(
                 id = "canvas",
@@ -60,7 +62,7 @@ fun ModuleActivityHub(
                 subtitle = "Unified syntax-colored diffs for git working tree",
                 icon = Icons.Default.Code,
                 category = "Intelligence & Coding",
-                color = Color(0xFF34D399)
+                color = tertiaryColor
             ),
             ActivityModuleItem(
                 id = "cli_manager",
@@ -68,7 +70,7 @@ fun ModuleActivityHub(
                 subtitle = "OmniRush, OpenCode, Codex & command quota sliders",
                 icon = Icons.Default.Terminal,
                 category = "Intelligence & Coding",
-                color = Color(0xFF60A5FA)
+                color = secondaryColor
             ),
             ActivityModuleItem(
                 id = "whiteboard",
@@ -76,7 +78,7 @@ fun ModuleActivityHub(
                 subtitle = "Touch drawing canvas with dot grid and architectural sketch attachments",
                 icon = Icons.Default.Brush,
                 category = "Creative & Canvas",
-                color = Color(0xFFFBBF24),
+                color = primaryColor,
                 badge = "NEW"
             ),
             ActivityModuleItem(
@@ -85,7 +87,7 @@ fun ModuleActivityHub(
                 subtitle = "Bento gallery of generated images with pinch-zoom lightbox",
                 icon = Icons.Default.AutoAwesome,
                 category = "Creative & Canvas",
-                color = Color(0xFFA855F7)
+                color = tertiaryColor
             ),
             ActivityModuleItem(
                 id = "browser",
@@ -93,7 +95,7 @@ fun ModuleActivityHub(
                 subtitle = "Anti-detection web view with session tabs and script injection",
                 icon = Icons.Default.Language,
                 category = "System & Gateway",
-                color = Color(0xFF2DD4BF)
+                color = secondaryColor
             )
         )
     }

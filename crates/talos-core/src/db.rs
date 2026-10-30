@@ -94,8 +94,18 @@ impl Database {
                 updated_at REAL NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS generated_images (
+                id TEXT PRIMARY KEY,
+                prompt TEXT NOT NULL,
+                style TEXT NOT NULL,
+                aspect_ratio TEXT NOT NULL,
+                image_url TEXT NOT NULL,
+                created_at REAL NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_messages_room ON messages(room_id, created_at);
             CREATE INDEX IF NOT EXISTS idx_tokens_hash ON tokens(token_hash);
+            CREATE INDEX IF NOT EXISTS idx_images_created ON generated_images(created_at DESC);
             "#,
         )?;
         Ok(())
@@ -494,5 +504,43 @@ impl Database {
         }
 
         Ok(None)
+    }
+
+    pub fn insert_generated_image(&self, img: &GeneratedImage) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT INTO generated_images (id, prompt, style, aspect_ratio, image_url, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![img.id, img.prompt, img.style, img.aspect_ratio, img.image_url, img.created_at],
+        )?;
+        Ok(())
+    }
+
+    pub fn list_generated_images(&self, limit: usize) -> Result<Vec<GeneratedImage>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, prompt, style, aspect_ratio, image_url, created_at FROM generated_images ORDER BY created_at DESC LIMIT ?1"
+        )?;
+        let rows = stmt.query_map(params![limit as i64], |row| {
+            Ok(GeneratedImage {
+                id: row.get(0)?,
+                prompt: row.get(1)?,
+                style: row.get(2)?,
+                aspect_ratio: row.get(3)?,
+                image_url: row.get(4)?,
+                created_at: row.get(5)?,
+            })
+        })?;
+
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
+    }
+
+    pub fn delete_generated_image(&self, id: &str) -> Result<bool> {
+        let conn = self.conn.lock().unwrap();
+        let affected = conn.execute("DELETE FROM generated_images WHERE id = ?1", params![id])?;
+        Ok(affected > 0)
     }
 }

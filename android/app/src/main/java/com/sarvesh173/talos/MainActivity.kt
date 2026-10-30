@@ -830,7 +830,7 @@ fun MainScreen(
                                     Icon(
                                         imageVector = Icons.Default.Dashboard,
                                         contentDescription = "Activity Hub",
-                                        tint = Color(0xFF60A5FA),
+                                        tint = MaterialTheme.colorScheme.tertiary,
                                         modifier = Modifier.size(19.dp)
                                     )
                                 }

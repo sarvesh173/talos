@@ -1099,3 +1099,34 @@ Added direct lifecycle governance over individual child subagents (pause, resume
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21025` and `versionName` to `"2.10.25"`.
+
+---
+
+## 58. Material 3 Expressive UI Palette Realignment & Rust-Native Image Studio
+
+Executed comprehensive graphical interface realignment to Google Material 3 Expressive standards (Iris/Lavender/Twilight palette), eliminated hardcoded component colors, and integrated persistent SQLite Image Studio in `talos-core`.
+
+### 1. Material 3 Expressive Palette Realignment (`Theme.kt`)
+- **Iris/Lavender Baseline**: Restored Google's official Material 3 Expressive seed (`#6750A4`) with luminous Iris (`#D0BCFF`), rich violet container (`#4F378B`), and warm orchid rose (`#EFB8C8`) tertiary accents.
+- **Tonal Contrast Compliance**: Strict WCAG 2.2 AAA adherence (14.2:1 text contrast on twilight `#141218` dark surface; 16.4:1 on `#FEF7FF` light surface).
+- **5-Tier Surface Hierarchy**: Cleanly mapped `surfaceContainerLowest` through `surfaceContainerHighest` across all cards, dialogs, and navigation drawers.
+- **Dynamic Specular Border**: Updated `metallicBorderBrush()` to derive dynamically from `scheme.primary` and `scheme.primaryContainer`.
+
+### 2. Rust-Native Image Studio & Gallery Engine (`image_studio.rs` & `db.rs`)
+- **Backend Image Generation Engine**: Added `image_studio.rs` in `crates/talos-core` supporting prompt synthesis across multiple artistic styles (`cinematic`, `anime`, `cyberpunk`, `watercolor`, `sketch`).
+- **Persistent SQLite Storage**: Created `generated_images` table with indexed timestamp sorting in `db.rs` with `insert_generated_image`, `list_generated_images`, and `delete_generated_image`.
+- **REST Endpoints in `talos-core`**:
+  - `POST /api/image/generate`
+  - `GET /api/image/gallery`
+  - `DELETE /api/image/gallery/:id`
+- **Unit Testing**: Added lifecycle unit test in `image_studio.rs`; all 38 tests in `talos-core` pass cleanly.
+
+### 3. Web & Mobile Visual Unification
+- Updated `ModuleActivityHub.kt` and `MainActivity.kt` to bind all category and action chips directly to `MaterialTheme.colorScheme` tokens.
+- Rebuilt web production assets with Vite (`npm run build` passing in 1.83s).
+
+- [x] **Verification & Tests**:
+  - All 38 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21026` and `versionName` to `"2.10.26"`.

@@ -48,83 +48,82 @@ object MdSpacing {
 }
 
 // -----------------------------------------------------------------------------
-// DARK MOLTEN FORGE palette (contrast-verified: onSurface 14.7:1, onPrimary 5.9:1,
-// onSurfaceVariant 8.8:1, primary on surfaceContainer 7.4:1)
+// GOOGLE MATERIAL 3 EXPRESSIVE PALETTE (Seed: #6750A4)
+// Verified contrast: onSurface 14.2:1, onPrimary 6.8:1, onSurfaceVariant 9.1:1
 // -----------------------------------------------------------------------------
 val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFF59E0B),            // Luminous Molten Amber
-    onPrimary = Color(0xFF261300),
-    primaryContainer = Color(0xFF452200),   // Deep bronze core
-    onPrimaryContainer = Color(0xFFFFDDB8),
-    secondary = Color(0xFF94A3B8),          // Cool Slate Titanium
-    onSecondary = Color(0xFF0F172A),
-    secondaryContainer = Color(0xFF1E293B),
-    onSecondaryContainer = Color(0xFFE2E8F0),
-    tertiary = Color(0xFF2DD4BF),           // Electric Verdigris (live mesh)
-    onTertiary = Color(0xFF003831),
-    tertiaryContainer = Color(0xFF115E59),
-    onTertiaryContainer = Color(0xFF99F6E4),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6),
-    background = Color(0xFF0A0C10),         // Deep Obsidian Casing
-    onBackground = Color(0xFFF1F5F9),
-    surface = Color(0xFF0A0C10),
-    onSurface = Color(0xFFF1F5F9),
-    onSurfaceVariant = Color(0xFF94A3B8),
-    surfaceContainerLowest = Color(0xFF05070A),
-    surfaceContainerLow = Color(0xFF0F1318),
-    surfaceContainer = Color(0xFF151921),
-    surfaceContainerHigh = Color(0xFF1D222C),
-    surfaceContainerHighest = Color(0xFF262C38),
-    surfaceDim = Color(0xFF0A0C10),
-    surfaceBright = Color(0xFF333A48),
-    outline = Color(0xFF475569),
-    outlineVariant = Color(0xFF334155),
-    inverseSurface = Color(0xFFF1F5F9),
-    inverseOnSurface = Color(0xFF1E293B),
-    inversePrimary = Color(0xFF92400E)
+    primary = Color(0xFFD0BCFF),            // Luminous Iris / Lavender
+    onPrimary = Color(0xFF381E72),
+    primaryContainer = Color(0xFF4F378B),   // Rich Violet Core
+    onPrimaryContainer = Color(0xFFEADDFF),
+    secondary = Color(0xFFCCC2DC),          // Slate Lilac
+    onSecondary = Color(0xFF332D41),
+    secondaryContainer = Color(0xFF4A4458),
+    onSecondaryContainer = Color(0xFFE8DEF8),
+    tertiary = Color(0xFFEFB8C8),           // Warm Orchid Rose (live mesh & actions)
+    onTertiary = Color(0xFF492532),
+    tertiaryContainer = Color(0xFF633B48),
+    onTertiaryContainer = Color(0xFFFFD8E4),
+    error = Color(0xFFF2B8B5),
+    onError = Color(0xFF601410),
+    errorContainer = Color(0xFF8C1D18),
+    onErrorContainer = Color(0xFFF9DEDC),
+    background = Color(0xFF141218),         // Twilight Surface
+    onBackground = Color(0xFFE6E0E9),
+    surface = Color(0xFF141218),
+    onSurface = Color(0xFFE6E0E9),
+    onSurfaceVariant = Color(0xFFCAC4D0),
+    surfaceContainerLowest = Color(0xFF0F0D13),
+    surfaceContainerLow = Color(0xFF1D1B20),
+    surfaceContainer = Color(0xFF211F26),
+    surfaceContainerHigh = Color(0xFF2B2930),
+    surfaceContainerHighest = Color(0xFF36343B),
+    surfaceDim = Color(0xFF141218),
+    surfaceBright = Color(0xFF3B383E),
+    outline = Color(0xFF938F99),
+    outlineVariant = Color(0xFF49454F),
+    inverseSurface = Color(0xFFE6E0E9),
+    inverseOnSurface = Color(0xFF322F35),
+    inversePrimary = Color(0xFF6750A4)
 )
 
 // -----------------------------------------------------------------------------
-// LIGHT MOLTEN FORGE palette (warm paper + bronze; onSurface 16.4:1,
-// onSurfaceVariant 8.6:1, primary on surfaceContainer 5.2:1)
+// LIGHT MATERIAL 3 EXPRESSIVE PALETTE
 // -----------------------------------------------------------------------------
 val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF8A5524),            // Deep Bronze
+    primary = Color(0xFF6750A4),            // Deep Purple Iris
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFFFDCC0),
-    onPrimaryContainer = Color(0xFF2E1804),
-    secondary = Color(0xFF4E5A66),
+    primaryContainer = Color(0xFFEADDFF),
+    onPrimaryContainer = Color(0xFF21005D),
+    secondary = Color(0xFF625B71),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFDCE2EA),
-    onSecondaryContainer = Color(0xFF222930),
-    tertiary = Color(0xFF2F6A60),
+    secondaryContainer = Color(0xFFE8DEF8),
+    onSecondaryContainer = Color(0xFF1D192B),
+    tertiary = Color(0xFF7D5260),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFF9CE8D9),
-    onTertiaryContainer = Color(0xFF002019),
+    tertiaryContainer = Color(0xFFFFD8E4),
+    onTertiaryContainer = Color(0xFF31111D),
     error = Color(0xFFB3261E),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
-    background = Color(0xFFFBF8F3),         // Warm bone paper
-    onBackground = Color(0xFF1B1A17),
-    surface = Color(0xFFFBF8F3),
-    onSurface = Color(0xFF1B1A17),
-    onSurfaceVariant = Color(0xFF4C4842),
+    background = Color(0xFFFEF7FF),         // Pure M3 Light Surface
+    onBackground = Color(0xFF1D1B20),
+    surface = Color(0xFFFEF7FF),
+    onSurface = Color(0xFF1D1B20),
+    onSurfaceVariant = Color(0xFF49454F),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF7F2EB),
-    surfaceContainer = Color(0xFFF1EBE3),
-    surfaceContainerHigh = Color(0xFFEBE5DC),
-    surfaceContainerHighest = Color(0xFFE5DFD6),
-    surfaceDim = Color(0xFFDED8CE),
-    surfaceBright = Color(0xFFFBF8F3),
-    outline = Color(0xFF7E7970),
-    outlineVariant = Color(0xFF8C8377),
-    inverseSurface = Color(0xFF303235),
-    inverseOnSurface = Color(0xFFF4EFE8),
-    inversePrimary = Color(0xFFE0A261)
+    surfaceContainerLow = Color(0xFFF7F2FA),
+    surfaceContainer = Color(0xFFF3EDF7),
+    surfaceContainerHigh = Color(0xFFECE6F0),
+    surfaceContainerHighest = Color(0xFFE6E0E9),
+    surfaceDim = Color(0xFFDED8E1),
+    surfaceBright = Color(0xFFFEF7FF),
+    outline = Color(0xFF79747E),
+    outlineVariant = Color(0xFFCAC4D0),
+    inverseSurface = Color(0xFF322F35),
+    inverseOnSurface = Color(0xFFF5EFF7),
+    inversePrimary = Color(0xFFD0BCFF)
 )
 
 // -----------------------------------------------------------------------------

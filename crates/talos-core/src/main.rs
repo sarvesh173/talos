@@ -14,6 +14,7 @@ mod theme;
 mod agents;
 mod delegation_mesh;
 mod browser_bridge;
+mod image_studio;
 
 use auth::AuthEngine;
 use axum::{
@@ -59,6 +60,7 @@ pub struct AppState {
     pub telemetry_config: Arc<tokio::sync::RwLock<telemetry::TelemetryConfig>>,
     pub delegation_mesh: Arc<delegation_mesh::DelegationMesh>,
     pub browser_bridge: Arc<browser_bridge::BrowserBridge>,
+    pub image_studio: Arc<image_studio::ImageStudio>,
 }
 
 #[tokio::main]
@@ -80,6 +82,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let telemetry_config = Arc::new(tokio::sync::RwLock::new(telemetry::TelemetryConfig::default()));
     let delegation_mesh = Arc::new(delegation_mesh::DelegationMesh::new());
     let browser_bridge = Arc::new(browser_bridge::BrowserBridge::new());
+    let image_studio = Arc::new(image_studio::ImageStudio::new());
 
     let state = AppState {
         db,
@@ -91,6 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         telemetry_config,
         delegation_mesh,
         browser_bridge,
+        image_studio,
     };
 
     let cors = CorsLayer::new()
@@ -162,6 +166,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Feature 55: Obscura Stealth Headless Browser Bridge
         .route("/api/browser/status", get(get_browser_status))
         .route("/api/browser/fetch", post(fetch_browser_page))
+        // Feature 58: Hermes Image Studio & Gallery
+        .route("/api/image/generate", post(generate_image_handler))
+        .route("/api/image/gallery", get(get_image_gallery_handler))
+        .route("/api/image/gallery/:id", delete(delete_image_handler))
         .layer(cors)
         .with_state(state);
 
@@ -1127,4 +1135,40 @@ async fn fetch_browser_page(
     Json(payload): Json<browser_bridge::BrowserFetchRequest>,
 ) -> Json<browser_bridge::BrowserFetchResult> {
     Json(state.browser_bridge.fetch_page(payload).await)
+}
+
+// ==========================================
+// Feature 58: Hermes Image Studio Handlers
+// ==========================================
+
+async fn generate_image_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<GenerateImageRequest>,
+) -> Result<Json<GeneratedImage>, (StatusCode, String)> {
+    state
+        .image_studio
+        .generate(payload, &state.db)
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn get_image_gallery_handler(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<GeneratedImage>>, (StatusCode, String)> {
+    state
+        .image_studio
+        .list(&state.db, 100)
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
+async fn delete_image_handler(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<bool>, (StatusCode, String)> {
+    state
+        .image_studio
+        .delete(&id, &state.db)
+        .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
 }

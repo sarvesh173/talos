@@ -234,3 +234,30 @@ pub struct MeshPeer {
     pub status: String,
     pub latency_ms: f64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneratedImage {
+    pub id: String,
+    pub prompt: String,
+    pub style: String,
+    pub aspect_ratio: String,
+    pub image_url: String,
+    pub created_at: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerateImageRequest {
+    pub prompt: String,
+    #[serde(default = "default_style")]
+    pub style: String,
+    #[serde(default = "default_aspect_ratio")]
+    pub aspect_ratio: String,
+}
+
+fn default_style() -> String {
+    "cinematic".to_string()
+}
+
+fn default_aspect_ratio() -> String {
+    "1:1".to_string()
+}

@@ -199,9 +199,9 @@ fun WhiteboardScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 val b64 = exportStrokesToPngBase64(paths, background = canvasBackground)
                                 if (b64 != null) {
-                                    client.sendMessage("📐 [OpenBoard Sketch: ${paths.size} strokes]\ndata:image/png;base64,$b64")
+                                    client.sendMessage("[OpenBoard Sketch: ${paths.size} strokes]\ndata:image/png;base64,$b64")
                                 } else {
-                                    client.sendMessage("📐 [OpenBoard Sketch Attached: ${paths.size} strokes]")
+                                    client.sendMessage("[OpenBoard Sketch Attached: ${paths.size} strokes]")
                                 }
                                 Toast.makeText(context, "Sketch attached to Council Room!", Toast.LENGTH_SHORT).show()
                                 onBack()

@@ -248,7 +248,7 @@ fun ImageGalleryScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = {
-                            client.sendMessage("🎨 [Hermes Generated Image: ${image.style}]\nPrompt: ${image.prompt}")
+                            client.sendMessage("[Hermes Generated Image: ${image.style}]\nPrompt: ${image.prompt}")
                             Toast.makeText(context, "Forwarded to Council Room!", Toast.LENGTH_SHORT).show()
                             selectedImage = null
                         },

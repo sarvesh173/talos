@@ -349,7 +349,7 @@ fun ObscuraBrowserScreen(
                                     IconButton(
                                         onClick = {
                                             val excerpt = result.content.take(600).trim()
-                                            client.sendMessage("🌐 [Obscura Web Excerpt: ${result.url}]\n$excerpt...")
+                                            client.sendMessage("[Obscura Web Excerpt: ${result.url}]\n$excerpt...")
                                             Toast.makeText(context, "Forwarded to Council Room!", Toast.LENGTH_SHORT).show()
                                         },
                                         modifier = Modifier.size(32.dp)

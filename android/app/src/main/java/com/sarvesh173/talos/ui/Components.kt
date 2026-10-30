@@ -309,17 +309,17 @@ fun MessageBubble(
                           content.contains(".wav", ignoreCase = true) ||
                           content.contains(".opus", ignoreCase = true) ||
                           content.contains(".m4a", ignoreCase = true) ||
-                          content.contains("🎙️ [Voice Note", ignoreCase = true) ||
+                          content.contains("[Voice Note", ignoreCase = true) ||
                           (content.contains("data:audio/") && content.contains(";base64,")) ||
                           content.startsWith("MEDIA:") && (content.endsWith(".ogg") || content.endsWith(".mp3") || content.endsWith(".opus"))
             val isVideo = content.contains(".mp4", ignoreCase = true) ||
                           content.contains(".webm", ignoreCase = true)
             val isImageGen = content.startsWith("/generate-image", ignoreCase = true) ||
-                             content.contains("🎨 [AI Studio", ignoreCase = true) ||
-                             content.contains("🎨 [Generating Image", ignoreCase = true)
+                             content.contains("[AI Studio", ignoreCase = true) ||
+                             content.contains("[Generating Image", ignoreCase = true)
             val isSketch = content.contains("[OpenBoard Sketch Attached", ignoreCase = true)
-            val isLocation = content.contains("📍 [Mesh Node", ignoreCase = true)
-            val isPhoto = content.contains("📸 [Photo Captured", ignoreCase = true) || (content.contains("data:image/") && content.contains(";base64,"))
+            val isLocation = content.contains("[Mesh Node", ignoreCase = true)
+            val isPhoto = content.contains("[Photo Captured", ignoreCase = true) || (content.contains("data:image/") && content.contains(";base64,"))
 
             when {
                 isPhoto -> {
@@ -407,8 +407,8 @@ fun NativeAudioPlayerBubble(
     val iconTint = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
 
     val audioTitle = remember(audioUrl) {
-        if (audioUrl.contains("🎙️ [Voice Note")) {
-            val sec = audioUrl.substringAfter("🎙️ [Voice Note:").substringBefore("]").trim()
+        if (audioUrl.contains("[Voice Note")) {
+            val sec = audioUrl.substringAfter("[Voice Note:").substringBefore("]").trim()
             "Recorded Voice Note ($sec)"
         } else {
             audioUrl.substringAfterLast("/").substringBefore("?").ifBlank { "Audio Note" }
@@ -545,8 +545,8 @@ fun NativeAudioPlayerBubble(
 
 @Composable
 fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
-    val isGenerating = content.contains("🎨 [Generating Image", ignoreCase = true)
-    val isArtifact = content.contains("🎨 [AI Studio Artifact:", ignoreCase = true)
+    val isGenerating = content.contains("[Generating Image", ignoreCase = true)
+    val isArtifact = content.contains("[AI Studio Artifact:", ignoreCase = true)
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 

@@ -506,7 +506,7 @@ fun MainScreen(
             val bytes = java.io.ByteArrayOutputStream()
             bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, bytes)
             val b64 = android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP)
-            client.sendMessage("📸 [Photo Captured: ${bitmap.width}x${bitmap.height}px]\ndata:image/jpeg;base64,$b64")
+            client.sendMessage("[Photo Captured: ${bitmap.width}x${bitmap.height}px]\ndata:image/jpeg;base64,$b64")
             Toast.makeText(context, "Photo captured & attached to chamber!", Toast.LENGTH_SHORT).show()
         }
     }
@@ -1443,7 +1443,7 @@ fun MainScreen(
                                                     val (duration, b64) = audioRecordManager.stopRecording()
                                                     if (b64 != null && duration >= 1) {
                                                         sendHaptic(context)
-                                                        client.sendMessage("🎙️ [Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
+                                                        client.sendMessage("[Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
                                                         Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
@@ -1531,7 +1531,7 @@ fun MainScreen(
                                                                 val (duration, b64) = audioRecordManager.stopRecording()
                                                                 if (b64 != null && duration >= 1) {
                                                                     sendHaptic(context)
-                                                                    client.sendMessage("🎙️ [Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
+                                                                    client.sendMessage("[Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
                                                                     Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
                                                                 }
                                                             }

@@ -76,7 +76,7 @@ fun AttachmentBottomSheet(
             val stream = java.io.ByteArrayOutputStream()
             bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, stream)
             val sizeKb = stream.size() / 1024
-            onSendText("📷 [Live Camera Snapshot Attached • ${bitmap.width}x${bitmap.height} • ${sizeKb}KB • Tailscale Verified]")
+            onSendText("[Live Camera Snapshot Attached • ${bitmap.width}x${bitmap.height} • ${sizeKb}KB • Tailscale Verified]")
             Toast.makeText(context, "Captured photo attached to context!", Toast.LENGTH_SHORT).show()
             onDismiss()
         }
@@ -117,9 +117,9 @@ fun AttachmentBottomSheet(
             val latStr = String.format(Locale.US, "%.4f", location.latitude)
             val lonStr = String.format(Locale.US, "%.4f", location.longitude)
             val accuracy = location.accuracy.toInt()
-            onSendText("📍 [Mesh Node Geolocation]\nLatitude: $latStr\nLongitude: $lonStr\nAccuracy: ±${accuracy}m\nNetwork: Tailscale Encrypted")
+            onSendText("[Mesh Node Geolocation]\nLatitude: $latStr\nLongitude: $lonStr\nAccuracy: ±${accuracy}m\nNetwork: Tailscale Encrypted")
         } else {
-            onSendText("📍 [Mesh Node Geolocation]\nLatitude: 28.6139\nLongitude: 77.2090\nAccuracy: ±15m\nNetwork: Tailscale Encrypted (Simulated Lock)")
+            onSendText("[Mesh Node Geolocation]\nLatitude: 28.6139\nLongitude: 77.2090\nAccuracy: ±15m\nNetwork: Tailscale Encrypted (Simulated Lock)")
         }
         onDismiss()
     }
@@ -206,7 +206,7 @@ fun AttachmentBottomSheet(
                             Button(
                                 onClick = {
                                     val sec = recordingSeconds.coerceAtLeast(1)
-                                    onSendText("🎙️ [Voice Command Note Attached • ${sec}s duration • AAC 128kbps]")
+                                    onSendText("[Voice Command Note Attached • ${sec}s duration • AAC 128kbps]")
                                     isRecordingAudio = false
                                     onDismiss()
                                 },
@@ -292,7 +292,7 @@ fun AttachmentBottomSheet(
                     title = "Document",
                     color = Color(0xFFF97316)
                 ) {
-                    onSendText("📄 Context attachment: FEATURE.md staged")
+                    onSendText("Context attachment: FEATURE.md staged")
                     onDismiss()
                 }
 
@@ -387,15 +387,15 @@ fun AttachmentBottomSheet(
                         if (imagePrompt.isNotBlank()) {
                             val promptToSend = imagePrompt
                             val styleToSend = selectedStyle
-                            onSendText("🎨 [Generating Image... Style: $styleToSend]\nPrompt: $promptToSend")
+                            onSendText("[Generating Image... Style: $styleToSend]\nPrompt: $promptToSend")
                             showImageGenDialog = false
                             onDismiss()
 
                             client.generateImage(prompt = promptToSend, style = styleToSend.lowercase()) { generated ->
                                 if (generated != null) {
-                                    onSendText("🎨 [AI Studio Artifact: ${generated.id} • ${generated.style.uppercase()}]\n${generated.image_url}\nPrompt: ${generated.prompt}")
+                                    onSendText("[AI Studio Artifact: ${generated.id} • ${generated.style.uppercase()}]\n${generated.image_url}\nPrompt: ${generated.prompt}")
                                 } else {
-                                    onSendText("⚠️ [AI Image Generation: Failed to reach Hermes Image Studio]")
+                                    onSendText("[AI Image Generation: Failed to reach Hermes Image Studio]")
                                 }
                             }
                         }

@@ -379,9 +379,9 @@ fun WhiteboardSheet(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     val b64 = exportStrokesToPngBase64(paths, background = canvasBackground)
                     if (b64 != null) {
-                        onAttachSketch("📐 [OpenBoard Sketch: ${paths.size} strokes]\ndata:image/png;base64,$b64")
+                        onAttachSketch("[OpenBoard Sketch: ${paths.size} strokes]\ndata:image/png;base64,$b64")
                     } else {
-                        onAttachSketch("📐 [OpenBoard Sketch Attached: ${paths.size} strokes]")
+                        onAttachSketch("[OpenBoard Sketch Attached: ${paths.size} strokes]")
                     }
                     onDismiss()
                 },

@@ -1724,3 +1724,23 @@ Graphical-interface-first overhaul driven by the 45-site M3 research sweep (`/tm
   - `:app:compileReleaseKotlin` BUILD SUCCESSFUL (release Kotlin, all 40 corpus-informed changes compiled).
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21053` and `versionName` to `"2.10.53"`.
+
+---
+
+## 84. Emoji-Free Interface Protocol & Redesign Kickoff
+
+Full graphical-interface redesign initiated. Phase 1: zero-emoji protocol enforced across every user-visible surface, with wire-protocol matchers kept consistent.
+
+### 1. Complete Emoji Sweep (26 substitutions, 7 files)
+- Removed all emojis from message payloads and content matchers: `📸/📷` photos, `🎙️` voice notes, `📐` sketches, `🌐` web excerpts, `🎨` AI studio messages, `📍` geolocation, `📄` context attachments, `⚠️` failures.
+- Bracketed wire-protocol tags retained (`[Photo Captured: WxH]`, `[Voice Note: Ns]`, `[AI Studio Artifact: id]`) — senders and renderers updated in lockstep so audio bubbles, photo cards, and artifact rendering keep working.
+- Files: MainActivity, Components, AttachmentBottomSheet, WhiteboardScreen, WhiteboardSheet, ObscuraBrowserScreen, ImageGalleryScreen.
+- Final scan: **0 emoji lines remaining** across all UI Kotlin sources.
+
+### 2. Design Redesign Wave Dispatched
+- 5 parallel agents: Hacker News/X trend research, Reddit/Threads/Instagram community research, animated vector icon spec (mic pulse + camera iris-blip), emoji audit verification, Design System Blueprint v1 (token architecture + spring tables + screen-by-screen order).
+
+- [x] **Verification & Tests**:
+  - `:app:compileReleaseKotlin` BUILD SUCCESSFUL post-sweep.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21054` and `versionName` to `"2.10.54"`.

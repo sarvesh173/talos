@@ -1466,3 +1466,29 @@ Grounded in Google Material 3 Expressive and motion specifications (`m3.material
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21043` and `versionName` to `"2.10.43"`.
+
+---
+
+## 74. Comprehensive Multi-Site M3/MUI Design Ecosystem Ingestion & Elimination of Stale Amber
+
+Scraped and synthesized the full 45-site Material Design 3 and Material UI specification ecosystem (`m3.material.io`, `mui.com`, `md3.io`, `beercss.com`, `androidx.compose.material3`). Applied cross-framework insights to eliminate stale amber/yellow remnants across `WhiteboardSheet.kt` and `AgentCanvasScreen.kt`.
+
+### 1. 45-Website Architectural Ecosystem Ingestion
+- Executed parallel non-invasive extraction across all 45 authoritative documentation, token, and component registries in `/tmp/` without repository pollution.
+- Harmonized key tonal elevation, contrast guarantees (WCAG 2.2 AA), and spring physics across Jetpack Compose and Material Web specifications.
+
+### 2. Elimination of Stale Amber & Full Parity in Embedded Whiteboard (`WhiteboardSheet.kt`)
+- **Signature Iris Defaults**: Replaced legacy `0xFFF59E0B` (Molten Amber) initializer and palette chips with Material 3 Signature Iris (`MaterialTheme.colorScheme.primary`), Azure Blue, Mint Emerald, Coral Rose, and Chalk White.
+- **OpenBoard Tool Suite Parity**: Integrated `OpenBoardTool` (`PEN`, `HIGHLIGHTER`, `ERASER`), `redoPaths` undo/redo stack, and quad-canvas background cycling (`DotGrid`, `GraphGrid`, `Ruled`, `Obsidian`).
+- **Tactile Feedback & Base64 PNG Export**: Added `LocalHapticFeedback` on stroke manipulation and wired `exportStrokesToPngBase64` so embedded sheet sketches dispatch high-fidelity PNG bitmaps to the council chamber.
+
+### 3. Agent Governance Color Role Harmonization (`AgentCanvasScreen.kt`)
+- Replaced legacy amber status indicators (`0xFFE5A93C`, `0xFFF59E0B`) with Material 3 semantic roles:
+  - `AgentStatus.THINKING` -> `MaterialTheme.colorScheme.primary`
+  - `AgentStatus.PAUSED` -> `MaterialTheme.colorScheme.secondary` (Slate Lilac)
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21044` and `versionName` to `"2.10.44"`.

@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +26,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,19 +44,37 @@ fun WhiteboardSheet(
     onDismiss: () -> Unit,
     onAttachSketch: (String) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val paths = remember { mutableStateListOf<StrokePath>() }
+    val redoPaths = remember { mutableStateListOf<StrokePath>() }
     var currentPoints = remember { mutableStateListOf<Offset>() }
-    var currentColor by remember { mutableStateOf(Color(0xFFF59E0B)) }
+    val defaultColor = MaterialTheme.colorScheme.primary
+    var currentColor by remember { mutableStateOf(defaultColor) }
     var strokeWidth by remember { mutableFloatStateOf(6f) }
-    var canvasBackground by remember { mutableStateOf("DotGrid") } // DotGrid, DarkSlate, Plain
+    var activeTool by remember { mutableStateOf(OpenBoardTool.PEN) }
+    var canvasBackground by remember { mutableStateOf("DotGrid") }
 
     val colorPalette = listOf(
-        Color(0xFFF59E0B), // Molten Amber
-        Color(0xFF2DD4BF), // Electric Verdigris
+        MaterialTheme.colorScheme.primary, // Signature Iris Purple
         Color(0xFF60A5FA), // Azure Blue
-        Color(0xFFF87171), // Laser Red
+        Color(0xFF34D399), // Mint Emerald
+        Color(0xFFF87171), // Coral Rose
         Color(0xFFFFFFFF)  // Chalk White
     )
+
+    val effectiveColor = when (activeTool) {
+        OpenBoardTool.PEN -> currentColor
+        OpenBoardTool.HIGHLIGHTER -> currentColor.copy(alpha = 0.35f)
+        OpenBoardTool.ERASER -> when (canvasBackground) {
+            "DarkSlate" -> Color(0xFF1E293B)
+            else -> Color(0xFF0F172A)
+        }
+    }
+    val effectiveWidth = when (activeTool) {
+        OpenBoardTool.PEN -> strokeWidth
+        OpenBoardTool.HIGHLIGHTER -> 24f
+        OpenBoardTool.ERASER -> 32f
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -79,66 +101,128 @@ fun WhiteboardSheet(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Sketch architecture or annotate bugs for agents",
+                        text = "${paths.size} strokes committed • ${activeTool.name}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     // Undo
                     IconButton(
-                        onClick = { if (paths.isNotEmpty()) paths.removeAt(paths.size - 1) },
+                        onClick = {
+                            if (paths.isNotEmpty()) {
+                                val last = paths.removeAt(paths.size - 1)
+                                redoPaths.add(last)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                        },
+                        enabled = paths.isNotEmpty(),
                         modifier = Modifier.size(36.dp)
                     ) {
-                        Icon(Icons.Default.Undo, contentDescription = "Undo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    // Redo
+                    IconButton(
+                        onClick = {
+                            if (redoPaths.isNotEmpty()) {
+                                val last = redoPaths.removeAt(redoPaths.size - 1)
+                                paths.add(last)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                        },
+                        enabled = redoPaths.isNotEmpty(),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Redo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     // Clear
                     IconButton(
-                        onClick = { paths.clear() },
+                        onClick = {
+                            redoPaths.clear()
+                            paths.clear()
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        enabled = paths.isNotEmpty(),
                         modifier = Modifier.size(36.dp)
                     ) {
-                        Icon(Icons.Default.DeleteOutline, contentDescription = "Clear", tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Default.DeleteSweep, contentDescription = "Clear", tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Drawing Tools Bar (Color Palette, Stroke width, Background mode)
+            // Tool & Geometry Controls Bar
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    colorPalette.forEach { color ->
-                        val isSelected = currentColor == color
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                                .border(
-                                    if (isSelected) 2.5.dp else 1.dp,
-                                    if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                                    CircleShape
-                                )
-                                .clickable { currentColor = color }
-                        )
-                    }
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(
-                        selected = canvasBackground == "DotGrid",
-                        onClick = { canvasBackground = "DotGrid" },
-                        label = { Text("Grid", fontSize = 11.sp) }
+                        selected = activeTool == OpenBoardTool.PEN,
+                        onClick = {
+                            activeTool = OpenBoardTool.PEN
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        },
+                        label = { Text("Pen", fontSize = 11.sp) }
                     )
                     FilterChip(
-                        selected = canvasBackground == "DarkSlate",
-                        onClick = { canvasBackground = "DarkSlate" },
-                        label = { Text("Slate", fontSize = 11.sp) }
+                        selected = activeTool == OpenBoardTool.HIGHLIGHTER,
+                        onClick = {
+                            activeTool = OpenBoardTool.HIGHLIGHTER
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        },
+                        label = { Text("Highlighter", fontSize = 11.sp) }
+                    )
+                    FilterChip(
+                        selected = activeTool == OpenBoardTool.ERASER,
+                        onClick = {
+                            activeTool = OpenBoardTool.ERASER
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        },
+                        label = { Text("Eraser", fontSize = 11.sp) }
+                    )
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val backgrounds = listOf("DotGrid", "GraphGrid", "Ruled", "Obsidian")
+                    val nextBg = backgrounds[(backgrounds.indexOf(canvasBackground) + 1).coerceAtLeast(0) % backgrounds.size]
+                    FilterChip(
+                        selected = canvasBackground != "Obsidian",
+                        onClick = {
+                            canvasBackground = nextBg
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        },
+                        label = { Text(canvasBackground, fontSize = 10.sp) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Color Palette
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                colorPalette.forEach { color ->
+                    val isSelected = currentColor == color
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .border(
+                                if (isSelected) 2.5.dp else 1.dp,
+                                if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                                CircleShape
+                            )
+                            .clickable {
+                                currentColor = color
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
                     )
                 }
             }
@@ -160,7 +244,7 @@ fun WhiteboardSheet(
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
-                        .pointerInput(currentColor, strokeWidth) {
+                        .pointerInput(activeTool, currentColor, strokeWidth, canvasBackground) {
                             detectDragGestures(
                                 onDragStart = { offset ->
                                     currentPoints = mutableStateListOf(offset)
@@ -174,31 +258,70 @@ fun WhiteboardSheet(
                                         paths.add(
                                             StrokePath(
                                                 points = currentPoints.toList(),
-                                                color = currentColor,
-                                                strokeWidth = strokeWidth
+                                                color = effectiveColor,
+                                                strokeWidth = effectiveWidth
                                             )
                                         )
+                                        redoPaths.clear()
                                         currentPoints = mutableStateListOf()
                                     }
                                 }
                             )
                         }
                 ) {
-                    // Draw OpenBoard dot grid pattern
-                    if (canvasBackground == "DotGrid") {
-                        val spacing = 24.dp.toPx()
-                        var x = spacing
-                        while (x < size.width) {
+                    // OpenBoard canvas background styles
+                    when (canvasBackground) {
+                        "DotGrid" -> {
+                            val spacing = 24.dp.toPx()
+                            var x = spacing
+                            while (x < size.width) {
+                                var y = spacing
+                                while (y < size.height) {
+                                    drawCircle(
+                                        color = Color(0xFF334155),
+                                        radius = 1.5f,
+                                        center = Offset(x, y)
+                                    )
+                                    y += spacing
+                                }
+                                x += spacing
+                            }
+                        }
+                        "GraphGrid" -> {
+                            val spacing = 22.dp.toPx()
+                            var x = spacing
+                            while (x < size.width) {
+                                drawLine(
+                                    color = Color(0xFF263045),
+                                    start = Offset(x, 0f),
+                                    end = Offset(x, size.height),
+                                    strokeWidth = 1f
+                                )
+                                x += spacing
+                            }
                             var y = spacing
                             while (y < size.height) {
-                                drawCircle(
-                                    color = Color(0xFF334155),
-                                    radius = 1.5f,
-                                    center = Offset(x, y)
+                                drawLine(
+                                    color = Color(0xFF263045),
+                                    start = Offset(0f, y),
+                                    end = Offset(size.width, y),
+                                    strokeWidth = 1f
                                 )
                                 y += spacing
                             }
-                            x += spacing
+                        }
+                        "Ruled" -> {
+                            val spacing = 28.dp.toPx()
+                            var y = spacing
+                            while (y < size.height) {
+                                drawLine(
+                                    color = Color(0xFF2B3648),
+                                    start = Offset(0f, y),
+                                    end = Offset(size.width, y),
+                                    strokeWidth = 1f
+                                )
+                                y += spacing
+                            }
                         }
                     }
 
@@ -233,9 +356,9 @@ fun WhiteboardSheet(
                         }
                         drawPath(
                             path = activePath,
-                            color = currentColor,
+                            color = effectiveColor,
                             style = Stroke(
-                                width = strokeWidth,
+                                width = effectiveWidth,
                                 cap = StrokeCap.Round,
                                 join = StrokeJoin.Round
                             )
@@ -248,10 +371,16 @@ fun WhiteboardSheet(
 
             Button(
                 onClick = {
-                    onAttachSketch("📐 [OpenBoard Sketch Attached: ${paths.size} strokes]")
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val b64 = exportStrokesToPngBase64(paths, background = canvasBackground)
+                    if (b64 != null) {
+                        onAttachSketch("📐 [OpenBoard Sketch: ${paths.size} strokes]\ndata:image/png;base64,$b64")
+                    } else {
+                        onAttachSketch("📐 [OpenBoard Sketch Attached: ${paths.size} strokes]")
+                    }
                     onDismiss()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Send, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)

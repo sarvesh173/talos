@@ -582,7 +582,7 @@ private fun AgentNodeCard(
                                     AgentStatus.THINKING -> MaterialTheme.colorScheme.primary.copy(alpha = pulseGlow)
                                     AgentStatus.VERIFYING -> Color(0xFF2DD4BF).copy(alpha = pulseGlow)
                                     AgentStatus.IDLE -> Color(0xFF64748B)
-                                    AgentStatus.PAUSED -> Color(0xFFF59E0B)
+                                    AgentStatus.PAUSED -> MaterialTheme.colorScheme.secondary.copy(alpha = pulseGlow)
                                 }
                             )
                     )
@@ -645,10 +645,10 @@ private fun AgentNodeCard(
 private fun StatusPill(status: AgentStatus) {
     val (label, bg, fg) = when (status) {
         AgentStatus.RUNNING -> Triple("RUNNING", Color(0xFF10B981).copy(alpha = 0.15f), Color(0xFF10B981))
-        AgentStatus.THINKING -> Triple("THINKING", Color(0xFFE5A93C).copy(alpha = 0.15f), Color(0xFFE5A93C))
+        AgentStatus.THINKING -> Triple("THINKING", MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), MaterialTheme.colorScheme.primary)
         AgentStatus.VERIFYING -> Triple("VERIFYING", Color(0xFF2DD4BF).copy(alpha = 0.15f), Color(0xFF2DD4BF))
         AgentStatus.IDLE -> Triple("IDLE", Color(0xFF64748B).copy(alpha = 0.15f), Color(0xFF94A3B8))
-        AgentStatus.PAUSED -> Triple("PAUSED", Color(0xFFF59E0B).copy(alpha = 0.15f), Color(0xFFF59E0B))
+        AgentStatus.PAUSED -> Triple("PAUSED", MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f), MaterialTheme.colorScheme.secondary)
     }
 
     Box(

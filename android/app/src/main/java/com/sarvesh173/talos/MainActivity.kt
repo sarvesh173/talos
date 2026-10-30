@@ -508,6 +508,8 @@ fun MainScreen(
         }
     }
 
+    val audioRecordManager = remember { com.sarvesh173.talos.network.AudioRecordManager(context) }
+
     val audioPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -1165,6 +1167,7 @@ fun MainScreen(
                                                 isRecordingActive = false
                                                 isRecordingLocked = false
                                                 recordingDurationSeconds = 0
+                                                audioRecordManager.cancelRecording()
                                             },
                                             modifier = Modifier.size(38.dp)
                                         ) {
@@ -1425,7 +1428,11 @@ fun MainScreen(
                                                     isRecordingActive = false
                                                     isRecordingLocked = false
                                                     recordingDurationSeconds = 0
-                                                    client.sendMessage("/consensus")
+                                                    val (duration, b64) = audioRecordManager.stopRecording()
+                                                    if (b64 != null && duration >= 1) {
+                                                        client.sendMessage("🎙️ [Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
+                                                        Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
+                                                    }
                                                 }
                                             )
                                         } else if (inputText.isNotBlank()) {
@@ -1472,6 +1479,7 @@ fun MainScreen(
                                                             isSendPressed = false
                                                         } else {
                                                             isRecordingActive = true
+                                                            audioRecordManager.startRecording()
                                                             var locked = false
                                                             while (true) {
                                                                 val event = awaitPointerEvent()
@@ -1489,9 +1497,10 @@ fun MainScreen(
                                                             isSendPressed = false
                                                             if (!locked) {
                                                                 isRecordingActive = false
-                                                                val duration = System.currentTimeMillis() - downTime
-                                                                if (duration >= 350) {
-                                                                    client.sendMessage("🎙️ [Voice Note Recorded: ${duration / 1000}s]")
+                                                                val (duration, b64) = audioRecordManager.stopRecording()
+                                                                if (b64 != null && duration >= 1) {
+                                                                    client.sendMessage("🎙️ [Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
+                                                                    Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
                                                                 }
                                                             }
                                                         }

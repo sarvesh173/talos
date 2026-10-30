@@ -1298,3 +1298,25 @@ Upgraded the bottom message command dock and chamber surfaces with authentic Mat
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21035` and `versionName` to `"2.10.35"`.
+
+---
+
+## 66. Hardware Microphone Audio Recording & Live In-Chamber Audio Player
+
+Implemented full end-to-end hardware voice note recording via Android `MediaRecorder` and in-chamber playback via `NativeAudioPlayerBubble`.
+
+### 1. Hardware Microphone Engine (`AudioRecordManager.kt` & `MainActivity.kt`)
+- **Native MediaRecorder Setup**: Records hardware microphone input directly to MPEG-4 AAC (`64kbps`, `44.1kHz`) internal cache files.
+- **Hold & Hands-Free Lock Support**: Both standard press-and-hold and swipe-up locked recording stop and encode the audio to Base64 upon completion.
+- **Auto-Dispatch**: Emits formatted `🎙️ [Voice Note: Xs]\ndata:audio/mp4;base64,...` payloads to the active room.
+
+### 2. Live In-Chamber Audio Playback (`Components.kt`)
+- **`NativeAudioPlayerBubble` Upgraded**: Added active `android.media.MediaPlayer` integration.
+- **Real-Time Progress & Scrubbing**: Live polling updates playback position and allows seeking across the slider track.
+- **Auto-Decodes Base64 & URLs**: Decodes embedded Base64 voice notes into temp playback files seamlessly.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21036` and `versionName` to `"2.10.36"`.

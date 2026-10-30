@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
@@ -231,6 +233,9 @@ fun MessageBubble(
                           content.contains(".ogg", ignoreCase = true) ||
                           content.contains(".wav", ignoreCase = true) ||
                           content.contains(".opus", ignoreCase = true) ||
+                          content.contains(".m4a", ignoreCase = true) ||
+                          content.contains("🎙️ [Voice Note", ignoreCase = true) ||
+                          (content.contains("data:audio/") && content.contains(";base64,")) ||
                           content.startsWith("MEDIA:") && (content.endsWith(".ogg") || content.endsWith(".mp3") || content.endsWith(".opus"))
             val isVideo = content.contains(".mp4", ignoreCase = true) ||
                           content.contains(".webm", ignoreCase = true)
@@ -304,8 +309,18 @@ fun NativeAudioPlayerBubble(
     audioUrl: String,
     isHuman: Boolean
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var isPlaying by remember { mutableStateOf(false) }
-    var progress by remember { mutableFloatStateOf(0.35f) }
+    var progress by remember { mutableFloatStateOf(0f) }
+    var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+
+    DisposableEffect(audioUrl) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
 
     val contentColor = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     val mutedColor = if (isHuman) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
@@ -313,6 +328,59 @@ fun NativeAudioPlayerBubble(
     val trackInactive = if (isHuman) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.outlineVariant
     val buttonBg = if (isHuman) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
     val iconTint = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+
+    val audioTitle = remember(audioUrl) {
+        if (audioUrl.contains("🎙️ [Voice Note")) {
+            val sec = audioUrl.substringAfter("🎙️ [Voice Note:").substringBefore("]").trim()
+            "Recorded Voice Note ($sec)"
+        } else {
+            audioUrl.substringAfterLast("/").substringBefore("?").ifBlank { "Audio Note" }
+        }
+    }
+
+    fun togglePlayback() {
+        if (isPlaying) {
+            mediaPlayer?.pause()
+            isPlaying = false
+        } else {
+            if (mediaPlayer == null) {
+                try {
+                    val player = android.media.MediaPlayer()
+                    if (audioUrl.contains(";base64,")) {
+                        val b64 = audioUrl.substringAfter(";base64,").trim()
+                        val bytes = android.util.Base64.decode(b64, android.util.Base64.DEFAULT)
+                        val tempAudio = java.io.File(context.cacheDir, "temp_play_${audioUrl.hashCode()}.m4a")
+                        tempAudio.writeBytes(bytes)
+                        player.setDataSource(tempAudio.absolutePath)
+                    } else if (audioUrl.startsWith("http://") || audioUrl.startsWith("https://")) {
+                        player.setDataSource(audioUrl)
+                    } else {
+                        player.setDataSource(audioUrl.removePrefix("MEDIA:").trim())
+                    }
+                    player.prepare()
+                    player.setOnCompletionListener {
+                        isPlaying = false
+                        progress = 0f
+                    }
+                    mediaPlayer = player
+                } catch (_: Exception) {
+                    return
+                }
+            }
+            mediaPlayer?.start()
+            isPlaying = true
+
+            coroutineScope.launch {
+                while (isPlaying) {
+                    val p = mediaPlayer
+                    if (p != null && p.isPlaying && p.duration > 0) {
+                        progress = p.currentPosition.toFloat() / p.duration.toFloat()
+                    }
+                    kotlinx.coroutines.delay(100)
+                }
+            }
+        }
+    }
 
     Surface(
         color = if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow,
@@ -331,7 +399,7 @@ fun NativeAudioPlayerBubble(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(
-                    onClick = { isPlaying = !isPlaying },
+                    onClick = { togglePlayback() },
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
@@ -355,7 +423,7 @@ fun NativeAudioPlayerBubble(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = audioUrl.substringAfterLast("/").ifBlank { "Audio Note" },
+                            text = audioTitle,
                             color = contentColor,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
@@ -364,7 +432,13 @@ fun NativeAudioPlayerBubble(
                     }
                     Slider(
                         value = progress,
-                        onValueChange = { progress = it },
+                        onValueChange = { newProgress ->
+                            progress = newProgress
+                            mediaPlayer?.let { p ->
+                                val seekTo = (newProgress * p.duration).toInt()
+                                p.seekTo(seekTo)
+                            }
+                        },
                         colors = SliderDefaults.colors(
                             thumbColor = trackActive,
                             activeTrackColor = trackActive,

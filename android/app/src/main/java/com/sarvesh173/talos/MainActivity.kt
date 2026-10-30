@@ -486,15 +486,23 @@ fun MainScreen(
     var activeSlotId by remember { mutableStateOf("chambers") }
 
     val context = LocalContext.current
+    val takePhotoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            val bytes = java.io.ByteArrayOutputStream()
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, bytes)
+            val b64 = android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP)
+            client.sendMessage("📸 [Photo Captured: ${bitmap.width}x${bitmap.height}px]\ndata:image/jpeg;base64,$b64")
+            Toast.makeText(context, "Photo captured & attached to chamber!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            runCatching {
-                context.startActivity(
-                    Intent(MediaStore.ACTION_IMAGE_CAPTURE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            }
+            takePhotoLauncher.launch(null)
         } else {
             Toast.makeText(context, "Camera permission needed to capture photos", Toast.LENGTH_SHORT).show()
         }
@@ -1495,12 +1503,7 @@ fun MainScreen(
                                                                     if (!hasCam) {
                                                                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                                                     } else {
-                                                                        runCatching {
-                                                                            context.startActivity(
-                                                                                Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                                                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                                            )
-                                                                        }
+                                                                        takePhotoLauncher.launch(null)
                                                                     }
                                                                 }
                                                             }

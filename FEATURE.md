@@ -1235,3 +1235,25 @@ Purged yellow/amber scheme, restored Google's official Signature Purple/Iris pal
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21032` and `versionName` to `"2.10.32"`.
+
+---
+
+## 63. Hardware Camera Capture Pipeline & In-Chamber Visual Card Rendering
+
+Implemented hardware-level camera capture flow with native `TakePicturePreview` and in-chamber `CapturedPhotoBubble` card.
+
+### 1. Hardware Camera Preview & Frame Capture (`MainActivity.kt`)
+- **Native Contract Integration**: Replaced raw intent launching with `ActivityResultContracts.TakePicturePreview()`, capturing immediate full-frame bitmaps from Android Camera API.
+- **Base64 Compressed Payload**: Compresses captured frame to JPEG (85% quality) and dispatches formatted `📸 [Photo Captured: WxHpx]` payload to active room context.
+
+### 2. Interactive Photo Attachment Bubble (`Components.kt`)
+- **`CapturedPhotoBubble`**: Dedicated Material 3 Expressive image card featuring:
+  - Header: Camera glyph badge with "CAMERA ATTACHMENT" label and green "READY" chip.
+  - High-res cropped image preview with rounded corners (`14.dp`) and outline border.
+  - Full-width chamber presentation matching multimodal vision input standards.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21033` and `versionName` to `"2.10.33"`.

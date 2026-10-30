@@ -25,6 +25,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.LocationOn
@@ -232,8 +237,12 @@ fun MessageBubble(
             val isImageGen = content.startsWith("/generate-image", ignoreCase = true)
             val isSketch = content.contains("[OpenBoard Sketch Attached", ignoreCase = true)
             val isLocation = content.contains("📍 [Mesh Node", ignoreCase = true)
+            val isPhoto = content.contains("📸 [Photo Captured", ignoreCase = true) || (content.contains("data:image/") && content.contains(";base64,"))
 
             when {
+                isPhoto -> {
+                    CapturedPhotoBubble(content = content, isHuman = isHuman)
+                }
                 isLocation -> {
                     LocationPinBubble(content = content, isHuman = isHuman)
                 }
@@ -481,6 +490,108 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                     text = "Vector strokes forwarded to multi-agent context",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CapturedPhotoBubble(content: String, isHuman: Boolean) {
+    val b64 = remember(content) {
+        if (content.contains(";base64,")) {
+            content.substringAfter(";base64,").trim()
+        } else {
+            ""
+        }
+    }
+    val bitmap = remember(b64) {
+        if (b64.isNotBlank()) {
+            runCatching {
+                val bytes = android.util.Base64.decode(b64, android.util.Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+            }.getOrNull()
+        } else null
+    }
+
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(1.2.dp, metallicBorderBrush()),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "CAMERA ATTACHMENT",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Live Frame Captured",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                ) {
+                    Text(
+                        text = "READY",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = "Captured Photo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(240.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                )
+            } else {
+                Text(
+                    text = content.substringBefore("data:image").trim(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

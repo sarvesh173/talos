@@ -213,6 +213,16 @@ fun AgentCanvasScreen(
                             tint = if (isSwarmPaused) Color(0xFF34D399) else MaterialTheme.colorScheme.secondary
                         )
                     }
+                    IconButton(onClick = {
+                        isCanvasMode = !isCanvasMode
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    }) {
+                        Icon(
+                            imageVector = if (isCanvasMode) Icons.Default.ViewList else Icons.Default.Hub,
+                            contentDescription = if (isCanvasMode) "List View" else "Canvas Topology",
+                            tint = if (isCanvasMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     IconButton(onClick = { client.fetchDelegationHierarchy() }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -293,17 +303,30 @@ fun AgentCanvasScreen(
                 matchesTier && matchesCli
             }
 
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(filteredNodes, key = { it.id }) { agent ->
-                    AgentNodeCard(
-                        agent = agent,
-                        isSelected = selectedNode?.id == agent.id,
-                        onClick = { selectedNode = agent }
-                    )
+            if (isCanvasMode) {
+                AgentTopologyCanvas(
+                    nodes = filteredNodes,
+                    selectedNode = selectedNode,
+                    onSelectNode = { selectedNode = it },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                )
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                ) {
+                    items(filteredNodes, key = { it.id }) { agent ->
+                        AgentNodeCard(
+                            agent = agent,
+                            isSelected = selectedNode?.id == agent.id,
+                            onClick = { selectedNode = agent }
+                        )
+                    }
                 }
             }
         }
@@ -755,5 +778,247 @@ private fun StatusPill(status: AgentStatus) {
             fontWeight = FontWeight.Bold,
             color = fg
         )
+    }
+}
+
+@Composable
+private fun AgentTopologyCanvas(
+    nodes: List<CanvasAgentNode>,
+    selectedNode: CanvasAgentNode?,
+    onSelectNode: (CanvasAgentNode) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scrollStateX = rememberScrollState()
+    val scrollStateY = rememberScrollState()
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val outlineVariant = MaterialTheme.colorScheme.outlineVariant
+
+    val tier1 = nodes.filter { it.tier.startsWith("Tier 1") }
+    val tier2 = nodes.filter { it.tier.startsWith("Tier 2") }
+    val tier3 = nodes.filter { it.tier.startsWith("Tier 3") }
+
+    val cardWidth = 220.dp
+    val cardHeight = 110.dp
+    val yLevel0 = 40.dp
+    val yLevel1 = 220.dp
+    val yLevel2 = 400.dp
+
+    val nodePositions = remember(nodes) {
+        val map = mutableMapOf<String, Pair<androidx.compose.ui.unit.Dp, androidx.compose.ui.unit.Dp>>()
+        tier1.forEachIndexed { idx, n ->
+            map[n.id] = Pair(40.dp + (idx * 280).dp, yLevel0)
+        }
+        tier2.forEachIndexed { idx, n ->
+            map[n.id] = Pair(40.dp + (idx * 260).dp, yLevel1)
+        }
+        tier3.forEachIndexed { idx, n ->
+            map[n.id] = Pair(40.dp + (idx * 240).dp, yLevel2)
+        }
+        map
+    }
+
+    val maxRowItems = maxOf(tier1.size, maxOf(tier2.size, maxOf(tier3.size, 1)))
+    val canvasWidth = maxOf(1000.dp, (maxRowItems * 280 + 100).dp)
+    val canvasHeight = 580.dp
+
+    Box(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .horizontalScroll(scrollStateX)
+            .verticalScroll(scrollStateY)
+    ) {
+        Canvas(modifier = Modifier.size(canvasWidth, canvasHeight)) {
+            val gridStep = 28.dp.toPx()
+            val dotRadius = 1.2.dp.toPx()
+            var gx = 0f
+            while (gx < size.width) {
+                var gy = 0f
+                while (gy < size.height) {
+                    drawCircle(
+                        color = outlineVariant.copy(alpha = 0.25f),
+                        radius = dotRadius,
+                        center = Offset(gx, gy)
+                    )
+                    gy += gridStep
+                }
+                gx += gridStep
+            }
+
+            nodes.forEach { node ->
+                val parentId = node.parentId
+                if (parentId != null) {
+                    val parentPos = nodePositions[parentId]
+                    val childPos = nodePositions[node.id]
+                    if (parentPos != null && childPos != null) {
+                        val startX = (parentPos.first + cardWidth / 2).toPx()
+                        val startY = (parentPos.second + cardHeight).toPx()
+                        val endX = (childPos.first + cardWidth / 2).toPx()
+                        val endY = childPos.second.toPx()
+
+                        val isConnectedSelected = selectedNode?.id == node.id || selectedNode?.id == parentId
+                        val path = Path().apply {
+                            moveTo(startX, startY)
+                            cubicTo(
+                                startX, startY + (endY - startY) * 0.5f,
+                                endX, endY - (endY - startY) * 0.5f,
+                                endX, endY
+                            )
+                        }
+                        drawPath(
+                            path = path,
+                            color = if (isConnectedSelected) primaryColor else outlineVariant.copy(alpha = 0.7f),
+                            style = Stroke(
+                                width = if (isConnectedSelected) 3.dp.toPx() else 1.8.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        nodes.forEach { node ->
+            val pos = nodePositions[node.id] ?: Pair(40.dp, 40.dp)
+            val isSelected = selectedNode?.id == node.id
+
+            Box(
+                modifier = Modifier
+                    .offset(x = pos.first, y = pos.second)
+                    .size(cardWidth, cardHeight)
+            ) {
+                CanvasNodeView(
+                    node = node,
+                    isSelected = isSelected,
+                    onClick = { onSelectNode(node) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CanvasNodeView(
+    node: CanvasAgentNode,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    val isRunning = node.status == AgentStatus.RUNNING || node.status == AgentStatus.THINKING
+
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
+
+    Surface(
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
+        shape = RoundedCornerShape(14.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                else MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) MaterialTheme.colorScheme.primary
+                    else if (isRunning) MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha)
+                    else MaterialTheme.colorScheme.outlineVariant
+        ),
+        shadowElevation = if (isSelected) 6.dp else 2.dp,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when (node.status) {
+                                    AgentStatus.RUNNING -> Color(0xFF34D399)
+                                    AgentStatus.THINKING -> MaterialTheme.colorScheme.primary
+                                    AgentStatus.PAUSED -> Color(0xFF94A3B8)
+                                    else -> Color(0xFF60A5FA)
+                                }
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = node.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = when {
+                            node.tier.startsWith("Tier 1") -> "HOST"
+                            node.tier.startsWith("Tier 2") -> "LEAD"
+                            else -> "WORKER"
+                        },
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = node.model,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1
+            )
+
+            Column {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "${node.turnsUsed}/${node.commandLimit} turns",
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = node.cliEngine.uppercase(),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+                Spacer(modifier = Modifier.height(3.dp))
+                LinearProgressIndicator(
+                    progress = { (node.turnsUsed.toFloat() / node.commandLimit.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(2.dp)),
+                    color = if (node.isPaused) Color(0xFF94A3B8) else MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                )
+            }
+        }
     }
 }

@@ -1617,3 +1617,27 @@ Calibrated `talos-core` hierarchical delegation mesh and `AgentCanvasScreen.kt` 
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21049` and `versionName` to `"2.10.49"`.
+
+---
+
+## 80. Multi-Agent 2D Topology Canvas: Hierarchical Graph & Bezier Leader Lines
+
+Elevated `AgentCanvasScreen.kt` to full Hermes Dashboard multi-agent canvas parity, featuring interactive 2D pan/zoom topology, cubic bezier relationship connectors, and pulsing execution status rings.
+
+### 1. 2D Interactive Canvas Topology (`AgentTopologyCanvas`)
+- **Hermes Dashboard Topology Parity**: Switched default view from flat list to an interactive 2D infinite canvas surface with subtle dot grid background (`28dp` pitch).
+- **Hierarchical Tier Coordinate Mapping**:
+  - `Tier 1: Host Engines`: Placed across top level (`y = 40dp`).
+  - `Tier 2: Delegate Leads`: Mapped below their host engine (`y = 220dp`).
+  - `Tier 3: Child Workers`: Grouped under their delegate orchestrator (`y = 400dp`).
+- **Smooth Cubic Bezier Connectors**: Dynamically calculates curve anchors and draws relationship lines connecting parent nodes to child workers with selection emphasis.
+- **Pulsing Agent Status Rings**: Active running and thinking agents render animated pulsing borders (`pulseAlpha` 0.4f -> 1.0f) for glanceable system activity.
+
+### 2. View Mode Switcher & Haptic Navigation
+- **Top Bar View Mode Switcher**: Added toggle between **"Canvas Topology"** (2D relationship graph) and **"List View"** (filterable cards column) with `TextHandleMove` haptic ticks.
+- **Integrated Node Inspector**: Tapping any node in the canvas highlights the relationship lines and opens the full governance sheet with command quota sliders and dynamic model switching chips.
+
+- [x] **Verification & Tests**:
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21050` and `versionName` to `"2.10.50"`.

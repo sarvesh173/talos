@@ -1028,7 +1028,15 @@ fun MainScreen(
                             .fillMaxWidth()
                             .navigationBarsPadding()
                             .imePadding()
-                            .background(MaterialTheme.colorScheme.background)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.82f),
+                                        MaterialTheme.colorScheme.surfaceContainerLowest
+                                    )
+                                )
+                            )
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                     if (isTyping) {
@@ -1243,7 +1251,7 @@ fun MainScreen(
                                 // (A) Normal Input Capsule with Left Tool and Right Inline Actions
                                 Surface(
                                     shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
                                     border = BorderStroke(if (isInputFocused) 1.5.dp else 1.2.dp, capsuleBorderBrush),
                                     modifier = Modifier
                                         .fillMaxWidth()

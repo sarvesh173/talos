@@ -1282,3 +1282,19 @@ Fixed the 1-second theme reversion bug caused by backend `/api/theme` Molten For
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21034` and `versionName` to `"2.10.34"`.
+
+---
+
+## 65. Frosted Glass Command Dock & Luminous Backdrop Blur Architecture
+
+Upgraded the bottom message command dock and chamber surfaces with authentic Material 3 translucent frosted glass backdrops.
+
+### 1. Translucent Frosted Glass Command Dock (`MainActivity.kt`)
+- **Vertical Gradient Diffusion**: Replaced solid opaque bottom background with vertical gradient scrim (`Color.Transparent` -> `surfaceContainerLowest.copy(alpha = 0.82f)` -> `surfaceContainerLowest`).
+- **Translucent Frosted Input Capsule**: Converted input surface to 85% opacity (`surfaceContainerHigh.copy(alpha = 0.85f)`) with specular hairline border sheen, allowing chamber list items to subtly show through while typing.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21035` and `versionName` to `"2.10.35"`.

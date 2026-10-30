@@ -125,7 +125,7 @@ fun ModuleActivityHub(
                         Text(
                             text = "GCompris-style modular activity dispatching",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrimaryAccent
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -224,7 +224,7 @@ private fun ActivityCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(module.color.copy(alpha = 0.2f))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {

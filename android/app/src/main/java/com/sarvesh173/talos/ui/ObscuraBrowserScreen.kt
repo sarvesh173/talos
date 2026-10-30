@@ -94,7 +94,7 @@ fun ObscuraBrowserScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(Color(0xFF2DD4BF).copy(alpha = 0.15f))
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
@@ -133,7 +133,7 @@ fun ObscuraBrowserScreen(
                         Icon(
                             imageVector = Icons.Default.Security,
                             contentDescription = "Status",
-                            tint = PrimaryAccent
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -207,10 +207,10 @@ fun ObscuraBrowserScreen(
                             MetallicCircularLoader(
                                 size = 18.dp,
                                 strokeWidth = 2.dp,
-                                accentColor = PrimaryAccent
+                                accentColor = MaterialTheme.colorScheme.primary
                             )
                         } else {
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Go", tint = PrimaryAccent)
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Go", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -223,7 +223,7 @@ fun ObscuraBrowserScreen(
             ) {
                 items(quickBookmarks) { (label, url) ->
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerLowest,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier.clickable {
@@ -235,7 +235,7 @@ fun ObscuraBrowserScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
-                            Icon(Icons.Default.BookmarkBorder, contentDescription = null, tint = PrimaryAccent, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.BookmarkBorder, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -301,7 +301,7 @@ fun ObscuraBrowserScreen(
                                 MetallicCircularLoader(
                                     size = 44.dp,
                                     strokeWidth = 3.5.dp,
-                                    accentColor = PrimaryAccent
+                                    accentColor = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.height(14.dp))
                                 Text(
@@ -354,7 +354,7 @@ fun ObscuraBrowserScreen(
                                         },
                                         modifier = Modifier.size(32.dp)
                                     ) {
-                                        Icon(Icons.Default.Send, contentDescription = "Forward", tint = PrimaryAccent, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Send, contentDescription = "Forward", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                                     }
                                 }
                             }
@@ -386,7 +386,7 @@ fun ObscuraBrowserScreen(
                                 Icon(
                                     imageVector = Icons.Default.Language,
                                     contentDescription = null,
-                                    tint = PrimaryAccent.copy(alpha = 0.5f),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                                     modifier = Modifier.size(56.dp)
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))

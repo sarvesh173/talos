@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -148,6 +149,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         client = TalosClient(this, lifecycleScope)
+
+        // Runtime notification permission (Android 13+): agents surface task
+        // completions and alarms through system notifications.
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                4001
+            )
+        }
 
         // Agent-first pairing link: talos://pair?url=<core>&token=<token>
         handlePairingIntent(intent)
@@ -1116,7 +1129,6 @@ fun MainScreen(
                     var isRecordingActive by remember { mutableStateOf(false) } // Active recording (hold or locked)
                     var isRecordingLocked by remember { mutableStateOf(false) } // Hands-free lock engaged
                     var recordingDurationSeconds by remember { mutableIntStateOf(0) }
-                    var lastDialTapTime by remember { mutableLongStateOf(0L) }
                     val context = LocalContext.current
                     val coroutineScope = rememberCoroutineScope()
                     var isSendPressed by remember { mutableStateOf(false) }
@@ -1416,8 +1428,8 @@ fun MainScreen(
                                         contentDescription = when {
                                             isRecordingLocked -> "Send voice recording"
                                             isSendMode -> "Send message"
-                                            isRecordingMode -> "Voice recording mode, hold to record, swipe up to lock"
-                                            else -> "Camera mode, tap for camera, double tap for voice recording"
+                                            isRecordingMode -> "Voice recording mode, hold to record, swipe up to lock, tap to switch to camera"
+                                            else -> "Camera mode, hold to open camera, tap to switch to voice recording"
                                         }
                                     }
                                     .pointerInput(isSendMode, isRecordingMode, isRecordingLocked, isTyping) {
@@ -1430,6 +1442,7 @@ fun MainScreen(
                                                     recordingDurationSeconds = 0
                                                     val (duration, b64) = audioRecordManager.stopRecording()
                                                     if (b64 != null && duration >= 1) {
+                                                        sendHaptic(context)
                                                         client.sendMessage("🎙️ [Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
                                                         Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
                                                     }
@@ -1446,6 +1459,7 @@ fun MainScreen(
                                                     }
                                                 },
                                                 onTap = {
+                                                    sendHaptic(context)
                                                     client.sendMessage(inputText)
                                                     inputText = ""
                                                 }
@@ -1454,77 +1468,110 @@ fun MainScreen(
                                             awaitPointerEventScope {
                                                 val down = awaitFirstDown(requireUnconsumed = false)
                                                 val downTime = System.currentTimeMillis()
-                                                val timeSinceLast = downTime - lastDialTapTime
                                                 isSendPressed = true
+                                                val lockThresholdPx = 80.dp.toPx()
 
-                                                if (timeSinceLast < 320) {
-                                                    // Double Tap: Switch between Camera Mode and Recording Mode!
-                                                    lastDialTapTime = 0L
-                                                    isRecordingMode = !isRecordingMode
-                                                    waitForUpOrCancellation()
-                                                    isSendPressed = false
-                                                } else {
-                                                    lastDialTapTime = downTime
+                                                if (isRecordingMode) {
+                                                    // Mic Mode: Check permission and hold to record
+                                                    val hasAudio = ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.RECORD_AUDIO
+                                                    ) == PackageManager.PERMISSION_GRANTED
 
-                                                    if (isRecordingMode) {
-                                                        // Recording Mode: Check permission and hold to record
-                                                        val hasAudio = ContextCompat.checkSelfPermission(
-                                                            context,
-                                                            Manifest.permission.RECORD_AUDIO
-                                                        ) == PackageManager.PERMISSION_GRANTED
+                                                    if (!hasAudio) {
+                                                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                                        waitForUpOrCancellation()
+                                                        isSendPressed = false
+                                                    } else {
+                                                        isRecordingActive = true
+                                                        audioRecordManager.startRecording()
+                                                        var locked = false
+                                                        var cancelled = false
 
-                                                        if (!hasAudio) {
-                                                            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                                            waitForUpOrCancellation()
-                                                            isSendPressed = false
-                                                        } else {
-                                                            isRecordingActive = true
-                                                            audioRecordManager.startRecording()
-                                                            var locked = false
-                                                            while (true) {
-                                                                val event = awaitPointerEvent()
-                                                                val change = event.changes.firstOrNull { it.id == down.id }
-                                                                if (change == null || !change.pressed) {
-                                                                    break
-                                                                }
-                                                                val dragY = change.position.y - down.position.y
-                                                                if (dragY <= -120f) {
-                                                                    locked = true
-                                                                    isRecordingLocked = true
-                                                                    break
-                                                                }
+                                                        while (true) {
+                                                            val event = awaitPointerEvent()
+                                                            val change = event.changes.firstOrNull { it.id == down.id }
+                                                            if (change == null || !change.pressed) {
+                                                                break
                                                             }
-                                                            isSendPressed = false
-                                                            if (!locked) {
+                                                            val dragY = change.position.y - down.position.y
+                                                            val dragX = change.position.x - down.position.x
+
+                                                            // verticalDrag offset > 80dp switches to locked recording with cancel button
+                                                            if (dragY <= -lockThresholdPx) {
+                                                                locked = true
+                                                                isRecordingLocked = true
+                                                                sendHaptic(context)
+                                                                break
+                                                            }
+                                                            // Slide left > 80dp to cancel
+                                                            if (dragX <= -lockThresholdPx) {
+                                                                cancelled = true
+                                                                break
+                                                            }
+                                                        }
+                                                        isSendPressed = false
+
+                                                        if (cancelled) {
+                                                            isRecordingActive = false
+                                                            audioRecordManager.cancelRecording()
+                                                            sendHaptic(context)
+                                                            Toast.makeText(context, "Recording cancelled", Toast.LENGTH_SHORT).show()
+                                                        } else if (!locked) {
+                                                            val pressDuration = System.currentTimeMillis() - downTime
+                                                            if (pressDuration < 300) {
+                                                                // Single tap on mic tile (<300ms) switches to camera mode (no double tap needed)
+                                                                isRecordingActive = false
+                                                                audioRecordManager.cancelRecording()
+                                                                sendHaptic(context)
+                                                                isRecordingMode = false
+                                                            } else {
+                                                                // onRelease auto-sends voice recording
                                                                 isRecordingActive = false
                                                                 val (duration, b64) = audioRecordManager.stopRecording()
                                                                 if (b64 != null && duration >= 1) {
+                                                                    sendHaptic(context)
                                                                     client.sendMessage("🎙️ [Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
                                                                     Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
                                                                 }
                                                             }
                                                         }
-                                                    } else {
-                                                        // Camera Mode: check permission and single tap opens camera
-                                                        val up = waitForUpOrCancellation()
-                                                        isSendPressed = false
-                                                        if (up != null) {
-                                                            coroutineScope.launch {
-                                                                delay(220)
-                                                                if (System.currentTimeMillis() - lastDialTapTime >= 300) {
-                                                                    val hasCam = ContextCompat.checkSelfPermission(
-                                                                        context,
-                                                                        Manifest.permission.CAMERA
-                                                                    ) == PackageManager.PERMISSION_GRANTED
-
-                                                                    if (!hasCam) {
-                                                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                                                    } else {
-                                                                        takePhotoLauncher.launch(null)
-                                                                    }
-                                                                }
-                                                            }
+                                                    }
+                                                } else {
+                                                    // Camera Mode: single tap switches to mic; press-hold (>400ms) opens camera
+                                                    var holdTriggered = false
+                                                    while (true) {
+                                                        val event = awaitPointerEvent()
+                                                        val change = event.changes.firstOrNull { it.id == down.id }
+                                                        if (change == null || !change.pressed) {
+                                                            // Released before 400ms -> Single tap!
+                                                            break
                                                         }
+                                                        if (System.currentTimeMillis() - downTime >= 400) {
+                                                            holdTriggered = true
+                                                            break
+                                                        }
+                                                    }
+                                                    isSendPressed = false
+
+                                                    if (holdTriggered) {
+                                                        // Camera opened on hold (>400ms)
+                                                        sendHaptic(context)
+                                                        val hasCam = ContextCompat.checkSelfPermission(
+                                                            context,
+                                                            Manifest.permission.CAMERA
+                                                        ) == PackageManager.PERMISSION_GRANTED
+
+                                                        if (!hasCam) {
+                                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                                        } else {
+                                                            takePhotoLauncher.launch(null)
+                                                        }
+                                                        waitForUpOrCancellation()
+                                                    } else {
+                                                        // Single tap switches to mic mode (no double tap needed!)
+                                                        sendHaptic(context)
+                                                        isRecordingMode = true
                                                     }
                                                 }
                                             }
@@ -1562,8 +1609,8 @@ fun MainScreen(
                                     ) { state ->
                                         val (glyph, glyphDesc) = when (state) {
                                             "send" -> Icons.AutoMirrored.Filled.Send to "Send Command"
-                                            "mic" -> Icons.Default.Mic to "Voice Recording"
-                                            else -> Icons.Default.PhotoCamera to "Camera Mode"
+                                            "mic" -> TalosIcons.TalosMic to "Voice Recording"
+                                            else -> TalosIcons.TalosCamera to "Camera Mode"
                                         }
                                         Icon(
                                             imageVector = glyph,
@@ -1637,7 +1684,10 @@ fun MainScreen(
         AttachmentBottomSheet(
             client = client,
             onDismiss = { showAttachmentSheet = false },
-            onSendText = { client.sendMessage(it) }
+            onSendText = {
+                sendHaptic(context)
+                client.sendMessage(it)
+            }
         )
     }
 }

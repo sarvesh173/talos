@@ -1,5 +1,6 @@
 package com.sarvesh173.talos.ui
 
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
@@ -49,7 +50,7 @@ fun MetallicCard(
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed && onClick != null) 0.96f else 1.0f,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = 800f),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
         label = "MetallicCardScale"
     )
 
@@ -101,9 +102,9 @@ fun MachinedIconWell(
     Box(
         modifier = modifier
             .size(size)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(wellBg)
-            .border(wellBorder, RoundedCornerShape(12.dp)),
+            .border(wellBorder, RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         AgentEmblemIcon(emblem = emblem, size = iconSize, tint = null)
@@ -123,7 +124,7 @@ fun MetallicButton(
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1.0f,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = 800f),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
         label = "MetallicButtonScale"
     )
 
@@ -142,7 +143,7 @@ fun MetallicButton(
                 MaterialTheme.colorScheme.onSurface
             }
         ),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, metallicBorderBrush()),
         modifier = modifier
             .height(52.dp)

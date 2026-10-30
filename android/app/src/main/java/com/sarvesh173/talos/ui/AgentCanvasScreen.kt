@@ -768,7 +768,7 @@ private fun StatusPill(status: AgentStatus) {
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(bg)
             .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
@@ -966,7 +966,7 @@ private fun CanvasNodeView(
                     )
                 }
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                 ) {
                     Text(
@@ -1014,7 +1014,7 @@ private fun CanvasNodeView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(3.dp)
-                        .clip(RoundedCornerShape(2.dp)),
+                        .clip(RoundedCornerShape(6.dp)),
                     color = if (node.isPaused) Color(0xFF94A3B8) else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                 )

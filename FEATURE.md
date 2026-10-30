@@ -1689,3 +1689,38 @@ Refactored `CliToolManager.kt` to enforce Material 3 Expressive touch ergonomics
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21052` and `versionName` to `"2.10.52"`.
+
+---
+
+## 83. Expressive Touch Choreography: PressableSurface, TalosHaptics & Hardware Tile Gestures
+
+Graphical-interface-first overhaul driven by the 45-site M3 research sweep (`/tmp/m3_research/TALOS_M3_Research_Digest.md`).
+
+### 1. PressableSurface Composable (`Components.kt`)
+- Reusable spring-press surface: pressed scale **0.96** with `DampingRatioMediumBouncy` + `StiffnessMedium`, resting scale 1.0 — every press now visibly springs (M3 Expressive spatial spring with overshoot).
+
+### 2. TalosHaptics (`TalosHaptics.kt`)
+- Real `VibratorManager` waveform `[0, 30, 50, 30]` via `VibrationEffect.createWaveform` (API 31+), legacy `Vibrator` fallback.
+- Wired into **10+ touch points** across `LandingScreen.kt`: primary action, hardware tiles, agent card taps, theme toggle, message send.
+
+### 3. Hardware Tile Gesture Engine (`LandingScreen.kt`)
+- **Camera tile**: single tap → switches to Mic (double-tap logic removed); hold >400ms → launches `ACTION_IMAGE_CAPTURE`.
+- **Mic tile**: press-and-hold → live recording UI; release <300ms → switches to Camera; release ≥300ms → auto-send; **swipe up >80dp → locked recording** ("Tap to send"); slide left >80dp → cancel.
+- Send/Delete action bar with "Release to send" / "Locked (Tap to send)" states and live seconds ticker.
+- Fixed double-fire bug: removed duplicate `onTap` handlers that conflicted with `onPress` gesture resolution.
+
+### 4. Custom Icon Family (`TalosIcons.kt`)
+- 6 hand-built `ImageVector` definitions with unique silhouettes: `TalosMic`, `TalosCamera`, `TalosHub`, `TalosBoard`, `TalosVault`, `TalosBrowser` — swapped into LandingScreen hardware tiles (replacing stock Material icons).
+
+### 5. Runtime Permissions (`MainActivity.kt`, `AndroidManifest.xml`)
+- `POST_NOTIFICATIONS` runtime request on Android 13+ launch.
+- Manifest: `SCHEDULE_EXACT_ALARM`, `USE_EXACT_ALARM`, `SCHEDULE_RECURRING_ALARM` for future alarm features.
+
+### 6. M3 Squircle Discipline & Zero-Amber
+- 15 sub-12dp corners normalized (2dp→6 tracks, 6→12 chips, 8→14 small cards, 10→16 medium cards) across AgentCanvasScreen, ImageGalleryScreen, ModuleActivityHub, ObscuraBrowserScreen, OnboardingWizard.
+- Last `PrimaryAccent` references replaced with `MaterialTheme.colorScheme.primary` (ObscuraBrowserScreen 7, OnboardingWizard 16, ModuleActivityHub 1, LandingScreen 2).
+
+- [x] **Verification & Tests**:
+  - `:app:compileReleaseKotlin` BUILD SUCCESSFUL (release Kotlin, all 40 corpus-informed changes compiled).
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21053` and `versionName` to `"2.10.53"`.

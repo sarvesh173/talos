@@ -226,7 +226,7 @@ fun AttachmentBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 AttachmentTile(
-                    icon = Icons.Default.PhotoCamera,
+                    icon = TalosIcons.TalosCamera,
                     title = "Camera",
                     color = MaterialTheme.colorScheme.primary
                 ) {
@@ -238,7 +238,7 @@ fun AttachmentBottomSheet(
                 }
 
                 AttachmentTile(
-                    icon = Icons.Default.Mic,
+                    icon = TalosIcons.TalosMic,
                     title = if (isRecordingAudio) "Recording" else "Voice Note",
                     color = if (isRecordingAudio) Color(0xFFEF4444) else MaterialTheme.colorScheme.tertiary
                 ) {
@@ -436,56 +436,39 @@ private fun AttachmentTile(
     color: Color,
     onClick: () -> Unit
 ) {
-    val motion = LocalTalosMotion.current
-    val haptic = LocalHapticFeedback.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = motion.spatialFastDamping,
-            stiffness = motion.spatialFastStiffness
-        ),
-        label = "tileScale"
-    )
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .sizeIn(minWidth = 64.dp, minHeight = 64.dp)
-            .scale(scale)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onClick()
-                }
-            )
-            .padding(4.dp)
+    PressableSurface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = Color.Transparent,
+        modifier = Modifier.padding(4.dp)
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(color.copy(alpha = 0.15f))
-                .border(BorderStroke(1.dp, color.copy(alpha = 0.4f)), RoundedCornerShape(18.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.sizeIn(minWidth = 64.dp, minHeight = 64.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = color,
-                modifier = Modifier.size(26.dp)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(color.copy(alpha = 0.15f))
+                    .border(BorderStroke(1.dp, color.copy(alpha = 0.4f)), RoundedCornerShape(18.dp))
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = color,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
             )
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
     }
 }

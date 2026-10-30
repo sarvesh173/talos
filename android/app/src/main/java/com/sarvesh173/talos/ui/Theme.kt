@@ -286,9 +286,9 @@ val StatusRed: Color @Composable get() = LocalTalosStatus.current.danger
 // M3 Shape Scale (10-level expressive scale)
 // -----------------------------------------------------------------------------
 val TalosShapes: Shapes = Shapes(
-    extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
-    small = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-    medium = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+    extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+    small = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+    medium = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
     large = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
     extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
 )
@@ -466,21 +466,22 @@ fun ThemeSelectionDialog(
                 Spacer(modifier = Modifier.height(4.dp))
                 MaterialThemePreset.values().forEach { preset ->
                     val isSelected = preset == currentPreset
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
+                    PressableSurface(
+                        onClick = { onSelectPreset(preset) },
+                        shape = RoundedCornerShape(16.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerHighest,
                         border = BorderStroke(
                             if (isSelected) 1.5.dp else 1.dp,
                             if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
                         ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectPreset(preset) }
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(

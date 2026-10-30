@@ -3,14 +3,19 @@ package com.sarvesh173.talos.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +33,9 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import android.widget.Toast
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -63,6 +71,69 @@ import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.data.ToolCall
+
+/**
+ * Reusable Material 3 Expressive PressableSurface composable.
+ *
+ * Implements smooth tactile press animation:
+ * - Pressed scale: 0.96f
+ * - Spring physics: Spring.DampingRatioMediumBouncy (0.5f), Spring.StiffnessMedium (1500f)
+ * - Rounded corners: Strictly >= 16dp (No square boxes anywhere in M3 UI)
+ * - Physical haptic feedback on actuation
+ */
+@Composable
+fun PressableSurface(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = RoundedCornerShape(16.dp),
+    color: Color = MaterialTheme.colorScheme.surfaceContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    border: BorderStroke? = null,
+    shadowElevation: Dp = 0.dp,
+    pressedScale: Float = 0.96f,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    content: @Composable BoxScope.() -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) pressedScale else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "PressableSurfaceScale"
+    )
+
+    Surface(
+        shape = shape,
+        color = color,
+        contentColor = contentColor,
+        border = border,
+        shadowElevation = shadowElevation,
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                }
+            )
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            content = content
+        )
+    }
+}
 
 @Composable
 fun ThreeDotTypingIndicator(
@@ -175,9 +246,9 @@ fun MessageBubble(
             Box(
                 modifier = Modifier
                     .size(38.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(EmblemSocket)
-                    .border(1.dp, emblem.accent.copy(alpha = 0.55f), RoundedCornerShape(12.dp)),
+                    .border(1.dp, emblem.accent.copy(alpha = 0.55f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 AgentEmblemIcon(emblem = emblem, size = 22.dp, tint = null)
@@ -547,7 +618,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                     label = "pulse"
                 )
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     border = BorderStroke(1.dp, accent.copy(alpha = 0.25f)),
                     modifier = Modifier
@@ -575,7 +646,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                 }
             } else if (isArtifact) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     border = BorderStroke(1.dp, accent.copy(alpha = 0.3f)),
                     modifier = Modifier.fillMaxWidth()
@@ -662,9 +733,9 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)), RoundedCornerShape(10.dp))
+                            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)), RoundedCornerShape(16.dp))
                     ) {
                         Icon(
                             imageVector = Icons.Default.Brush,
@@ -717,9 +788,9 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
-                        .clip(RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(16.dp))
                         .background(Color(0xFF0F1117))
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 )
             }
         }
@@ -761,12 +832,12 @@ fun CapturedPhotoBubble(content: String, isHuman: Boolean) {
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                     ) {
                         Icon(
-                            imageVector = Icons.Default.PhotoCamera,
+                            imageVector = TalosIcons.TalosCamera,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
@@ -814,8 +885,8 @@ fun CapturedPhotoBubble(content: String, isHuman: Boolean) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(240.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 )
             } else {
                 Text(
@@ -857,9 +928,9 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(accent.copy(alpha = 0.15f))
-                            .border(1.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .border(1.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
@@ -904,7 +975,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
 
             if (lat != null && lon != null) {
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.fillMaxWidth()
@@ -932,30 +1003,45 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedButton(
+                    PressableSurface(
                         onClick = {
                             val uri = android.net.Uri.parse("geo:$lat,$lon?q=$lat,$lon(Talos Mesh Node)")
                             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
                             context.startActivity(intent)
                         },
-                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        modifier = Modifier.weight(1f).height(44.dp)
                     ) {
-                        Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Open Maps", fontSize = 12.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.Map, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Open Maps", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                        }
                     }
 
-                    Button(
+                    PressableSurface(
                         onClick = {
                             clipboardManager.setText(AnnotatedString("$lat, $lon"))
                             android.widget.Toast.makeText(context, "Coordinates copied!", android.widget.Toast.LENGTH_SHORT).show()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = accent),
-                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        color = accent,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.weight(1f).height(44.dp)
                     ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Copy", color = MaterialTheme.colorScheme.onPrimary, fontSize = 12.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Copy", color = MaterialTheme.colorScheme.onPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
             } else {
@@ -990,24 +1076,23 @@ fun NativeVideoPreviewBubble(
                     // overflows in a short split-screen window.
                     .aspectRatio(1.7f)
                     .heightIn(max = 160.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                    .border(1.dp, metallicBorderBrush(), RoundedCornerShape(12.dp)),
+                    .border(1.dp, metallicBorderBrush(), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(
+                    PressableSurface(
                         onClick = { /* launch native video playback */ },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = "Play Video",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(28.dp).align(Alignment.Center)
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1035,16 +1120,17 @@ fun NativeVideoPreviewBubble(
 fun CollapsibleThoughtBlock(thoughtText: String) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    Surface(
+    PressableSurface(
+        onClick = { isExpanded = !isExpanded },
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, metallicBorderBrush()),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { isExpanded = !isExpanded }
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -1089,19 +1175,21 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
 fun ToolCallItem(tool: ToolCall) {
     var showOutput by remember { mutableStateOf(false) }
 
-    Surface(
+    PressableSurface(
+        onClick = { if (!tool.output.isNullOrBlank()) showOutput = !showOutput },
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, metallicBorderBrush()),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { if (!tool.output.isNullOrBlank()) showOutput = !showOutput }
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
                     imageVector = if (tool.tool_name.contains("code", ignoreCase = true)) Icons.Default.Code else Icons.Default.Terminal,
@@ -1127,10 +1215,10 @@ fun ToolCallItem(tool: ToolCall) {
             }
 
             if (showOutput && !tool.output.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    shape = RoundedCornerShape(4.dp),
+                    shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -1139,7 +1227,7 @@ fun ToolCallItem(tool: ToolCall) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(6.dp)
+                        modifier = Modifier.padding(10.dp)
                     )
                 }
             }

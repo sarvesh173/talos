@@ -487,7 +487,7 @@ private fun WizardTopBar(
                         Icon(
                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = PrimaryAccent,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.graphicsLayer {
                                 rotationZ = themeRot
                                 scaleX = themeScale
@@ -516,8 +516,8 @@ private fun WizardTopBar(
                 )
                 val animatedColor by animateColorAsState(
                     targetValue = when {
-                        isCurrent -> PrimaryAccent
-                        isPassed -> PrimaryAccent.copy(alpha = 0.70f)
+                        isCurrent -> MaterialTheme.colorScheme.primary
+                        isPassed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.70f)
                         else -> MaterialTheme.colorScheme.outlineVariant
                     },
                     animationSpec = tween(320, easing = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)),
@@ -527,7 +527,7 @@ private fun WizardTopBar(
                     modifier = Modifier
                         .weight(animatedWeight)
                         .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
+                        .clip(RoundedCornerShape(6.dp))
                         .background(animatedColor)
                 )
             }
@@ -615,7 +615,7 @@ private fun OverviewStep() {
                         painter = painterResource(R.drawable.ic_core),
                         contentDescription = "TALOS Mesh Core",
                         modifier = Modifier.size(32.dp),
-                        colorFilter = ColorFilter.tint(PrimaryAccent)
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
                     )
                 }
             }
@@ -678,13 +678,13 @@ private fun OverviewStep() {
                 index = 3,
                 title = "Real-Time Collaboration & Tool Bus",
                 body = "Shared event bus, tool calls and presence in a single stream.",
-                badgeTint = PrimaryAccent,
+                badgeTint = MaterialTheme.colorScheme.primary,
                 badge = {
                     Image(
                         painter = painterResource(R.drawable.ic_step_token),
                         contentDescription = "Cryptographic Key",
                         modifier = Modifier.size(28.dp),
-                        colorFilter = ColorFilter.tint(PrimaryAccent)
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
                     )
                 }
             )
@@ -732,8 +732,8 @@ private fun OverviewElevatedCard(
                         modifier = Modifier
                             .size(24.dp)
                             .clip(CircleShape)
-                            .background(PrimaryAccent.copy(alpha = 0.20f))
-                            .border(1.dp, PrimaryAccent.copy(alpha = 0.40f), CircleShape),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.20f))
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -873,14 +873,14 @@ private fun MeshStep(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(talosBg)
-                        .border(1.dp, WizardBorder, RoundedCornerShape(8.dp))
+                        .border(1.dp, WizardBorder, RoundedCornerShape(14.dp))
                         .padding(10.dp)
                 ) {
                     Text(
                         text = hostSetupPrompt,
-                        color = PrimaryAccent,
+                        color = MaterialTheme.colorScheme.primary,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
                         lineHeight = 15.sp
@@ -896,7 +896,7 @@ private fun MeshStep(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(14.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Icon(
@@ -1011,8 +1011,8 @@ private fun MeshStep(
                         onRefresh()
                     },
                     enabled = !isChecking,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
-                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(38.dp)
@@ -1143,11 +1143,11 @@ private fun TokenStep(
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(PrimaryAccent.copy(alpha = 0.20f))
-                            .border(1.dp, PrimaryAccent.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.20f))
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        KeyBadge(tint = PrimaryAccent)
+                        KeyBadge(tint = MaterialTheme.colorScheme.primary)
                     }
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -1255,7 +1255,7 @@ private fun TokenStep(
                     text = "Terminal:  bash scripts/pairing_link.sh\nBrowser:   http://<host>:8010/pair",
                     fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = PrimaryAccent
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -1305,7 +1305,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                         painter = painterResource(R.drawable.ic_step_chamber),
                         contentDescription = "Council Chamber Portal",
                         modifier = Modifier.size(34.dp),
-                        colorFilter = ColorFilter.tint(PrimaryAccent)
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
                     )
                 }
             }
@@ -1345,7 +1345,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                 letterSpacing = 1.sp
             )
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = StatusGreen.copy(alpha = 0.12f),
                 border = BorderStroke(1.dp, StatusGreen.copy(alpha = 0.35f))
             ) {
@@ -1399,9 +1399,9 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(16.dp))
                                         .background(emblem.accent.copy(alpha = 0.14f))
-                                        .border(1.dp, emblem.accent.copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
+                                        .border(1.dp, emblem.accent.copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     AgentEmblemIcon(emblem = emblem, size = 22.dp, tint = null)
@@ -1447,7 +1447,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
         Button(
             onClick = onEnterChamber,
             colors = ButtonDefaults.buttonColors(
-                containerColor = PrimaryAccent,
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ),
             shape = RoundedCornerShape(28.dp),

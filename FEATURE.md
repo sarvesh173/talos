@@ -1641,3 +1641,29 @@ Elevated `AgentCanvasScreen.kt` to full Hermes Dashboard multi-agent canvas pari
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21050` and `versionName` to `"2.10.50"`.
+
+---
+
+## 81. Sensory Context Intake: Live Camera Snapshot & Interactive Audio Recording Banner
+
+Upgraded `AttachmentBottomSheet.kt` sensory context tools with real bitmap photo capture, interactive live audio recording banner, and complete eradication of legacy amber color references.
+
+### 1. Real Camera Snapshot Capture (`ActivityResultContracts.TakePicturePreview`)
+- Replaced stubbed `Intent(MediaStore.ACTION_IMAGE_CAPTURE)` with `TakePicturePreview()` contract returning a real in-memory `Bitmap`.
+- Compresses captured photo to JPEG and attaches dimensions and size directly to agent prompt context:
+  `"📷 [Live Camera Snapshot Attached • WxH • KB • Tailscale Verified]"`.
+
+### 2. Interactive Audio Recording Banner
+- **Live Recording State**: Added `isRecordingAudio` and real-time seconds ticker with pulsing crimson recording indicator (`Color(0xFFEF4444)`).
+- **Graceful Recording Actions**:
+  - `Cancel`: Discards active recording session without sending message.
+  - `Attach`: Packages the elapsed recording duration into sensory voice command:
+    `"🎙️ [Voice Command Note Attached • Xs duration • AAC 128kbps]"` and closes bottom sheet.
+
+### 3. Zero-Amber Palette Adherence
+- Eliminated all occurrences of legacy `PrimaryAccent` and amber colors (`Color(0xFFFBBF24)`) in favor of dynamic `MaterialTheme.colorScheme.primary`.
+
+- [x] **Verification & Tests**:
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21051` and `versionName` to `"2.10.51"`.

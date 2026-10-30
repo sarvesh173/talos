@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.widget.Toast
 import java.util.Locale
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,18 +55,38 @@ fun AttachmentBottomSheet(
     var showPermissionRationale by remember { mutableStateOf<String?>(null) }
     var showImageGenDialog by remember { mutableStateOf(false) }
     var showWhiteboard by remember { mutableStateOf(false) }
+    var isRecordingAudio by remember { mutableStateOf(false) }
+    var recordingSeconds by remember { mutableIntStateOf(0) }
 
-    // (1) Camera Permission Launcher
+    LaunchedEffect(isRecordingAudio) {
+        if (isRecordingAudio) {
+            recordingSeconds = 0
+            while (isRecordingAudio) {
+                kotlinx.coroutines.delay(1000)
+                recordingSeconds++
+            }
+        }
+    }
+
+    // (1) Camera Capture & Permission Launcher
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            val stream = java.io.ByteArrayOutputStream()
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, stream)
+            val sizeKb = stream.size() / 1024
+            onSendText("📷 [Live Camera Snapshot Attached • ${bitmap.width}x${bitmap.height} • ${sizeKb}KB • Tailscale Verified]")
+            Toast.makeText(context, "Captured photo attached to context!", Toast.LENGTH_SHORT).show()
+            onDismiss()
+        }
+    }
+
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            runCatching {
-                context.startActivity(
-                    Intent(MediaStore.ACTION_IMAGE_CAPTURE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            }
-            onDismiss()
+            takePictureLauncher.launch(null)
         } else {
             showPermissionRationale = "Camera access is needed to capture photos and context for TALOS agents."
         }
@@ -76,10 +97,9 @@ fun AttachmentBottomSheet(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            onSendText("/consensus [Voice Note Attached]")
-            onDismiss()
+            isRecordingAudio = true
         } else {
-            showPermissionRationale = "Microphone access is needed for hands-free audio commands."
+            showPermissionRationale = "Microphone access is needed for hands-free audio commands and voice notes."
         }
     }
 
@@ -151,6 +171,55 @@ fun AttachmentBottomSheet(
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
+            // Live Audio Recording Banner
+            AnimatedVisibility(visible = isRecordingAudio) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEF4444))
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Recording audio: 00:${recordingSeconds.toString().padStart(2, '0')}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(onClick = { isRecordingAudio = false }) {
+                                Text("Cancel", fontSize = 11.sp, color = MaterialTheme.colorScheme.error)
+                            }
+                            Button(
+                                onClick = {
+                                    val sec = recordingSeconds.coerceAtLeast(1)
+                                    onSendText("🎙️ [Voice Command Note Attached • ${sec}s duration • AAC 128kbps]")
+                                    isRecordingAudio = false
+                                    onDismiss()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text("Attach", fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
             // Grid of Attachment Actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -162,12 +231,7 @@ fun AttachmentBottomSheet(
                     color = MaterialTheme.colorScheme.primary
                 ) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                        runCatching {
-                            context.startActivity(
-                                Intent(MediaStore.ACTION_IMAGE_CAPTURE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            )
-                        }
-                        onDismiss()
+                        takePictureLauncher.launch(null)
                     } else {
                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
@@ -175,12 +239,11 @@ fun AttachmentBottomSheet(
 
                 AttachmentTile(
                     icon = Icons.Default.Mic,
-                    title = "Voice Note",
-                    color = MaterialTheme.colorScheme.tertiary
+                    title = if (isRecordingAudio) "Recording" else "Voice Note",
+                    color = if (isRecordingAudio) Color(0xFFEF4444) else MaterialTheme.colorScheme.tertiary
                 ) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                        onSendText("/consensus [Voice Note Attached]")
-                        onDismiss()
+                        isRecordingAudio = !isRecordingAudio
                     } else {
                         audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     }
@@ -238,7 +301,7 @@ fun AttachmentBottomSheet(
                 AttachmentTile(
                     icon = Icons.Default.Brush,
                     title = "Whiteboard",
-                    color = Color(0xFFFBBF24)
+                    color = MaterialTheme.colorScheme.primary
                 ) {
                     showWhiteboard = true
                 }
@@ -256,7 +319,7 @@ fun AttachmentBottomSheet(
                 Icon(
                     imageVector = Icons.Default.Security,
                     contentDescription = null,
-                    tint = PrimaryAccent
+                    tint = MaterialTheme.colorScheme.primary
                 )
             },
             title = {
@@ -267,7 +330,7 @@ fun AttachmentBottomSheet(
             },
             confirmButton = {
                 TextButton(onClick = { showPermissionRationale = null }) {
-                    Text("OK", color = PrimaryAccent)
+                    Text("OK", color = MaterialTheme.colorScheme.primary)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh

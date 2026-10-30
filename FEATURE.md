@@ -1542,3 +1542,23 @@ Implemented full swarm execution governance in `talos-core` and wired interactiv
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21046` and `versionName` to `"2.10.46"`.
+
+---
+
+## 77. Sensory Sensory Microinteractions: Spring Scale Physics & M3 Iris Alignment in Attachment Sheet
+
+Applied M3 Expressive tactile feedback guidelines (`material-3-expressive`, `microinteractions`) across `AttachmentBottomSheet.kt`, ensuring 48dp+ accessibility touch targets, spring-press physics, and sensory haptic ticks.
+
+### 1. Spring-Press Microinteractions (`AttachmentTile`)
+- **Press Scale Spring**: Bound `MutableInteractionSource` to `animateFloatAsState(scale = 0.92f)` using `LocalTalosMotion.current`'s `spatialFastDamping` and `spatialFastStiffness`. Tiles visually compress under touch and bounce back naturally.
+- **Accessibility Bounds**: Enforced `.sizeIn(minWidth = 64.dp, minHeight = 64.dp)` ensuring all sensory actions (Camera, Voice, Location, AI Image, Whiteboard) comfortably exceed the WCAG 48dp touch target threshold.
+- **Sensory Haptics**: Attached `LocalHapticFeedback` providing tactile ticks (`TextHandleMove`) on tap.
+
+### 2. Tonal Role Harmonization (Zero Legacy Accent)
+- Replaced legacy static `PrimaryAccent` references with `MaterialTheme.colorScheme.primary` across Camera tile highlights and AI Studio image generation dialog submission buttons.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21047` and `versionName` to `"2.10.47"`.

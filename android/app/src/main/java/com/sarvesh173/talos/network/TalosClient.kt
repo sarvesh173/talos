@@ -190,6 +190,44 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    fun toggleChildPause(childId: String, isCurrentlyPaused: Boolean) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val action = if (isCurrentlyPaused) "resume" else "pause"
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/children/$childId/$action")
+                    .post("{}".toRequestBody(mediaType))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        fetchDelegationHierarchy()
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to toggle child subagent pause: ${e.message}")
+            }
+        }
+    }
+
+    fun terminateChildSubagent(childId: String) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/children/$childId")
+                    .delete()
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        fetchDelegationHierarchy()
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to terminate child subagent: ${e.message}")
+            }
+        }
+    }
+
     fun checkBrowserStatus(onResult: (BrowserStatusDto?) -> Unit) {
         scope.launch(Dispatchers.IO) {
             runCatching {

@@ -78,7 +78,7 @@ fun AttachmentBottomSheet(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            onSendText("📍 Current Device Mesh Node: 100.75.107.79 (Tailscale Active)")
+            onSendText("📍 Device Mesh Node Connected (Tailscale Encrypted)")
             onDismiss()
         } else {
             showPermissionRationale = "Location permission is needed to map mesh network proximity."
@@ -162,7 +162,7 @@ fun AttachmentBottomSheet(
                     color = Color(0xFF60A5FA)
                 ) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                        onSendText("📍 Current Device Mesh Node: 100.75.107.79 (Tailscale Active)")
+                        onSendText("📍 Device Mesh Node Connected (Tailscale Encrypted)")
                         onDismiss()
                     } else {
                         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)

@@ -62,7 +62,7 @@ fun ObscuraBrowserScreen(
         "Skills Hub" to "https://skills.sh",
         "Hermes Docs" to "https://hermes-agent.nousresearch.com/docs",
         "TALOS Repo" to "https://github.com/sarvesh173/talos",
-        "Mesh Status" to "http://100.75.107.79:8010/health"
+        "Mesh Status" to "${client.baseUrl}/health"
     )
 
     fun executeFetch(targetUrl: String = urlInput) {

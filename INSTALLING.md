@@ -54,12 +54,12 @@ To prevent token desynchronization, token duplication, and database bloat:
 - **Format**:
 ```json
 {
-  "tailscale_ip": "100.75.107.79",
+  "tailscale_ip": "<tailscale_ip>",
   "port": 8010,
-  "endpoint": "http://100.75.107.79:8010",
+  "endpoint": "http://<tailscale_ip>:8010",
   "api_key": "talos_sk_...",
   "created_at": "2026-10-28 19:35:00 UTC",
-  "environment": "Linux 6.12.111+deb13-amd64"
+  "environment": "Linux"
 }
 ```
 - **Idempotency**: If `credentials.json` already contains a valid key, agents and scripts **MUST NOT** mint a new token. They must reuse the existing verified key.

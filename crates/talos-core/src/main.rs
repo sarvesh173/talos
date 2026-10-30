@@ -156,6 +156,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/delegates/:id/pause", post(pause_delegate))
         .route("/api/delegates/:id/resume", post(resume_delegate))
         .route("/api/delegates/:id/children", post(spawn_delegate_child))
+        .route("/api/children/:id/pause", post(pause_child))
+        .route("/api/children/:id/resume", post(resume_child))
+        .route("/api/children/:id", delete(terminate_child_handler))
         // Feature 55: Obscura Stealth Headless Browser Bridge
         .route("/api/browser/status", get(get_browser_status))
         .route("/api/browser/fetch", post(fetch_browser_page))
@@ -1071,6 +1074,42 @@ async fn spawn_delegate_child(
         .await
         .map(Json)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+async fn pause_child(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<delegation_mesh::SubagentState>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .toggle_child_pause(&id, true)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
+}
+
+async fn resume_child(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<delegation_mesh::SubagentState>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .toggle_child_pause(&id, false)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
+}
+
+async fn terminate_child_handler(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<bool>, (StatusCode, String)> {
+    state
+        .delegation_mesh
+        .terminate_child(&id)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
 }
 
 // ==========================================

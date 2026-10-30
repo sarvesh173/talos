@@ -28,8 +28,8 @@ const PASTEL_LAVENDER = 'rgba(208, 188, 255, 0.22)';
 const PASTEL_SKY = 'rgba(56, 189, 248, 0.22)';
 const PASTEL_PEACH = 'rgba(239, 184, 200, 0.22)';
 
-const MESH_IP = '100.75.107.79';
-const PEER_LABEL = 'V2158';
+const MESH_IP = typeof window !== 'undefined' ? window.location.hostname : 'mesh-node.local';
+const PEER_LABEL = 'TALOS-Node';
 
 const STEPS = 4;
 

@@ -419,11 +419,11 @@ res = subprocess.run(
 ```json
 {
   "status": "active",
-  "mesh_ip": "100.75.107.79",
+  "mesh_ip": "<tailscale_ip>",
   "peers": [
     {
       "hostname": "V2158",
-      "ip": "100.104.6.26",
+      "ip": "<peer_ip>",
       "online": true,
       "os": "android",
       "direct": true,

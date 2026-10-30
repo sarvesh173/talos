@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Terminal, Bot, MessageSquare, Users, Menu, X, Sparkles } from 'lucide-react';
 import OnboardingWizard from './components/OnboardingWizard.jsx';
 
-const DEFAULT_SERVER = 'http://100.75.107.79:8000';
+const DEFAULT_SERVER = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://localhost:8000';
 const ONBOARDED_KEY = 'talos.onboarded';
 const SPLASH_SEEN_KEY = 'talos.splashSeen';
 
@@ -246,7 +246,7 @@ export default function App() {
               className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse"
               style={{ background: connected ? '#10B981' : '#F2B8B5' }}
             />
-            <span className="truncate font-mono text-[11px]">Mesh: 100.75.107.79</span>
+            <span className="truncate font-mono text-[11px]">Mesh: {typeof window !== 'undefined' ? window.location.hostname : 'connected'}</span>
           </div>
         </aside>
 

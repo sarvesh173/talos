@@ -1074,3 +1074,28 @@ Implemented comprehensive design and architectural improvements surfaced by the 
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21024` and `versionName` to `"2.10.24"`.
+
+---
+
+## 57. Child Subagent Lifecycle Control & System IP Privacy Hardening
+
+Added direct lifecycle governance over individual child subagents (pause, resume, terminate) and enforced absolute system network privacy by scrubbing hardcoded IPs across all documentation, web components, and Android views.
+
+### 1. Granular Subagent Child Governance (`delegation_mesh.rs` & `main.rs`)
+- **Child Pause & Resume**: Added `POST /api/children/:id/pause` and `POST /api/children/:id/resume` to halt individual subagent reasoning loops mid-run without stopping the parent delegate lead.
+- **Child Termination & Cleanup**: Added `DELETE /api/children/:id` to prune completed or orphaned subagents from the engine tree.
+- **Extended Test Coverage**: Added unit tests covering child pause and termination; all 37 tests in `talos-core` pass cleanly.
+
+### 2. Interactive Android Subagent Controls (`CliToolManager.kt` & `TalosClient.kt`)
+- Added `toggleChildPause()` and `terminateChildSubagent()` client methods backed by reactive StateFlow updates.
+- Display each child's task goal, running/paused status badge, one-tap pause/play toggle, and terminate action button directly on the UI card.
+
+### 3. Absolute Network Privacy Hardening
+- Scrubbed all hardcoded local/mesh IP references across `AttachmentBottomSheet.kt`, `ObscuraBrowserScreen.kt`, `TalosBrowser.kt`, `web/src/App.jsx`, `OnboardingWizard.jsx`, and technical documentation (`INSTALLING.md`, `MULTI_AGENT_MESH_ARCHITECTURE.md`, `CODE_REVIEW_M3_AUDIT.md`).
+- Replaced with dynamic client baseUrl, window location origin, or `<tailscale_ip>` documentation placeholders to guarantee zero private data leaks to public GitHub repositories.
+
+- [x] **Verification & Tests**:
+  - All 37 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21025` and `versionName` to `"2.10.25"`.

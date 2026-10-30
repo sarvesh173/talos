@@ -154,6 +154,12 @@ fun CliToolManagerScreen(
                     },
                     onStartSpawnChild = { delegateId ->
                         spawningDelegateId = delegateId
+                    },
+                    onToggleChildPause = { childId, isPaused ->
+                        client.toggleChildPause(childId, isPaused)
+                    },
+                    onTerminateChild = { childId ->
+                        client.terminateChildSubagent(childId)
                     }
                 )
             }
@@ -219,7 +225,9 @@ private fun CliEngineCard(
     engine: CliEngineDto,
     onUpdateQuota: (String, Int, String) -> Unit,
     onTogglePause: (String, Boolean) -> Unit,
-    onStartSpawnChild: (String) -> Unit
+    onStartSpawnChild: (String) -> Unit,
+    onToggleChildPause: (String, Boolean) -> Unit,
+    onTerminateChild: (String) -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(true) }
 
@@ -283,7 +291,9 @@ private fun CliEngineCard(
                             },
                             onSpawnChild = {
                                 onStartSpawnChild(delegate.id)
-                            }
+                            },
+                            onToggleChildPause = onToggleChildPause,
+                            onTerminateChild = onTerminateChild
                         )
                     }
                 }
@@ -297,7 +307,9 @@ private fun DelegateLeadCard(
     delegate: DelegateLeadDto,
     onUpdateQuota: (Int, String) -> Unit,
     onTogglePause: (Boolean) -> Unit,
-    onSpawnChild: () -> Unit
+    onSpawnChild: () -> Unit,
+    onToggleChildPause: (String, Boolean) -> Unit,
+    onTerminateChild: (String) -> Unit
 ) {
     var commandLimit by remember(delegate.command_turn_limit) { mutableFloatStateOf(delegate.command_turn_limit.toFloat()) }
     var reasoning by remember(delegate.reasoning_effort) { mutableStateOf(delegate.reasoning_effort) }
@@ -425,6 +437,7 @@ private fun DelegateLeadCard(
                 }
 
                 delegate.children.forEach { child ->
+                    val isChildPaused = child.state.equals("paused", ignoreCase = true)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -432,7 +445,10 @@ private fun DelegateLeadCard(
                             .fillMaxWidth()
                             .padding(vertical = 4.dp, horizontal = 4.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.SubdirectoryArrowRight,
                                 contentDescription = null,
@@ -440,19 +456,57 @@ private fun DelegateLeadCard(
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = child.name,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Column {
+                                Text(
+                                    text = child.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = child.task_goal,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
                         }
 
-                        Text(
-                            text = child.state.uppercase(),
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (child.state.equals("running", ignoreCase = true)) Color(0xFF10B981) else Color(0xFF94A3B8)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = child.state.uppercase(),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (child.state.equals("running", ignoreCase = true)) Color(0xFF10B981) else Color(0xFF94A3B8)
+                            )
+
+                            IconButton(
+                                onClick = { onToggleChildPause(child.id, isChildPaused) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isChildPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                                    contentDescription = if (isChildPaused) "Resume" else "Pause",
+                                    tint = PrimaryAccent,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { onTerminateChild(child.id) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Terminate",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
                     }
                 }
             } else {

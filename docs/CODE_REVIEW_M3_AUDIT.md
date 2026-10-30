@@ -318,7 +318,7 @@ This global singleton is stateful (in-memory `_seen_messages`, `_active_turns`, 
 
 `android/OnboardingWizard.kt:114–115`
 ```kotlin
-private const val MESH_IP = "100.75.107.79"
+private const val MESH_IP = "<tailscale_ip>"
 private const val PEER_LABEL = "V2158"
 ```
 Hard-coded personal mesh IP address. Should be sourced from `TalosClient.DEFAULT_BASE_URL` or a config resource.

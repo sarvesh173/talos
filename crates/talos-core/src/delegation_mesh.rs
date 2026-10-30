@@ -349,6 +349,50 @@ impl DelegationMesh {
 
         Err(format!("Delegate '{}' not found", delegate_id))
     }
+
+    /// Toggle pause / resume on an individual child subagent.
+    pub async fn toggle_child_pause(
+        &self,
+        child_id: &str,
+        paused: bool,
+    ) -> Result<SubagentState, String> {
+        let mut guard = self.engines.write().await;
+
+        for eng in guard.values_mut() {
+            for del in &mut eng.delegates {
+                for child in &mut del.children {
+                    if child.id == child_id {
+                        child.state = if paused {
+                            SubagentState::Paused
+                        } else {
+                            SubagentState::Running
+                        };
+                        info!("Child subagent {} state set to {:?}", child.id, child.state);
+                        return Ok(child.state.clone());
+                    }
+                }
+            }
+        }
+
+        Err(format!("Child subagent '{}' not found", child_id))
+    }
+
+    /// Terminate and remove a child subagent.
+    pub async fn terminate_child(&self, child_id: &str) -> Result<bool, String> {
+        let mut guard = self.engines.write().await;
+
+        for eng in guard.values_mut() {
+            for del in &mut eng.delegates {
+                if let Some(pos) = del.children.iter().position(|c| c.id == child_id) {
+                    let removed = del.children.remove(pos);
+                    info!("Terminated and removed child subagent {}", removed.id);
+                    return Ok(true);
+                }
+            }
+        }
+
+        Err(format!("Child subagent '{}' not found", child_id))
+    }
 }
 
 #[cfg(test)]
@@ -432,5 +476,29 @@ mod tests {
             .await;
 
         assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_toggle_and_terminate_child() {
+        let mesh = DelegationMesh::new();
+        let child = mesh
+            .spawn_child(
+                "del_omni_ui",
+                SpawnSubagentRequest {
+                    name: "Test Runner".to_string(),
+                    task_goal: "Run test suite".to_string(),
+                },
+            )
+            .await
+            .expect("spawn should succeed");
+
+        let paused_state = mesh
+            .toggle_child_pause(&child.id, true)
+            .await
+            .expect("pause should succeed");
+        assert_eq!(paused_state, SubagentState::Paused);
+
+        let term_res = mesh.terminate_child(&child.id).await.expect("terminate should succeed");
+        assert!(term_res);
     }
 }

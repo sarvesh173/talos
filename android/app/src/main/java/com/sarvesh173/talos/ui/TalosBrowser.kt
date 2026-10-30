@@ -63,7 +63,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun TalosBrowserScreen(
-    initialUrl: String = "http://100.75.107.79:8010",
+    initialUrl: String = "https://skills.sh",
     onClose: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {

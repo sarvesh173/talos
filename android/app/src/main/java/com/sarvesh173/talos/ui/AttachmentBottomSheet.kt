@@ -43,6 +43,7 @@ fun AttachmentBottomSheet(
     val context = LocalContext.current
     var showPermissionRationale by remember { mutableStateOf<String?>(null) }
     var showImageGenDialog by remember { mutableStateOf(false) }
+    var showWhiteboard by remember { mutableStateOf(false) }
 
     // (1) Camera Permission Launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -202,6 +203,16 @@ fun AttachmentBottomSheet(
                     onSendText("📄 Context attachment: FEATURE.md staged")
                     onDismiss()
                 }
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                AttachmentTile(
+                    icon = Icons.Default.Brush,
+                    title = "Whiteboard",
+                    color = Color(0xFFFBBF24)
+                ) {
+                    showWhiteboard = true
+                }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -298,6 +309,20 @@ fun AttachmentBottomSheet(
                 }
             },
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
+    }
+
+    if (showWhiteboard) {
+        WhiteboardSheet(
+            onDismiss = {
+                showWhiteboard = false
+                onDismiss()
+            },
+            onAttachSketch = { sketchPayload ->
+                onSendText(sketchPayload)
+                showWhiteboard = false
+                onDismiss()
+            }
         )
     }
 }

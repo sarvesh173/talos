@@ -932,3 +932,20 @@ Comprehensive system upgrade implementing Hermes Dashboard style multi-agent can
   - [x] Elevate `Theme.kt` with M3 Expressive palette and tonal containers.
   - [x] Wire top bar and navigation in `MainActivity.kt`.
   - [x] Increment version to `2.10.18`, compile release APK, test, and push.
+
+---
+
+## 51. OpenBoard-Inspired Interactive Whiteboard & Sketch Annotation Sheet (`WhiteboardSheet.kt`)
+
+Ported desktop whiteboard architecture inspired by OpenBoard directly into TALOS Android companion to allow sketching diagrams and visual bug annotations on mobile.
+
+- [x] **Interactive Touch Vector Canvas**:
+  - Real-time stroke tracking using Compose PointerInput with `detectDragGestures`.
+  - Color palette: Molten Amber (`#F59E0B`), Electric Verdigris (`#2DD4BF`), Azure Blue (`#60A5FA`), Laser Red (`#F87171`), and Chalk White (`#FFFFFF`).
+  - OpenBoard Dot-Grid and Dark Slate background modes.
+  - Multi-level Undo and Clear canvas controls.
+- [x] **Agent Context Integration**:
+  - One-tap "Send Sketch to Agents" packages the drawn strokes into a structured context attachment in the active chat room.
+  - Seamlessly launched from the M3 Expressive `AttachmentBottomSheet`.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21019` and `versionName` to `"2.10.19"`.

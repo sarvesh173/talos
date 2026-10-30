@@ -1020,3 +1020,30 @@ Wired the Android companion client directly to the live `talos-core` delegation 
 
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21022` and `versionName` to `"2.10.22"`.
+
+---
+
+## 55. Obscura Stealth Headless Browser Integration & Companion Navigator
+
+Integrated the Rust-native Obscura headless browser (`obscura 0.2.5`) with anti-fingerprint stealth, V8 DOM extraction, and full mobile UI companion navigation.
+
+### 1. Obscura Rust Core Bridge (`browser_bridge.rs` & `main.rs`)
+- **Zero-Chromium Architecture**: Runs against host `obscura` binary with 28MB RSS footprint instead of 200+MB Chromium.
+- **Stealth Fingerprinting Protection**: Spoofs TLS, headers, UA, navigator, and WebGL; blocks tracking domains and SSRF bypasses via `--allow-private-network`.
+- **Extraction Modes**: Supports `--dump text` (clean reader format), `--dump links` (anchor map), and `--dump assets`.
+- **REST Endpoints in `talos-core`**:
+  - `GET /api/browser/status`: Reports Obscura binary availability, version, CDP port (`9222`), and stealth capability.
+  - `POST /api/browser/fetch`: Executes headless stealth extraction with latency timing.
+
+### 2. Android Obscura Companion Navigator (`ObscuraBrowserScreen.kt`)
+- **Omnibox Address Bar**: Real-time URL navigation with status badge (`STEALTH ACTIVE`), TLS indicator, and clear button.
+- **Preset Bookmarks**: Quick access chips for Skills Hub (`skills.sh`), Hermes Docs, TALOS Repo, and Mesh Health.
+- **Reader View & Link Inspector**: Monospace text viewer with execution latency metrics.
+- **Council Context Forwarding**: One-tap button to forward extracted web excerpts directly into the multi-agent chat council room.
+- **Rich Chat Bubbles (`Components.kt`)**: Added dedicated visual cards for `/generate-image` prompt previews and OpenBoard sketch vector attachments.
+
+- [x] **Verification & Tests**:
+  - All 36 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21023` and `versionName` to `"2.10.23"`.

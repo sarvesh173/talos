@@ -367,6 +367,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        "browser" -> {
+                            ObscuraBrowserScreen(
+                                client = client,
+                                onBack = { appScreen = "main" }
+                            )
+                        }
                         "wizard" -> {
                             OnboardingWizard(
                                 client = client,

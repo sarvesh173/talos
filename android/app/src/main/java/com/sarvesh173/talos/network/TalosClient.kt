@@ -190,6 +190,61 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    fun checkBrowserStatus(onResult: (BrowserStatusDto?) -> Unit) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/browser/status")
+                    .get()
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: return@use
+                        val parsed = json.decodeFromString<BrowserStatusDto>(body)
+                        withContext(Dispatchers.Main) { onResult(parsed) }
+                    } else {
+                        withContext(Dispatchers.Main) { onResult(null) }
+                    }
+                }
+            }.onFailure {
+                withContext(Dispatchers.Main) { onResult(null) }
+            }
+        }
+    }
+
+    fun fetchBrowserPage(
+        url: String,
+        stealth: Boolean = true,
+        dumpMode: String = "text",
+        onResult: (BrowserFetchResultDto) -> Unit
+    ) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val payload = json.encodeToString(BrowserFetchRequestDto(url, stealth, dumpMode))
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/browser/fetch")
+                    .post(payload.toRequestBody(mediaType))
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: "{}"
+                    val parsed = json.decodeFromString<BrowserFetchResultDto>(body)
+                    withContext(Dispatchers.Main) { onResult(parsed) }
+                }
+            }.onFailure { e ->
+                val fallback = BrowserFetchResultDto(
+                    url = url,
+                    title = "Error",
+                    content = "",
+                    duration_ms = 0,
+                    success = false,
+                    error = e.message ?: "Failed to connect to browser core"
+                )
+                withContext(Dispatchers.Main) { onResult(fallback) }
+            }
+        }
+    }
+
     private val _currentRoomId = MutableStateFlow("the-council")
     val currentRoomId: StateFlow<String> = _currentRoomId.asStateFlow()
 
@@ -866,4 +921,31 @@ data class UpdateQuotaRequestDto(
 data class SpawnSubagentRequestDto(
     val name: String,
     val task_goal: String
+)
+
+@kotlinx.serialization.Serializable
+data class BrowserStatusDto(
+    val available: Boolean,
+    val version: String,
+    val binary_path: String,
+    val cdp_port: Int,
+    val stealth_capable: Boolean
+)
+
+@kotlinx.serialization.Serializable
+data class BrowserFetchRequestDto(
+    val url: String,
+    val stealth: Boolean = true,
+    val dump_mode: String = "text",
+    val timeout_secs: Long = 15
+)
+
+@kotlinx.serialization.Serializable
+data class BrowserFetchResultDto(
+    val url: String,
+    val title: String,
+    val content: String,
+    val duration_ms: Long,
+    val success: Boolean,
+    val error: String? = null
 )

@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -36,6 +38,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -219,8 +223,16 @@ fun MessageBubble(
                           content.startsWith("MEDIA:") && (content.endsWith(".ogg") || content.endsWith(".mp3") || content.endsWith(".opus"))
             val isVideo = content.contains(".mp4", ignoreCase = true) ||
                           content.contains(".webm", ignoreCase = true)
+            val isImageGen = content.startsWith("/generate-image", ignoreCase = true)
+            val isSketch = content.contains("[OpenBoard Sketch Attached", ignoreCase = true)
 
             when {
+                isImageGen -> {
+                    ImageGenerationPromptBubble(content = content, isHuman = isHuman)
+                }
+                isSketch -> {
+                    SketchAttachmentBubble(content = content, isHuman = isHuman)
+                }
                 isAudio -> {
                     NativeAudioPlayerBubble(
                         audioUrl = content.removePrefix("MEDIA:").trim(),
@@ -356,6 +368,105 @@ fun NativeAudioPlayerBubble(
                         modifier = Modifier.size(16.dp)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
+    val style = content.substringAfter("[Style: ").substringBefore("]").ifBlank { "Cinematic" }
+    val prompt = content.substringAfter("] ").ifBlank { content }
+
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.2.dp, Brush.linearGradient(listOf(Color(0xFFA855F7), Color(0xFF6366F1)))),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = Color(0xFFA855F7),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Hermes Image Gen",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFA855F7)
+                    )
+                }
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFFA855F7).copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = style,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFA855F7),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = prompt,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.2.dp, Color(0xFFFBBF24).copy(alpha = 0.6f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFFBBF24).copy(alpha = 0.2f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Brush,
+                    contentDescription = null,
+                    tint = Color(0xFFFBBF24),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(
+                    text = "OpenBoard Sketch Attached",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Vector strokes forwarded to multi-agent context",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

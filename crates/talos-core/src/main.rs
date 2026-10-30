@@ -13,6 +13,7 @@ mod room_bus;
 mod theme;
 mod agents;
 mod delegation_mesh;
+mod browser_bridge;
 
 use auth::AuthEngine;
 use axum::{
@@ -57,6 +58,7 @@ pub struct AppState {
     pub telemetry_tracker: Arc<tokio::sync::Mutex<telemetry::TokenVelocityTracker>>,
     pub telemetry_config: Arc<tokio::sync::RwLock<telemetry::TelemetryConfig>>,
     pub delegation_mesh: Arc<delegation_mesh::DelegationMesh>,
+    pub browser_bridge: Arc<browser_bridge::BrowserBridge>,
 }
 
 #[tokio::main]
@@ -77,6 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let telemetry_tracker = Arc::new(tokio::sync::Mutex::new(telemetry::TokenVelocityTracker::new()));
     let telemetry_config = Arc::new(tokio::sync::RwLock::new(telemetry::TelemetryConfig::default()));
     let delegation_mesh = Arc::new(delegation_mesh::DelegationMesh::new());
+    let browser_bridge = Arc::new(browser_bridge::BrowserBridge::new());
 
     let state = AppState {
         db,
@@ -87,6 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         telemetry_tracker,
         telemetry_config,
         delegation_mesh,
+        browser_bridge,
     };
 
     let cors = CorsLayer::new()
@@ -152,6 +156,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/delegates/:id/pause", post(pause_delegate))
         .route("/api/delegates/:id/resume", post(resume_delegate))
         .route("/api/delegates/:id/children", post(spawn_delegate_child))
+        // Feature 55: Obscura Stealth Headless Browser Bridge
+        .route("/api/browser/status", get(get_browser_status))
+        .route("/api/browser/fetch", post(fetch_browser_page))
         .layer(cors)
         .with_state(state);
 
@@ -1064,4 +1071,21 @@ async fn spawn_delegate_child(
         .await
         .map(Json)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+
+// ==========================================
+// Feature 55: Obscura Browser Handlers
+// ==========================================
+
+async fn get_browser_status(
+    State(state): State<AppState>,
+) -> Json<browser_bridge::BrowserStatusResult> {
+    Json(state.browser_bridge.check_status())
+}
+
+async fn fetch_browser_page(
+    State(state): State<AppState>,
+    Json(payload): Json<browser_bridge::BrowserFetchRequest>,
+) -> Json<browser_bridge::BrowserFetchResult> {
+    Json(state.browser_bridge.fetch_page(payload).await)
 }

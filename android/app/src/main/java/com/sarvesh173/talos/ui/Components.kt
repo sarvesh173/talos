@@ -25,6 +25,10 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import android.widget.Toast
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import android.graphics.BitmapFactory
@@ -239,7 +243,9 @@ fun MessageBubble(
                           content.startsWith("MEDIA:") && (content.endsWith(".ogg") || content.endsWith(".mp3") || content.endsWith(".opus"))
             val isVideo = content.contains(".mp4", ignoreCase = true) ||
                           content.contains(".webm", ignoreCase = true)
-            val isImageGen = content.startsWith("/generate-image", ignoreCase = true)
+            val isImageGen = content.startsWith("/generate-image", ignoreCase = true) ||
+                             content.contains("🎨 [AI Studio", ignoreCase = true) ||
+                             content.contains("🎨 [Generating Image", ignoreCase = true)
             val isSketch = content.contains("[OpenBoard Sketch Attached", ignoreCase = true)
             val isLocation = content.contains("📍 [Mesh Node", ignoreCase = true)
             val isPhoto = content.contains("📸 [Photo Captured", ignoreCase = true) || (content.contains("data:image/") && content.contains(";base64,"))
@@ -468,9 +474,22 @@ fun NativeAudioPlayerBubble(
 
 @Composable
 fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
-    val style = content.substringAfter("[Style: ").substringBefore("]").ifBlank { "Cinematic" }
-    val prompt = content.substringAfter("] ").ifBlank { content }
-    val accent = MaterialTheme.colorScheme.tertiary
+    val isGenerating = content.contains("🎨 [Generating Image", ignoreCase = true)
+    val isArtifact = content.contains("🎨 [AI Studio Artifact:", ignoreCase = true)
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+
+    val style = when {
+        isArtifact -> content.substringAfter("• ").substringBefore("]").ifBlank { "Cinematic" }
+        content.contains("[Style: ") -> content.substringAfter("[Style: ").substringBefore("]").ifBlank { "Cinematic" }
+        else -> "Cinematic"
+    }
+    val prompt = when {
+        content.contains("Prompt: ") -> content.substringAfter("Prompt: ")
+        content.contains("] ") -> content.substringAfter("] ")
+        else -> content
+    }
+    val accent = PrimaryAccent
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -493,7 +512,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Hermes Image Gen",
+                        text = if (isArtifact) "Hermes Studio Artifact" else "Hermes Image Studio",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = accent
@@ -513,6 +532,93 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (isGenerating) {
+                val infiniteTransition = rememberInfiniteTransition(label = "img_shimmer")
+                val alphaPulse by infiniteTransition.animateFloat(
+                    initialValue = 0.40f,
+                    targetValue = 0.95f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(800, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulse"
+                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    border = BorderStroke(1.dp, accent.copy(alpha = 0.25f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxSize().padding(12.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = accent,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Synthesizing vector scene via Hermes multimodal engine...",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alphaPulse)
+                        )
+                    }
+                }
+            } else if (isArtifact) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    border = BorderStroke(1.dp, accent.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .background(Color(0xFF10B981), CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "SYNTHESIS READY",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF10B981)
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(content))
+                                    Toast.makeText(context, "Copied artifact URI to clipboard!", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = prompt,

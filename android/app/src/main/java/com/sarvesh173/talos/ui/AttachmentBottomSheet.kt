@@ -315,9 +315,19 @@ fun AttachmentBottomSheet(
                 Button(
                     onClick = {
                         if (imagePrompt.isNotBlank()) {
-                            onSendText("/generate-image [Style: $selectedStyle] $imagePrompt")
+                            val promptToSend = imagePrompt
+                            val styleToSend = selectedStyle
+                            onSendText("🎨 [Generating Image... Style: $styleToSend]\nPrompt: $promptToSend")
                             showImageGenDialog = false
                             onDismiss()
+
+                            client.generateImage(prompt = promptToSend, style = styleToSend.lowercase()) { generated ->
+                                if (generated != null) {
+                                    onSendText("🎨 [AI Studio Artifact: ${generated.id} • ${generated.style.uppercase()}]\n${generated.image_url}\nPrompt: ${generated.prompt}")
+                                } else {
+                                    onSendText("⚠️ [AI Image Generation: Failed to reach Hermes Image Studio]")
+                                }
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)

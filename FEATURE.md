@@ -1381,3 +1381,24 @@ Harmonized location sharing in `AttachmentBottomSheet.kt` with live GPS sensor p
   - Android Kotlin compilation passed cleanly with Gradle.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21039` and `versionName` to `"2.10.39"`.
+
+---
+
+## 70. Hermes Multimodal Image Studio Synthesis & In-Chamber Generative Artifact Cards
+
+Integrated backend SVG vector synthesis in `image_studio.rs` with Material 3 Signature Purple defaults, live progress shimmer cards, and one-tap artifact sharing.
+
+### 1. Vector Synthesis Studio Engine (`crates/talos-core/src/image_studio.rs`)
+- **Strict Signature Purple Defaults**: Replaced legacy yellow palette fallbacks with Google Material 3 Signature Purple (`#141218`, `#2B2338`, `#D0BCFF`, `#6750A4`).
+- **Expanded Style Spectrum**: Added generative styling presets (`wan`, `flux`, `digital_art`, `cinematic`, `anime`, `cyberpunk`, `watercolor`, `sketch`) with dynamic gradient frames, circuit mesh grid backgrounds, radial glow centers, and aspect ratio tags.
+- **REST Generation Endpoint (`POST /api/image/generate`)**: Returns unique artifact identifiers, style metadata, and SVG data URIs, persisting them to the SQLite `generated_images` gallery.
+
+### 2. In-Chamber Visual Shimmer & Artifact Share Cards (`Components.kt` & `AttachmentBottomSheet.kt`)
+- **Direct Backend Trigger**: Submitting an image prompt from `AttachmentBottomSheet` immediately executes `client.generateImage(...)` and streams the result into the conversation chamber.
+- **Microinteraction Feedback**: Displays an animated shimmering pulse indicator during generation, and transitions to a verified "SYNTHESIS READY" artifact card with instant clipboard copying upon completion.
+
+- [x] **Verification & Tests**:
+  - All 39 Rust unit tests passing cleanly in `crates/talos-core`.
+  - Android Kotlin compilation passed cleanly with Gradle.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21040` and `versionName` to `"2.10.40"`.

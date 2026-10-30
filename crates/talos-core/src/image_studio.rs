@@ -46,13 +46,15 @@ impl ImageStudio {
             _ => (1024, 1024),
         };
 
-        // Determine theme colors based on style
-        let (bg_start, bg_end, accent_color) = match style.as_str() {
-            "anime" => ("#1E1B4B", "#4A044E", "#F472B6"),
-            "cyberpunk" => ("#050505", "#18181B", "#2DD4BF"),
-            "watercolor" => ("#FDF2F8", "#E0F2FE", "#38BDF8"),
-            "sketch" => ("#1C1917", "#292524", "#F59E0B"),
-            _ => ("#0A0C10", "#151921", "#F59E0B"), // Cinematic Molten Forge
+        // Determine theme colors based on style (Strict M3 Expressive & Signature Purple Authority)
+        let (bg_start, bg_end, accent_color, secondary_accent) = match style.as_str() {
+            "anime" => ("#1E1B4B", "#4A044E", "#F472B6", "#E879F9"),
+            "cyberpunk" => ("#050505", "#18181B", "#2DD4BF", "#38BDF8"),
+            "watercolor" => ("#0F172A", "#1E293B", "#818CF8", "#A78BFA"),
+            "sketch" => ("#141218", "#211F26", "#D0BCFF", "#E6E0E9"),
+            "flux" | "photorealistic" => ("#090D16", "#141C2E", "#38BDF8", "#818CF8"),
+            "wan" | "digital_art" => ("#181024", "#2D1B4E", "#C084FC", "#F43F5E"),
+            _ => ("#141218", "#2B2338", "#D0BCFF", "#6750A4"), // Google M3 Signature Purple
         };
 
         // Clean text escape
@@ -64,9 +66,12 @@ impl ImageStudio {
             .replace('\'', "&apos;");
 
         let style_upper = style.to_uppercase();
-        let prompt_y = height - 100;
+        let prompt_y = height - 120;
         let cx = width / 2;
         let cy = height / 2;
+        let frame_inset = 32;
+        let frame_w = width - (frame_inset * 2);
+        let frame_h = height - (frame_inset * 2);
 
         let svg_data = format!(
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\
@@ -76,15 +81,32 @@ impl ImageStudio {
             <stop offset=\"100%\" stop-color=\"{bg_end}\"/>\
             </linearGradient>\
             <radialGradient id=\"acc\" cx=\"50%\" cy=\"50%\" r=\"50%\">\
-            <stop offset=\"0%\" stop-color=\"{accent_color}\" stop-opacity=\"0.35\"/>\
+            <stop offset=\"0%\" stop-color=\"{accent_color}\" stop-opacity=\"0.40\"/>\
             <stop offset=\"100%\" stop-color=\"{accent_color}\" stop-opacity=\"0\"/>\
             </radialGradient>\
+            <linearGradient id=\"borderGrad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\">\
+            <stop offset=\"0%\" stop-color=\"{accent_color}\" stop-opacity=\"0.7\"/>\
+            <stop offset=\"100%\" stop-color=\"{secondary_accent}\" stop-opacity=\"0.2\"/>\
+            </linearGradient>\
+            <pattern id=\"grid\" width=\"40\" height=\"40\" patternUnits=\"userSpaceOnUse\">\
+            <path d=\"M 40 0 L 0 0 0 40\" fill=\"none\" stroke=\"{accent_color}\" stroke-width=\"0.5\" stroke-opacity=\"0.15\"/>\
+            </pattern>\
             </defs>\
             <rect width=\"{width}\" height=\"{height}\" fill=\"url(#bg)\"/>\
-            <circle cx=\"{cx}\" cy=\"{cy}\" r=\"350\" fill=\"url(#acc)\"/>\
-            <text x=\"50\" y=\"80\" font-family=\"sans-serif\" font-size=\"28\" font-weight=\"bold\" fill=\"{accent_color}\">TALOS IMAGE STUDIO • {style_upper}</text>\
-            <text x=\"50\" y=\"{prompt_y}\" font-family=\"sans-serif\" font-size=\"36\" font-weight=\"600\" fill=\"#F1F5F9\">{encoded_prompt}</text>\
-            </svg>"
+            <rect width=\"{width}\" height=\"{height}\" fill=\"url(#grid)\"/>\
+            <circle cx=\"{cx}\" cy=\"{cy}\" r=\"380\" fill=\"url(#acc)\"/>\
+            <rect x=\"{frame_inset}\" y=\"{frame_inset}\" width=\"{frame_w}\" height=\"{frame_h}\" rx=\"24\" fill=\"none\" stroke=\"url(#borderGrad)\" stroke-width=\"2\"/>\
+            <rect x=\"60\" y=\"60\" width=\"280\" height=\"36\" rx=\"18\" fill=\"{accent_color}\" fill-opacity=\"0.18\" stroke=\"{accent_color}\" stroke-width=\"1\"/>\
+            <text x=\"80\" y=\"84\" font-family=\"sans-serif\" font-size=\"14\" font-weight=\"bold\" fill=\"{accent_color}\" letter-spacing=\"1.5\">HERMES STUDIO • {style_upper}</text>\
+            <rect x=\"{frame_w}\" y=\"60\" width=\"80\" height=\"36\" rx=\"18\" fill=\"#141218\" fill-opacity=\"0.8\" stroke=\"{secondary_accent}\" stroke-width=\"1\"/>\
+            <text x=\"{}\" y=\"84\" font-family=\"sans-serif\" font-size=\"14\" font-weight=\"600\" fill=\"{secondary_accent}\">{aspect_ratio}</text>\
+            <rect x=\"60\" y=\"{}\" width=\"{}\" height=\"90\" rx=\"16\" fill=\"#141218\" fill-opacity=\"0.7\" stroke=\"{accent_color}\" stroke-opacity=\"0.3\" stroke-width=\"1\"/>\
+            <text x=\"84\" y=\"{}\" font-family=\"sans-serif\" font-size=\"24\" font-weight=\"600\" fill=\"#E6E0E9\">{encoded_prompt}</text>\
+            </svg>",
+            frame_w + 20,
+            prompt_y - 30,
+            width - 120,
+            prompt_y + 24
         );
 
         let image_url = format!(

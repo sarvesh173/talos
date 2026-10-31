@@ -87,6 +87,10 @@ fun PressableSurface(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp),
+    /** Optional M3E press morph target. When set, the surface tightens toward this
+     *  corner shape while held and springs back on release. Only RoundedCornerShape
+     *  pairs are morphed; any other shape keeps its resting geometry. */
+    pressedShape: RoundedCornerShape? = null,
     color: Color = MaterialTheme.colorScheme.surfaceContainer,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     border: BorderStroke? = null,
@@ -107,6 +111,20 @@ fun PressableSurface(
         label = "PressableSurfaceScale"
     )
 
+    // Shape morph: spatial spring, overshoot allowed (M3E press signature).
+    val morphProgress by animateFloatAsState(
+        targetValue = if (isPressed && enabled && pressedShape != null) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 420f),
+        label = "PressableSurfaceMorph"
+    )
+
+    val resolvedShape: Shape = run {
+        val from = shape as? RoundedCornerShape
+        if (from != null && pressedShape != null && morphProgress > 0.001f) {
+            MorphRoundedShape(from, pressedShape, morphProgress)
+        } else shape
+    }
+
     val activeBorder = if (isPressed && enabled) {
         BorderStroke(
             1.2.dp,
@@ -120,7 +138,7 @@ fun PressableSurface(
     } else border
 
     Surface(
-        shape = shape,
+        shape = resolvedShape,
         color = color,
         contentColor = contentColor,
         border = activeBorder,
@@ -1048,6 +1066,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             context.startActivity(intent)
                         },
                         shape = RoundedCornerShape(16.dp),
+                        pressedShape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier.weight(1f).height(44.dp)
@@ -1068,6 +1087,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             android.widget.Toast.makeText(context, "Coordinates copied!", android.widget.Toast.LENGTH_SHORT).show()
                         },
                         shape = RoundedCornerShape(16.dp),
+                        pressedShape = RoundedCornerShape(12.dp),
                         color = accent,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.weight(1f).height(44.dp)
@@ -1123,6 +1143,7 @@ fun NativeVideoPreviewBubble(
                     PressableSurface(
                         onClick = { /* launch native video playback */ },
                         shape = CircleShape,
+                        pressedShape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(48.dp)
                     ) {
@@ -1162,6 +1183,7 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
         onClick = { isExpanded = !isExpanded },
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
+        pressedShape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1217,6 +1239,7 @@ fun ToolCallItem(tool: ToolCall) {
         onClick = { if (!tool.output.isNullOrBlank()) showOutput = !showOutput },
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
+        pressedShape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {

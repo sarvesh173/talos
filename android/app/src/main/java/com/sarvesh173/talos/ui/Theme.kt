@@ -469,6 +469,7 @@ fun ThemeSelectionDialog(
                     PressableSurface(
                         onClick = { onSelectPreset(preset) },
                         shape = RoundedCornerShape(16.dp),
+                        pressedShape = RoundedCornerShape(12.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerHighest,
                         border = BorderStroke(
                             if (isSelected) 1.5.dp else 1.dp,

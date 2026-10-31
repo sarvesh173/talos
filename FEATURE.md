@@ -1839,3 +1839,25 @@ Continued the Metallic 3 redesign into the chat surface, module hub, and agent c
   - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21057` and `versionName` to `"2.10.57"`.
+
+---
+
+## 88. M3E Press Shape Morph: `MorphRoundedShape` Engine
+
+Implemented the signature Material 3 Expressive interaction the design contract had only described: **containers change shape while pressed, not just scale**.
+
+### 1. New morph primitive (`ExpressiveShapes.kt`)
+- `MorphRoundedShape(from, to, progress)` interpolates two `RoundedCornerShape`s **per-corner in px**, so a pill (50%) or 18dp tile morphs toward a 12/14/16dp squircle continuously at any measured size — no polygon vertex-count constraints, no snapping.
+- Progress is driven by the tactile `FastSpatial` spring (damping 0.62, stiffness 420), so the corner tighten overshoots subtly and settles.
+
+### 2. `PressableSurface` gains `pressedShape`
+- New optional parameter `pressedShape: RoundedCornerShape?`. When supplied, pressing animates corner geometry alongside the existing 0.96f compression, gradient border glow, and haptic — release springs everything back.
+- Any non-`RoundedCornerShape` resting shape is left untouched (safe fallback, no crash path).
+
+### 3. Wired call sites (11 surfaces)
+- Chat/action cards and composer surfaces (`Components.kt`, 5 sites), landing hero + hardware dock (`LandingScreen.kt`, 4 sites), theme preset cards (`Theme.kt`), attachment tiles (`AttachmentBottomSheet.kt`): resting 16/18dp → 12/14dp, resting pill → 16dp.
+
+- [x] **Verification & Tests**:
+  - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21058` and `versionName` to `"2.10.58"`.

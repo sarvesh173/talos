@@ -439,6 +439,7 @@ private fun AttachmentTile(
     PressableSurface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
+        pressedShape = RoundedCornerShape(14.dp),
         color = Color.Transparent,
         modifier = Modifier.padding(4.dp)
     ) {

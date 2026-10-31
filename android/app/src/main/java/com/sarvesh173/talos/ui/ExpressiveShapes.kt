@@ -1,6 +1,8 @@
 package com.sarvesh173.talos.ui
 
 import android.graphics.Path as AndroidPath
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Matrix
@@ -9,6 +11,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.graphics.shapes.CornerRounding
 import androidx.graphics.shapes.Morph
@@ -68,6 +71,32 @@ class M3EMorphShape(
         val dy = (size.height - bounds.size.height) / 2f - bounds.top
         if (dx != 0f || dy != 0f) path.translate(Offset(dx, dy))
         return Outline.Generic(path)
+    }
+}
+
+/**
+ * Interpolates between two [RoundedCornerShape]s — the M3E press morph primitive.
+ * Corner radii lerp in px so pill→squircle stays visually continuous at any size.
+ */
+class MorphRoundedShape(
+    private val from: RoundedCornerShape,
+    private val to: RoundedCornerShape,
+    private val progress: Float
+) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val p = progress.coerceIn(0f, 1f)
+        fun lerp(a: CornerSize, b: CornerSize): Dp {
+            val av = a.toPx(size, density)
+            val bv = b.toPx(size, density)
+            return Dp((av + (bv - av) * p) / density.density)
+        }
+        val shape = RoundedCornerShape(
+            topStart = lerp(from.topStart, to.topStart),
+            topEnd = lerp(from.topEnd, to.topEnd),
+            bottomEnd = lerp(from.bottomEnd, to.bottomEnd),
+            bottomStart = lerp(from.bottomStart, to.bottomStart)
+        )
+        return shape.createOutline(size, layoutDirection, density)
     }
 }
 

@@ -410,6 +410,7 @@ fun LandingScreen(
                     PressableSurface(
                         onClick = onToggleTheme,
                         shape = CircleShape,
+                        pressedShape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.surfaceContainer,
                         border = BorderStroke(1.dp, metallicBorderBrush()),
                         modifier = Modifier
@@ -804,6 +805,7 @@ fun LandingScreen(
                 PressableSurface(
                     onClick = handlePrimaryAction,
                     shape = ShapeFull,
+                    pressedShape = RoundedCornerShape(16.dp),
                     color = scheme.surfaceContainerHighest,
                     contentColor = scheme.onSurface,
                     border = BorderStroke(1.2.dp, metallicBorderBrush()),
@@ -849,6 +851,7 @@ fun LandingScreen(
                     PressableSurface(
                         onClick = onOpenWizard,
                         shape = RoundedCornerShape(16.dp),
+                        pressedShape = RoundedCornerShape(12.dp),
                         color = scheme.surfaceContainerLow,
                         border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.6f)),
                         modifier = Modifier
@@ -1682,6 +1685,7 @@ private fun AgentNodeWithBubble(
         PressableSurface(
             onClick = onTap,
             shape = ShapeLargeIncreased,
+            pressedShape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surfaceContainer,
             border = BorderStroke(
                 width = if (isActive) 1.5.dp else 1.dp,

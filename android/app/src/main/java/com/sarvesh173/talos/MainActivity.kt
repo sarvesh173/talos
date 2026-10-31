@@ -74,13 +74,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import dev.chrisbanes.haze.HazeInput
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
-import dev.chrisbanes.haze.blur.hazeBlur
-import dev.chrisbanes.haze.blur.materials.CupertinoMaterials
-import dev.chrisbanes.haze.blur.materials.FluentMaterials
-import dev.chrisbanes.haze.blur.materials.HazeMaterials
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
+import com.sarvesh173.talos.ui.talosSpecularGlassBorder
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -562,7 +560,7 @@ fun MainScreen(
 
     val listState = rememberLazyListState()
     // Haze state: real backdrop blur for the floating chrome (header + composer).
-    val hazeState = rememberHazeState()
+    val hazeState = remember { HazeState() }
     var previousRoomId by remember { mutableStateOf(currentRoomId) }
 
     LaunchedEffect(currentRoomId, messages.size) {
@@ -820,20 +818,25 @@ fun MainScreen(
                                 )
                             )
                     )
-                    // Floating M3 Glassmorphic Chamber Header
+                    // Floating M3 Glassmorphic Chamber Header with Specular Rim
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .hazeBlur(
-                                input = HazeInput.Backdrop(hazeState),
-                                style = CupertinoMaterials.thin()
+                            .clip(RoundedCornerShape(22.dp))
+                            .hazeChild(
+                                state = hazeState,
+                                shape = RoundedCornerShape(22.dp),
+                                style = HazeDefaults.style(
+                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.58f),
+                                    blurRadius = 24.dp
+                                )
                             )
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                         shape = RoundedCornerShape(22.dp),
                         // Translucent capsule: the blurred backdrop shows through,
                         // giving a true glass header instead of a painted panel.
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.58f),
-                        border = BorderStroke(1.2.dp, metallicBorderBrush())
+                        color = Color.Transparent,
+                        border = talosSpecularGlassBorder(isDark = isDark, strokeWidth = 1.2.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -1109,9 +1112,12 @@ fun MainScreen(
                             // Windows Fluent acrylic: real backdrop blur with a
                             // tonal wash, so the composer reads as a floating
                             // material layer rather than an opaque strip.
-                            .hazeBlur(
-                                input = HazeInput.Backdrop(hazeState),
-                                style = FluentMaterials.thinAcrylic(isDark)
+                            .hazeChild(
+                                state = hazeState,
+                                style = HazeDefaults.style(
+                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.65f),
+                                    blurRadius = 24.dp
+                                )
                             )
                             .background(
                                 Brush.verticalGradient(
@@ -1728,7 +1734,7 @@ fun MainScreen(
                         state = listState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .hazeSource(state = hazeState)
+                            .haze(hazeState)
                             .padding(bottom = paddingValues.calculateBottomPadding()),
                         contentPadding = PaddingValues(
                             top = paddingValues.calculateTopPadding() + 10.dp,

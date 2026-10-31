@@ -44,11 +44,10 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import dev.chrisbanes.haze.HazeInput
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
-import dev.chrisbanes.haze.blur.hazeBlur
-import dev.chrisbanes.haze.blur.materials.HazeMaterials
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -123,7 +122,7 @@ fun LandingScreen(
     val dissolvePaletteLocal = dissolvePalette()
     val isCurrentDark = LocalIsDark.current
     // Haze state: lets the landing header blur the constellation canvas behind it.
-    val hazeState = rememberHazeState()
+    val hazeState = remember { HazeState() }
 
 
     var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
@@ -331,9 +330,12 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .hazeBlur(
-                        input = HazeInput.Backdrop(hazeState),
-                        style = HazeMaterials.regular()
+                    .hazeChild(
+                        state = hazeState,
+                        style = HazeDefaults.style(
+                            backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f),
+                            blurRadius = 24.dp
+                        )
                     )
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.62f))
                     .padding(horizontal = MdSpacing.sm, vertical = 6.dp)
@@ -568,7 +570,7 @@ fun LandingScreen(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .hazeSource(state = hazeState)
+                    .haze(hazeState)
             ) {
                 if (centerAnchor == Offset.Zero) return@Canvas
 

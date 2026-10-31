@@ -13,8 +13,8 @@ android {
         applicationId = "com.sarvesh173.talos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21064
-        versionName = "2.10.64"
+        versionCode = 21065
+        versionName = "2.10.65"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -76,12 +76,8 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.5.0-alpha12")
     implementation("androidx.compose.material:material-icons-extended")
 
-    // Haze: true backdrop blur (glass) for Compose. Gives TALOS real
-    // Material / Apple (Cupertino) / Windows (Fluent) translucent materials
-    // instead of painted-on approximations.
-    implementation("dev.chrisbanes.haze:haze:2.0.1")
-    implementation("dev.chrisbanes.haze:haze-blur:2.0.1")
-    implementation("dev.chrisbanes.haze:haze-blur-materials:2.0.1")
+    // Haze 1.1.1: Rock-solid backdrop blur aligned with Kotlin 2.0.21 stdlib & compileSdk 35/36
+    implementation("dev.chrisbanes.haze:haze:1.1.1")
     // M3E shape engine: RoundedPolygon / Morph (stable 1.1.0)
     implementation("androidx.graphics:graphics-shapes:1.1.0")
 

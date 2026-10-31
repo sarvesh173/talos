@@ -2011,3 +2011,27 @@ Resolved the CI compile gate error where modern Compose Multiplatform AAR metada
   - GitHub Actions run for `v2.10.64` — compile + package.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21064` and `versionName` to `"2.10.64"`.
+
+---
+
+## 95. Native Glass Engine (Haze 1.1.1), Specular Rim Lighting & One UI 8.5 Ergonomics
+
+Integrated architecture blueprints produced by the parallel subagent swarms:
+- **`RESEARCH_GLASS_M3.md`**: Physical optics of Apple Liquid Glass, Windows Fluent Acrylic 5-layer occlusion depth, and Material 3 Expressive 0.dp elevation.
+- **`AUDIT_ONEUI_TOPOLOGY.md`**: Samsung One UI 8.5 dual-zone ergonomic split (viewing vs interaction zones) for 6.7"+ devices.
+
+### 1. Haze 1.1.1 Production Alignment (`build.gradle.kts`)
+- Switched to `dev.chrisbanes.haze:haze:1.1.1` to align strictly with Kotlin stdlib `2.0.21` and Android 36 SDK runners, avoiding Kotlin 2.4.x compiler metadata incompatibilities.
+- Clean backdrop blur decoupling: `Modifier.haze(hazeState)` on background canvas/list, and `Modifier.hazeChild(hazeState, ...)` on floating chrome.
+
+### 2. Directional Specular Rim Lighting (`ui/TalosGlass.kt`)
+- Created `talosSpecularGlassBorder()` producing a 1.2dp vertical gradient highlight (`White.copy(0.35f)` down to `White.copy(0.05f)`), mimicking convex physical glass catching ambient light from above.
+- Enforced the "Single Translucent Plane" rule to guarantee WCAG 2.2 AA text contrast over dynamic background content.
+
+### 3. One UI 8.5 Reachability Refinements
+- Maintained primary touch triggers (drawer toggle, action capsules, composer) anchored to the lower reachability zone on tall aspect ratio displays.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21065` and `versionName` to `"2.10.65"`.

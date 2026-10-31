@@ -437,10 +437,11 @@ fun LandingScreen(
                 val targetNode = baseNodes.firstOrNull { it.key == activeReceiver }
                 val activeColor = activeNode?.accent ?: MaterialTheme.colorScheme.primary
 
+                // Apple Secondary Card Live Activity Pill
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    color = Color(0xFF1C1C1E),
                     shape = ShapeFull,
-                    border = BorderStroke(1.dp, scheme.outlineVariant),
+                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.12f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = MdSpacing.xxs)
@@ -460,12 +461,13 @@ fun LandingScreen(
                             text = "${activeNode?.name ?: "Agent"} → ${targetNode?.name ?: "Agent"}:",
                             color = activeColor,
                             style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.1).sp
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = senderTask,
-                            color = scheme.onSurface,
+                            color = Color.White.copy(alpha = 0.90f),
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -474,14 +476,14 @@ fun LandingScreen(
                 }
 
 
-                // Primary M3 Action Button with tactile spring bounce back
+                // Primary Apple Action Capsule with tactile spring bounce back
                 PressableSurface(
                     onClick = handlePrimaryAction,
                     shape = ShapeFull,
                     pressedShape = RoundedCornerShape(16.dp),
-                    color = scheme.surfaceContainerHighest,
-                    contentColor = scheme.onSurface,
-                    border = BorderStroke(1.2.dp, metallicBorderBrush()),
+                    color = Color(0xFF0071E3), // Apple Action Blue signature fill
+                    contentColor = Color.White,
+                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.35f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
@@ -505,51 +507,52 @@ fun LandingScreen(
                         Icon(
                             imageVector = Icons.Default.RocketLaunch,
                             contentDescription = null,
-                            tint = scheme.onSurface,
+                            tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Enter Chamber",
                             style = MaterialTheme.typography.labelLarge,
-                            letterSpacing = 0.4.sp,
-                            color = scheme.onSurface
+                            letterSpacing = (-0.15).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     }
                 }
 
-                // Frictionless Onboarding & Setup Actions (M3 Outlined Secondary)
+                // Frictionless Onboarding & Setup Actions (Apple Secondary)
                 if (onOpenWizard != null) {
                     Spacer(modifier = Modifier.height(6.dp))
                     PressableSurface(
                         onClick = onOpenWizard,
                         shape = RoundedCornerShape(16.dp),
                         pressedShape = RoundedCornerShape(12.dp),
-                        color = scheme.surfaceContainerLow,
-                        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.6f)),
+                        color = Color(0xFF1C1C1E),
+                        contentColor = Color.White,
+                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.12f)),
                         modifier = Modifier
-                            .height(36.dp)
-                            .semantics { contentDescription = "Setup WireGuard Mesh & Token" }
+                            .fillMaxWidth()
+                            .height(44.dp)
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 14.dp),
+                            modifier = Modifier.fillMaxSize(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.SettingsEthernet,
+                                imageVector = Icons.Default.AutoFixHigh,
                                 contentDescription = null,
-                                tint = scheme.onSurfaceVariant,
-                                modifier = Modifier.size(13.dp)
+                                tint = Color(0xFF2997FF),
+                                modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Setup WireGuard Mesh & Token",
-                                color = scheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium
+                                text = "Setup Wizard · Configure Providers",
+                                style = MaterialTheme.typography.labelMedium,
+                                letterSpacing = (-0.1).sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White.copy(alpha = 0.90f)
                             )
                         }
                     }

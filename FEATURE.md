@@ -2076,3 +2076,21 @@ Implemented the hierarchical Git-style session tree in the drawer navigation on 
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21067` and `versionName` to `"2.10.67"`.
+
+---
+
+## 98. Apple Cupertino Landing Dock, Monochromatic Mesh & Specular Action Capsules
+
+Refactored `LandingScreen.kt` from Material 3 noisy fills to Apple's minimalist, high-contrast dark space design on branch `feature/apple-design-remake`.
+
+### 1. Apple Action Blue Capsule (`ui/LandingScreen.kt`)
+- Transformed primary action button into an iconic Apple Action Blue capsule (`#0071E3`) with crisp white typography and a 0.8dp specular top edge.
+- Secondary wizard button refactored to an Apple Secondary card (`#1C1C1E`) with subtle hairline border (`White 0.12f`).
+
+### 2. High-Contrast Monochromatic Live Activity Pill
+- Live node status bar now floats inside an Apple Secondary container (`#1C1C1E`) with active agent routing badges and clean SF Text typography.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21068` and `versionName` to `"2.10.68"`.

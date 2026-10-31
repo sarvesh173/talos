@@ -247,10 +247,34 @@ fun MessageBubble(
 ) {
     val isHuman = msg.sender_role == Role.human
 
+    // M3E entrance choreography: spatial scale springs may overshoot,
+    // alpha fades use effects springs and never do.
+    var bubbleAppeared by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { bubbleAppeared = true }
+    val entranceScale by animateFloatAsState(
+        targetValue = if (bubbleAppeared) 1f else 0.90f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 420f),
+        label = "bubbleEntranceScale"
+    )
+    val entranceAlpha by animateFloatAsState(
+        targetValue = if (bubbleAppeared) 1f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "bubbleEntranceAlpha"
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .graphicsLayer {
+                scaleX = entranceScale
+                scaleY = entranceScale
+                alpha = entranceAlpha
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(
+                    if (isHuman) 1f else 0f,
+                    1f
+                )
+            },
         horizontalArrangement = if (isHuman) Arrangement.End else Arrangement.Start
     ) {
         if (!isHuman) {
@@ -363,10 +387,11 @@ fun MessageBubble(
                     val isDark = LocalIsDark.current
                     Surface(
                         color = if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer,
+                        tonalElevation = 0.dp,
                         shape = if (isHuman) {
-                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 4.dp, bottomStart = 18.dp)
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 6.dp, bottomStart = 18.dp)
                         } else {
-                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 4.dp)
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 6.dp)
                         },
                         border = BorderStroke(
                             width = 1.2.dp,
@@ -625,7 +650,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                     initialValue = 0.40f,
                     targetValue = 0.95f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(800, easing = LinearEasing),
+                        animation = tween(800, easing = FastOutSlowInEasing),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulse"
@@ -674,14 +699,14 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                                 Box(
                                     modifier = Modifier
                                         .size(10.dp)
-                                        .background(Color(0xFF10B981), CircleShape)
+                                        .background(StatusGreen, CircleShape)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "SYNTHESIS READY",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF10B981)
+                                    color = StatusGreen
                                 )
                             }
                             IconButton(
@@ -802,7 +827,7 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                         .fillMaxWidth()
                         .height(200.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF0F1117))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 )
             }
@@ -971,12 +996,12 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
 
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFF10B981).copy(alpha = 0.15f),
-                    border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.4f))
+                    color = StatusGreen.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, StatusGreen.copy(alpha = 0.4f))
                 ) {
                     Text(
                         text = "VERIFIED",
-                        color = Color(0xFF10B981),
+                        color = StatusGreen,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)

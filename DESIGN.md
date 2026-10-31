@@ -19,6 +19,17 @@ M3 removed easing+duration as the primary system. Motion is springs, defined by 
 
 Hard rule: **anything that changes position/scale may bounce; anything that changes color/opacity must not.**
 
+Named token recipes (M3E spring tokens → Compose specs):
+
+| Token | Damping ζ | Stiffness k | Overshoot | Use |
+|---|---|---|---|---|
+| `FastSpatial` | 0.62 | 420 | yes | button/tile press scale, dial morphs (tuned tighter than stock 0.6/800 per field feedback) |
+| `DefaultSpatial` | 0.8 | 380 | subtle | cards, sheets, drawer slides, bubble entrance |
+| `SlowSpatial` | 0.8 | 200 | subtle | screen cross-transitions, hero morphs, topology reveals |
+| `FastEffects` | 1.0 | 3800 | none | icon tint switches, state-layer alpha, micro-fades |
+| `DefaultEffects` | 1.0 | 1600 | none | container fill transitions, theme cross-fade |
+| `SlowEffects` | 1.0 | 800 | none | modal scrim alpha, backdrop dissolves |
+
 Named recipes in code:
 - `PressableSurface` — pressed scale `0.96`, expressive spatial spring, haptic on actuation.
 - `AnimatedTalosIcon` — `IDLE` (ambient breath 0.97↔1.03), `RECORDING` (emission rings + 1.06 body), `ACTIVATE` (one-shot 1.22 spring pop).

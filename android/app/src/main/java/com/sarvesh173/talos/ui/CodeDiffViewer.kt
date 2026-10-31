@@ -156,13 +156,13 @@ fun CodeDiffViewer(
                             modifier = Modifier
                                 .size(56.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF10B981).copy(alpha = 0.15f))
-                                .border(1.dp, Color(0xFF10B981).copy(alpha = 0.4f), CircleShape)
+                                .background(StatusGreen.copy(alpha = 0.15f))
+                                .border(1.dp, StatusGreen.copy(alpha = 0.4f), CircleShape)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = Color(0xFF10B981),
+                                tint = StatusGreen,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -233,14 +233,14 @@ fun CodeDiffViewer(
                                     Text(
                                         text = "+${file.additions}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color(0xFF4ADE80)
+                                        color = StatusGreen
                                     )
                                     if (file.deletions > 0) {
                                         Spacer(modifier = Modifier.width(3.dp))
                                         Text(
                                             text = "-${file.deletions}",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = Color(0xFFF87171)
+                                            color = StatusRed
                                         )
                                     }
                                 }
@@ -309,9 +309,9 @@ fun CodeDiffViewer(
                         ) {
                             items(displayedLines) { line ->
                                 val (bgColor, textColor) = when (line.line_type) {
-                                    "added" -> Color(0xFF0F291E) to Color(0xFF4ADE80)
-                                    "deleted" -> Color(0xFF331518) to Color(0xFFF87171)
-                                    "header" -> Color(0xFF261D36) to MaterialTheme.colorScheme.primary
+                                    "added" -> StatusGreen.copy(alpha = 0.10f) to StatusGreen
+                                    "deleted" -> StatusRed.copy(alpha = 0.10f) to StatusRed
+                                    "header" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.10f) to MaterialTheme.colorScheme.primary
                                     else -> Color.Transparent to MaterialTheme.colorScheme.onSurfaceVariant
                                 }
 

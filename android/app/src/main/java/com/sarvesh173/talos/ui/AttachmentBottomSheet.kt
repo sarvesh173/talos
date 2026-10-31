@@ -139,7 +139,7 @@ fun AttachmentBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 6.dp,
+        tonalElevation = 0.dp,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle = {
             Box(
@@ -189,7 +189,7 @@ fun AttachmentBottomSheet(
                                 modifier = Modifier
                                     .size(10.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFEF4444))
+                                    .background(MaterialTheme.colorScheme.error)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -240,7 +240,7 @@ fun AttachmentBottomSheet(
                 AttachmentTile(
                     icon = TalosIcons.TalosMic,
                     title = if (isRecordingAudio) "Recording" else "Voice Note",
-                    color = if (isRecordingAudio) Color(0xFFEF4444) else MaterialTheme.colorScheme.tertiary
+                    color = if (isRecordingAudio) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
                 ) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                         isRecordingAudio = !isRecordingAudio
@@ -252,7 +252,7 @@ fun AttachmentBottomSheet(
                 AttachmentTile(
                     icon = Icons.Default.Place,
                     title = "Location",
-                    color = Color(0xFF60A5FA)
+                    color = MaterialTheme.colorScheme.primary
                 ) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         shareCurrentLocation()
@@ -264,7 +264,7 @@ fun AttachmentBottomSheet(
                 AttachmentTile(
                     icon = Icons.Default.AutoAwesome,
                     title = "AI Image",
-                    color = Color(0xFFA855F7)
+                    color = MaterialTheme.colorScheme.tertiary
                 ) {
                     showImageGenDialog = true
                 }
@@ -279,7 +279,7 @@ fun AttachmentBottomSheet(
                 AttachmentTile(
                     icon = Icons.Default.Code,
                     title = "Source Diff",
-                    color = Color(0xFF34D399)
+                    color = StatusGreen
                 ) {
                     onSendText("/status [Reviewing live git working tree]")
                     onDismiss()
@@ -290,7 +290,7 @@ fun AttachmentBottomSheet(
                 AttachmentTile(
                     icon = Icons.Default.Description,
                     title = "Document",
-                    color = Color(0xFFF97316)
+                    color = StatusAmber
                 ) {
                     onSendText("Context attachment: FEATURE.md staged")
                     onDismiss()
@@ -346,7 +346,7 @@ fun AttachmentBottomSheet(
         AlertDialog(
             onDismissRequest = { showImageGenDialog = false },
             icon = {
-                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFFA855F7))
+                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
             },
             title = {
                 Text(text = "Generate AI Image", style = MaterialTheme.typography.titleMedium)

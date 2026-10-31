@@ -1199,7 +1199,7 @@ fun MainScreen(
                                             initialValue = 0.3f,
                                             targetValue = 1f,
                                             animationSpec = infiniteRepeatable(
-                                                animation = tween(600, easing = LinearEasing),
+                                                animation = tween(600, easing = FastOutSlowInEasing),
                                                 repeatMode = RepeatMode.Reverse
                                             ),
                                             label = "RecDotAlpha"
@@ -1233,22 +1233,22 @@ fun MainScreen(
                                         ) {
                                             val bar1Height by infiniteTransition.animateFloat(
                                                 initialValue = 6f, targetValue = 18f,
-                                                animationSpec = infiniteRepeatable(tween(400, easing = LinearEasing), RepeatMode.Reverse),
+                                                animationSpec = infiniteRepeatable(tween(400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
                                                 label = "b1"
                                             )
                                             val bar2Height by infiniteTransition.animateFloat(
                                                 initialValue = 16f, targetValue = 8f,
-                                                animationSpec = infiniteRepeatable(tween(350, easing = LinearEasing), RepeatMode.Reverse),
+                                                animationSpec = infiniteRepeatable(tween(350, easing = FastOutSlowInEasing), RepeatMode.Reverse),
                                                 label = "b2"
                                             )
                                             val bar3Height by infiniteTransition.animateFloat(
                                                 initialValue = 8f, targetValue = 22f,
-                                                animationSpec = infiniteRepeatable(tween(450, easing = LinearEasing), RepeatMode.Reverse),
+                                                animationSpec = infiniteRepeatable(tween(450, easing = FastOutSlowInEasing), RepeatMode.Reverse),
                                                 label = "b3"
                                             )
                                             val bar4Height by infiniteTransition.animateFloat(
                                                 initialValue = 20f, targetValue = 10f,
-                                                animationSpec = infiniteRepeatable(tween(380, easing = LinearEasing), RepeatMode.Reverse),
+                                                animationSpec = infiniteRepeatable(tween(380, easing = FastOutSlowInEasing), RepeatMode.Reverse),
                                                 label = "b4"
                                             )
                                             listOf(bar1Height, bar2Height, bar3Height, bar4Height).forEach { h ->
@@ -1400,7 +1400,7 @@ fun MainScreen(
                                             initialValue = 0f,
                                             targetValue = -6f,
                                             animationSpec = infiniteRepeatable(
-                                                animation = tween(500, easing = LinearEasing),
+                                                animation = tween(500, easing = FastOutSlowInEasing),
                                                 repeatMode = RepeatMode.Reverse
                                             ),
                                             label = "ChevronOffset"

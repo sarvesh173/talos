@@ -526,7 +526,7 @@ private fun WizardTopBar(
                 Box(
                     modifier = Modifier
                         .weight(animatedWeight)
-                        .height(4.dp)
+                        .height(6.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .background(animatedColor)
                 )
@@ -738,7 +738,7 @@ private fun OverviewElevatedCard(
                     ) {
                         Text(
                             text = index.toString(),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -894,7 +894,7 @@ private fun MeshStep(
                         onClick = { onCopyPrompt(hostSetupPrompt) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = Color.White
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         shape = RoundedCornerShape(14.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
@@ -1448,7 +1448,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
             onClick = onEnterChamber,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             shape = RoundedCornerShape(28.dp),
             modifier = Modifier
@@ -1459,13 +1459,13 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                 Icon(
                     imageVector = Icons.Default.Groups,
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Enter Agent Chamber",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )

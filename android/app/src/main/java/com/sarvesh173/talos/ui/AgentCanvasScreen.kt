@@ -7,6 +7,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.ripple
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -210,7 +212,7 @@ fun AgentCanvasScreen(
                         Icon(
                             imageVector = if (isSwarmPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
                             contentDescription = if (isSwarmPaused) "Resume Swarm" else "Pause Swarm",
-                            tint = if (isSwarmPaused) Color(0xFF34D399) else MaterialTheme.colorScheme.secondary
+                            tint = if (isSwarmPaused) StatusGreen else MaterialTheme.colorScheme.secondary
                         )
                     }
                     IconButton(onClick = {
@@ -337,7 +339,7 @@ fun AgentCanvasScreen(
         ModalBottomSheet(
             onDismissRequest = { selectedNode = null },
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 8.dp,
+            tonalElevation = 0.dp,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
         ) {
             Column(
@@ -662,12 +664,15 @@ private fun AgentNodeCard(
         initialValue = 0.4f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
+            animation = tween(1200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseGlow"
     )
 
+    // M3E: no tonal elevation -> no lavender surfaceTint washout. Selection is
+    // expressed through the border + container step, never a tint overlay.
+    val pressSource = remember { MutableInteractionSource() }
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -675,10 +680,15 @@ private fun AgentNodeCard(
             if (isSelected) 1.5.dp else 1.dp,
             if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
         ),
-        tonalElevation = if (isSelected) 4.dp else 1.dp,
+        tonalElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .m3ePressScale(pressSource)
+            .clickable(
+                interactionSource = pressSource,
+                indication = ripple(bounded = true, radius = 90.dp),
+                onClick = onClick
+            )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -693,10 +703,10 @@ private fun AgentNodeCard(
                             .clip(CircleShape)
                             .background(
                                 when (agent.status) {
-                                    AgentStatus.RUNNING -> Color(0xFF10B981).copy(alpha = pulseGlow)
+                                    AgentStatus.RUNNING -> StatusGreen.copy(alpha = pulseGlow)
                                     AgentStatus.THINKING -> MaterialTheme.colorScheme.primary.copy(alpha = pulseGlow)
-                                    AgentStatus.VERIFYING -> Color(0xFF2DD4BF).copy(alpha = pulseGlow)
-                                    AgentStatus.IDLE -> Color(0xFF64748B)
+                                    AgentStatus.VERIFYING -> MaterialTheme.colorScheme.tertiary.copy(alpha = pulseGlow)
+                                    AgentStatus.IDLE -> MaterialTheme.colorScheme.onSurfaceVariant
                                     AgentStatus.PAUSED -> MaterialTheme.colorScheme.secondary.copy(alpha = pulseGlow)
                                 }
                             )
@@ -759,10 +769,10 @@ private fun AgentNodeCard(
 @Composable
 private fun StatusPill(status: AgentStatus) {
     val (label, bg, fg) = when (status) {
-        AgentStatus.RUNNING -> Triple("RUNNING", Color(0xFF10B981).copy(alpha = 0.15f), Color(0xFF10B981))
+        AgentStatus.RUNNING -> Triple("RUNNING", StatusGreen.copy(alpha = 0.15f), StatusGreen)
         AgentStatus.THINKING -> Triple("THINKING", MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), MaterialTheme.colorScheme.primary)
-        AgentStatus.VERIFYING -> Triple("VERIFYING", Color(0xFF2DD4BF).copy(alpha = 0.15f), Color(0xFF2DD4BF))
-        AgentStatus.IDLE -> Triple("IDLE", Color(0xFF64748B).copy(alpha = 0.15f), Color(0xFF94A3B8))
+        AgentStatus.VERIFYING -> Triple("VERIFYING", MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f), MaterialTheme.colorScheme.tertiary)
+        AgentStatus.IDLE -> Triple("IDLE", MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f), MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f))
         AgentStatus.PAUSED -> Triple("PAUSED", MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f), MaterialTheme.colorScheme.secondary)
     }
 
@@ -910,7 +920,7 @@ private fun CanvasNodeView(
         initialValue = 0.4f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
+            animation = tween(1200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseAlpha"
@@ -949,10 +959,10 @@ private fun CanvasNodeView(
                             .clip(CircleShape)
                             .background(
                                 when (node.status) {
-                                    AgentStatus.RUNNING -> Color(0xFF34D399)
+                                    AgentStatus.RUNNING -> StatusGreen
                                     AgentStatus.THINKING -> MaterialTheme.colorScheme.primary
-                                    AgentStatus.PAUSED -> Color(0xFF94A3B8)
-                                    else -> Color(0xFF60A5FA)
+                                    AgentStatus.PAUSED -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                    else -> MaterialTheme.colorScheme.primary
                                 }
                             )
                     )
@@ -1015,7 +1025,7 @@ private fun CanvasNodeView(
                         .fillMaxWidth()
                         .height(3.dp)
                         .clip(RoundedCornerShape(6.dp)),
-                    color = if (node.isPaused) Color(0xFF94A3B8) else MaterialTheme.colorScheme.primary,
+                    color = if (node.isPaused) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f) else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                 )
             }

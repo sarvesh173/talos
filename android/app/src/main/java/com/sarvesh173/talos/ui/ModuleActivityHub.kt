@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +18,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +35,9 @@ data class ActivityModuleItem(
     val icon: ImageVector,
     val category: String,
     val color: Color,
-    val badge: String? = null
+    val badge: String? = null,
+    /** Module needs a live TALOS core link; stays disabled while disconnected. */
+    val requiresCore: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +47,8 @@ fun ModuleActivityHub(
     onBack: () -> Unit,
     onNavigate: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val isCoreConnected by client.isConnected.collectAsState()
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
@@ -54,7 +61,8 @@ fun ModuleActivityHub(
                 icon = Icons.Default.Hub,
                 category = "Intelligence & Coding",
                 color = primaryColor,
-                badge = "LIVE"
+                badge = "LIVE",
+                requiresCore = true
             ),
             ActivityModuleItem(
                 id = "diff",
@@ -62,7 +70,8 @@ fun ModuleActivityHub(
                 subtitle = "Unified syntax-colored diffs for git working tree",
                 icon = Icons.Default.Code,
                 category = "Intelligence & Coding",
-                color = tertiaryColor
+                color = tertiaryColor,
+                requiresCore = true
             ),
             ActivityModuleItem(
                 id = "cli_manager",
@@ -70,7 +79,8 @@ fun ModuleActivityHub(
                 subtitle = "OmniRush, OpenCode, Codex & command quota sliders",
                 icon = Icons.Default.Terminal,
                 category = "Intelligence & Coding",
-                color = secondaryColor
+                color = secondaryColor,
+                requiresCore = true
             ),
             ActivityModuleItem(
                 id = "whiteboard",
@@ -165,9 +175,22 @@ fun ModuleActivityHub(
                 }
 
                 items(items, key = { it.id }) { module ->
+                    val gated = module.requiresCore && !isCoreConnected
                     ActivityCard(
                         module = module,
-                        onClick = { onNavigate(module.id) }
+                        enabled = !gated,
+                        onClick = {
+                            if (gated) {
+                                TalosHaptics.sendHaptic(context)
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "TALOS core is offline. Connect the gateway first.",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                onNavigate(module.id)
+                            }
+                        }
                     )
                 }
             }
@@ -178,15 +201,27 @@ fun ModuleActivityHub(
 @Composable
 private fun ActivityCard(
     module: ActivityModuleItem,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    // M3E disabled state: 38% content opacity, no press scale, muted border.
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = if (enabled) MaterialTheme.colorScheme.surfaceContainerHigh
+        else MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.outlineVariant
+        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        tonalElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .alpha(if (enabled) 1f else 0.45f)
+            .m3ePressScale(interactionSource, pressedScale = if (enabled) 0.96f else 1f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = if (enabled) ripple(bounded = true, radius = 120.dp) else null,
+                onClick = onClick
+            )
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

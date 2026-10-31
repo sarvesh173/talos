@@ -95,14 +95,14 @@ fun ObscuraBrowserScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFF2DD4BF).copy(alpha = 0.15f))
+                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f))
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = if (isStealthActive) "STEALTH ACTIVE" else "STANDARD",
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2DD4BF)
+                                    color = MaterialTheme.colorScheme.tertiary
                                 )
                             }
                         }
@@ -149,13 +149,15 @@ fun ObscuraBrowserScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Omnibox Address Bar
+            // Omnibox Address Bar - fully rounded capsule per DESIGN.md button/surface rule
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                tonalElevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .defaultMinSize(minHeight = 48.dp)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Row(
@@ -165,7 +167,7 @@ fun ObscuraBrowserScreen(
                     Icon(
                         imageVector = if (isStealthActive) Icons.Default.VpnKey else Icons.Default.Language,
                         contentDescription = null,
-                        tint = if (isStealthActive) Color(0xFF2DD4BF) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (isStealthActive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
 
@@ -193,15 +195,15 @@ fun ObscuraBrowserScreen(
                     if (urlInput.isNotBlank()) {
                         IconButton(
                             onClick = { urlInput = "" },
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(40.dp)
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                         }
                     }
 
                     IconButton(
                         onClick = { executeFetch() },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(44.dp)
                     ) {
                         if (isLoading) {
                             MetallicCircularLoader(
@@ -331,7 +333,7 @@ fun ObscuraBrowserScreen(
                                     Text(
                                         text = "${result.duration_ms}ms • ${result.content.length} chars extracted",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (result.success) Color(0xFF10B981) else MaterialTheme.colorScheme.error
+                                        color = if (result.success) StatusGreen else MaterialTheme.colorScheme.error
                                     )
                                 }
 
@@ -341,9 +343,9 @@ fun ObscuraBrowserScreen(
                                             clipboardManager.setText(AnnotatedString(result.content))
                                             Toast.makeText(context, "Content copied!", Toast.LENGTH_SHORT).show()
                                         },
-                                        modifier = Modifier.size(32.dp)
+                                        modifier = Modifier.size(48.dp)
                                     ) {
-                                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                                     }
 
                                     IconButton(
@@ -352,9 +354,9 @@ fun ObscuraBrowserScreen(
                                             client.sendMessage("[Obscura Web Excerpt: ${result.url}]\n$excerpt...")
                                             Toast.makeText(context, "Forwarded to Council Room!", Toast.LENGTH_SHORT).show()
                                         },
-                                        modifier = Modifier.size(32.dp)
+                                        modifier = Modifier.size(48.dp)
                                     ) {
-                                        Icon(Icons.Default.Send, contentDescription = "Forward", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Send, contentDescription = "Forward", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                     }
                                 }
                             }

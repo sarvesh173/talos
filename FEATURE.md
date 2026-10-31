@@ -1801,3 +1801,41 @@ Resolved user-reported touch artifacts ("white/blue haze overlay behind clicked 
   - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21056` and `versionName` to `"2.10.56"`.
+
+---
+
+## 87. Chat Surface Physics, Theme Token Purity & Hub Service Gating
+
+Continued the Metallic 3 redesign into the chat surface, module hub, and agent canvas (DESIGN.md redesign order items 2 and 3).
+
+### 1. MessageBubble Entrance Choreography (`Components.kt`)
+- Every chat bubble now enters with M3E motion choreography: spatial scale springs from 0.90f with the tactile 0.62/420 spring (may overshoot), while alpha fades with a no-bounce effects spring (never overshoots).
+- Entrance is anchored with `TransformOrigin` to the sender's side (bottom-right for human, bottom-left for agent) so bubbles grow *out of* the conversation edge instead of popping from the center.
+- Bubble tail corners lifted from 4.dp to 6.dp and `tonalElevation = 0.dp` enforced to keep the lavender `surfaceTint` washout off chat surfaces.
+
+### 2. Theme Token Purity Sweep (`Components.kt`, `LandingScreen.kt`, `AgentCanvasScreen.kt`, `ObscuraBrowserScreen.kt`, `AttachmentBottomSheet.kt`)
+- Eliminated 32 hardcoded `Color(0xFF...))` hex fills from the UI layer and re-pointed them at theme tokens: `StatusGreen`, `StatusAmber`, `MaterialTheme.colorScheme.primary/tertiary/error/onSurfaceVariant/surfaceContainerLowest`.
+- Agent status semantics now follow the scheme in both light and dark mode: RUNNING/VERIFYING/IDLE/PAUSED dots, status pills, topology canvas nodes, and attachment tiles (Voice Note, Location, AI Image, Source Diff, Document) all resolve dynamically — zero off-scheme fills remain outside `Theme.kt`.
+
+### 3. Organic Reverse-Pulse Easing (`MainActivity.kt`, `Components.kt`, `LandingScreen.kt`, `AgentCanvasScreen.kt`)
+- Converted 10 mechanical `LinearEasing` reverse pulses (recording dot, waveform visualizer bars, agent status glow) to `FastOutSlowInEasing` so ambient breathing feels organic. Continuous ambient rotations intentionally stay linear per M3 motion guidance.
+
+### 4. Hub Service Gating — Disabled-While-Offline Modules (`ModuleActivityHub.kt`)
+- Fixed the reported bug where gated modules stayed tappable while the core was unreachable: `ActivityModuleItem` gained a `requiresCore` flag (Multi-Agent Canvas, Code & File Changes, Multi-CLI Governance).
+- The hub now observes `client.isConnected` as state. While the TALOS core is offline, gated cards render the M3 disabled treatment — 45% content alpha, `surfaceContainerLow`, muted 35% border, no press-scale, no ripple — and a tap fires a haptic plus a "TALOS core is offline" toast instead of navigating.
+
+### 5. Expressive Card Physics (`AgentCanvasScreen.kt`, `ModuleActivityHub.kt`)
+- `AgentNodeCard` and hub `ActivityCard` switched from bare `clickable` to shared `MutableInteractionSource` press physics (`m3ePressScale`) with bounded M3 ripples and `tonalElevation = 0.dp`.
+- Migrated off the deprecated `rememberRipple` Indication API to the Material 3 `ripple()` node API for the new performant indication pipeline.
+
+### 6. Washout Sweep Extended to Sheets, Diff Viewer, Wizard & Browser
+- `ModalBottomSheet` containers (`WhiteboardSheet.kt`, `AgentCanvasScreen.kt`, `AttachmentBottomSheet.kt`): tonal elevation 6–8dp → **0dp** — sheets keep their explicit `surfaceContainerHigh` fill without the lavender tint overlay.
+- `CodeDiffViewer.kt`: 8 hardcoded hex fills → theme tokens (`StatusGreen`/`StatusRed` for added/deleted semantics, `primary` 10% wash for headers) so diffs follow the active Material You preset.
+- `OnboardingWizard.kt`: progress rail 4dp → **6dp** track scale; `Color.White` button content → `onPrimary`/`onSurface` tokens; chamber button icon normalized to 20dp.
+- `ObscuraBrowserScreen.kt`: omnibox rebuilt as a **fully rounded `CircleShape` capsule** with 48dp minimum height; Go button 36→44dp, Clear 28→40dp, extraction action buttons 32→48dp touch bounds with 20dp icons.
+- `DESIGN.md`: added the 6-token M3E spring table (FastSpatial 0.62/420 through SlowEffects 1.0/800) so every motion decision maps to a named contract token.
+
+- [x] **Verification & Tests**:
+  - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21057` and `versionName` to `"2.10.57"`.

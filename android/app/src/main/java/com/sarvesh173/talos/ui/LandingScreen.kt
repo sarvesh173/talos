@@ -528,14 +528,14 @@ fun LandingScreen(
                             // Pulsing dot
                             val recDotAlpha by rememberInfiniteTransition(label = "RecDotAlphaLanding").animateFloat(
                                 initialValue = 0.3f, targetValue = 1f,
-                                animationSpec = infiniteRepeatable(tween(600, easing = LinearEasing), RepeatMode.Reverse),
+                                animationSpec = infiniteRepeatable(tween(600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
                                 label = "dotAlpha"
                             )
                             Box(
                                 modifier = Modifier
                                     .size(9.dp)
                                     .graphicsLayer { alpha = recDotAlpha }
-                                    .background(Color(0xFFFF3B30), CircleShape)
+                                    .background(MaterialTheme.colorScheme.error, CircleShape)
                             )
 
                             Spacer(modifier = Modifier.width(6.dp))

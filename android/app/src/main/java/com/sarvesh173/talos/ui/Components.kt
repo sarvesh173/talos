@@ -632,7 +632,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.AutoAwesome,
+                        imageVector = TalosSparkle,
                         contentDescription = null,
                         tint = accent,
                         modifier = Modifier.size(16.dp)
@@ -794,7 +794,7 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                             .border(BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)), RoundedCornerShape(16.dp))
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Brush,
+                            imageVector = TalosBoard,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
@@ -1253,7 +1253,7 @@ fun ToolCallItem(tool: ToolCall) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = if (tool.tool_name.contains("code", ignoreCase = true)) Icons.Default.Code else Icons.Default.Terminal,
+                    imageVector = if (tool.tool_name.contains("code", ignoreCase = true)) TalosCode else TalosTerminal,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(14.dp)

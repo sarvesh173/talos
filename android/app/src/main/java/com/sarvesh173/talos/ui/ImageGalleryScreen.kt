@@ -107,7 +107,7 @@ fun ImageGalleryScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Default.AutoAwesome,
+                        imageVector = TalosSparkle,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         modifier = Modifier.size(56.dp)
@@ -221,7 +221,7 @@ fun ImageGalleryScreen(
         AlertDialog(
             onDismissRequest = { selectedImage = null },
             icon = {
-                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Icon(TalosSparkle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             title = {
                 Text("Image Artifact (${image.style})", style = MaterialTheme.typography.titleMedium)

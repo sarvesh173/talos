@@ -1885,3 +1885,25 @@ The activity hub and attachment sheet were still borrowing Material stock glyphs
   - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21059` and `versionName` to `"2.10.59"`.
+
+---
+
+## 90. Stock Glyph Purge: Custom TalosIcons Across Every Screen
+
+Swept the last Material stock icons out of the app's navigation and content surfaces so the icon contract (custom family only) now holds end-to-end.
+
+### 1. 16 further swaps across 7 files
+- `MainActivity.kt` (5): hub, code, browser, gallery, board glyphs.
+- `Components.kt` (4): artifact/image-studio and board glyphs in chat bubbles.
+- `AttachmentBottomSheet.kt` (1): whiteboard tile.
+- `ObscuraBrowserScreen.kt` (2): omnibox globe + browser glyph.
+- `ImageGalleryScreen.kt` (2), `AgentCanvasScreen.kt` (1), `TalosBrowser.kt` (1).
+
+### 2. Build pipeline moved off the laptop
+- Per user directive: the Android APK is now built by **GitHub Actions**, never by a local `./gradlew` run on the Celeron box. CI is the compile gate; the loop is patch → bump → push (SSH) → poll run → fetch release APK.
+- `talos-improvement-loop` skill updated so future loops never start a local Gradle build by default.
+
+- [x] **Verification & Tests**:
+  - GitHub Actions run for `v2.10.60` — compile + package.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21060` and `versionName` to `"2.10.60"`.

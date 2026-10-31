@@ -299,7 +299,7 @@ fun AttachmentBottomSheet(
                 Spacer(modifier = Modifier.width(24.dp))
 
                 AttachmentTile(
-                    icon = Icons.Default.Brush,
+                    icon = TalosBoard,
                     title = "Whiteboard",
                     color = MaterialTheme.colorScheme.primary
                 ) {

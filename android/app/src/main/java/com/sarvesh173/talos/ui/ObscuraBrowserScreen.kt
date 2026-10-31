@@ -166,7 +166,7 @@ fun ObscuraBrowserScreen(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
                     Icon(
-                        imageVector = if (isStealthActive) Icons.Default.VpnKey else Icons.Default.Language,
+                        imageVector = if (isStealthActive) Icons.Default.VpnKey else TalosBrowser,
                         contentDescription = null,
                         tint = if (isStealthActive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
@@ -387,7 +387,7 @@ fun ObscuraBrowserScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
-                                    imageVector = Icons.Default.Language,
+                                    imageVector = TalosBrowser,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                                     modifier = Modifier.size(56.dp)

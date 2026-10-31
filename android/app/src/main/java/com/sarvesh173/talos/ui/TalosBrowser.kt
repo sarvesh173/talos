@@ -126,7 +126,7 @@ fun TalosBrowserScreen(
                             singleLine = true,
                             leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Default.Language,
+                                    imageVector = TalosBrowser,
                                     contentDescription = null,
                                     tint = scheme.primary,
                                     modifier = Modifier.size(16.dp)

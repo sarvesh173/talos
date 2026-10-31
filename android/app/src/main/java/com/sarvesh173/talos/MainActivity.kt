@@ -811,7 +811,7 @@ fun MainScreen(
                                     if (roomEmblem != null) {
                                         AgentEmblemIcon(emblem = roomEmblem, size = 20.dp, tint = null)
                                     } else {
-                                        Icon(Icons.Default.Hub, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                        Icon(TalosHub, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                                     }
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))
@@ -852,7 +852,7 @@ fun MainScreen(
                                     modifier = Modifier.size(38.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Hub,
+                                        imageVector = TalosHub,
                                         contentDescription = "Agent Canvas",
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(19.dp)
@@ -865,7 +865,7 @@ fun MainScreen(
                                     modifier = Modifier.size(38.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Code,
+                                        imageVector = TalosCode,
                                         contentDescription = "Code Changes",
                                         tint = MaterialTheme.colorScheme.tertiary,
                                         modifier = Modifier.size(19.dp)
@@ -1893,7 +1893,7 @@ fun ChamberHero(
                     AgentEmblemIcon(emblem = heroEmblem, size = 42.dp, tint = null)
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Hub,
+                        imageVector = TalosHub,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(38.dp)
@@ -1999,7 +1999,7 @@ fun ChamberHero(
         val commands = listOf(
             Triple("/consensus", "Propose democratic vote across registered agents", Icons.Default.Groups),
             Triple("/benchmark", "Ping AI providers and recalculate latency route", Icons.Default.Speed),
-            Triple("/mesh", "Scan peers on your private Tailscale overlay", Icons.Default.Hub)
+            Triple("/mesh", "Scan peers on your private Tailscale overlay", TalosHub)
         )
 
         Column(

@@ -220,7 +220,7 @@ fun AgentCanvasScreen(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     }) {
                         Icon(
-                            imageVector = if (isCanvasMode) Icons.Default.ViewList else Icons.Default.Hub,
+                            imageVector = if (isCanvasMode) Icons.Default.ViewList else TalosHub,
                             contentDescription = if (isCanvasMode) "List View" else "Canvas Topology",
                             tint = if (isCanvasMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )

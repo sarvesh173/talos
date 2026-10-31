@@ -355,6 +355,218 @@ object TalosIcons {
             }
             return _talosbrowser!!
         }
+
+    private var _taloscode: ImageVector? = null
+
+    /** Precision chevron pair with motional cursor rail — source-diff / code module. */
+    val TalosCode: ImageVector
+        get() {
+            if (_taloscode != null) return _taloscode!!
+            _taloscode = materialIcon(name = "TalosCode") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(8.6f, 7.2f)
+                    lineTo(3.6f, 12.0f)
+                    lineTo(8.6f, 16.8f)
+                    lineTo(9.9f, 15.5f)
+                    lineTo(6.2f, 12.0f)
+                    lineTo(9.9f, 8.5f)
+                    close()
+                    moveTo(15.4f, 7.2f)
+                    lineTo(20.4f, 12.0f)
+                    lineTo(15.4f, 16.8f)
+                    lineTo(14.1f, 15.5f)
+                    lineTo(17.8f, 12.0f)
+                    lineTo(14.1f, 8.5f)
+                    close()
+                    // Central motional cursor rail
+                    moveTo(13.7f, 5.9f)
+                    lineTo(10.2f, 18.1f)
+                    lineTo(11.8f, 18.4f)
+                    lineTo(15.3f, 6.2f)
+                    close()
+                }
+            }
+            return _taloscode!!
+        }
+
+    private var _talosterminal: ImageVector? = null
+
+    /** Machined console window with prompt caret and output rail — CLI governance. */
+    val TalosTerminal: ImageVector
+        get() {
+            if (_talosterminal != null) return _talosterminal!!
+            _talosterminal = materialIcon(name = "TalosTerminal") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(4.4f, 4.6f)
+                    curveTo(3.2f, 4.6f, 2.4f, 5.4f, 2.4f, 6.6f)
+                    lineTo(2.4f, 17.4f)
+                    curveTo(2.4f, 18.6f, 3.2f, 19.4f, 4.4f, 19.4f)
+                    lineTo(19.6f, 19.4f)
+                    curveTo(20.8f, 19.4f, 21.6f, 18.6f, 21.6f, 17.4f)
+                    lineTo(21.6f, 6.6f)
+                    curveTo(21.6f, 5.4f, 20.8f, 4.6f, 19.6f, 4.6f)
+                    close()
+                    // Console face inset
+                    moveTo(4.6f, 6.4f)
+                    lineTo(19.4f, 6.4f)
+                    lineTo(19.4f, 17.6f)
+                    lineTo(4.6f, 17.6f)
+                    close()
+                }
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    // Prompt caret
+                    moveTo(6.9f, 9.3f)
+                    lineTo(9.4f, 11.7f)
+                    lineTo(6.9f, 14.1f)
+                    lineTo(7.9f, 15.2f)
+                    lineTo(11.5f, 11.7f)
+                    lineTo(7.9f, 8.2f)
+                    close()
+                    // Output rail
+                    moveTo(12.9f, 9.0f)
+                    lineTo(17.4f, 9.0f)
+                    lineTo(17.4f, 10.4f)
+                    lineTo(12.9f, 10.4f)
+                    close()
+                    moveTo(12.9f, 13.1f)
+                    lineTo(16.2f, 13.1f)
+                    lineTo(16.2f, 14.5f)
+                    lineTo(12.9f, 14.5f)
+                    close()
+                }
+            }
+            return _talosterminal!!
+        }
+
+    private var _talospalette: ImageVector? = null
+
+    /** Aperture ring with three pigment wells — Material You theme selection. */
+    val TalosPalette: ImageVector
+        get() {
+            if (_talospalette != null) return _talospalette!!
+            _talospalette = materialIcon(name = "TalosPalette") {
+                materialPath(pathFillType = PathFillType.EvenOdd) {
+                    moveTo(12.0f, 2.6f)
+                    curveTo(17.19f, 2.6f, 21.4f, 6.81f, 21.4f, 12.0f)
+                    curveTo(21.4f, 17.19f, 17.19f, 21.4f, 12.0f, 21.4f)
+                    curveTo(6.81f, 21.4f, 2.6f, 17.19f, 2.6f, 12.0f)
+                    curveTo(2.6f, 6.81f, 6.81f, 2.6f, 12.0f, 2.6f)
+                    close()
+                    moveTo(12.0f, 4.6f)
+                    curveTo(7.92f, 4.6f, 4.6f, 7.92f, 4.6f, 12.0f)
+                    curveTo(4.6f, 16.08f, 7.92f, 19.4f, 12.0f, 19.4f)
+                    curveTo(16.08f, 19.4f, 19.4f, 16.08f, 19.4f, 12.0f)
+                    curveTo(19.4f, 7.92f, 16.08f, 4.6f, 12.0f, 4.6f)
+                    close()
+                    // Pigment well alpha
+                    moveTo(8.2f, 8.2f)
+                    curveTo(9.0f, 8.2f, 9.6f, 8.8f, 9.6f, 9.6f)
+                    curveTo(9.6f, 10.4f, 9.0f, 11.0f, 8.2f, 11.0f)
+                    curveTo(7.4f, 11.0f, 6.8f, 10.4f, 6.8f, 9.6f)
+                    curveTo(6.8f, 8.8f, 7.4f, 8.2f, 8.2f, 8.2f)
+                    close()
+                    moveTo(12.0f, 13.0f)
+                    curveTo(12.8f, 13.0f, 13.4f, 13.6f, 13.4f, 14.4f)
+                    curveTo(13.4f, 15.2f, 12.8f, 15.8f, 12.0f, 15.8f)
+                    curveTo(11.2f, 15.8f, 10.6f, 15.2f, 10.6f, 14.4f)
+                    curveTo(10.6f, 13.6f, 11.2f, 13.0f, 12.0f, 13.0f)
+                    close()
+                    moveTo(16.0f, 7.9f)
+                    curveTo(16.8f, 7.9f, 17.4f, 8.5f, 17.4f, 9.3f)
+                    curveTo(17.4f, 10.1f, 16.8f, 10.7f, 16.0f, 10.7f)
+                    curveTo(15.2f, 10.7f, 14.6f, 10.1f, 14.6f, 9.3f)
+                    curveTo(14.6f, 8.5f, 15.2f, 7.9f, 16.0f, 7.9f)
+                    close()
+                }
+            }
+            return _talospalette!!
+        }
+
+    private var _talossparkle: ImageVector? = null
+
+    /** Generative four-point emission star with satellite spark — AI image studio. */
+    val TalosSparkle: ImageVector
+        get() {
+            if (_talossparkle != null) return _talossparkle!!
+            _talossparkle = materialIcon(name = "TalosSparkle") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(11.0f, 2.6f)
+                    curveTo(11.9f, 7.6f, 14.4f, 10.1f, 19.4f, 11.0f)
+                    curveTo(14.4f, 11.9f, 11.9f, 14.4f, 11.0f, 19.4f)
+                    curveTo(10.1f, 14.4f, 7.6f, 11.9f, 2.6f, 11.0f)
+                    curveTo(7.6f, 10.1f, 10.1f, 7.6f, 11.0f, 2.6f)
+                    close()
+                    // Satellite spark
+                    moveTo(18.4f, 14.0f)
+                    curveTo(18.8f, 16.1f, 19.7f, 17.0f, 21.8f, 17.4f)
+                    curveTo(19.7f, 17.8f, 18.8f, 18.7f, 18.4f, 20.8f)
+                    curveTo(18.0f, 18.7f, 17.1f, 17.8f, 15.0f, 17.4f)
+                    curveTo(17.1f, 17.0f, 18.0f, 16.1f, 18.4f, 14.0f)
+                    close()
+                }
+            }
+            return _talossparkle!!
+        }
+
+    private var _talospin: ImageVector? = null
+
+    /** Faceted map pin with caliper core — location sharing. */
+    val TalosPin: ImageVector
+        get() {
+            if (_talospin != null) return _talospin!!
+            _talospin = materialIcon(name = "TalosPin") {
+                materialPath(pathFillType = PathFillType.EvenOdd) {
+                    moveTo(12.0f, 2.2f)
+                    curveTo(7.6f, 2.2f, 4.2f, 5.6f, 4.2f, 9.9f)
+                    curveTo(4.2f, 15.1f, 12.0f, 21.8f, 12.0f, 21.8f)
+                    curveTo(12.0f, 21.8f, 19.8f, 15.1f, 19.8f, 9.9f)
+                    curveTo(19.8f, 5.6f, 16.4f, 2.2f, 12.0f, 2.2f)
+                    close()
+                    moveTo(12.0f, 6.4f)
+                    curveTo(14.1f, 6.4f, 15.7f, 8.0f, 15.7f, 10.1f)
+                    curveTo(15.7f, 12.2f, 14.1f, 13.8f, 12.0f, 13.8f)
+                    curveTo(9.9f, 13.8f, 8.3f, 12.2f, 8.3f, 10.1f)
+                    curveTo(8.3f, 8.0f, 9.9f, 6.4f, 12.0f, 6.4f)
+                    close()
+                }
+            }
+            return _talospin!!
+        }
+
+    private var _talosdoc: ImageVector? = null
+
+    /** Machined sheet with folded corner and content rails — document context. */
+    val TalosDoc: ImageVector
+        get() {
+            if (_talosdoc != null) return _talosdoc!!
+            _talosdoc = materialIcon(name = "TalosDoc") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(5.6f, 2.4f)
+                    lineTo(14.2f, 2.4f)
+                    lineTo(18.4f, 6.6f)
+                    lineTo(18.4f, 21.6f)
+                    lineTo(5.6f, 21.6f)
+                    close()
+                    // Content rails knocked out
+                    moveTo(8.0f, 9.2f)
+                    lineTo(16.0f, 9.2f)
+                    lineTo(16.0f, 10.6f)
+                    lineTo(8.0f, 10.6f)
+                    close()
+                    moveTo(8.0f, 12.8f)
+                    lineTo(16.0f, 12.8f)
+                    lineTo(16.0f, 14.2f)
+                    lineTo(8.0f, 14.2f)
+                    close()
+                    moveTo(8.0f, 16.4f)
+                    lineTo(13.2f, 16.4f)
+                    lineTo(13.2f, 17.8f)
+                    lineTo(8.0f, 17.8f)
+                    close()
+                }
+            }
+            return _talosdoc!!
+        }
 }
 
 val TalosMic: ImageVector get() = TalosIcons.TalosMic
@@ -363,3 +575,9 @@ val TalosHub: ImageVector get() = TalosIcons.TalosHub
 val TalosBoard: ImageVector get() = TalosIcons.TalosBoard
 val TalosVault: ImageVector get() = TalosIcons.TalosVault
 val TalosBrowser: ImageVector get() = TalosIcons.TalosBrowser
+val TalosCode: ImageVector get() = TalosIcons.TalosCode
+val TalosTerminal: ImageVector get() = TalosIcons.TalosTerminal
+val TalosPalette: ImageVector get() = TalosIcons.TalosPalette
+val TalosSparkle: ImageVector get() = TalosIcons.TalosSparkle
+val TalosPin: ImageVector get() = TalosIcons.TalosPin
+val TalosDoc: ImageVector get() = TalosIcons.TalosDoc

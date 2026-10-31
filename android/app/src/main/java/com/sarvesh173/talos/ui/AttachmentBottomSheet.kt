@@ -250,7 +250,7 @@ fun AttachmentBottomSheet(
                 }
 
                 AttachmentTile(
-                    icon = Icons.Default.Place,
+                    icon = TalosPin,
                     title = "Location",
                     color = MaterialTheme.colorScheme.primary
                 ) {
@@ -262,7 +262,7 @@ fun AttachmentBottomSheet(
                 }
 
                 AttachmentTile(
-                    icon = Icons.Default.AutoAwesome,
+                    icon = TalosSparkle,
                     title = "AI Image",
                     color = MaterialTheme.colorScheme.tertiary
                 ) {
@@ -277,7 +277,7 @@ fun AttachmentBottomSheet(
                 horizontalArrangement = Arrangement.Start
             ) {
                 AttachmentTile(
-                    icon = Icons.Default.Code,
+                    icon = TalosCode,
                     title = "Source Diff",
                     color = StatusGreen
                 ) {
@@ -288,7 +288,7 @@ fun AttachmentBottomSheet(
                 Spacer(modifier = Modifier.width(24.dp))
 
                 AttachmentTile(
-                    icon = Icons.Default.Description,
+                    icon = TalosDoc,
                     title = "Document",
                     color = StatusAmber
                 ) {
@@ -346,7 +346,7 @@ fun AttachmentBottomSheet(
         AlertDialog(
             onDismissRequest = { showImageGenDialog = false },
             icon = {
-                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                Icon(imageVector = TalosSparkle, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
             },
             title = {
                 Text(text = "Generate AI Image", style = MaterialTheme.typography.titleMedium)

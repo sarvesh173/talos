@@ -1861,3 +1861,27 @@ Implemented the signature Material 3 Expressive interaction the design contract 
   - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21058` and `versionName` to `"2.10.58"`.
+
+---
+
+## 89. TalosIcons v3.1: Six New Hand-Built Vectors, Zero Stock Glyphs in Navigation
+
+The activity hub and attachment sheet were still borrowing Material stock glyphs — the one thing the icon contract forbids (custom `TalosIcons` family only).
+
+### 1. New precision vectors (`TalosIcons.kt`)
+- `TalosCode` — twin chevrons with a motional cursor rail (source-diff module).
+- `TalosTerminal` — machined console window, prompt caret, dual output rails (CLI governance).
+- `TalosPalette` — aperture ring with three knockout pigment wells (theme selection).
+- `TalosSparkle` — four-point emission star plus satellite spark (AI image studio).
+- `TalosPin` — faceted map pin with caliper core (location sharing).
+- `TalosDoc` — folded-corner sheet with three content rails (document context).
+- Same 24dp viewport discipline as v3.0: pure Bezier/line geometry, EvenOdd knockouts, no containment boxes.
+
+### 2. Wiring (12 replacements)
+- `ModuleActivityHub.kt` (7): Hub, Diff, CLI, Whiteboard, Gallery, Browser and Themes cards all render TalosIcons now.
+- `AttachmentBottomSheet.kt` (5): Location, AI Image, Source Diff, Document tiles plus the image-gen dialog header.
+
+- [x] **Verification & Tests**:
+  - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21059` and `versionName` to `"2.10.59"`.

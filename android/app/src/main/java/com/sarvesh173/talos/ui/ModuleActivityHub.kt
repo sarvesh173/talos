@@ -58,7 +58,7 @@ fun ModuleActivityHub(
                 id = "canvas",
                 title = "Multi-Agent Canvas",
                 subtitle = "Spatial mesh of parallel running agents and child subagents",
-                icon = Icons.Default.Hub,
+                icon = TalosHub,
                 category = "Intelligence & Coding",
                 color = primaryColor,
                 badge = "LIVE",
@@ -68,7 +68,7 @@ fun ModuleActivityHub(
                 id = "diff",
                 title = "Code & File Changes",
                 subtitle = "Unified syntax-colored diffs for git working tree",
-                icon = Icons.Default.Code,
+                icon = TalosCode,
                 category = "Intelligence & Coding",
                 color = tertiaryColor,
                 requiresCore = true
@@ -77,7 +77,7 @@ fun ModuleActivityHub(
                 id = "cli_manager",
                 title = "Multi-CLI Governance",
                 subtitle = "OmniRush, OpenCode, Codex & command quota sliders",
-                icon = Icons.Default.Terminal,
+                icon = TalosTerminal,
                 category = "Intelligence & Coding",
                 color = secondaryColor,
                 requiresCore = true
@@ -86,7 +86,7 @@ fun ModuleActivityHub(
                 id = "whiteboard",
                 title = "OpenBoard Whiteboard",
                 subtitle = "Touch drawing canvas with dot grid and architectural sketch attachments",
-                icon = Icons.Default.Brush,
+                icon = TalosBoard,
                 category = "Creative & Canvas",
                 color = primaryColor,
                 badge = "NEW"
@@ -95,7 +95,7 @@ fun ModuleActivityHub(
                 id = "gallery",
                 title = "AI Image Studio",
                 subtitle = "Bento gallery of generated images with pinch-zoom lightbox",
-                icon = Icons.Default.AutoAwesome,
+                icon = TalosSparkle,
                 category = "Creative & Canvas",
                 color = tertiaryColor
             ),
@@ -103,7 +103,7 @@ fun ModuleActivityHub(
                 id = "browser",
                 title = "Obscura Browser",
                 subtitle = "Anti-detection web view with session tabs and script injection",
-                icon = Icons.Default.Language,
+                icon = TalosBrowser,
                 category = "System & Gateway",
                 color = secondaryColor
             ),
@@ -111,7 +111,7 @@ fun ModuleActivityHub(
                 id = "themes",
                 title = "Material UI Themes",
                 subtitle = "Switch between Signature Purple, Cobalt Blue, Cyber Mint, and Amber presets",
-                icon = Icons.Default.Palette,
+                icon = TalosPalette,
                 category = "System & Gateway",
                 color = primaryColor,
                 badge = "NEW"

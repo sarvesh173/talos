@@ -24,6 +24,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -757,19 +758,68 @@ fun MainScreen(
     ) {
         Scaffold(
             topBar = {
-                Column(
+                // Apple-style scroll-reactive chrome: the header materializes
+                // (translucent + blurred) as chat content scrolls underneath it.
+                val headerCollapse by remember {
+                    derivedStateOf {
+                        val index = listState.firstVisibleItemIndex
+                        val offset = listState.firstVisibleItemScrollOffset
+                        if (index > 0) 1f else (offset / 148f).coerceIn(0f, 1f)
+                    }
+                }
+                val frostAlpha by animateFloatAsState(
+                    targetValue = headerCollapse,
+                    animationSpec = spring(dampingRatio = 0.9f, stiffness = 320f),
+                    label = "header_frost_alpha"
+                )
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .background(MaterialTheme.colorScheme.background)
                 ) {
+                    // Frosted backdrop: a translucent material that materializes
+                    // as chat content scrolls underneath it (Apple navigation-bar
+                    // behavior), with a hairline specular edge on top.
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .graphicsLayer { alpha = frostAlpha }
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.background.copy(alpha = 0.94f),
+                                        MaterialTheme.colorScheme.background.copy(alpha = 0.78f),
+                                        MaterialTheme.colorScheme.background.copy(alpha = 0f)
+                                    )
+                                )
+                            )
+                    )
+                    // Specular top edge — light catching the material.
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .graphicsLayer { alpha = frostAlpha * 0.8f }
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color.Transparent,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
                     // Floating M3 Glassmorphic Chamber Header
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                         shape = RoundedCornerShape(22.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        // Translucent capsule: the frosted material behind it
+                        // shows through, giving a true glass header.
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.86f),
                         border = BorderStroke(1.2.dp, metallicBorderBrush())
                     ) {
                         Row(
@@ -1651,11 +1701,18 @@ fun MainScreen(
                             .padding(paddingValues)
                     )
                 } else {
+                    // Chat content scrolls UNDER the floating header so the
+                    // frosted material reads as a real translucent layer
+                    // (Apple navigation-bar behavior) instead of a solid bar.
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(paddingValues)
+                            .padding(bottom = paddingValues.calculateBottomPadding()),
+                        contentPadding = PaddingValues(
+                            top = paddingValues.calculateTopPadding() + 10.dp,
+                            bottom = 16.dp
+                        )
                     ) {
                         items(
                             items = messages,

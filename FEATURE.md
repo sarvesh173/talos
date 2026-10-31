@@ -1926,3 +1926,35 @@ The reported artifact was M3's `tonalElevation`/`surfaceTint` overlay, which rep
   - GitHub Actions run for `v2.10.61` — compile + package.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21061` and `versionName` to `"2.10.61"`.
+
+---
+
+## 92. First-Run Purity, Apple-Style Frosted Chrome & Public Release Pipeline
+
+Three fixes shipped together: the landing page no longer asks the user to test their microphone, the chat header now behaves like a real Apple navigation bar, and every GitHub release finally carries its changelog.
+
+### 1. Landing page hardware tiles removed (`LandingScreen.kt`)
+- The Camera/Mic "sensory node" tiles and the recording send/delete bar are gone from the first-run landing page. A user's first job on this screen is to *understand the mesh*, not to grant hardware access or test a microphone.
+- All dead recording state (`isRecordingMode`, `isRecordingActive`, `isRecordingLocked`, `recordingDurationSeconds`, press scales, `coroutineScope`) was removed with the UI. Voice capture remains available in the chat composer, where it belongs.
+- Net effect: the landing page now flows Live Activity → **Enter Chamber** → Setup, with nothing in between competing for attention.
+
+### 2. Apple-style scroll-reactive frosted header (`MainActivity.kt`)
+- Chat content now scrolls **under** the floating chamber capsule (`contentPadding` instead of `Scaffold` padding), so the header reads as a floating material layer rather than an opaque bar.
+- A translucent frost material materializes on scroll: the collapse progress is derived from `listState.firstVisibleItemIndex/firstVisibleItemScrollOffset`, then eased on a `damping 0.9 / stiffness 320` spring.
+- The capsule itself is now 86% opaque, letting the frosted layer show through — real glass, not a painted panel.
+- A 1dp **specular top edge** (primary-tinted horizontal gradient) appears with the frost: the "light catching the material" detail from Apple's material system, and a scroll-edge effect instead of a hard divider.
+
+### 3. Release pipeline now publishes changelogs (`.github/workflows/build-apk.yml`)
+- Versioned releases were being created with an **empty body** — 118 releases had no notes, which is exactly why the Releases page looked frozen.
+- The workflow now composes real notes from the tag's commit range and attaches them via `body_path`, with a `FEATURE.md` deep link and install instructions.
+- `fetch-depth: 0` was required so the commit range is actually available in the runner.
+- The rolling `latest-build` release no longer claims `make_latest` — the newest **versioned** tag stays pinned as "Latest".
+- Backfilled all 118 existing releases with their matching `FEATURE.md` section, and pinned `v2.10.61` as Latest.
+
+### 4. Repository is now public
+- `sarvesh173/talos` flipped from private → public. A full secret audit ran first: no API keys, tokens, `.env`, keystores or private keys in the working tree or in any commit in history (only placeholders and the standard Android debug keystore).
+
+- [x] **Verification & Tests**:
+  - GitHub Actions run for `v2.10.62` — compile + package.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21062` and `versionName` to `"2.10.62"`.

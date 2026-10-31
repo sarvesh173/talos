@@ -118,34 +118,6 @@ fun LandingScreen(
     val dissolvePaletteLocal = dissolvePalette()
     val isCurrentDark = LocalIsDark.current
 
-    var isRecordingMode by remember { mutableStateOf(false) } // false = Camera, true = Mic
-    var isRecordingActive by remember { mutableStateOf(false) } // Active recording (hold or locked)
-    var isRecordingLocked by remember { mutableStateOf(false) } // Hands-free lock engaged
-    var recordingDurationSeconds by remember { mutableIntStateOf(0) }
-    var isCameraPressed by remember { mutableStateOf(false) }
-    var isMicPressed by remember { mutableStateOf(false) }
-
-    val cameraPressScale by animateFloatAsState(
-        targetValue = if (isCameraPressed) 0.94f else 1.0f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 420f),
-        label = "camera_press_scale"
-    )
-    val micPressScale by animateFloatAsState(
-        targetValue = if (isMicPressed || isRecordingActive) 0.94f else 1.0f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 420f),
-        label = "mic_press_scale"
-    )
-    val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(isRecordingActive) {
-        if (isRecordingActive) {
-            recordingDurationSeconds = 0
-            while (isRecordingActive) {
-                delay(1000)
-                recordingDurationSeconds++
-            }
-        }
-    }
 
     var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
 
@@ -488,318 +460,6 @@ fun LandingScreen(
                     }
                 }
 
-                if (isRecordingActive || isRecordingLocked) {
-                    // Send/Delete bar with Cancel button
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.2.dp, metallicBorderBrush()),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .padding(bottom = MdSpacing.xs)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp)
-                        ) {
-                            // Cancel / Trash button
-                            IconButton(
-                                onClick = {
-                                    isRecordingActive = false
-                                    isRecordingLocked = false
-                                    recordingDurationSeconds = 0
-                                    TalosHaptics.sendHaptic(context)
-                                    Toast.makeText(context, "Recording cancelled", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Cancel Recording",
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(6.dp))
-
-                            // Pulsing dot
-                            val recDotAlpha by rememberInfiniteTransition(label = "RecDotAlphaLanding").animateFloat(
-                                initialValue = 0.3f, targetValue = 1f,
-                                animationSpec = infiniteRepeatable(tween(600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-                                label = "dotAlpha"
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(9.dp)
-                                    .graphicsLayer { alpha = recDotAlpha }
-                                    .background(MaterialTheme.colorScheme.error, CircleShape)
-                            )
-
-                            Spacer(modifier = Modifier.width(6.dp))
-
-                            val minutes = recordingDurationSeconds / 60
-                            val seconds = recordingDurationSeconds % 60
-                            Text(
-                                text = "%02d:%02d".format(minutes, seconds),
-                                color = scheme.onSurface,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            Text(
-                                text = if (isRecordingLocked) "Locked (Tap to send)" else "Release to send",
-                                color = scheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            // Send button
-                            IconButton(
-                                onClick = {
-                                    isRecordingActive = false
-                                    isRecordingLocked = false
-                                    recordingDurationSeconds = 0
-                                    TalosHaptics.sendHaptic(context)
-                                    Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = "Send Recording",
-                                    tint = scheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    // Quick Hardware Sensory Nodes (Camera & Mic Tiles)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = MdSpacing.xs),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // Camera Tile
-                        val cameraHighlighted = !isRecordingMode
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
-                                .graphicsLayer {
-                                    scaleX = cameraPressScale
-                                    scaleY = cameraPressScale
-                                }
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (cameraHighlighted) MaterialTheme.colorScheme.surfaceContainerHigh
-                                    else MaterialTheme.colorScheme.surfaceContainerLow
-                                )
-                                .border(
-                                    width = if (cameraHighlighted) 1.2.dp else 1.dp,
-                                    brush = if (cameraHighlighted) {
-                                        Brush.linearGradient(
-                                            listOf(
-                                                scheme.primary.copy(alpha = 0.80f),
-                                                scheme.primary.copy(alpha = 0.30f)
-                                            )
-                                        )
-                                    } else {
-                                        Brush.linearGradient(
-                                            listOf(
-                                                scheme.outlineVariant.copy(alpha = 0.45f),
-                                                scheme.outlineVariant.copy(alpha = 0.20f)
-                                            )
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                                .semantics { contentDescription = "Camera Hardware Tile, tap to switch, hold to open camera" }
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            isCameraPressed = true
-                                            val downTime = System.currentTimeMillis()
-                                            var cameraOpened = false
-                                            val holdJob = coroutineScope.launch {
-                                                delay(400)
-                                                // Camera tile open camera on press-hold (>400ms)
-                                                cameraOpened = true
-                                                TalosHaptics.sendHaptic(context)
-                                                Toast.makeText(context, "Opening Camera...", Toast.LENGTH_SHORT).show()
-                                                runCatching {
-                                                    val intent = android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
-                                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                    context.startActivity(intent)
-                                                }
-                                            }
-                                            try {
-                                                tryAwaitRelease()
-                                            } finally {
-                                                isCameraPressed = false
-                                                holdJob.cancel()
-                                                if (!cameraOpened && System.currentTimeMillis() - downTime < 400) {
-                                                    // Single tap switches to mic mode (no double tap required)
-                                                    isRecordingMode = true
-                                                    TalosHaptics.sendHaptic(context)
-                                                    Toast.makeText(context, "Switched to Microphone", Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 10.dp)
-                            ) {
-                                AnimatedTalosIcon(
-                                    imageVector = TalosIcons.TalosCamera,
-                                    contentDescription = "Camera",
-                                    tint = if (cameraHighlighted) scheme.primary else scheme.onSurfaceVariant,
-                                    size = 18.dp,
-                                    mode = if (cameraHighlighted) TalosIconMode.ACTIVATE else TalosIconMode.IDLE
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Camera",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (cameraHighlighted) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (cameraHighlighted) scheme.primary else scheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        // Mic Tile
-                        val micHighlighted = isRecordingMode
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
-                                .graphicsLayer {
-                                    scaleX = micPressScale
-                                    scaleY = micPressScale
-                                }
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (micHighlighted) MaterialTheme.colorScheme.surfaceContainerHigh
-                                    else MaterialTheme.colorScheme.surfaceContainerLow
-                                )
-                                .border(
-                                    width = if (micHighlighted) 1.2.dp else 1.dp,
-                                    brush = if (micHighlighted) {
-                                        Brush.linearGradient(
-                                            listOf(
-                                                scheme.tertiary.copy(alpha = 0.85f),
-                                                scheme.tertiary.copy(alpha = 0.35f)
-                                            )
-                                        )
-                                    } else {
-                                        Brush.linearGradient(
-                                            listOf(
-                                                scheme.outlineVariant.copy(alpha = 0.45f),
-                                                scheme.outlineVariant.copy(alpha = 0.20f)
-                                            )
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                                .semantics { contentDescription = "Microphone Hardware Tile, tap to switch, hold to record" }
-                                .pointerInput(isRecordingMode, isRecordingLocked) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            isMicPressed = true
-                                            isRecordingActive = true
-                                            val downTime = System.currentTimeMillis()
-                                            TalosHaptics.sendHaptic(context)
-                                            try {
-                                                val released = tryAwaitRelease()
-                                                if (released) {
-                                                    val duration = System.currentTimeMillis() - downTime
-                                                    if (duration < 300 && !isRecordingLocked) {
-                                                        // Single tap switches mode
-                                                        isRecordingActive = false
-                                                        isRecordingMode = false
-                                                        TalosHaptics.sendHaptic(context)
-                                                        Toast.makeText(context, "Switched to Camera", Toast.LENGTH_SHORT).show()
-                                                    } else if (!isRecordingLocked) {
-                                                        // onRelease sends or shows send/delete bar
-                                                        isRecordingActive = false
-                                                        TalosHaptics.sendHaptic(context)
-                                                        Toast.makeText(context, "Voice note auto-sent!", Toast.LENGTH_SHORT).show()
-                                                    }
-                                                }
-                                            } finally {
-                                                isMicPressed = false
-                                            }
-                                        }
-                                    )
-                                }
-                                .pointerInput(isRecordingMode, isRecordingLocked) {
-                                    awaitPointerEventScope {
-                                        val down = awaitFirstDown(requireUnconsumed = false)
-                                        val lockThresholdPx = 80.dp.toPx()
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                            if (!change.pressed) break
-                                            val dragY = change.position.y - down.position.y
-                                            val dragX = change.position.x - down.position.x
-
-                                            // verticalDrag offset > 80dp switches to locked recording with cancel
-                                            if (dragY <= -lockThresholdPx) {
-                                                isRecordingLocked = true
-                                                TalosHaptics.sendHaptic(context)
-                                                break
-                                            }
-                                            // Slide left > 80dp to cancel
-                                            if (dragX <= -lockThresholdPx) {
-                                                isRecordingActive = false
-                                                isRecordingLocked = false
-                                                TalosHaptics.sendHaptic(context)
-                                                Toast.makeText(context, "Recording cancelled", Toast.LENGTH_SHORT).show()
-                                                break
-                                            }
-                                        }
-                                    }
-                                }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 10.dp)
-                            ) {
-                                AnimatedTalosIcon(
-                                    imageVector = TalosIcons.TalosMic,
-                                    contentDescription = if (isRecordingActive || isRecordingLocked) "Recording" else "Microphone",
-                                    tint = if (micHighlighted) scheme.tertiary else scheme.onSurfaceVariant,
-                                    size = 18.dp,
-                                    mode = if (isRecordingActive || isRecordingLocked) TalosIconMode.RECORDING else TalosIconMode.IDLE
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Mic",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (micHighlighted) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (micHighlighted) scheme.tertiary else scheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
 
                 // Primary M3 Action Button with tactile spring bounce back
                 PressableSurface(
@@ -1210,7 +870,7 @@ fun LandingScreen(
             AnimatedVisibility(
                 visible = isOpenCodeSpawned,
                 enter = fadeIn(spring(dampingRatio = 0.75f, stiffness = 400f)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 400f)),
-                exit = fadeOut(tween(200)) + scaleOut(tween(200)),
+                exit = fadeOut(spring(dampingRatio = 0.75f, stiffness = 400f)) + scaleOut(spring(dampingRatio = 0.75f, stiffness = 400f)),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(y = 96.dp)
@@ -1645,8 +1305,8 @@ private fun AgentNodeWithBubble(
         if (!bubbleBelow) {
             AnimatedVisibility(
                 visible = !bubbleText.isNullOrBlank() && isActive,
-                enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { 15 },
-                exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { -10 }
+                enter = fadeIn(spring(dampingRatio = 0.8f, stiffness = 380f)) + slideInVertically(spring(dampingRatio = 0.8f, stiffness = 380f)) { 15 },
+                exit = fadeOut(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) + slideOutVertically(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) { -10 }
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -1752,8 +1412,8 @@ private fun AgentNodeWithBubble(
         if (bubbleBelow) {
             AnimatedVisibility(
                 visible = !bubbleText.isNullOrBlank() && isActive,
-                enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { -15 },
-                exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { 10 }
+                enter = fadeIn(spring(dampingRatio = 0.8f, stiffness = 380f)) + slideInVertically(spring(dampingRatio = 0.8f, stiffness = 380f)) { -15 },
+                exit = fadeOut(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) + slideOutVertically(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) { 10 }
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,

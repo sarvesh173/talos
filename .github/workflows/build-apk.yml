@@ -24,6 +24,10 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # Full history + tags: release notes are generated from the commit
+          # range between the previous tag and the one being released.
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -88,9 +92,40 @@ jobs:
           # Not a prerelease: GitHub hides prereleases behind a filter, which
           # is exactly why the APK "wasn't visible" on the Releases page.
           prerelease: false
-          make_latest: true
+          # The rolling build is deliberately NOT the "Latest" release:
+          # the newest *versioned* tag must stay pinned as Latest, otherwise
+          # the Releases page shows an untagged rolling build instead of the
+          # actual current version.
+          make_latest: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compose Release Notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          NOTES_FILE="${RUNNER_TEMP}/release-notes.md"
+          {
+            echo "## TALOS ${TAG_NAME}"
+            echo
+            echo "Material 3 Expressive build of the TALOS multi-agent mesh —"
+            echo "compiled on GitHub Actions, packaged, signed and attached here."
+            echo
+            echo "### Install"
+            echo
+            echo "Download \`talos-${TAG_NAME}.apk\` and sideload it."
+            echo
+            echo "### Changes in this release"
+            echo
+            git log --no-merges --pretty=format:'- %s (%h)' "${TAG_NAME}^..${TAG_NAME}" || true
+            echo
+            echo
+            echo "---"
+            echo
+            echo "Full changelog: [FEATURE.md](https://github.com/sarvesh173/talos/blob/${TAG_NAME}/FEATURE.md)"
+          } > "${NOTES_FILE}"
+          cat "${NOTES_FILE}"
 
       - name: Publish Versioned Release (v* tags only)
         if: startsWith(github.ref, 'refs/tags/v')
@@ -98,6 +133,8 @@ jobs:
         with:
           files: |
             build-artifacts/talos-*.apk
+          body_path: ${{ runner.temp }}/release-notes.md
+          name: TALOS ${{ github.ref_name }}
           draft: false
           prerelease: false
           make_latest: true

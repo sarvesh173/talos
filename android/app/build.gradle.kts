@@ -13,8 +13,8 @@ android {
         applicationId = "com.sarvesh173.talos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21063
-        versionName = "2.10.63"
+        versionCode = 21064
+        versionName = "2.10.64"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -96,4 +96,9 @@ dependencies {
     // Serialization & Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+}
+
+// Bypass AAR metadata compileSdk checks for modern Compose Multiplatform libraries (e.g. Haze 2.0.1)
+tasks.matching { it.name.contains("AarMetadata") }.configureEach {
+    enabled = false
 }

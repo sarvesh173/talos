@@ -63,6 +63,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -611,58 +612,112 @@ fun MainScreen(
                         contentType = { "room_item" }
                     ) { room: Room ->
                         val isSelected = room.id == currentRoomId && activeSlotId == "chambers"
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .animateItem()
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent)
-                                .then(
-                                    if (isSelected) Modifier.border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                                    else Modifier
-                                )
-                                .clickable {
-                                    activeSlotId = "chambers"
-                                    client.switchRoom(room.id)
-                                    scope.launch { drawerState.close() }
-                                }
-                                .padding(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            val roomEmblem = when {
-                                room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
-                                room.id == "the-council" -> emblemByKey("omnirush")
-                                else -> emblemBySender(room.name)
-                            }
-                            Box(
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(EmblemSocket)
-                                    .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
-                                contentAlignment = Alignment.Center
+                                    .animateItem()
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 3.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) Color(0xFF0071E3).copy(alpha = 0.16f) else Color.Transparent)
+                                    .then(
+                                        if (isSelected) Modifier.border(0.8.dp, Color(0xFF2997FF).copy(alpha = 0.40f), RoundedCornerShape(12.dp))
+                                        else Modifier
+                                    )
+                                    .clickable {
+                                        activeSlotId = "chambers"
+                                        client.switchRoom(room.id)
+                                        scope.launch { drawerState.close() }
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 8.dp)
                             ) {
-                                AgentEmblemIcon(
-                                    emblem = roomEmblem,
-                                    size = 18.dp,
-                                    tint = null
-                                )
+                                val roomEmblem = when {
+                                    room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
+                                    room.id == "the-council" -> emblemByKey("omnirush")
+                                    else -> emblemBySender(room.name)
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(EmblemSocket)
+                                        .border(0.8.dp, if (isSelected) Color(0xFF2997FF).copy(alpha = 0.6f) else Color.White.copy(alpha = 0.12f), RoundedCornerShape(8.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    AgentEmblemIcon(
+                                        emblem = roomEmblem,
+                                        size = 18.dp,
+                                        tint = null
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = room.name,
+                                        color = if (isSelected) Color(0xFF2997FF) else TextPrimary,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 15.sp,
+                                        letterSpacing = (-0.15).sp
+                                    )
+                                    Text(
+                                        text = room.description,
+                                        color = TextMuted,
+                                        fontSize = 11.sp,
+                                        maxLines = 1
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = room.name,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else TextPrimary,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    fontSize = 15.sp
-                                )
-                                Text(
-                                    text = room.description,
-                                    color = TextMuted,
-                                    fontSize = 11.sp,
-                                    maxLines = 1
-                                )
+                            // Apple Git-Style Branch Connector for active conversation session
+                            if (isSelected && messages.isNotEmpty()) {
+                                val lastMsg = messages.lastOrNull()
+                                if (lastMsg != null) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 28.dp, end = 16.dp, bottom = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .width(14.dp)
+                                                .height(18.dp)
+                                                .drawBehind {
+                                                    val strokeWidth = 1.5.dp.toPx()
+                                                    val strokeColor = Color(0xFF2997FF).copy(alpha = 0.45f)
+                                                    drawLine(strokeColor, Offset(0f, 0f), Offset(0f, size.height * 0.5f), strokeWidth)
+                                                    drawLine(strokeColor, Offset(0f, size.height * 0.5f), Offset(size.width, size.height * 0.5f), strokeWidth)
+                                                }
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Color(0xFF1C1C1E),
+                                            border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.12f)),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(5.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color(0xFF30D158))
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = lastMsg.content.take(30) + if (lastMsg.content.length > 30) "..." else "",
+                                                    color = Color.White.copy(alpha = 0.85f),
+                                                    fontSize = 11.sp,
+                                                    maxLines = 1,
+                                                    letterSpacing = (-0.1).sp
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

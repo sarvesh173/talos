@@ -2057,3 +2057,22 @@ Commencing the complete visual transformation from over-engineered Material 3 pa
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21066` and `versionName` to `"2.10.66"`.
+
+---
+
+## 97. Apple Git-Style Session Tree Branching & Cupertino Drawer Navigation
+
+Implemented the hierarchical Git-style session tree in the drawer navigation on branch `feature/apple-design-remake`.
+
+### 1. Hierarchical Git Tree Branching (`MainActivity.kt`)
+- Integrated L-branching trunk line (`Color(0xFF2997FF).copy(alpha = 0.45f)`) dynamically drawn with `drawBehind` beneath active chamber items.
+- Renders an Apple secondary card (`#1C1C1E`) node with a pulsing green indicator (`#30D158`), showing live session activity and preview text.
+- Replaced Material 3 selection states with Apple translucent action blue capsule fills (`Color(0xFF0071E3).copy(alpha = 0.16f)`) and 0.8dp specular borders.
+
+### 2. Apple Typography & Pro Spacing
+- Enforced clean negative tracking (`-0.15sp`) across chamber names and message previews.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21067` and `versionName` to `"2.10.67"`.

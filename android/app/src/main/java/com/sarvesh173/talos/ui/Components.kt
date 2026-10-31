@@ -125,6 +125,17 @@ fun PressableSurface(
         } else shape
     }
 
+    // M3 state layer: content-colored overlay at 12% while pressed.
+    // Effects spring (no overshoot) — the layer must never flash past 12%.
+    val stateLayerAlpha by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 0.12f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = 3800f
+        ),
+        label = "PressableSurfaceStateLayer"
+    )
+
     val activeBorder = if (isPressed && enabled) {
         BorderStroke(
             1.2.dp,
@@ -160,9 +171,19 @@ fun PressableSurface(
             )
     ) {
         Box(
-            contentAlignment = Alignment.Center,
-            content = content
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            // State layer sits UNDER the content so glyphs keep full contrast.
+            if (stateLayerAlpha > 0.001f) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer { alpha = stateLayerAlpha }
+                        .background(contentColor)
+                )
+            }
+            content()
+        }
     }
 }
 

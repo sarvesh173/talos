@@ -1907,3 +1907,22 @@ Swept the last Material stock icons out of the app's navigation and content surf
   - GitHub Actions run for `v2.10.60` — compile + package.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21060` and `versionName` to `"2.10.60"`.
+
+---
+
+## 91. M3 State Layer Engine: 12% Content-Colored Press Overlay
+
+The design contract required state layers, but `PressableSurface` only had a border glow. M3 defines the pressed state as a **translucent overlay of the content color**, never a background swap.
+
+### 1. `PressableSurface` state layer (`Components.kt`)
+- Pressing now paints a 12% overlay of the surface's own `contentColor` beneath the content (never over it), so glyphs keep full contrast.
+- The layer animates on an **effects spring** (`DampingRatioNoBouncy`, stiffness 3800) — it can never overshoot past 12%, which would read as a flash.
+- Release fades the layer back to 0 with the same spring, giving the tap a physical "press and recover" texture on top of the existing 0.96f compression, shape morph, and haptic tick.
+
+### 2. Why it is not the "white haze"
+The reported artifact was M3's `tonalElevation`/`surfaceTint` overlay, which repaints the whole container with lavender at elevation. The state layer is a deliberate 12% content-colored film scoped to the pressed frame only — a different mechanism, at a fraction of the strength.
+
+- [x] **Verification & Tests**:
+  - GitHub Actions run for `v2.10.61` — compile + package.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21061` and `versionName` to `"2.10.61"`.

@@ -1958,3 +1958,31 @@ Three fixes shipped together: the landing page no longer asks the user to test t
   - GitHub Actions run for `v2.10.62` — compile + package.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21062` and `versionName` to `"2.10.62"`.
+
+---
+
+## 93. True Glass: Haze Backdrop Blur with a Material / Apple / Windows Mix
+
+Transparent UI is now the dominant design language across Apple (Liquid Glass), Windows 11 (Mica/Acrylic), Samsung (One UI visual depth) and Material 3 itself. Painted-on translucency is not enough — the surface has to actually **blur what is behind it**. TALOS now does that for real.
+
+### 1. Haze 2.0.1 adopted (`android/app/build.gradle.kts`)
+- `dev.chrisbanes.haze:haze` + `haze-blur` + `haze-blur-materials` — the Compose-native backdrop-blur library by Chris Banes. It blurs the *content behind* a surface (unlike `Modifier.blur`, which only blurs a composable's own content), which is exactly what glass surfaces need.
+- The API surface was verified against the published AARs (`javap`) rather than guessed: `rememberHazeState()`, `Modifier.hazeSource(state)`, `Modifier.hazeBlur(input = HazeInput.Backdrop(state), style = …)`.
+
+### 2. The four-language material mix
+| Surface | Material language | Preset | Why |
+| :--- | :--- | :--- | :--- |
+| Chat header capsule | **Apple** (Liquid Glass lensing) | `CupertinoMaterials.thin()` | Floating functional layer with light catching the edge. |
+| Chat composer dock | **Windows** (Fluent acrylic) | `FluentMaterials.thinAcrylic(isDark)` | Translucent chrome that keeps focus on the conversation. |
+| Landing header | **Material 3** | `HazeMaterials.regular()` | The house design language, now with real backdrop blur. |
+| Chat message list | — | `hazeSource` | Source of the blur for everything above it. |
+
+### 3. Transparency discipline
+- The landing header's opaque `surface` fill became `surface.copy(alpha = 0.62f)` — the blur now supplies the material, the tint only supplies the tone.
+- The chat capsule dropped to `0.58f` alpha; the composer gradient dropped to `0.62–0.86f`.
+- Rule of thumb from all three systems: **never stack a light translucent surface on another translucent surface** — legibility collapses. Every glass surface in TALOS sits on the opaque app background.
+
+- [x] **Verification & Tests**:
+  - GitHub Actions run for `v2.10.63` — compile + package.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21063` and `versionName` to `"2.10.63"`.

@@ -74,6 +74,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.blur.materials.CupertinoMaterials
+import dev.chrisbanes.haze.blur.materials.FluentMaterials
+import dev.chrisbanes.haze.blur.materials.HazeMaterials
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -554,6 +561,8 @@ fun MainScreen(
     val roomTitle = activeRoom?.name ?: "TALOS"
 
     val listState = rememberLazyListState()
+    // Haze state: real backdrop blur for the floating chrome (header + composer).
+    val hazeState = rememberHazeState()
     var previousRoomId by remember { mutableStateOf(currentRoomId) }
 
     LaunchedEffect(currentRoomId, messages.size) {
@@ -815,11 +824,15 @@ fun MainScreen(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .hazeBlur(
+                                input = HazeInput.Backdrop(hazeState),
+                                style = CupertinoMaterials.thin()
+                            )
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                         shape = RoundedCornerShape(22.dp),
-                        // Translucent capsule: the frosted material behind it
-                        // shows through, giving a true glass header.
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.86f),
+                        // Translucent capsule: the blurred backdrop shows through,
+                        // giving a true glass header instead of a painted panel.
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.58f),
                         border = BorderStroke(1.2.dp, metallicBorderBrush())
                     ) {
                         Row(
@@ -1093,12 +1106,19 @@ fun MainScreen(
                             .fillMaxWidth()
                             .navigationBarsPadding()
                             .imePadding()
+                            // Windows Fluent acrylic: real backdrop blur with a
+                            // tonal wash, so the composer reads as a floating
+                            // material layer rather than an opaque strip.
+                            .hazeBlur(
+                                input = HazeInput.Backdrop(hazeState),
+                                style = FluentMaterials.thinAcrylic(isDark)
+                            )
                             .background(
                                 Brush.verticalGradient(
                                     colors = listOf(
                                         Color.Transparent,
-                                        MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.82f),
-                                        MaterialTheme.colorScheme.surfaceContainerLowest
+                                        MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.62f),
+                                        MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.86f)
                                     )
                                 )
                             )
@@ -1708,6 +1728,7 @@ fun MainScreen(
                         state = listState,
                         modifier = Modifier
                             .fillMaxSize()
+                            .hazeSource(state = hazeState)
                             .padding(bottom = paddingValues.calculateBottomPadding()),
                         contentPadding = PaddingValues(
                             top = paddingValues.calculateTopPadding() + 10.dp,

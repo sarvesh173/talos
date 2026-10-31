@@ -44,6 +44,11 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.blur.materials.HazeMaterials
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -117,6 +122,8 @@ fun LandingScreen(
     val scheme = MaterialTheme.colorScheme
     val dissolvePaletteLocal = dissolvePalette()
     val isCurrentDark = LocalIsDark.current
+    // Haze state: lets the landing header blur the constellation canvas behind it.
+    val hazeState = rememberHazeState()
 
 
     var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
@@ -324,7 +331,11 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .background(MaterialTheme.colorScheme.surface)
+                    .hazeBlur(
+                        input = HazeInput.Backdrop(hazeState),
+                        style = HazeMaterials.regular()
+                    )
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.62f))
                     .padding(horizontal = MdSpacing.sm, vertical = 6.dp)
             ) {
                 Row(
@@ -554,7 +565,11 @@ fun LandingScreen(
             // Fluid Material 3 Expressive Canvas
             // (scheme colors are captured BEFORE the draw scope - DrawScope is not composable)
             val canvasPrimary = MaterialTheme.colorScheme.primary
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hazeSource(state = hazeState)
+            ) {
                 if (centerAnchor == Offset.Zero) return@Canvas
 
                 // 1. Ambient Breathing Halo behind Central Hub

@@ -1772,3 +1772,32 @@ Redesign Phase 2: the design system is now a written contract (`DESIGN.md`), and
   - Contrast audit script: all ratios ≥ WCAG AA floors; all ramp steps ≥1.07:1.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21055` and `versionName` to `"2.10.55"`.
+
+---
+
+## 86. Metallic 3 Redesign: Tonal Washout Eradication, Organic Spring Physics & Precision Vector Iconography
+
+Resolved user-reported touch artifacts ("white/blue haze overlay behind clicked buttons", blocky icon shapes, and stiff animations) across LandingScreen and MainActivity.
+
+### 1. Tonal Elevation & Washout Eradication (`Components.kt`, `MainActivity.kt`)
+- **Root Cause Identified**: Default Material 3 `Surface` elevation maps `tonalElevation = shadowElevation` and overlays a semi-transparent `surfaceTint` (`#D0BCFF` light lavender/blue in dark mode).
+- Explicitly enforced `tonalElevation = 0.dp` across `PressableSurface` and all action dial surfaces.
+- Replaced the washed-out white/blue overlay with an active metallic border gradient (`scheme.primary` 0.65f to 0.25f) on touch.
+- Removed the 26dp inner background tinted boxes from LandingScreen Camera and Mic hardware tiles.
+
+### 2. Fluid Organic Spring Physics (`Components.kt`, `LandingScreen.kt`, `AnimatedTalosIcon.kt`)
+- Loosened rigid `StiffnessMedium` (1500f) to tactile, fluid `stiffness = 420f` with `dampingRatio = 0.62f` across all button press interactions for genuine physical bounce.
+- Added direct touch spring scales (`0.94f`) with real physics to Camera and Mic tiles.
+- Upgraded `AnimatedTalosIcon` ambient breath and ring emission from `LinearEasing` to `FastOutSlowInEasing`.
+
+### 3. Precision Vector Iconography Suite v3 (`TalosIcons.kt`)
+- Completely re-authored all 6 custom vector icons (`TalosMic`, `TalosCamera`, `TalosHub`, `TalosBoard`, `TalosVault`, `TalosBrowser`) from scratch.
+- Pure optical geometry: studio condenser capsule with acoustic grille louvers and shockmount cradle; rangefinder camera with optical multi-ring lens barrel; tri-orbital swarm nexus; architect drafting slate tablet; cyber aegis shield; and quantum coordinate geodesics.
+
+### 4. Zero-Amber Sweep Completion (`MainActivity.kt`, `Components.kt`)
+- Eliminated all remaining 31 occurrences of legacy `PrimaryAccent` in favor of dynamic `MaterialTheme.colorScheme.primary`.
+
+- [x] **Verification & Tests**:
+  - `:app:compileReleaseKotlin` BUILD SUCCESSFUL.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21056` and `versionName` to `"2.10.56"`.

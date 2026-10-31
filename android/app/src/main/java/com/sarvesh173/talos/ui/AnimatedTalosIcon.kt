@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -95,18 +96,18 @@ fun AnimatedTalosIcon(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1400, easing = LinearEasing),
+            animation = tween(durationMillis = 1600, easing = androidx.compose.animation.core.FastOutSlowInEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "talos_icon_ring"
     )
 
-    // Ambient breath for idle state — keeps the hero alive, never a dead frame.
+    // Ambient breath for idle state — smooth sinusoidal breathing
     val idleBreath by infinite.animateFloat(
-        initialValue = 0.97f,
-        targetValue = 1.03f,
+        initialValue = 0.98f,
+        targetValue = 1.02f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2600, easing = LinearEasing),
+            animation = tween(durationMillis = 2800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "talos_icon_breath"
@@ -114,32 +115,29 @@ fun AnimatedTalosIcon(
 
     val painter = rememberVectorPainter(imageVector)
 
-    androidx.compose.foundation.layout.Box(modifier = modifier.size(size)) {
-        // Emission rings behind the glyph (spatial, no overshoot needed here).
+    androidx.compose.foundation.layout.Box(
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        // Delicate emission rings during active recording
         if (emitters) {
-            Canvas(modifier = Modifier.size(size)) {
+            Canvas(modifier = Modifier.size(size * 1.5f)) {
                 val maxR = this.size.minDimension / 2f
                 repeat(2) { i ->
                     val p = (ringProgress + i * 0.5f) % 1f
-                    val alpha = (1f - p) * 0.35f
+                    val alpha = (1f - p) * 0.28f
                     drawCircle(
                         color = pulseColor.copy(alpha = alpha),
-                        radius = maxR * (0.55f + 0.45f * p),
-                        style = Stroke(width = 1.4.dp.toPx(), cap = StrokeCap.Round)
+                        radius = maxR * (0.45f + 0.55f * p),
+                        style = Stroke(width = 1.2.dp.toPx(), cap = StrokeCap.Round)
                     )
                 }
-                // Inner core dot, steady, low alpha.
-                drawCircle(
-                    color = pulseColor.copy(alpha = 0.22f),
-                    radius = maxR * 0.42f,
-                    center = Offset(this.size.width / 2f, this.size.height / 2f)
-                )
             }
         }
 
         val effectiveScale = when (mode) {
             TalosIconMode.ACTIVATE -> popScale
-            TalosIconMode.RECORDING -> bodyScale * idleBreath
+            TalosIconMode.RECORDING -> bodyScale
             TalosIconMode.IDLE -> bodyScale * idleBreath
         }
 

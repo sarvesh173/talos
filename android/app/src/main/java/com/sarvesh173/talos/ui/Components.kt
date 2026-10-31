@@ -101,18 +101,31 @@ fun PressableSurface(
     val scale by animateFloatAsState(
         targetValue = if (isPressed && enabled) pressedScale else 1.0f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            dampingRatio = 0.62f,
+            stiffness = 420f
         ),
         label = "PressableSurfaceScale"
     )
+
+    val activeBorder = if (isPressed && enabled) {
+        BorderStroke(
+            1.2.dp,
+            Brush.linearGradient(
+                listOf(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                )
+            )
+        )
+    } else border
 
     Surface(
         shape = shape,
         color = color,
         contentColor = contentColor,
-        border = border,
+        border = activeBorder,
         shadowElevation = shadowElevation,
+        tonalElevation = 0.dp,
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale
@@ -560,7 +573,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
         content.contains("] ") -> content.substringAfter("] ")
         else -> content
     }
-    val accent = PrimaryAccent
+    val accent = MaterialTheme.colorScheme.primary
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,

@@ -610,9 +610,9 @@ fun MainScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) PrimaryAccent.copy(alpha = 0.12f) else Color.Transparent)
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent)
                                 .then(
-                                    if (isSelected) Modifier.border(1.dp, PrimaryAccent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                                    if (isSelected) Modifier.border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                                     else Modifier
                                 )
                                 .clickable {
@@ -632,7 +632,7 @@ fun MainScreen(
                                     .size(32.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(EmblemSocket)
-                                    .border(1.dp, if (isSelected) PrimaryAccent.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
+                                    .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 AgentEmblemIcon(
@@ -645,7 +645,7 @@ fun MainScreen(
                             Column {
                                 Text(
                                     text = room.name,
-                                    color = if (isSelected) PrimaryAccent else TextPrimary,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else TextPrimary,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     fontSize = 15.sp
                                 )
@@ -684,7 +684,7 @@ fun MainScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSlotSelected) PrimaryAccent.copy(alpha = 0.15f) else Color.Transparent)
+                                .background(if (isSlotSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent)
                                 .clickable {
                                     activeSlotId = slot.id
                                     scope.launch { drawerState.close() }
@@ -694,14 +694,14 @@ fun MainScreen(
                             Icon(
                                 imageVector = slot.icon,
                                 contentDescription = slot.title,
-                                tint = if (isSlotSelected) PrimaryAccent else talosTextPrimary,
+                                tint = if (isSlotSelected) MaterialTheme.colorScheme.primary else talosTextPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
                                     text = slot.title,
-                                    color = if (isSlotSelected) PrimaryAccent else talosTextPrimary,
+                                    color = if (isSlotSelected) MaterialTheme.colorScheme.primary else talosTextPrimary,
                                     fontWeight = if (isSlotSelected) FontWeight.Bold else FontWeight.Medium,
                                     fontSize = 15.sp
                                 )
@@ -732,14 +732,14 @@ fun MainScreen(
                             Icon(
                                 imageVector = Icons.Default.Home,
                                 contentDescription = null,
-                                tint = PrimaryAccent,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
                                     text = "Return to Landing",
-                                    color = PrimaryAccent,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 )
@@ -805,13 +805,13 @@ fun MainScreen(
                                         .size(36.dp)
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(EmblemSocket)
-                                        .border(1.dp, PrimaryAccent.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
+                                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (roomEmblem != null) {
                                         AgentEmblemIcon(emblem = roomEmblem, size = 20.dp, tint = null)
                                     } else {
-                                        Icon(Icons.Default.Hub, contentDescription = null, tint = PrimaryAccent, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Hub, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                                     }
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))
@@ -854,7 +854,7 @@ fun MainScreen(
                                     Icon(
                                         imageVector = Icons.Default.Hub,
                                         contentDescription = "Agent Canvas",
-                                        tint = PrimaryAccent,
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(19.dp)
                                     )
                                 }
@@ -914,7 +914,7 @@ fun MainScreen(
                                     Icon(
                                         imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
                                         contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode",
-                                        tint = PrimaryAccent,
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
                                             .size(19.dp)
                                             .graphicsLayer {
@@ -983,7 +983,7 @@ fun MainScreen(
                                     },
                                     shape = ShapeLargeIncreased,
                                     colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = PrimaryAccent,
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
                                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                                         labelColor = talosTextPrimary
@@ -1019,7 +1019,7 @@ fun MainScreen(
                                 },
                                 shape = ShapeLargeIncreased,
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = PrimaryAccent,
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                     selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
                                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -1060,15 +1060,15 @@ fun MainScreen(
                             modifier = Modifier
                                 .padding(bottom = 6.dp, start = 8.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(PrimaryAccent.copy(alpha = 0.12f))
-                                .border(1.dp, PrimaryAccent.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             ThreeDotTypingIndicator(dotSize = 5.dp, dotSpacing = 3.dp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Agent fleet is deliberating...",
-                                color = PrimaryAccent,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -1099,7 +1099,7 @@ fun MainScreen(
                                 ) {
                                     Text(
                                         text = cmd,
-                                        color = PrimaryAccent,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -1115,9 +1115,9 @@ fun MainScreen(
                     val capsuleBorderBrush = if (isInputFocused) {
                         Brush.horizontalGradient(
                             colors = listOf(
-                                PrimaryAccent,
+                                MaterialTheme.colorScheme.primary,
                                 activeHighlight,
-                                PrimaryAccent
+                                MaterialTheme.colorScheme.primary
                             )
                         )
                     } else {
@@ -1256,7 +1256,7 @@ fun MainScreen(
                                                     modifier = Modifier
                                                         .width(3.dp)
                                                         .height(h.dp)
-                                                        .background(PrimaryAccent, RoundedCornerShape(1.5.dp))
+                                                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(1.5.dp))
                                                 )
                                             }
                                         }
@@ -1287,7 +1287,7 @@ fun MainScreen(
                                             Icon(
                                                 imageVector = Icons.Default.SentimentSatisfied,
                                                 contentDescription = "Agent & Tool Mode",
-                                                tint = if (inputText.startsWith("/")) PrimaryAccent else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                tint = if (inputText.startsWith("/")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                                 modifier = Modifier.size(20.dp)
                                             )
                                         }
@@ -1376,6 +1376,7 @@ fun MainScreen(
                                     color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
                                     border = BorderStroke(1.dp, metallicBorderBrush()),
                                     shadowElevation = 8.dp,
+                                    tonalElevation = 0.dp,
                                     modifier = Modifier
                                         .width(44.dp)
                                         .height(84.dp)
@@ -1390,7 +1391,7 @@ fun MainScreen(
                                         Icon(
                                             imageVector = Icons.Default.Lock,
                                             contentDescription = "Swipe up to lock",
-                                            tint = PrimaryAccent,
+                                            tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(18.dp)
                                         )
 
@@ -1417,10 +1418,22 @@ fun MainScreen(
                             }
 
                             // Action Dial Surface
+                            val dialColor = when {
+                                isRecordingActive || isRecordingLocked -> MaterialTheme.colorScheme.errorContainer
+                                isSendMode -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.surfaceContainerHigh
+                            }
+                            val dialTint = when {
+                                isRecordingActive || isRecordingLocked -> MaterialTheme.colorScheme.onErrorContainer
+                                isSendMode -> MaterialTheme.colorScheme.onPrimary
+                                isRecordingMode -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.primary
+                            }
                             Surface(
                                 shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
-                                color = PrimaryAccent,
-                                border = BorderStroke(1.dp, metallicBorderBrush()),
+                                color = dialColor,
+                                tonalElevation = 0.dp,
+                                border = BorderStroke(1.2.dp, metallicBorderBrush()),
                                 modifier = Modifier
                                     .size(48.dp)
                                     .scale(sendScale)
@@ -1615,7 +1628,7 @@ fun MainScreen(
                                         Icon(
                                             imageVector = glyph,
                                             contentDescription = glyphDesc,
-                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            tint = dialTint,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -1746,7 +1759,7 @@ fun SettingsDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = talosBg,
                         unfocusedContainerColor = talosBg,
-                        focusedBorderColor = PrimaryAccent,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = SurfaceBorder,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
@@ -1776,7 +1789,7 @@ fun SettingsDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = talosBg,
                         unfocusedContainerColor = talosBg,
-                        focusedBorderColor = PrimaryAccent,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = SurfaceBorder,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
@@ -1882,7 +1895,7 @@ fun ChamberHero(
                     Icon(
                         imageVector = Icons.Default.Hub,
                         contentDescription = null,
-                        tint = PrimaryAccent,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(38.dp)
                     )
                 }
@@ -2014,13 +2027,13 @@ fun ChamberHero(
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(EmblemSocket)
-                                .border(1.dp, PrimaryAccent.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
+                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = PrimaryAccent,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -2030,7 +2043,7 @@ fun ChamberHero(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = cmd,
-                                color = PrimaryAccent,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace

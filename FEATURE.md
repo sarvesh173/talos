@@ -2035,3 +2035,25 @@ Integrated architecture blueprints produced by the parallel subagent swarms:
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21065` and `versionName` to `"2.10.65"`.
+
+---
+
+## 96. Apple iOS HIG Design Remake: OLED Black, Cupertino Action Blue & Clean Chat Bubbles
+
+Commencing the complete visual transformation from over-engineered Material 3 palettes to Apple iOS Human Interface Guidelines (HIG) minimalism on dedicated branch `feature/apple-design-remake`.
+
+### 1. Pure OLED Monochromatic Architecture (`ui/Theme.kt`)
+- **Canvas:** Pitch OLED Black (`#000000`), optimizing battery life and providing infinite contrast for mobile reading.
+- **Surface Cards:** Apple Secondary System Background (`#1C1C1E`) and Tertiary Background (`#2C2C2E`), eliminating noisy copper/bronze/neon tints.
+- **Action Accent:** Signature Apple Action Blue (`#0071E3` on light, `#2997FF` on dark).
+- **Typography:** High-contrast clean white text (`#FFFFFF`) with secondary gray (`#8E8E93`) and subtle negative letter-spacing (`-0.15sp`) mirroring SF Pro Display.
+- **Specular Hairline:** Replaced multi-stop metallic linear gradients with clean vertical directional lighting (`White 0.22f` to `White 0.04f`).
+
+### 2. Apple Cupertino Message Bubbles (`ui/Components.kt`)
+- **User Bubble:** Iconic iOS Action Blue (`#0071E3`) with pure white typography, 18dp continuous curvature, and 0.8dp specular top edge.
+- **Assistant Bubble:** Deep minimalist secondary surface (`#1C1C1E`) with subtle 0.8dp hairline border (`White 0.10f`), removing distracting bronze fills.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21066` and `versionName` to `"2.10.66"`.

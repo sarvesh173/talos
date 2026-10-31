@@ -425,30 +425,32 @@ fun MessageBubble(
                 else -> {
                     val isDark = LocalIsDark.current
                     Surface(
-                        color = if (isHuman) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer,
+                        color = if (isHuman) {
+                            Color(0xFF0071E3) // Apple Action Blue signature fill
+                        } else {
+                            if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA) // Apple Secondary System Background
+                        },
                         tonalElevation = 0.dp,
                         shape = if (isHuman) {
-                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 6.dp, bottomStart = 18.dp)
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 4.dp, bottomStart = 18.dp)
                         } else {
-                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 6.dp)
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 4.dp)
                         },
-                        border = BorderStroke(
-                            width = 1.2.dp,
-                            brush = if (isHuman) {
-                                Brush.linearGradient(listOf(Color.White.copy(alpha = 0.40f), Color.Transparent))
-                            } else {
-                                metallicBorderBrush()
-                            }
-                        )
+                        border = if (isHuman) {
+                            BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f))
+                        } else {
+                            BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f))
+                        }
                     ) {
                         Box(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             Text(
                                 text = msg.content,
-                                color = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                color = if (isHuman) Color.White else (if (isDark) Color.White else Color(0xFF1D1D1F)),
                                 fontSize = 15.sp,
-                                lineHeight = 21.sp
+                                lineHeight = 21.sp,
+                                letterSpacing = (-0.15).sp // Apple SF Pro clean negative tracking
                             )
                         }
                     }

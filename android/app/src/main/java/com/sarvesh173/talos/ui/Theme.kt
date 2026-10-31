@@ -62,89 +62,92 @@ object MdSpacing {
 }
 
 // -----------------------------------------------------------------------------
-// GOOGLE MATERIAL 3 SIGNATURE PURPLE / IRIS PALETTE (Seed: #6750A4)
-// Verified contrast: onSurface 14.8:1, onPrimary 7.2:1, onSurfaceVariant 9.2:1
-// Pure Google Material Design 3 Signature Theme.
+// APPLE iOS HUMAN INTERFACE GUIDELINES (HIG) MONOCHROMATIC PALETTE
+// Pure OLED black canvas (#000000), Apple secondary card surface (#1C1C1E),
+// Apple tertiary elevated chrome (#2C2C2E), and Apple Action Blue (#0071E3 / #2997FF).
 // -----------------------------------------------------------------------------
 val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFD0BCFF),            // Luminous Iris / Lavender
-    onPrimary = Color(0xFF381E72),
-    primaryContainer = Color(0xFF4F378B),   // Deep Royal Violet
-    onPrimaryContainer = Color(0xFFEADDFF),
-    secondary = Color(0xFFCCC2DC),          // Slate Lilac
-    onSecondary = Color(0xFF332D41),
-    secondaryContainer = Color(0xFF4A4458),
-    onSecondaryContainer = Color(0xFFE8DEF8),
-    tertiary = Color(0xFFEFB8C8),           // Warm Orchid Rose (live mesh & actions)
-    onTertiary = Color(0xFF492532),
-    tertiaryContainer = Color(0xFF633B48),
-    onTertiaryContainer = Color(0xFFFFD8E4),
-    error = Color(0xFFF2B8B5),
-    onError = Color(0xFF601410),
-    errorContainer = Color(0xFF8C1D18),
-    onErrorContainer = Color(0xFFF9DEDC),
-    background = Color(0xFF141218),         // Twilight Surface
-    onBackground = Color(0xFFE6E0E9),
-    surface = Color(0xFF141218),
-    onSurface = Color(0xFFE6E0E9),
-    onSurfaceVariant = Color(0xFFCAC4D0),
-    surfaceContainerLowest = Color(0xFF0F0D13),
-    surfaceContainerLow = Color(0xFF1D1B20),
-    surfaceContainer = Color(0xFF25232B),   // Even 1.09:1 ramp step (fixes "washout" nesting)
-    surfaceContainerHigh = Color(0xFF2B2930),
-    surfaceContainerHighest = Color(0xFF36343B),
-    surfaceDim = Color(0xFF141218),
-    surfaceBright = Color(0xFF3B383E),
-    outline = Color(0xFF938F99),
-    outlineVariant = Color(0xFF55515C),     // Raised border definition (was 0xFF49454F)
-    inverseSurface = Color(0xFFE6E0E9),
-    inverseOnSurface = Color(0xFF322F35),
-    inversePrimary = Color(0xFF6750A4)
+    primary = Color(0xFF2997FF),            // Apple Action Blue (Luminous on Dark)
+    onPrimary = Color(0xFF000000),
+    primaryContainer = Color(0xFF0040DD),   // Deep Apple Blue container
+    onPrimaryContainer = Color(0xFFD0E2FF),
+    secondary = Color(0xFF8E8E93),          // Apple System Gray (Clean Muted)
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFF2C2C2E), // Apple Tertiary System Background
+    onSecondaryContainer = Color(0xFFFFFFFF),
+    tertiary = Color(0xFF30D158),           // Apple System Green (Live Node status)
+    onTertiary = Color(0xFF000000),
+    tertiaryContainer = Color(0xFF0D3E1A),
+    onTertiaryContainer = Color(0xFFA3F3B8),
+    error = Color(0xFFFF453A),              // Apple System Red
+    onError = Color(0xFF000000),
+    errorContainer = Color(0xFF491210),
+    onErrorContainer = Color(0xFFFFB4AB),
+    background = Color(0xFF000000),         // Pure Apple OLED Black Canvas
+    onBackground = Color(0xFFFFFFFF),       // Pure White Text
+    surface = Color(0xFF000000),            // True OLED Surface
+    onSurface = Color(0xFFFFFFFF),
+    onSurfaceVariant = Color(0xFF8E8E93),   // Apple Secondary Text Gray
+    surfaceContainerLowest = Color(0xFF000000),
+    surfaceContainerLow = Color(0xFF141416),
+    surfaceContainer = Color(0xFF1C1C1E),   // Apple Secondary System Background (Cards)
+    surfaceContainerHigh = Color(0xFF2C2C2E), // Apple Tertiary System Background (Floating headers)
+    surfaceContainerHighest = Color(0xFF3A3A3C), // Apple Elevated controls / Separators
+    surfaceDim = Color(0xFF000000),
+    surfaceBright = Color(0xFF2C2C2E),
+    outline = Color(0xFF38383A),            // Apple Hairline Border
+    outlineVariant = Color(0xFF2C2C2E),
+    inverseSurface = Color(0xFFF2F2F7),
+    inverseOnSurface = Color(0xFF1C1C1E),
+    inversePrimary = Color(0xFF0071E3)
 )
 
 // -----------------------------------------------------------------------------
-// LIGHT MATERIAL 3 SIGNATURE PURPLE PALETTE
+// LIGHT APPLE CUPERTINO PALETTE
 // -----------------------------------------------------------------------------
 val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF6750A4),            // Deep Purple Iris
+    primary = Color(0xFF0071E3),            // Apple Action Blue (Signature Light)
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFEADDFF),
-    onPrimaryContainer = Color(0xFF21005D),
-    secondary = Color(0xFF625B71),
+    primaryContainer = Color(0xFFE5F1FF),
+    onPrimaryContainer = Color(0xFF001F52),
+    secondary = Color(0xFF8E8E93),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFE8DEF8),
-    onSecondaryContainer = Color(0xFF1D192B),
-    tertiary = Color(0xFF7D5260),
+    secondaryContainer = Color(0xFFF2F2F7),
+    onSecondaryContainer = Color(0xFF1C1C1E),
+    tertiary = Color(0xFF34C759),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFFFD8E4),
-    onTertiaryContainer = Color(0xFF31111D),
-    error = Color(0xFFB3261E),
+    tertiaryContainer = Color(0xFFD6F5DE),
+    onTertiaryContainer = Color(0xFF053913),
+    error = Color(0xFFFF3B30),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
-    background = Color(0xFFFEF7FF),         // Pure M3 Light Surface
-    onBackground = Color(0xFF1D1B20),
-    surface = Color(0xFFFEF7FF),
-    onSurface = Color(0xFF1D1B20),
-    onSurfaceVariant = Color(0xFF49454F),
+    background = Color(0xFFF2F2F7),         // Pale Apple Gray (#F2F2F7)
+    onBackground = Color(0xFF1D1D1F),       // Apple Near-Black Ink (#1D1D1F)
+    surface = Color(0xFFFFFFFF),            // Pure White Card Canvas
+    onSurface = Color(0xFF1D1D1F),
+    onSurfaceVariant = Color(0xFF6E6E73),   // Apple Secondary Text
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF7F2FA),
-    surfaceContainer = Color(0xFFF3EDF7),
-    surfaceContainerHigh = Color(0xFFECE6F0),
-    surfaceContainerHighest = Color(0xFFE6E0E9),
-    surfaceDim = Color(0xFFDED8E1),
-    surfaceBright = Color(0xFFFEF7FF),
-    outline = Color(0xFF79747E),
-    outlineVariant = Color(0xFFCAC4D0),
-    inverseSurface = Color(0xFF322F35),
-    inverseOnSurface = Color(0xFFF5EFF7),
-    inversePrimary = Color(0xFFD0BCFF)
+    surfaceContainerLow = Color(0xFFFBFBFD),
+    surfaceContainer = Color(0xFFF5F5F7),   // Pale Apple Gray Card
+    surfaceContainerHigh = Color(0xFFE5E5EA),
+    surfaceContainerHighest = Color(0xFFD1D1D6),
+    surfaceDim = Color(0xFFE5E5EA),
+    surfaceBright = Color(0xFFFFFFFF),
+    outline = Color(0xFFC7C7CC),
+    outlineVariant = Color(0xFFE5E5EA),
+    inverseSurface = Color(0xFF1C1C1E),
+    inverseOnSurface = Color(0xFFFFFFFF),
+    inversePrimary = Color(0xFF2997FF)
 )
 
 // -----------------------------------------------------------------------------
-// DYNAMIC MATERIAL UI 3 THEME PRESETS
+// DYNAMIC THEME PRESETS (APPLE CUPERTINO & PRO STYLES)
 // -----------------------------------------------------------------------------
 enum class MaterialThemePreset(val displayName: String, val seedColor: Color) {
+    APPLE_CUPERTINO("Apple Cupertino", Color(0xFF0071E3)),
+    APPLE_MIDNIGHT("Apple Midnight", Color(0xFF2997FF)),
+    APPLE_GRAPHITE("Apple Space Gray", Color(0xFF8E8E93)),
     PURPLE_IRIS("Signature Purple", Color(0xFF6750A4)),
     COBALT_OCEAN("Cobalt Ocean", Color(0xFF1E40AF)),
     EMERALD_MINT("Cyber Emerald", Color(0xFF047857)),
@@ -154,6 +157,42 @@ enum class MaterialThemePreset(val displayName: String, val seedColor: Color) {
 
 fun getPresetColorScheme(preset: MaterialThemePreset, isDark: Boolean): ColorScheme {
     return when (preset) {
+        MaterialThemePreset.APPLE_CUPERTINO -> if (isDark) DarkColorScheme else LightColorScheme
+        MaterialThemePreset.APPLE_MIDNIGHT -> if (isDark) {
+            DarkColorScheme.copy(
+                primary = Color(0xFF2997FF),
+                background = Color(0xFF000000),
+                surface = Color(0xFF000000),
+                surfaceContainer = Color(0xFF161618),
+                surfaceContainerHigh = Color(0xFF1C1C1E),
+                surfaceContainerHighest = Color(0xFF2C2C2E)
+            )
+        } else {
+            LightColorScheme.copy(
+                primary = Color(0xFF0071E3),
+                background = Color(0xFFF2F2F7),
+                surface = Color(0xFFFFFFFF),
+                surfaceContainer = Color(0xFFF5F5F7)
+            )
+        }
+        MaterialThemePreset.APPLE_GRAPHITE -> if (isDark) {
+            DarkColorScheme.copy(
+                primary = Color(0xFFE5E5EA),
+                primaryContainer = Color(0xFF3A3A3C),
+                background = Color(0xFF000000),
+                surface = Color(0xFF000000),
+                surfaceContainer = Color(0xFF1C1C1E),
+                surfaceContainerHigh = Color(0xFF2C2C2E),
+                surfaceContainerHighest = Color(0xFF3A3A3C)
+            )
+        } else {
+            LightColorScheme.copy(
+                primary = Color(0xFF1D1D1F),
+                background = Color(0xFFF5F5F7),
+                surface = Color(0xFFFFFFFF),
+                surfaceContainer = Color(0xFFE5E5EA)
+            )
+        }
         MaterialThemePreset.PURPLE_IRIS -> if (isDark) DarkColorScheme else LightColorScheme
         MaterialThemePreset.COBALT_OCEAN -> if (isDark) {
             DarkColorScheme.copy(
@@ -322,7 +361,7 @@ val TalosTypography = Typography(
 // Dynamic Theme CompositionLocal & Accessors
 // -----------------------------------------------------------------------------
 val LocalIsDark = compositionLocalOf { true }
-val LocalThemePreset = staticCompositionLocalOf { MaterialThemePreset.PURPLE_IRIS }
+val LocalThemePreset = staticCompositionLocalOf { MaterialThemePreset.APPLE_CUPERTINO }
 
 val talosBg: Color @Composable get() = MaterialTheme.colorScheme.background
 val talosSurface: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainer
@@ -343,13 +382,11 @@ val TextMuted: Color @Composable get() = talosTextMuted
  */
 @Composable
 fun metallicBorderBrush(): Brush {
-    val scheme = MaterialTheme.colorScheme
-    return Brush.linearGradient(
-        colors = listOf(
-            scheme.primary.copy(alpha = 0.40f),
-            scheme.primary.copy(alpha = 0.22f),
-            scheme.primaryContainer.copy(alpha = 0.16f)
-        )
+    val isDark = LocalIsDark.current
+    val highlight = if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.60f)
+    val shadow = if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.08f)
+    return Brush.verticalGradient(
+        colors = listOf(highlight, shadow)
     )
 }
 

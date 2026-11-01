@@ -2602,3 +2602,21 @@ Refined `LookAndFeelScreen.kt` addressing user feedback on contrast, corner geom
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21091` and `versionName` to `"2.10.91"`.
+
+---
+
+## 120. Reverted Signing Overrides & Direct Versioned APK Delivery
+
+Eliminated APK signature corruption caused by explicit V1/V2 overrides, aligning with the proven v2.10.85/v2.10.90 signing baseline:
+
+### 1. Reverted Signing Overrides
+- Removed explicit `enableV1Signing = true` and `enableV2Signing = true` which introduced conflicting JAR manifests (`META-INF/CERT.RSA`, `CERT.SF`) into the APK.
+- Restored AGP's default pure APK Signature Scheme v2/v3 block behavior identical to `v2.10.85`.
+
+### 2. Versioned Unique APK Downloads
+- Provided direct links to `talos-v2.10.92.apk` rather than the colliding `talos-latest.apk`, preventing Android download collision parsing issues (`talos-latest (2).apk`).
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21092` and `versionName` to `"2.10.92"`.

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.*
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**

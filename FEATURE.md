@@ -2542,3 +2542,12 @@ Fixed compile-time animation imports and runtime typography providers, enabling 
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21088` and `versionName` to `"2.10.88"`.
+
+---
+
+## 117. Coroutine Scope Resolution & V1/V2 Dual-Signed Live Packaging
+
+Resolved coroutine imports in `LookAndFeelScreen.kt` and finalized V1/V2 signature deployment:
+
+- Added `import kotlinx.coroutines.launch` to manage live drop animation timers.
+- Bumped `versionCode` to `21089` and `versionName` to `"2.10.89"`.

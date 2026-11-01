@@ -2388,4 +2388,4 @@ Complete overhaul of `LookAndFeelScreen.kt` and color architecture matching user
 - [x] **Verification & Tests**:
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
-  - Bumped `versionCode` to `21080` and `versionName` to `"2.10.80"`.
+  - Bumped `versionCode` to `21081` and `versionName` to `"2.10.81"`.

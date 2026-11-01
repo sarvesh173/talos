@@ -296,18 +296,65 @@ class MainActivity : ComponentActivity() {
                 val activeTarget = when (appScreen) {
                     "landing" -> "landing"
                     "wizard" -> "wizard"
+                    "settings" -> "settings"
+                    "look_and_feel" -> "look_and_feel"
+                    "canvas" -> "canvas"
+                    "diff" -> "diff"
+                    "hub" -> "hub"
+                    "gallery" -> "gallery"
+                    "cli_manager" -> "cli_manager"
                     else -> if (isPaired) "main" else "landing"
                 }
 
                 AnimatedContent(
                     targetState = activeTarget,
                     transitionSpec = {
-                        // M3E physics: spatial springs for screen-level transitions.
-                        // Slow spatial (0.8/200) for full-screen movement - expressive, interruptible.
                         val offsetIn = M3EMotion.slowSpatial<IntOffset>()
                         val floatIn = M3EMotion.slowSpatial<Float>()
                         val fadeSpec = M3EMotion.defaultEffects<Float>()
-                        if (initialState == "landing" && (targetState == "wizard" || targetState == "main")) {
+                        val appleSpringSpatial = spring<IntOffset>(dampingRatio = 0.85f, stiffness = 400f)
+                        val appleSpringFloat = spring<Float>(dampingRatio = 0.85f, stiffness = 400f)
+                        if ((initialState == "main" && (targetState == "settings" || targetState == "look_and_feel")) ||
+                            (initialState == "settings" && targetState == "look_and_feel")) {
+                            // Apple iOS Push Transition (Slide from right with scale and fade)
+                            (
+                                fadeIn(animationSpec = fadeSpec) +
+                                slideInHorizontally(
+                                    animationSpec = appleSpringSpatial,
+                                    initialOffsetX = { width -> width }
+                                ) +
+                                scaleIn(
+                                    animationSpec = appleSpringFloat,
+                                    initialScale = 0.98f
+                                )
+                            ).togetherWith(
+                                fadeOut(animationSpec = M3EMotion.fastEffects()) +
+                                slideOutHorizontally(
+                                    animationSpec = appleSpringSpatial,
+                                    targetOffsetX = { width -> -(width * 0.25f).toInt() }
+                                )
+                            )
+                        } else if ((initialState == "look_and_feel" && (targetState == "settings" || targetState == "main")) ||
+                                   (initialState == "settings" && targetState == "main")) {
+                            // Apple iOS Pop Transition (Slide back to right with spring physics)
+                            (
+                                fadeIn(animationSpec = fadeSpec) +
+                                slideInHorizontally(
+                                    animationSpec = appleSpringSpatial,
+                                    initialOffsetX = { width -> -(width * 0.25f).toInt() }
+                                )
+                            ).togetherWith(
+                                fadeOut(animationSpec = M3EMotion.fastEffects()) +
+                                slideOutHorizontally(
+                                    animationSpec = appleSpringSpatial,
+                                    targetOffsetX = { width -> width }
+                                ) +
+                                scaleOut(
+                                    animationSpec = appleSpringFloat,
+                                    targetScale = 0.98f
+                                )
+                            )
+                        } else if (initialState == "landing" && (targetState == "wizard" || targetState == "main")) {
                             // Ascension: incoming screen glides upward from below with spring overshoot
                             (
                                 fadeIn(animationSpec = fadeSpec) +

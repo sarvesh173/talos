@@ -1,11 +1,14 @@
 package com.sarvesh173.talos.ui.features
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -67,9 +71,13 @@ fun LookAndFeelScreen(
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val backInteraction = remember { MutableInteractionSource() }
                     IconButton(
                         onClick = onBack,
-                        modifier = Modifier.size(38.dp)
+                        interactionSource = backInteraction,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .applePressScale(backInteraction, 0.97f)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -211,54 +219,92 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA),
-                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f)),
-                modifier = Modifier.fillMaxWidth()
+            val appearanceModes = listOf(
+                "SYSTEM" to "System Auto",
+                "LIGHT" to "Light",
+                "DARK" to "Dark"
+            )
+            val selectedAppearanceIndex = when (currentThemeMode.uppercase()) {
+                "SYSTEM" -> 0
+                "LIGHT" -> 1
+                "DARK" -> 2
+                else -> 0
+            }
+
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA))
+                    .border(
+                        0.8.dp,
+                        if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .padding(4.dp)
             ) {
+                val segmentWidth = maxWidth / appearanceModes.size
+                val pillOffset by animateDpAsState(
+                    targetValue = segmentWidth * selectedAppearanceIndex,
+                    animationSpec = spring(
+                        dampingRatio = 0.85f,
+                        stiffness = 400f
+                    ),
+                    label = "appearance_pill_offset"
+                )
+
+                // Fluid sliding indicator pill
+                Box(
+                    modifier = Modifier
+                        .offset(x = pillOffset)
+                        .width(segmentWidth)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isDark) Color(0xFF2C2C2E) else Color.White)
+                        .border(
+                            0.8.dp,
+                            if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.08f),
+                            RoundedCornerShape(12.dp)
+                        )
+                )
+
+                // Segment labels with subtle scale bounce on tap
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .height(38.dp)
                 ) {
-                    val modes = listOf(
-                        "SYSTEM" to "System Auto",
-                        "LIGHT" to "Light",
-                        "DARK" to "Dark"
-                    )
+                    appearanceModes.forEachIndexed { index, (modeKey, modeTitle) ->
+                        val isSelected = selectedAppearanceIndex == index
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val tabScale by animateFloatAsState(
+                            targetValue = if (isPressed) 0.95f else 1f,
+                            animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
+                            label = "appearance_tab_scale"
+                        )
 
-                    modes.forEach { (modeKey, modeTitle) ->
-                        val isSelected = currentThemeMode.equals(modeKey, ignoreCase = true)
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) {
-                                if (isDark) Color(0xFF2C2C2E) else Color.White
-                            } else Color.Transparent,
-                            border = if (isSelected) {
-                                BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f))
-                            } else null,
+                        Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(38.dp)
-                                .clickable {
+                                .fillMaxHeight()
+                                .scale(tabScale)
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) {
                                     client.setThemeMode(modeKey)
-                                }
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Text(
-                                    text = modeTitle,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) {
-                                        if (isDark) Color.White else Color(0xFF1D1D1F)
-                                    } else talosTextMuted
-                                )
-                            }
+                            Text(
+                                text = modeTitle,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) {
+                                    if (isDark) Color.White else Color(0xFF1D1D1F)
+                                } else talosTextMuted
+                            )
                         }
                     }
                 }
@@ -307,10 +353,15 @@ fun LookAndFeelScreen(
                                 val isSelected = activeAccent == accent
                                 val swatchColor = if (isDark) accent.darkColor else accent.lightColor
 
+                                val swatchInteraction = remember { MutableInteractionSource() }
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier
-                                        .clickable {
+                                        .applePressScale(swatchInteraction, 0.94f)
+                                        .clickable(
+                                            interactionSource = swatchInteraction,
+                                            indication = null
+                                        ) {
                                             client.setAccentColor(accent.name)
                                         }
                                         .padding(4.dp)
@@ -385,6 +436,7 @@ fun LookAndFeelScreen(
                 canvasPresets.forEach { (preset, title, desc) ->
                     val isSelected = currentPresetName == preset.name ||
                             (preset == MaterialThemePreset.APPLE_AMOLED_BLACK && (currentPresetName == "APPLE_CUPERTINO" || currentPresetName == "PURPLE_IRIS"))
+                    val cardInteraction = remember { MutableInteractionSource() }
 
                     Surface(
                         shape = RoundedCornerShape(16.dp),
@@ -403,7 +455,11 @@ fun LookAndFeelScreen(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .applePressScale(cardInteraction, 0.97f)
+                            .clickable(
+                                interactionSource = cardInteraction,
+                                indication = null
+                            ) {
                                 client.setThemePreset(preset.name)
                             }
                     ) {
@@ -465,54 +521,92 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA),
-                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f)),
-                modifier = Modifier.fillMaxWidth()
+            val scaleOptions = listOf(
+                "compact" to "Compact",
+                "standard" to "Standard",
+                "spacious" to "Spacious"
+            )
+            val selectedScaleIndex = when (currentFontScale.lowercase()) {
+                "compact" -> 0
+                "standard" -> 1
+                "spacious" -> 2
+                else -> 1
+            }
+
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA))
+                    .border(
+                        0.8.dp,
+                        if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .padding(4.dp)
             ) {
+                val segmentWidth = maxWidth / scaleOptions.size
+                val pillOffset by animateDpAsState(
+                    targetValue = segmentWidth * selectedScaleIndex,
+                    animationSpec = spring(
+                        dampingRatio = 0.85f,
+                        stiffness = 400f
+                    ),
+                    label = "font_scale_pill_offset"
+                )
+
+                // Fluid sliding indicator pill
+                Box(
+                    modifier = Modifier
+                        .offset(x = pillOffset)
+                        .width(segmentWidth)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isDark) Color(0xFF2C2C2E) else Color.White)
+                        .border(
+                            0.8.dp,
+                            if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.08f),
+                            RoundedCornerShape(12.dp)
+                        )
+                )
+
+                // Segment labels with subtle scale bounce on tap
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .height(38.dp)
                 ) {
-                    val scaleOptions = listOf(
-                        "compact" to "Compact",
-                        "standard" to "Standard",
-                        "spacious" to "Spacious"
-                    )
+                    scaleOptions.forEachIndexed { index, (scaleKey, scaleTitle) ->
+                        val isSelected = selectedScaleIndex == index
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val tabScale by animateFloatAsState(
+                            targetValue = if (isPressed) 0.95f else 1f,
+                            animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
+                            label = "font_scale_tab_scale"
+                        )
 
-                    scaleOptions.forEach { (scaleKey, scaleTitle) ->
-                        val isSelected = currentFontScale.equals(scaleKey, ignoreCase = true)
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) {
-                                if (isDark) Color(0xFF2C2C2E) else Color.White
-                            } else Color.Transparent,
-                            border = if (isSelected) {
-                                BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f))
-                            } else null,
+                        Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(38.dp)
-                                .clickable {
+                                .fillMaxHeight()
+                                .scale(tabScale)
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) {
                                     client.setFontScale(scaleKey)
-                                }
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Text(
-                                    text = scaleTitle,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) {
-                                        if (isDark) Color.White else Color(0xFF1D1D1F)
-                                    } else talosTextMuted
-                                )
-                            }
+                            Text(
+                                text = scaleTitle,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) {
+                                    if (isDark) Color.White else Color(0xFF1D1D1F)
+                                } else talosTextMuted
+                            )
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.getValue
@@ -101,3 +102,46 @@ fun Modifier.m3ePressScale(
 /** Convenience: remember an interaction source bound to press-scale. */
 @androidx.compose.runtime.Composable
 fun rememberM3ePressInteraction(): MutableInteractionSource = remember { MutableInteractionSource() }
+
+/**
+ * Apple iOS 17/18 spring-based tactile press physics.
+ * Scales down to pressedScale (default 0.97f) on press with dampingRatio = 0.85f, stiffness = 400f.
+ */
+fun Modifier.applePressScale(
+    interactionSource: MutableInteractionSource,
+    pressedScale: Float = 0.97f
+): Modifier = composed {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) pressedScale else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.85f,
+            stiffness = 400f
+        ),
+        label = "apple_press_scale"
+    )
+    scale(scale)
+}
+
+fun Modifier.applePressable(
+    pressedScale: Float = 0.97f,
+    onClick: () -> Unit
+): Modifier = composed {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) pressedScale else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.85f,
+            stiffness = 400f
+        ),
+        label = "apple_pressable"
+    )
+    this
+        .scale(scale)
+        .clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = onClick
+        )
+}

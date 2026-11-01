@@ -2207,3 +2207,24 @@ Resolved Settings button unresponsiveness caused by header overflow and eliminat
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21073` and `versionName` to `"2.10.73"`.
+
+---
+
+## 104. Screen Routing Restoration & iOS 17/18 Spring Motion Physics
+
+Fixed the core navigation interception bug where `activeTarget` was overriding `appScreen` to `"main"`, and integrated Apple iOS tactile spring press feedback across Settings and Look & Feel screens.
+
+### 1. Root-Cause Screen Routing Fix (`MainActivity.kt`)
+- `activeTarget` was hardcoded to coerce all non-landing/wizard screens to `"main"`, causing Settings button taps to be silently swallowed.
+- Explicitly expanded `activeTarget` to honor `"settings"`, `"look_and_feel"`, `"canvas"`, `"diff"`, `"hub"`, `"gallery"`, and `"cli_manager"`.
+- Implemented Apple iOS Push (`slideInHorizontally` from right + `scaleIn` 0.97f with `spring(dampingRatio = 0.85f, stiffness = 420f)`) and Pop transitions for seamless hierarchy traversal.
+
+### 2. Apple Tactile Motion & Sliding Pill Indicator (`ExpressiveMotion.kt` & `LookAndFeelScreen.kt`)
+- Added `Modifier.applePressScale(interactionSource, pressedScale = 0.97f)` and `Modifier.applePressable` with iOS spring physics (`dampingRatio = 0.85f, stiffness = 400f`).
+- Upgraded the `Appearance Mode` segmented control to a true fluid sliding indicator pill (`pillOffset by animateDpAsState`) with scale bounce on tap.
+- Applied tactile feedback to back buttons, Look & Feel cards, and handshake action buttons.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21074` and `versionName` to `"2.10.74"`.

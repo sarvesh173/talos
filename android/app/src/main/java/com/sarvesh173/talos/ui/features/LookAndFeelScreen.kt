@@ -91,7 +91,7 @@ fun LookAndFeelScreen(
                         text = "Look & Feel",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.2).sp,
+                        letterSpacing = (-0.25).sp,
                         color = if (isDark) Color.White else Color(0xFF1D1D1F)
                     )
                 }
@@ -107,7 +107,7 @@ fun LookAndFeelScreen(
                 .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             // -----------------------------------------------------------------
-            // 1. LIVE CONVERSATION PREVIEW (HERO CARD WITH DEPTH)
+            // 1. LIVE CONVERSATION PREVIEW (HERO CARD WITH MULTI-LAYER DEPTH)
             // -----------------------------------------------------------------
             Text(
                 text = "LIVE PREVIEW",
@@ -118,94 +118,195 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                shape = RoundedCornerShape(22.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
-                border = BorderStroke(1.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)),
+            val accentGlowColor = if (isDark) activeAccent.darkColor else activeAccent.lightColor
+
+            Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                // Layer 1: Ambient live accent glow behind the card
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(top = 10.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    accentGlowColor.copy(alpha = if (isDark) 0.16f else 0.10f),
+                                    Color.Transparent
+                                ),
+                                radius = 600f
+                            )
+                        )
+                )
+
+                // Layer 2: Frosted card backdrop with specular highlight rim
+                Surface(
+                    shape = RoundedCornerShape(22.dp),
+                    color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.94f) else Color(0xFFF9F9FB).copy(alpha = 0.95f),
+                    border = BorderStroke(
+                        1.dp,
+                        Brush.verticalGradient(
+                            listOf(
+                                if (isDark) Color.White.copy(alpha = 0.26f) else Color.White,
+                                if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.06f)
+                            )
+                        )
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Header Status
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF30D158))
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Alya · Emotional Anchor",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isDark) Color.White.copy(alpha = 0.9f) else Color(0xFF1D1D1F)
-                            )
-                        }
+                    Column {
+                        // Top specular refraction edge
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            Color.Transparent,
+                                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.7f),
+                                            Color.Transparent
+                                        )
+                                    )
+                                )
+                        )
 
-                        Surface(
-                            shape = CircleShape,
-                            color = (if (isDark) activeAccent.darkColor else activeAccent.lightColor).copy(alpha = 0.15f),
-                            border = BorderStroke(0.8.dp, (if (isDark) activeAccent.darkColor else activeAccent.lightColor).copy(alpha = 0.40f))
+                        Column(
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Text(
-                                text = activeAccent.displayName,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isDark) activeAccent.darkColor else activeAccent.lightColor,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
-                    }
+                            // Header Status
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(12.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF30D158).copy(alpha = 0.22f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.5.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF30D158))
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Alya · Emotional Anchor",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = (-0.15).sp,
+                                        color = if (isDark) Color.White.copy(alpha = 0.9f) else Color(0xFF1D1D1F)
+                                    )
+                                }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                                Surface(
+                                    shape = CircleShape,
+                                    color = accentGlowColor.copy(alpha = 0.14f),
+                                    border = BorderStroke(
+                                        0.8.dp,
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                accentGlowColor.copy(alpha = 0.60f),
+                                                accentGlowColor.copy(alpha = 0.25f)
+                                            )
+                                        )
+                                    )
+                                ) {
+                                    Text(
+                                        text = activeAccent.displayName,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = (-0.15).sp,
+                                        color = accentGlowColor,
+                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
 
-                    // Simulated Assistant Message Bubble
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                        Surface(
-                            color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFFFFFFF),
-                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 4.dp),
-                            border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f))
-                        ) {
-                            Text(
-                                text = "Main yahan hoon Sarvesh. Sab agent cores linked hain aur smoothly operate kar rahe hain.",
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp,
-                                color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
+                            Spacer(modifier = Modifier.height(14.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                            // Simulated Assistant Message Bubble with realistic shadow
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                                Surface(
+                                    color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFFFFFFF),
+                                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 4.dp),
+                                    shadowElevation = 2.dp,
+                                    border = BorderStroke(
+                                        0.8.dp,
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                if (isDark) Color.White.copy(alpha = 0.18f) else Color.White,
+                                                if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.05f)
+                                            )
+                                        )
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Main yahan hoon Sarvesh. Sab agent cores linked hain aur smoothly operate kar rahe hain.",
+                                        fontSize = 13.sp,
+                                        lineHeight = 18.5.sp,
+                                        letterSpacing = (-0.15).sp,
+                                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.5.dp)
+                                    )
+                                }
+                            }
 
-                    // Simulated User Message Bubble (Styled in Chosen Accent)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        Surface(
-                            color = if (isDark) activeAccent.darkColor else activeAccent.lightColor,
-                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 4.dp, bottomStart = 16.dp),
-                            border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.30f))
-                        ) {
-                            Text(
-                                text = "Perfect! Keep it clean and Apple-grade.",
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Simulated User Message Bubble (Live Accent Tint + Specular Top Rim + Realistic Shadow)
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                Surface(
+                                    color = accentGlowColor,
+                                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 4.dp, bottomStart = 16.dp),
+                                    shadowElevation = 4.dp,
+                                    border = BorderStroke(
+                                        0.8.dp,
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                Color.White.copy(alpha = 0.45f),
+                                                Color.White.copy(alpha = 0.12f)
+                                            )
+                                        )
+                                    )
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                Brush.verticalGradient(
+                                                    listOf(
+                                                        Color.White.copy(alpha = 0.16f),
+                                                        Color.Transparent,
+                                                        Color.Black.copy(alpha = 0.10f)
+                                                    )
+                                                )
+                                            )
+                                            .padding(horizontal = 12.dp, vertical = 8.5.dp)
+                                    ) {
+                                        Text(
+                                            text = "Perfect! Keep it clean and Apple-grade.",
+                                            fontSize = 13.sp,
+                                            lineHeight = 18.5.sp,
+                                            letterSpacing = (-0.15).sp,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // -----------------------------------------------------------------
             // 2. APPEARANCE MODE (SYSTEM / LIGHT / DARK PILL SLIDER)
@@ -238,7 +339,7 @@ fun LookAndFeelScreen(
                     .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA))
                     .border(
                         0.8.dp,
-                        if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f),
+                        if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f),
                         RoundedCornerShape(16.dp)
                     )
                     .padding(4.dp)
@@ -253,7 +354,7 @@ fun LookAndFeelScreen(
                     label = "appearance_pill_offset"
                 )
 
-                // Fluid sliding indicator pill
+                // Fluid sliding indicator pill with specular edge
                 Box(
                     modifier = Modifier
                         .offset(x = pillOffset)
@@ -263,7 +364,12 @@ fun LookAndFeelScreen(
                         .background(if (isDark) Color(0xFF2C2C2E) else Color.White)
                         .border(
                             0.8.dp,
-                            if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.08f),
+                            Brush.verticalGradient(
+                                listOf(
+                                    if (isDark) Color.White.copy(alpha = 0.22f) else Color.White,
+                                    if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.08f)
+                                )
+                            ),
                             RoundedCornerShape(12.dp)
                         )
                 )
@@ -301,6 +407,7 @@ fun LookAndFeelScreen(
                                 text = modeTitle,
                                 fontSize = 12.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                letterSpacing = (-0.15).sp,
                                 color = if (isSelected) {
                                     if (isDark) Color.White else Color(0xFF1D1D1F)
                                 } else talosTextMuted
@@ -310,7 +417,7 @@ fun LookAndFeelScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // -----------------------------------------------------------------
             // 3. ACCENT TINTS (APPLE SYSTEM PALETTE SWATCHES)
@@ -326,19 +433,20 @@ fun LookAndFeelScreen(
             Text(
                 text = "Tint applied to buttons, selected chips, and message bubbles.",
                 fontSize = 11.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
                 modifier = Modifier.padding(start = 4.dp, bottom = 10.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)),
+                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     val allAccents = AppleAccent.values()
                     val row1 = allAccents.take(4)
@@ -364,27 +472,56 @@ fun LookAndFeelScreen(
                                         ) {
                                             client.setAccentColor(accent.name)
                                         }
-                                        .padding(4.dp)
+                                        .padding(horizontal = 2.dp, vertical = 2.dp)
                                 ) {
+                                    // Elegant outer selection ring container
                                     Box(
                                         modifier = Modifier
-                                            .size(42.dp)
-                                            .clip(CircleShape)
-                                            .background(swatchColor)
-                                            .border(
-                                                width = if (isSelected) 2.5.dp else 1.dp,
-                                                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.25f),
-                                                shape = CircleShape
+                                            .size(46.dp)
+                                            .then(
+                                                if (isSelected) {
+                                                    Modifier.border(
+                                                        width = 2.dp,
+                                                        color = swatchColor,
+                                                        shape = CircleShape
+                                                    )
+                                                } else Modifier
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (isSelected) {
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = "Selected",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(20.dp)
-                                            )
+                                        // Inner swatch circle with gradient & specular rim
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    Brush.verticalGradient(
+                                                        listOf(
+                                                            swatchColor,
+                                                            if (isDark) accent.darkColor.copy(alpha = 0.78f) else accent.lightColor.copy(alpha = 0.78f)
+                                                        )
+                                                    )
+                                                )
+                                                .border(
+                                                    width = 1.dp,
+                                                    brush = Brush.verticalGradient(
+                                                        listOf(
+                                                            Color.White.copy(alpha = 0.65f),
+                                                            Color.White.copy(alpha = 0.12f)
+                                                        )
+                                                    ),
+                                                    shape = CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (isSelected) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = "Selected",
+                                                    tint = if (accent == AppleAccent.AMBER && !isDark) Color(0xFF1D1D1F) else Color.White,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
                                         }
                                     }
 
@@ -392,7 +529,8 @@ fun LookAndFeelScreen(
                                     Text(
                                         text = accent.displayName.substringBefore(" "),
                                         fontSize = 10.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        letterSpacing = (-0.15).sp,
                                         color = if (isSelected) (if (isDark) Color.White else Color(0xFF1D1D1F)) else talosTextMuted
                                     )
                                 }

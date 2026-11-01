@@ -49,6 +49,16 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         private const val KEY_API_TOKEN = "api_token"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_HAS_LAUNCHED = "has_launched"
+        private const val KEY_THINKING_ENABLED = "thinking_enabled"
+        private const val KEY_DEVICE_ACTIONS_ENABLED = "device_actions_enabled"
+        private const val KEY_LINK_PREVIEWS_ENABLED = "link_previews_enabled"
+        private const val KEY_OPEN_LINKS_IN_APP = "open_links_in_app"
+        private const val KEY_MEMORY_UPDATES_ENABLED = "memory_updates_enabled"
+        private const val KEY_LOADING_INDICATOR_STYLE = "loading_indicator_style"
+        private const val KEY_ANIMATE_CHARACTERS = "animate_characters"
+        private const val KEY_REDUCE_MOTION = "reduce_motion"
+        private const val KEY_HAPTICS_ENABLED = "haptics_enabled"
+        private const val KEY_APP_ICON = "app_icon"
         private const val TAG = "TalosClient"
     }
 
@@ -466,10 +476,227 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         prefs.edit().putString("KEY_FONT_SCALE", scale).apply()
     }
 
+    // -------------------------------------------------------------------------
+    // CHAT PREFERENCES (Official Nous Mobile spec)
+    // -------------------------------------------------------------------------
+    private val _isThinkingEnabled = MutableStateFlow(
+        prefs.getBoolean(KEY_THINKING_ENABLED, true)
+    )
+    val isThinkingEnabled: StateFlow<Boolean> = _isThinkingEnabled.asStateFlow()
+
+    fun setThinkingEnabled(enabled: Boolean) {
+        _isThinkingEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_THINKING_ENABLED, enabled).apply()
+    }
+
+    private val _isDeviceActionsEnabled = MutableStateFlow(
+        prefs.getBoolean(KEY_DEVICE_ACTIONS_ENABLED, true)
+    )
+    val isDeviceActionsEnabled: StateFlow<Boolean> = _isDeviceActionsEnabled.asStateFlow()
+
+    fun setDeviceActionsEnabled(enabled: Boolean) {
+        _isDeviceActionsEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_DEVICE_ACTIONS_ENABLED, enabled).apply()
+    }
+
+    private val _isLinkPreviewsEnabled = MutableStateFlow(
+        prefs.getBoolean(KEY_LINK_PREVIEWS_ENABLED, true)
+    )
+    val isLinkPreviewsEnabled: StateFlow<Boolean> = _isLinkPreviewsEnabled.asStateFlow()
+
+    fun setLinkPreviewsEnabled(enabled: Boolean) {
+        _isLinkPreviewsEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_LINK_PREVIEWS_ENABLED, enabled).apply()
+    }
+
+    private val _isOpenLinksInApp = MutableStateFlow(
+        prefs.getBoolean(KEY_OPEN_LINKS_IN_APP, true)
+    )
+    val isOpenLinksInApp: StateFlow<Boolean> = _isOpenLinksInApp.asStateFlow()
+
+    fun setOpenLinksInApp(inApp: Boolean) {
+        _isOpenLinksInApp.value = inApp
+        prefs.edit().putBoolean(KEY_OPEN_LINKS_IN_APP, inApp).apply()
+    }
+
+    private val _isMemoryUpdatesEnabled = MutableStateFlow(
+        prefs.getBoolean(KEY_MEMORY_UPDATES_ENABLED, true)
+    )
+    val isMemoryUpdatesEnabled: StateFlow<Boolean> = _isMemoryUpdatesEnabled.asStateFlow()
+
+    fun setMemoryUpdatesEnabled(enabled: Boolean) {
+        _isMemoryUpdatesEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_MEMORY_UPDATES_ENABLED, enabled).apply()
+    }
+
+    // -------------------------------------------------------------------------
+    // LOOK & FEEL PREFERENCES (Loading Style, Characters, Motion, Haptics, Icon)
+    // -------------------------------------------------------------------------
+    private val _loadingIndicatorStyle = MutableStateFlow(
+        prefs.getString(KEY_LOADING_INDICATOR_STYLE, "Dots") ?: "Dots"
+    )
+    val loadingIndicatorStyle: StateFlow<String> = _loadingIndicatorStyle.asStateFlow()
+
+    fun setLoadingIndicatorStyle(style: String) {
+        _loadingIndicatorStyle.value = style
+        prefs.edit().putString(KEY_LOADING_INDICATOR_STYLE, style).apply()
+    }
+
+    private val _animateCharacters = MutableStateFlow(
+        prefs.getBoolean(KEY_ANIMATE_CHARACTERS, true)
+    )
+    val animateCharacters: StateFlow<Boolean> = _animateCharacters.asStateFlow()
+
+    fun setAnimateCharacters(enabled: Boolean) {
+        _animateCharacters.value = enabled
+        prefs.edit().putBoolean(KEY_ANIMATE_CHARACTERS, enabled).apply()
+    }
+
+    private val _reduceMotion = MutableStateFlow(
+        prefs.getBoolean(KEY_REDUCE_MOTION, false)
+    )
+    val reduceMotion: StateFlow<Boolean> = _reduceMotion.asStateFlow()
+
+    fun setReduceMotion(reduce: Boolean) {
+        _reduceMotion.value = reduce
+        prefs.edit().putBoolean(KEY_REDUCE_MOTION, reduce).apply()
+    }
+
+    private val _isHapticsEnabled = MutableStateFlow(
+        prefs.getBoolean(KEY_HAPTICS_ENABLED, true).also {
+            com.sarvesh173.talos.ui.TalosHaptics.isHapticsEnabled = it
+        }
+    )
+    val isHapticsEnabled: StateFlow<Boolean> = _isHapticsEnabled.asStateFlow()
+
+    fun setHapticsEnabled(enabled: Boolean) {
+        _isHapticsEnabled.value = enabled
+        com.sarvesh173.talos.ui.TalosHaptics.isHapticsEnabled = enabled
+        prefs.edit().putBoolean(KEY_HAPTICS_ENABLED, enabled).apply()
+    }
+
+    private val _appIcon = MutableStateFlow(
+        prefs.getString(KEY_APP_ICON, "nous") ?: "nous"
+    )
+    val appIcon: StateFlow<String> = _appIcon.asStateFlow()
+
+    fun setAppIcon(iconKey: String) {
+        _appIcon.value = iconKey
+        prefs.edit().putString(KEY_APP_ICON, iconKey).apply()
+    }
+
+    // --- Nous Portal / Talos Advanced Preferences ---
+    private val _requireBiometrics = MutableStateFlow(prefs.getBoolean("KEY_REQUIRE_BIOMETRICS", false))
+    val requireBiometrics: StateFlow<Boolean> = _requireBiometrics.asStateFlow()
+    fun setRequireBiometrics(enabled: Boolean) {
+        _requireBiometrics.value = enabled
+        prefs.edit().putBoolean("KEY_REQUIRE_BIOMETRICS", enabled).apply()
+    }
+
+    private val _cacheChatList = MutableStateFlow(prefs.getBoolean("KEY_CACHE_CHAT_LIST", true))
+    val cacheChatList: StateFlow<Boolean> = _cacheChatList.asStateFlow()
+    fun setCacheChatList(enabled: Boolean) {
+        _cacheChatList.value = enabled
+        prefs.edit().putBoolean("KEY_CACHE_CHAT_LIST", enabled).apply()
+    }
+
+    private val _cacheMessages = MutableStateFlow(prefs.getBoolean("KEY_CACHE_MESSAGES", true))
+    val cacheMessages: StateFlow<Boolean> = _cacheMessages.asStateFlow()
+    fun setCacheMessages(enabled: Boolean) {
+        _cacheMessages.value = enabled
+        prefs.edit().putBoolean("KEY_CACHE_MESSAGES", enabled).apply()
+    }
+
+    fun purgeCache() {
+        clearCache()
+    }
+
+    fun clearCache(): Long {
+        var freedBytes = 0L
+        val editor = prefs.edit()
+        prefs.all.keys.filter { it.startsWith("cached_msgs_") || it == "cached_rooms" }.forEach { key ->
+            val v = prefs.all[key]
+            if (v is String) freedBytes += v.toByteArray().size
+            editor.remove(key)
+        }
+        editor.apply()
+        try {
+            val cacheFiles = context.cacheDir.listFiles()
+            if (cacheFiles != null) {
+                for (file in cacheFiles) {
+                    freedBytes += file.length()
+                    file.deleteRecursively()
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Cache dir clear failed: ${e.message}")
+        }
+        return freedBytes
+    }
+
+    val showThinking: StateFlow<Boolean> get() = _isThinkingEnabled.asStateFlow()
+    fun setShowThinking(enabled: Boolean) = setThinkingEnabled(enabled)
+
+    val showDeviceActions: StateFlow<Boolean> get() = _isDeviceActionsEnabled.asStateFlow()
+    fun setShowDeviceActions(enabled: Boolean) = setDeviceActionsEnabled(enabled)
+
+    val showLinkPreviews: StateFlow<Boolean> get() = _isLinkPreviewsEnabled.asStateFlow()
+    fun setShowLinkPreviews(enabled: Boolean) = setLinkPreviewsEnabled(enabled)
+
+    val openLinksInApp: StateFlow<Boolean> get() = _isOpenLinksInApp.asStateFlow()
+
+    val showMemoryUpdates: StateFlow<Boolean> get() = _isMemoryUpdatesEnabled.asStateFlow()
+    fun setShowMemoryUpdates(enabled: Boolean) = setMemoryUpdatesEnabled(enabled)
+
+    private val _notificationsAllowed = MutableStateFlow(prefs.getBoolean("KEY_NOTIFICATIONS_ALLOWED", true))
+    val notificationsAllowed: StateFlow<Boolean> = _notificationsAllowed.asStateFlow()
+    fun setNotificationsAllowed(enabled: Boolean) {
+        _notificationsAllowed.value = enabled
+        prefs.edit().putBoolean("KEY_NOTIFICATIONS_ALLOWED", enabled).apply()
+    }
+
+    private val _categoryAgentReplies = MutableStateFlow(prefs.getBoolean("KEY_CAT_AGENT_REPLIES", true))
+    val categoryAgentReplies: StateFlow<Boolean> = _categoryAgentReplies.asStateFlow()
+    fun setCategoryAgentReplies(enabled: Boolean) {
+        _categoryAgentReplies.value = enabled
+        prefs.edit().putBoolean("KEY_CAT_AGENT_REPLIES", enabled).apply()
+    }
+
+    private val _categoryApprovals = MutableStateFlow(prefs.getBoolean("KEY_CAT_APPROVALS", true))
+    val categoryApprovals: StateFlow<Boolean> = _categoryApprovals.asStateFlow()
+    fun setCategoryApprovals(enabled: Boolean) {
+        _categoryApprovals.value = enabled
+        prefs.edit().putBoolean("KEY_CAT_APPROVALS", enabled).apply()
+    }
+
+    private val _categoryAutomations = MutableStateFlow(prefs.getBoolean("KEY_CAT_AUTOMATIONS", true))
+    val categoryAutomations: StateFlow<Boolean> = _categoryAutomations.asStateFlow()
+    fun setCategoryAutomations(enabled: Boolean) {
+        _categoryAutomations.value = enabled
+        prefs.edit().putBoolean("KEY_CAT_AUTOMATIONS", enabled).apply()
+    }
+
+    private val _categoryGatewayStatus = MutableStateFlow(prefs.getBoolean("KEY_CAT_GATEWAY_STATUS", true))
+    val categoryGatewayStatus: StateFlow<Boolean> = _categoryGatewayStatus.asStateFlow()
+    fun setCategoryGatewayStatus(enabled: Boolean) {
+        _categoryGatewayStatus.value = enabled
+        prefs.edit().putBoolean("KEY_CAT_GATEWAY_STATUS", enabled).apply()
+    }
+
+    private val _showWorkingAgents = MutableStateFlow(prefs.getBoolean("KEY_SHOW_WORKING_AGENTS", true))
+    val showWorkingAgents: StateFlow<Boolean> = _showWorkingAgents.asStateFlow()
+    fun setShowWorkingAgents(enabled: Boolean) {
+        _showWorkingAgents.value = enabled
+        prefs.edit().putBoolean("KEY_SHOW_WORKING_AGENTS", enabled).apply()
+    }
+
+    val hapticsEnabled: StateFlow<Boolean> get() = _isHapticsEnabled.asStateFlow()
+
     private val _isAgentTyping = MutableStateFlow(false)
     val isAgentTyping: StateFlow<Boolean> = _isAgentTyping.asStateFlow()
 
     private fun loadCachedMessages(roomId: String): List<Message> {
+        if (!_cacheMessages.value) return emptyList()
         val raw = prefs.getString("cached_msgs_$roomId", null) ?: return emptyList()
         return try {
             json.decodeFromString<List<Message>>(raw)
@@ -479,6 +706,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     }
 
     private fun saveCachedMessages(roomId: String, list: List<Message>) {
+        if (!_cacheMessages.value) return
         try {
             val raw = json.encodeToString(list.takeLast(100))
             prefs.edit().putString("cached_msgs_$roomId", raw).apply()

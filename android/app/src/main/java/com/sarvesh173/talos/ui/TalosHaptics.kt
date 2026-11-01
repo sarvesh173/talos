@@ -12,6 +12,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 object TalosHaptics {
+    var isHapticsEnabled: Boolean = true
     private val WAVEFORM = longArrayOf(0, 30, 50, 30)
 
     /**
@@ -23,6 +24,7 @@ object TalosHaptics {
         context: Context,
         composeHaptic: HapticFeedback? = null
     ) {
+        if (!isHapticsEnabled) return
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager

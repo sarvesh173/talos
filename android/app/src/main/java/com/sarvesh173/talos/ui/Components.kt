@@ -19,6 +19,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -55,6 +56,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
@@ -1318,5 +1320,51 @@ fun ToolCallItem(tool: ToolCall) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Authentic Apple iOS 17/18 fluid toggle switch.
+ * 51x31dp capsule with 27dp floating white thumb and spring animation.
+ */
+@Composable
+fun AppleToggleSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    activeTrackColor: Color = Color(0xFF34C759)
+) {
+    val isDark = LocalIsDark.current
+    val thumbOffset by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (checked) 22.dp else 2.dp,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = 0.82f,
+            stiffness = 500f
+        ),
+        label = "apple_switch_thumb"
+    )
+    val trackColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (checked) activeTrackColor else (if (isDark) Color(0xFF39393D) else Color(0xFFE9E9EA)),
+        animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 500f),
+        label = "apple_switch_track"
+    )
+
+    Box(
+        modifier = modifier
+            .size(width = 51.dp, height = 31.dp)
+            .clip(CircleShape)
+            .background(trackColor)
+            .applePressable(0.96f) { onCheckedChange(!checked) }
+            .padding(vertical = 2.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffset)
+                .size(27.dp)
+                .shadow(elevation = 2.5.dp, shape = CircleShape)
+                .clip(CircleShape)
+                .background(Color.White)
+        )
     }
 }

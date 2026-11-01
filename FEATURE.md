@@ -2293,3 +2293,39 @@ Resolved misplaced closing brace in topBar hierarchy in `MainActivity.kt` ensuri
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21077` and `versionName` to `"2.10.77"`.
+
+---
+
+## 108. Full Nous Mobile Architecture: Security, Caching, Notifications & Chat Preferences
+
+Comprehensive implementation of all screens and preferences extracted from the official Nous Mobile specification screenshots on `feature/apple-design-remake`.
+
+### 1. Dedicated Sub-Screens (`ui/features/`)
+- **`SecurityScreen.kt`**: Require Biometrics toggle with iOS 51x31dp fluid switch, fingerprint squircle badge, and fallback lock guidance.
+- **`CachingScreen.kt`**: Chat List & Messages local caching toggles, plus tactile "Clear Local Device Cache" action.
+- **`NotificationsScreen.kt`**: "Notifications allowed" system toggle, deep-link to Android notification settings, 4 category toggles (Agent Replies, Approvals & Questions, Automations & Deliveries, Gateway Status), and "Working Agents" ongoing notification toggle.
+- **`ChatPreferencesScreen.kt`**: Hermes reasoning transparency ("Thinking Process"), Device actions, Link previews, Open links in app, and Memory updates toggles.
+
+### 2. Look & Feel Supercharged (`LookAndFeelScreen.kt`)
+- Loading indicator style selector (Dots, Wave, Pulse) with live simulated indicator preview.
+- Character animation & Motion toggles ("Animate bot characters", "Reduce motion").
+- Haptics master toggle with immediate tactile confirmation.
+- App Icon selection cards: Nous / Talos, Alya, and Orbs (Iris, Aurora, Bloom, Orb Trio, Orb Pair, Original).
+
+### 3. SettingsScreen Inset Grouped Hierarchy (`SettingsScreen.kt`)
+- Organized into 6 distinct iOS Inset Grouped sections:
+  1. Appearance & Personality (Look & Feel)
+  2. Chat & Reasoning (Chat Preferences)
+  3. Device & Security (Biometrics, Caching)
+  4. Notifications
+  5. Network & Core Transport (Tailscale endpoint, Host Token)
+  6. Council Fleet & About
+
+### 4. Button Border & Mark Polish (`MainActivity.kt`)
+- Fixed sharp rectangular borders on rounded icon buttons by enforcing continuous `RoundedCornerShape(10.dp)` matching on all specular glass action pills.
+- Replaced 5-stop metallic border with clean Apple specular hairline rim on action dial.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21078` and `versionName` to `"2.10.78"`.

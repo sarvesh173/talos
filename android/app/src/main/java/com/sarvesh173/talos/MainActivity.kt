@@ -101,6 +101,10 @@ import com.sarvesh173.talos.core.feature.FeatureScope
 import com.sarvesh173.talos.core.motion.MotionTokens
 import com.sarvesh173.talos.ui.features.SettingsScreen
 import com.sarvesh173.talos.ui.features.LookAndFeelScreen
+import com.sarvesh173.talos.ui.features.ChatPreferencesScreen
+import com.sarvesh173.talos.ui.features.SecurityScreen
+import com.sarvesh173.talos.ui.features.CachingScreen
+import com.sarvesh173.talos.ui.features.NotificationsScreen
 import com.sarvesh173.talos.ui.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -300,6 +304,10 @@ class MainActivity : ComponentActivity() {
                     "wizard" -> "wizard"
                     "settings" -> "settings"
                     "look_and_feel" -> "look_and_feel"
+                    "chat_preferences" -> "chat_preferences"
+                    "security" -> "security"
+                    "caching" -> "caching"
+                    "notifications" -> "notifications"
                     "canvas" -> "canvas"
                     "diff" -> "diff"
                     "hub" -> "hub"
@@ -316,8 +324,10 @@ class MainActivity : ComponentActivity() {
                         val fadeSpec = M3EMotion.defaultEffects<Float>()
                         val appleSpringSpatial = spring<IntOffset>(dampingRatio = 0.85f, stiffness = 400f)
                         val appleSpringFloat = spring<Float>(dampingRatio = 0.85f, stiffness = 400f)
-                        if ((initialState == "main" && (targetState == "settings" || targetState == "look_and_feel")) ||
-                            (initialState == "settings" && targetState == "look_and_feel")) {
+                        val isSettingsSub = targetState in listOf("look_and_feel", "chat_preferences", "security", "caching", "notifications")
+                        val fromSettingsSub = initialState in listOf("look_and_feel", "chat_preferences", "security", "caching", "notifications")
+                        if ((initialState == "main" && (targetState == "settings" || isSettingsSub)) ||
+                            (initialState == "settings" && isSettingsSub)) {
                             // Apple iOS Push Transition (Slide from right with scale and fade)
                             (
                                 fadeIn(animationSpec = fadeSpec) +
@@ -336,7 +346,7 @@ class MainActivity : ComponentActivity() {
                                     targetOffsetX = { width -> -(width * 0.25f).toInt() }
                                 )
                             )
-                        } else if ((initialState == "look_and_feel" && (targetState == "settings" || targetState == "main")) ||
+                        } else if ((fromSettingsSub && (targetState == "settings" || targetState == "main")) ||
                                    (initialState == "settings" && targetState == "main")) {
                             // Apple iOS Pop Transition (Slide back to right with spring physics)
                             (
@@ -447,11 +457,39 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(
                                 client = client,
                                 onBack = { appScreen = "main" },
-                                onNavigateToLookAndFeel = { appScreen = "look_and_feel" }
+                                onNavigateToLookAndFeel = { appScreen = "look_and_feel" },
+                                onNavigateToChatPreferences = { appScreen = "chat_preferences" },
+                                onNavigateToSecurity = { appScreen = "security" },
+                                onNavigateToCaching = { appScreen = "caching" },
+                                onNavigateToNotifications = { appScreen = "notifications" }
                             )
                         }
                         "look_and_feel" -> {
                             LookAndFeelScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
+                        }
+                        "chat_preferences" -> {
+                            ChatPreferencesScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
+                        }
+                        "security" -> {
+                            SecurityScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
+                        }
+                        "caching" -> {
+                            CachingScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
+                        }
+                        "notifications" -> {
+                            NotificationsScreen(
                                 client = client,
                                 onBack = { appScreen = "settings" }
                             )
@@ -982,7 +1020,7 @@ fun MainScreen(
                                         .size(36.dp)
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                        .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                        .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
                                         .applePressable(0.94f) { scope.launch { drawerState.open() } },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -1053,7 +1091,7 @@ fun MainScreen(
                                             .size(36.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                            .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
                                             .applePressable(0.94f) { onToggleTheme() },
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -1076,7 +1114,7 @@ fun MainScreen(
                                             .size(36.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                            .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
                                             .applePressable(0.94f) { onOpenSettings() },
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -1093,7 +1131,7 @@ fun MainScreen(
                                             .size(36.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                            .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
                                             .applePressable(0.94f) { onExitToLanding() },
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -1605,7 +1643,7 @@ fun MainScreen(
                                 shape = if (sendMorphProgress > 0.01f) M3EMorphShape(sendMorph, sendMorphProgress) else CircleShape,
                                 color = dialColor,
                                 tonalElevation = 0.dp,
-                                border = BorderStroke(1.2.dp, metallicBorderBrush()),
+                                border = BorderStroke(0.8.dp, Color.White.copy(alpha = if (isDark) 0.20f else 0.40f)),
                                 modifier = Modifier
                                     .size(48.dp)
                                     .scale(sendScale)

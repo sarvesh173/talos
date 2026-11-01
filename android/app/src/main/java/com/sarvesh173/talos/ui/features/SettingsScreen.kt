@@ -51,7 +51,11 @@ private data class SettingsFleetAgent(
 fun SettingsScreen(
     client: TalosClient,
     onBack: () -> Unit,
-    onNavigateToLookAndFeel: () -> Unit
+    onNavigateToLookAndFeel: () -> Unit,
+    onNavigateToChatPreferences: () -> Unit = {},
+    onNavigateToSecurity: () -> Unit = {},
+    onNavigateToCaching: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val isDark = LocalIsDark.current
@@ -72,6 +76,8 @@ fun SettingsScreen(
     val appleGreen = Color(0xFF34C759)
     val applePurple = Color(0xFFAF52DE)
     val appleGray = Color(0xFF8E8E93)
+    val appleRed = Color(0xFFFF3B30)
+    val appleTeal = Color(0xFF30B0C7)
 
     Scaffold(
         topBar = {
@@ -142,51 +148,285 @@ fun SettingsScreen(
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .applePressable(0.97f) { onNavigateToLookAndFeel() }
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // 30x30dp squircle leading icon badge (Blue for Look & Feel)
-                    Box(
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
                         modifier = Modifier
-                            .size(30.dp)
-                            .clip(RoundedCornerShape(7.dp))
-                            .background(appleBlue),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { onNavigateToLookAndFeel() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // 30x30dp squircle leading icon badge (Blue for Look & Feel)
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleBlue),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = TalosSparkle,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Look & Feel",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Customize",
+                            fontSize = 13.sp,
+                            color = talosTextMuted,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
                         Icon(
-                            imageVector = TalosSparkle,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(17.dp)
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open Look & Feel",
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Look & Feel",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = (-0.2).sp,
-                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                        modifier = Modifier.weight(1f)
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
                     )
-                    Text(
-                        text = "Customize",
-                        fontSize = 13.sp,
-                        color = talosTextMuted,
-                        letterSpacing = (-0.15).sp
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { onNavigateToChatPreferences() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 30x30dp squircle leading icon badge (Purple for Chat Preferences)
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(applePurple),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Chat Preferences",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Configure",
+                            fontSize = 13.sp,
+                            color = talosTextMuted,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open Chat Preferences",
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // -----------------------------------------------------------------
+            // PREFERENCES & PRIVACY (Notifications, Security, Caching)
+            // -----------------------------------------------------------------
+            Text(
+                text = "PREFERENCES & PRIVACY",
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.8.sp,
+                color = talosTextMuted,
+                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+            )
+
+            val notifAllowedState by client.notificationsAllowed.collectAsState()
+            val biometricsState by client.requireBiometrics.collectAsState()
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Row 1: Notifications
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { onNavigateToNotifications() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleRed),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Notifications",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = if (notifAllowedState) "On" else "Off",
+                            fontSize = 13.sp,
+                            color = talosTextMuted,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open Notifications",
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "Open Look & Feel",
-                        tint = talosTextMuted.copy(alpha = 0.5f),
-                        modifier = Modifier.size(14.dp)
+
+                    // Row 2: Security
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { onNavigateToSecurity() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleGreen),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Fingerprint,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Security",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = if (biometricsState) "Biometrics" else "Standard",
+                            fontSize = 13.sp,
+                            color = talosTextMuted,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open Security",
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
                     )
+
+                    // Row 3: Caching
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { onNavigateToCaching() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleTeal),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Storage,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Caching",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Storage",
+                            fontSize = 13.sp,
+                            color = talosTextMuted,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open Caching",
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
             }
 

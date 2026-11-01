@@ -518,7 +518,7 @@ fun LookAndFeelScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // -----------------------------------------------------------------
-            // 3. TYPOGRAPHY & TEXT SIZE (Clean Unified Inset Card)
+            // 3. TYPOGRAPHY & TEXT SIZE (Exact Layout from Reference Screenshot)
             // -----------------------------------------------------------------
             Text(
                 text = "Typography",
@@ -529,8 +529,8 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            var showFontLayer by remember { mutableStateOf(false) }
-            var showSizeLayer by remember { mutableStateOf(false) }
+            var showFontMenu by remember { mutableStateOf(false) }
+            var showSizeMenu by remember { mutableStateOf(false) }
 
             val fontOptions = remember {
                 listOf(
@@ -543,8 +543,116 @@ fun LookAndFeelScreen(
                 )
             }
 
-            val textSizeOptions = remember {
+            // 1. FONT SELECTION BUTTON (Opens Floating Popup Menu)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
+                    border = BorderStroke(
+                        0.6.dp,
+                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            TalosHaptics.sendHaptic(context)
+                            showFontMenu = true
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = currentFont,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.UnfoldMore,
+                            contentDescription = "Select Font",
+                            tint = talosTextMuted.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // Floating Dropdown Menu for Font
+                DropdownMenu(
+                    expanded = showFontMenu,
+                    onDismissRequest = { showFontMenu = false },
+                    modifier = Modifier
+                        .background(
+                            if (isDark) Color(0xFF2C2C2E) else Color(0xFFFFFFFF),
+                            RoundedCornerShape(20.dp)
+                        )
+                        .border(
+                            BorderStroke(
+                                0.6.dp,
+                                if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
+                            ),
+                            RoundedCornerShape(20.dp)
+                        )
+                        .width(220.dp)
+                ) {
+                    fontOptions.forEach { (fontName, _, fontFamily) ->
+                        val isSelected = currentFont == fontName
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = fontName,
+                                    fontSize = 16.sp,
+                                    fontFamily = fontFamily,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                            },
+                            trailingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Selected",
+                                        tint = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            } else null,
+                            onClick = {
+                                if (fontName != currentFont) {
+                                    TalosHaptics.sendHaptic(context)
+                                    client.setSelectedFont(fontName)
+                                    showFontMenu = false
+                                    coroutineScope.launch {
+                                        isDropletActive = true
+                                        dropletAnim.snapTo(0f)
+                                        dropletAnim.animateTo(
+                                            targetValue = 1f,
+                                            animationSpec = tween(
+                                                durationMillis = 1100,
+                                                easing = androidx.compose.animation.core.FastOutSlowInEasing
+                                            )
+                                        )
+                                        isDropletActive = false
+                                    }
+                                } else {
+                                    showFontMenu = false
+                                }
+                            },
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 2. TEXT SIZE SELECTION BUTTON (Opens Floating Popup Menu matching img_adec807ee049.jpg)
+            val popupSizeList = remember {
                 listOf(
+                    "system" to "System",
                     "tiny" to "Tiny",
                     "extra_small" to "Extra Small",
                     "small" to "Small",
@@ -553,224 +661,126 @@ fun LookAndFeelScreen(
                     "extra_large" to "Extra Large"
                 )
             }
-            val activeSizeLabel = textSizeOptions.find { it.first == currentFontScale.lowercase() }?.second ?: "Small"
+            val activeSizeDisplay = popupSizeList.find { it.first == currentFontScale.lowercase() }?.second ?: "Small"
 
-            // UNIFIED INSET CARD: Font & Text Size in the SAME Section
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(
-                    0.6.dp,
-                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    // ROW 1: FONT SELECTION ROW (Single Button Layer)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
+                    border = BorderStroke(
+                        0.6.dp,
+                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            TalosHaptics.sendHaptic(context)
+                            showSizeMenu = true
+                        }
+                ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                TalosHaptics.sendHaptic(context)
-                                showFontLayer = !showFontLayer
-                                if (showFontLayer) showSizeLayer = false
-                            }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Font",
+                            text = activeSizeDisplay,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Medium,
                             letterSpacing = (-0.2).sp,
                             color = if (isDark) Color.White else Color(0xFF1D1D1F)
                         )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = currentFont,
-                                fontSize = 15.sp,
-                                color = talosTextMuted,
-                                letterSpacing = (-0.1).sp
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.Default.UnfoldMore,
-                                contentDescription = "Select Font",
-                                tint = talosTextMuted.copy(alpha = 0.6f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.UnfoldMore,
+                            contentDescription = "Select Text Size",
+                            tint = talosTextMuted.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
+                }
 
-                    // Font Selection Layer
-                    AnimatedVisibility(visible = showFontLayer) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            HorizontalDivider(
-                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                                thickness = 0.5.dp
-                            )
-                            fontOptions.forEachIndexed { index, (fontName, fontSubtitle, fontFamily) ->
-                                val isSelected = currentFont == fontName
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            if (fontName != currentFont) {
-                                                TalosHaptics.sendHaptic(context)
-                                                client.setSelectedFont(fontName)
-                                                showFontLayer = false
-
-                                                coroutineScope.launch {
-                                                    isDropletActive = true
-                                                    dropletAnim.snapTo(0f)
-                                                    dropletAnim.animateTo(
-                                                        targetValue = 1f,
-                                                        animationSpec = tween(
-                                                            durationMillis = 1100,
-                                                            easing = androidx.compose.animation.core.FastOutSlowInEasing
-                                                        )
-                                                    )
-                                                    isDropletActive = false
-                                                }
-                                            } else {
-                                                showFontLayer = false
-                                            }
-                                        }
-                                        .padding(vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = fontName,
-                                            fontSize = 15.5.sp,
-                                            fontFamily = fontFamily,
-                                            color = if (isSelected) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F)),
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                            letterSpacing = (-0.2).sp
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = fontSubtitle,
-                                            fontSize = 12.5.sp,
-                                            fontFamily = fontFamily,
-                                            color = talosTextMuted,
-                                            letterSpacing = (-0.1).sp
-                                        )
-                                    }
-                                    if (isSelected) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Selected",
-                                            tint = effectiveAccentColor,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                                if (index < fontOptions.size - 1) {
-                                    HorizontalDivider(
-                                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                                        thickness = 0.5.dp
+                // Floating Dropdown Menu matching img_adec807ee049.jpg
+                DropdownMenu(
+                    expanded = showSizeMenu,
+                    onDismissRequest = { showSizeMenu = false },
+                    modifier = Modifier
+                        .background(
+                            if (isDark) Color(0xFF2C2C2E) else Color(0xFFFFFFFF),
+                            RoundedCornerShape(20.dp)
+                        )
+                        .border(
+                            BorderStroke(
+                                0.6.dp,
+                                if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
+                            ),
+                            RoundedCornerShape(20.dp)
+                        )
+                        .width(220.dp)
+                ) {
+                    popupSizeList.forEach { (sizeKey, sizeTitle) ->
+                        val isSelected = currentFontScale.lowercase() == sizeKey || (currentFontScale.lowercase() == "standard" && sizeKey == "small")
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = sizeTitle,
+                                    fontSize = 16.sp,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                            },
+                            trailingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Selected",
+                                        tint = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
-
-                    HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                        thickness = 0.5.dp
-                    )
-
-                    // ROW 2: TEXT SIZE (Same Section, Single Button Layer)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
+                            } else null,
+                            onClick = {
                                 TalosHaptics.sendHaptic(context)
-                                showSizeLayer = !showSizeLayer
-                                if (showSizeLayer) showFontLayer = false
-                            }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Text Size",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = (-0.2).sp,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                val targetKey = if (sizeKey == "system") "standard" else sizeKey
+                                client.setFontScale(targetKey)
+                                showSizeMenu = false
+                            },
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
                         )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = activeSizeLabel,
-                                fontSize = 15.sp,
-                                color = talosTextMuted,
-                                letterSpacing = (-0.1).sp
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.Default.UnfoldMore,
-                                contentDescription = "Change Text Size",
-                                tint = talosTextMuted.copy(alpha = 0.6f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-
-                    // Text Size Selection Layer
-                    AnimatedVisibility(visible = showSizeLayer) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            HorizontalDivider(
-                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                                thickness = 0.5.dp
-                            )
-                            textSizeOptions.forEachIndexed { index, (sizeKey, sizeTitle) ->
-                                val isSelected = currentFontScale.lowercase() == sizeKey || (currentFontScale.lowercase() == "standard" && sizeKey == "small")
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            TalosHaptics.sendHaptic(context)
-                                            client.setFontScale(sizeKey)
-                                            showSizeLayer = false
-                                        }
-                                        .padding(vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = sizeTitle,
-                                        fontSize = 15.sp,
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (isSelected) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F))
-                                    )
-                                    if (isSelected) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Selected",
-                                            tint = effectiveAccentColor,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                                if (index < textSizeOptions.size - 1) {
-                                    HorizontalDivider(
-                                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                                        thickness = 0.5.dp
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 3. CONTINUOUS TEXT SIZE SLIDER (Shown directly below the button in img_adec807ee049.jpg)
+            val sliderValue = when (currentFontScale.lowercase()) {
+                "tiny" -> 0f
+                "extra_small" -> 1f
+                "small", "standard", "default" -> 2f
+                "medium" -> 3f
+                "large" -> 4f
+                "extra_large" -> 5f
+                else -> 2f
+            }
+
+            Slider(
+                value = sliderValue,
+                onValueChange = { v ->
+                    val idx = v.roundToInt().coerceIn(0, 5)
+                    val keys = listOf("tiny", "extra_small", "small", "medium", "large", "extra_large")
+                    client.setFontScale(keys[idx])
+                },
+                valueRange = 0f..5f,
+                steps = 4,
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = effectiveAccentColor,
+                    inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.1f)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp)
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
         }

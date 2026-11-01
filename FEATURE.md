@@ -2620,3 +2620,27 @@ Eliminated APK signature corruption caused by explicit V1/V2 overrides, aligning
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21092` and `versionName` to `"2.10.92"`.
+
+---
+
+## 121. Exact Floating Popover Layout Alignment (`img_adec807ee049.jpg`)
+
+Replaced inline expandable section with the exact floating popup menu layout from user's reference:
+
+### 1. Dedicated Selection Buttons with `< >` Chevron
+- Built standalone selection containers for **Font** and **Text Size** (`shape = RoundedCornerShape(14.dp)`).
+- Left: Current selection label; Right: Vertical chevron (`Icons.Default.UnfoldMore`).
+
+### 2. Floating Dropdown Menu Popover
+- Tapping either button opens an authentic floating popover (`DropdownMenu`) with:
+  - `RoundedCornerShape(20.dp)` with elevation & border.
+  - Full item list (`System`, `Tiny`, `Extra Small`, `Small`, `Medium`, `Large`, `Extra Large`).
+  - Active checkmark `✓` icon on current selection.
+
+### 3. Continuous Text Size Slider
+- Integrated the continuous fluid slider directly beneath the Text Size button matching `img_adec807ee049.jpg`.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21093` and `versionName` to `"2.10.93"`.

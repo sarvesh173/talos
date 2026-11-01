@@ -115,7 +115,8 @@ fun SettingsScreen(
             // 1. APPEARANCE & LOOK AND FEEL CATEGORY
             // -----------------------------------------------------------------
             Text(
-                text = "APPEARANCE & PERSONALITY",\n                fontSize = 11.sp,
+                text = "APPEARANCE & PERSONALITY",
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.8.sp,
                 color = talosTextMuted,

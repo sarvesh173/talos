@@ -347,20 +347,19 @@ fun LandingScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(MdSpacing.xs)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
                             text = "TALOS",
-                            color = scheme.onSurface,
-                            style = MaterialTheme.typography.titleLarge,
+                            color = if (isCurrentDark) Color.White else Color(0xFF1D1D1F),
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.2.sp
+                            letterSpacing = (-0.5).sp
                         )
 
                         Surface(
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shape = ShapeFull,
-                            border = BorderStroke(1.dp, scheme.outlineVariant)
+                            color = if (isCurrentDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA),
+                            shape = CircleShape
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -371,13 +370,14 @@ fun LandingScreen(
                                     modifier = Modifier
                                         .size(6.dp)
                                         .clip(CircleShape)
-                                        .background(StatusGreen)
+                                        .background(Color(0xFF34C759))
                                 )
                                 Text(
                                     text = if (isOpenCodeSpawned) "5 AGENTS ACTIVE" else "4 AGENTS ACTIVE",
-                                    color = scheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold
+                                    color = talosTextMuted,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = 0.4.sp
                                 )
                             }
                         }
@@ -395,22 +395,25 @@ fun LandingScreen(
                     PressableSurface(
                         onClick = onToggleTheme,
                         shape = CircleShape,
-                        pressedShape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainer,
-                        border = BorderStroke(1.dp, metallicBorderBrush()),
+                        pressedShape = RoundedCornerShape(14.dp),
+                        color = if (isCurrentDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                        border = BorderStroke(
+                            0.6.dp,
+                            if (isCurrentDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
+                        ),
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(38.dp)
                             .semantics {
                                 contentDescription = if (isCurrentDark) "Switch to Light Mode" else "Switch to Dark Mode"
                             }
                     ) {
                         Icon(
-                            imageVector = if (isCurrentDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            imageVector = TalosIcons.TalosPalette,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = if (isCurrentDark) Color.White else Color(0xFF1D1D1F),
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .size(19.dp)
+                                .size(18.dp)
                                 .graphicsLayer {
                                     rotationZ = themeRot
                                     scaleX = themeScale
@@ -479,11 +482,10 @@ fun LandingScreen(
                 // Primary Apple Action Capsule with tactile spring bounce back
                 PressableSurface(
                     onClick = handlePrimaryAction,
-                    shape = ShapeFull,
+                    shape = CircleShape,
                     pressedShape = RoundedCornerShape(16.dp),
-                    color = Color(0xFF0071E3), // Apple Action Blue signature fill
+                    color = MaterialTheme.colorScheme.primary, // Apple Active System Accent
                     contentColor = Color.White,
-                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.35f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
@@ -504,18 +506,12 @@ fun LandingScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.RocketLaunch,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Enter Chamber",
                             style = MaterialTheme.typography.labelLarge,
-                            letterSpacing = (-0.15).sp,
-                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.2).sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 17.sp,
                             color = Color.White
                         )
                     }

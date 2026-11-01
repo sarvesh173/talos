@@ -2442,3 +2442,22 @@ Complete visual and interaction redesign of the Talos Main Chat interface adheri
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21084` and `versionName` to `"2.10.84"`.
+
+---
+
+## 113. Apple HIG Landing & Pair Screen Typography and Glyph Polish
+
+Refined the Landing and Pairing Hero screen with authentic Apple typography and unboxed controls:
+
+### 1. Apple SF Pro Display Hero & Status Capsule
+- **Display Typography**: Modern Apple SF Pro bold header (`24sp`, letter spacing `-0.5sp`), eliminating generic Material 1.2sp tracking.
+- **Minimalist Status Indicator**: Clean 6dp emerald green status dot (`#34C759`) encased in a calm, borderless pill.
+
+### 2. Apple Action Pill & Bespoke Palette Glyph
+- **Dynamic Accent Action Pill**: Replaced hardcoded blue button with dynamic system accent (`MaterialTheme.colorScheme.primary`) pill with comfortable 17sp SF Pro SemiBold typography.
+- **Bespoke Theme Switcher**: Replaced generic Material Light/Dark icons with custom handcrafted `TalosIcons.TalosPalette` vector glyph.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21085` and `versionName` to `"2.10.85"`.

@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -539,10 +540,10 @@ fun LookAndFeelScreen(
             Spacer(modifier = Modifier.height(22.dp))
 
             // -----------------------------------------------------------------
-            // 4. FONTS (Exact 6 Fonts from Reference)
+            // 4. TYPOGRAPHY & TEXT SIZE (Unified Inset Section + Water Droplet Ripple)
             // -----------------------------------------------------------------
             Text(
-                text = "Fonts",
+                text = "Typography",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = talosTextMuted,
@@ -553,6 +554,13 @@ fun LookAndFeelScreen(
             var isApplyingFontAnimation by remember { mutableStateOf(false) }
             var fontAnimJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
             val coroutineScope = rememberCoroutineScope()
+
+            var showFontLayer by remember { mutableStateOf(false) }
+            var showSizeLayer by remember { mutableStateOf(false) }
+
+            var displayedFont by remember { mutableStateOf(currentFont) }
+            val dropletAnim = remember { Animatable(1f) }
+            var isDropletActive by remember { mutableStateOf(false) }
 
             val fontOptions = remember {
                 listOf(
@@ -565,6 +573,18 @@ fun LookAndFeelScreen(
                 )
             }
             val activeFontModel = fontOptions.find { it.first == currentFont } ?: fontOptions[1]
+
+            val textSizeOptions = remember {
+                listOf(
+                    "tiny" to "Tiny",
+                    "extra_small" to "Extra Small",
+                    "small" to "Small",
+                    "medium" to "Medium",
+                    "large" to "Large",
+                    "extra_large" to "Extra Large"
+                )
+            }
+            val activeSizeLabel = textSizeOptions.find { it.first == currentFontScale.lowercase() }?.second ?: "Small"
 
             // Floating Dynamic Island Font Drop Banner
             AnimatedVisibility(
@@ -603,6 +623,7 @@ fun LookAndFeelScreen(
                 }
             }
 
+            // Live Typography Preview Card with Expanding Water Droplet Simulated Ripple
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
@@ -612,140 +633,106 @@ fun LookAndFeelScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
-                    fontOptions.forEachIndexed { index, (fontName, fontSubtitle, fontFamily) ->
-                        val isSelected = currentFont == fontName
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    TalosHaptics.sendHaptic(context)
-                                    client.setSelectedFont(fontName)
-                                    fontAnimJob?.cancel()
-                                    isApplyingFontAnimation = true
-                                    fontAnimJob = coroutineScope.launch {
-                                        kotlinx.coroutines.delay(1600)
-                                        isApplyingFontAnimation = false
-                                    }
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = fontName,
-                                    fontSize = 16.sp,
-                                    fontFamily = fontFamily,
-                                    color = if (isSelected) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F)),
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                    letterSpacing = (-0.2).sp
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = fontSubtitle,
-                                    fontSize = 13.sp,
-                                    fontFamily = fontFamily,
-                                    color = talosTextMuted,
-                                    letterSpacing = (-0.1).sp
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    // Expanding Water Droplet Canvas Ripple
+                    if (isDropletActive) {
+                        val p = dropletAnim.value
+                        Canvas(modifier = Modifier.matchParentSize()) {
+                            val center = Offset(size.width * 0.5f, size.height * 0.45f)
+                            val maxR = kotlin.math.hypot(size.width, size.height) * 0.75f
+
+                            // Wave 1: Primary ripple ring
+                            val r1 = maxR * p
+                            val a1 = ((1f - p) * 0.85f).coerceIn(0f, 1f)
+                            drawCircle(
+                                color = effectiveAccentColor.copy(alpha = a1),
+                                radius = r1,
+                                center = center,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx() * (1f - p * 0.5f))
+                            )
+
+                            // Wave 2: Secondary echoing ripple
+                            if (p > 0.15f) {
+                                val p2 = (p - 0.15f) / 0.85f
+                                val r2 = maxR * p2
+                                val a2 = ((1f - p2) * 0.5f).coerceIn(0f, 1f)
+                                drawCircle(
+                                    color = effectiveAccentColor.copy(alpha = a2),
+                                    radius = r2,
+                                    center = center,
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
                                 )
                             }
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
-                                    tint = effectiveAccentColor,
-                                    modifier = Modifier.size(18.dp)
+
+                            // Wave 3: Delicate inner ripple
+                            if (p > 0.32f) {
+                                val p3 = (p - 0.32f) / 0.68f
+                                val r3 = maxR * p3
+                                val a3 = ((1f - p3) * 0.35f).coerceIn(0f, 1f)
+                                drawCircle(
+                                    color = effectiveAccentColor.copy(alpha = a3),
+                                    radius = r3,
+                                    center = center,
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
                                 )
                             }
-                        }
-                        if (index < fontOptions.size - 1) {
-                            HorizontalDivider(
-                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                                thickness = 0.5.dp
+
+                            // Liquid radial sheen
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        effectiveAccentColor.copy(alpha = (1f - p) * 0.18f),
+                                        Color.Transparent
+                                    ),
+                                    center = center,
+                                    radius = r1.coerceAtLeast(1f)
+                                ),
+                                radius = r1,
+                                center = center
                             )
                         }
+                    }
+
+                    val targetFontModel = fontOptions.find { it.first == displayedFont } ?: activeFontModel
+                    val liquidScale = if (isDropletActive) {
+                        val p = dropletAnim.value
+                        1f + 0.04f * kotlin.math.sin(p * Math.PI.toFloat())
+                    } else 1f
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 18.dp)
+                            .graphicsLayer {
+                                scaleX = liquidScale
+                                scaleY = liquidScale
+                            }
+                    ) {
+                        Text(
+                            text = displayedFont,
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = targetFontModel.third,
+                            letterSpacing = (-0.4).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "A clear view of your conversations.",
+                            fontSize = 15.sp,
+                            fontFamily = targetFontModel.third,
+                            letterSpacing = (-0.2).sp,
+                            color = talosTextMuted
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Live Typography Preview Card with Cascading Drop Animation
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(
-                    0.6.dp,
-                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
-                    AnimatedContent(
-                        targetState = currentFont,
-                        transitionSpec = {
-                            (slideInVertically(
-                                animationSpec = spring(dampingRatio = 0.72f, stiffness = 320f)
-                            ) { h -> h / 2 } + fadeIn(tween(500)))
-                                .togetherWith(
-                                    slideOutVertically(
-                                        animationSpec = tween(300)
-                                    ) { h -> -h / 3 } + fadeOut(tween(250))
-                                )
-                        },
-                        label = "FontDropTransition"
-                    ) { targetFontName ->
-                        val targetFontModel = fontOptions.find { it.first == targetFontName } ?: activeFontModel
-                        Column {
-                            Text(
-                                text = targetFontName,
-                                fontSize = 21.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = targetFontModel.third,
-                                letterSpacing = (-0.4).sp,
-                                color = if (isDark) Color.White else Color(0xFF1D1D1F)
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "A clear view of your conversations.",
-                                fontSize = 15.sp,
-                                fontFamily = targetFontModel.third,
-                                letterSpacing = (-0.2).sp,
-                                color = talosTextMuted
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // -----------------------------------------------------------------
-            // 5. TEXT SIZE PICKER (Exact 6 Discrete Sizes from Screenshot)
+            // UNIFIED INSET CARD: Font & Text Size in the SAME Section
             // -----------------------------------------------------------------
-            Text(
-                text = "Text Size",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = talosTextMuted,
-                letterSpacing = (-0.15).sp,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-            )
-
-            var showSizeMenu by remember { mutableStateOf(false) }
-            val textSizeOptions = remember {
-                listOf(
-                    "tiny" to "Tiny",
-                    "extra_small" to "Extra Small",
-                    "small" to "Small",
-                    "medium" to "Medium",
-                    "large" to "Large",
-                    "extra_large" to "Extra Large"
-                )
-            }
-            val activeSizeLabel = textSizeOptions.find { it.first == currentFontScale.lowercase() }?.second ?: "Small"
-
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
@@ -756,12 +743,141 @@ fun LookAndFeelScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
+                    // ROW 1: FONT SELECTION ROW (Single Button Layer)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
                                 TalosHaptics.sendHaptic(context)
-                                showSizeMenu = !showSizeMenu
+                                showFontLayer = !showFontLayer
+                                if (showFontLayer) showSizeLayer = false
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Font",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = currentFont,
+                                fontSize = 15.sp,
+                                color = talosTextMuted,
+                                letterSpacing = (-0.1).sp
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Default.UnfoldMore,
+                                contentDescription = "Select Font",
+                                tint = talosTextMuted.copy(alpha = 0.6f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // Font Selection Layer
+                    AnimatedVisibility(visible = showFontLayer) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            HorizontalDivider(
+                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                                thickness = 0.5.dp
+                            )
+                            fontOptions.forEachIndexed { index, (fontName, fontSubtitle, fontFamily) ->
+                                val isSelected = currentFont == fontName
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            if (fontName != currentFont) {
+                                                TalosHaptics.sendHaptic(context)
+                                                client.setSelectedFont(fontName)
+                                                showFontLayer = false
+
+                                                fontAnimJob?.cancel()
+                                                isApplyingFontAnimation = true
+                                                fontAnimJob = coroutineScope.launch {
+                                                    isDropletActive = true
+                                                    dropletAnim.snapTo(0f)
+                                                    launch {
+                                                        kotlinx.coroutines.delay(220)
+                                                        displayedFont = fontName
+                                                    }
+                                                    dropletAnim.animateTo(
+                                                        targetValue = 1f,
+                                                        animationSpec = tween(
+                                                            durationMillis = 1400,
+                                                            easing = androidx.compose.animation.core.FastOutSlowInEasing
+                                                        )
+                                                    )
+                                                    isDropletActive = false
+                                                    kotlinx.coroutines.delay(200)
+                                                    isApplyingFontAnimation = false
+                                                }
+                                            } else {
+                                                showFontLayer = false
+                                            }
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = fontName,
+                                            fontSize = 15.5.sp,
+                                            fontFamily = fontFamily,
+                                            color = if (isSelected) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F)),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                            letterSpacing = (-0.2).sp
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = fontSubtitle,
+                                            fontSize = 12.5.sp,
+                                            fontFamily = fontFamily,
+                                            color = talosTextMuted,
+                                            letterSpacing = (-0.1).sp
+                                        )
+                                    }
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = effectiveAccentColor,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                                if (index < fontOptions.size - 1) {
+                                    HorizontalDivider(
+                                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                                        thickness = 0.5.dp
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp
+                    )
+
+                    // ROW 2: TEXT SIZE (Same Section, Single Button Layer)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                TalosHaptics.sendHaptic(context)
+                                showSizeLayer = !showSizeLayer
+                                if (showSizeLayer) showFontLayer = false
                             }
                             .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -792,7 +908,8 @@ fun LookAndFeelScreen(
                         }
                     }
 
-                    AnimatedVisibility(visible = showSizeMenu) {
+                    // Text Size Selection Layer
+                    AnimatedVisibility(visible = showSizeLayer) {
                         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                             HorizontalDivider(
                                 color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
@@ -806,7 +923,7 @@ fun LookAndFeelScreen(
                                         .clickable {
                                             TalosHaptics.sendHaptic(context)
                                             client.setFontScale(sizeKey)
-                                            showSizeMenu = false
+                                            showSizeLayer = false
                                         }
                                         .padding(vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,

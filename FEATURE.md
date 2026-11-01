@@ -2551,3 +2551,28 @@ Resolved coroutine imports in `LookAndFeelScreen.kt` and finalized V1/V2 signatu
 
 - Added `import kotlinx.coroutines.launch` to manage live drop animation timers.
 - Bumped `versionCode` to `21089` and `versionName` to `"2.10.89"`.
+
+---
+
+## 118. Unified Typography Inset Layer & Water Droplet Ripple Animation
+
+Consolidated the typography selection into a single unified Apple Inset card and introduced a water droplet expanding wave transformation:
+
+### 1. Unified Typography & Text Size Inset Card
+- Removed scattered font button lists in favor of a clean, single grouped Inset Card:
+  - **Row 1: Font** — Displays `Font: [Active] <>`. Tapping opens an expandable layer with the 6 font choices (with subtitles and checkmark).
+  - **Divider**
+  - **Row 2: Text Size** — Displays `Text Size: [Active] <>`. Tapping opens an expandable layer with the 6 discrete size choices.
+- Completely unified into the same section per user specification.
+
+### 2. Water Droplet Expanding Wave Typography Transformation
+- Implemented a simulated water droplet ripple effect on font change:
+  - When a new typeface is chosen, a water drop strikes the preview card.
+  - Expanding concentric water ripples (`Canvas` drawing primary, secondary, and inner delicate rings) radiate outwards with fluid physics (`FastOutSlowInEasing`).
+  - As the circular liquid wave expands over the text, the text undergoes a liquid morph scale pulse and transforms into the selected font, completing the transition as the ripple fades out.
+  - Accompanied by haptic droplet click feedback.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21090` and `versionName` to `"2.10.90"`.

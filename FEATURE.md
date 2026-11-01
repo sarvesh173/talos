@@ -2576,3 +2576,29 @@ Consolidated the typography selection into a single unified Apple Inset card and
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21090` and `versionName` to `"2.10.90"`.
+
+---
+
+## 119. Restored Side Inset Corners, Full-System Water Droplet Wave & Removed Redundant Preview
+
+Refined `LookAndFeelScreen.kt` addressing user feedback on contrast, corner geometry, and animation scope:
+
+### 1. Restored Side Corners & Inset Contrast
+- Replaced washed-out `#FFFFFF` scaffold background with authentic Apple system grouped background (`Color(0xFFF2F2F7)` on light, `Color(0xFF000000)` on dark).
+- Pure white cards now stand out with distinct, crisp `20.dp` rounded corners and `16.dp` side margins.
+
+### 2. Contextual Background Canvases
+- Merged separate stacked `Light Background` and `Dark Background` blocks into a single contextual `Background` card row that automatically displays the relevant options (White & Paper White for Light mode; Midnight, Black, Gray for Dark mode).
+
+### 3. Removed Redundant Font Display & Banners
+- Completely eliminated the oversized font name card and the text "Applying font" banners.
+- Kept the typography control simple and compact: a single Inset Card with `Font` and `Text Size` rows.
+
+### 4. Full-System Water Droplet Ripple Animation
+- Promoted the water droplet wave to a full-system screen overlay.
+- Selecting any font casts an expanding circular liquid wave across the entire screen, serving as the fluid visual indicator for typography updates.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21091` and `versionName` to `"2.10.91"`.

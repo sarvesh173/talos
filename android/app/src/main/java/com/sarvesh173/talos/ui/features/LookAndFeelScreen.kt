@@ -110,6 +110,10 @@ fun LookAndFeelScreen(
     var showColorPicker by remember { mutableStateOf(false) }
     var showSpectrumWheel by remember { mutableStateOf(false) }
 
+    val dropletAnim = remember { Animatable(1f) }
+    var isDropletActive by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
     if (showColorPicker) {
         AppleColorPickerDialog(
             initialColor = effectiveAccentColor,
@@ -171,15 +175,19 @@ fun LookAndFeelScreen(
                 }
             }
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = if (isDark) Color(0xFF000000) else Color(0xFFF2F2F7)
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
             // -----------------------------------------------------------------
             // 1. APPEARANCE & ACCENT (MATCHING SCREENSHOT)
             // -----------------------------------------------------------------
@@ -409,10 +417,10 @@ fun LookAndFeelScreen(
             Spacer(modifier = Modifier.height(18.dp))
 
             // -----------------------------------------------------------------
-            // 2. LIGHT BACKGROUND (White & Paper White side by side)
+            // 2. BACKGROUND CANVAS (Contextual: White/Paper for Light; Midnight/Black/Gray for Dark)
             // -----------------------------------------------------------------
             Text(
-                text = "Light Background",
+                text = "Background",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = talosTextMuted,
@@ -420,127 +428,97 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Android Option Card (System Light)
-                val isAndroidSelected = lightBg == "android" || lightBg == "default"
-                BackgroundOptionCard(
-                    title = "Android",
-                    previewColor = Color(0xFFF2F2F7),
-                    isSelected = isAndroidSelected,
-                    accentColor = effectiveAccentColor,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        TalosHaptics.sendHaptic(context)
-                        client.setLightBackground("android")
-                        client.setThemePreset(MaterialThemePreset.APPLE_PURE_WHITE.name)
-                    }
-                )
+            if (!isDark) {
+                // Light mode canvases: White & Paper White (2 spacious cards)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val isWhiteSelected = lightBg == "white" || lightBg == "default"
+                    BackgroundOptionCard(
+                        title = "White",
+                        previewColor = Color(0xFFFFFFFF),
+                        isSelected = isWhiteSelected,
+                        accentColor = effectiveAccentColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            TalosHaptics.sendHaptic(context)
+                            client.setLightBackground("white")
+                            client.setThemePreset(MaterialThemePreset.APPLE_PURE_WHITE.name)
+                        }
+                    )
 
-                // White Option Card
-                val isWhiteSelected = lightBg == "white"
-                BackgroundOptionCard(
-                    title = "White",
-                    previewColor = Color(0xFFFFFFFF),
-                    isSelected = isWhiteSelected,
-                    accentColor = effectiveAccentColor,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        TalosHaptics.sendHaptic(context)
-                        client.setLightBackground("white")
-                        client.setThemePreset(MaterialThemePreset.APPLE_PURE_WHITE.name)
-                    }
-                )
+                    val isPaperSelected = lightBg == "paper_white"
+                    BackgroundOptionCard(
+                        title = "Paper White",
+                        previewColor = Color(0xFFF7F5F0),
+                        isSelected = isPaperSelected,
+                        accentColor = effectiveAccentColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            TalosHaptics.sendHaptic(context)
+                            client.setLightBackground("paper_white")
+                            client.setThemePreset(MaterialThemePreset.APPLE_PAPER_WHITE.name)
+                        }
+                    )
+                }
+            } else {
+                // Dark mode canvases: Midnight, Black, Gray (3 cards with clean spacing)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val isMidnightSelected = darkBg == "midnight"
+                    DarkBackgroundOptionCard(
+                        title = "Midnight",
+                        canvasColor = Color(0xFF0B0E14),
+                        bubbleColor = Color(0xFF161B26),
+                        isSelected = isMidnightSelected,
+                        accentColor = effectiveAccentColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            TalosHaptics.sendHaptic(context)
+                            client.setDarkBackground("midnight")
+                            client.setThemePreset(MaterialThemePreset.APPLE_MIDNIGHT.name)
+                        }
+                    )
 
-                // Paper White Option Card
-                val isPaperSelected = lightBg == "paper_white"
-                BackgroundOptionCard(
-                    title = "Paper White",
-                    previewColor = Color(0xFFF7F5F0),
-                    isSelected = isPaperSelected,
-                    accentColor = effectiveAccentColor,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        TalosHaptics.sendHaptic(context)
-                        client.setLightBackground("paper_white")
-                        client.setThemePreset(MaterialThemePreset.APPLE_PAPER_WHITE.name)
-                    }
-                )
+                    val isBlackSelected = darkBg == "black" || darkBg == "default"
+                    DarkBackgroundOptionCard(
+                        title = "Black",
+                        canvasColor = Color(0xFF000000),
+                        bubbleColor = Color(0xFF1C1C1E),
+                        isSelected = isBlackSelected,
+                        accentColor = effectiveAccentColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            TalosHaptics.sendHaptic(context)
+                            client.setDarkBackground("black")
+                            client.setThemePreset(MaterialThemePreset.APPLE_AMOLED_BLACK.name)
+                        }
+                    )
+
+                    val isGraySelected = darkBg == "gray"
+                    DarkBackgroundOptionCard(
+                        title = "Gray",
+                        canvasColor = Color(0xFF1C1C1E),
+                        bubbleColor = Color(0xFF2C2C2E),
+                        isSelected = isGraySelected,
+                        accentColor = effectiveAccentColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            TalosHaptics.sendHaptic(context)
+                            client.setDarkBackground("gray")
+                            client.setThemePreset(MaterialThemePreset.APPLE_DARK_SLATE.name)
+                        }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // -----------------------------------------------------------------
-            // 3. DARK BACKGROUND (Midnight, Black, Gray side by side)
-            // -----------------------------------------------------------------
-            Text(
-                text = "Dark Background",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = talosTextMuted,
-                letterSpacing = (-0.15).sp,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Midnight
-                val isMidnightSelected = darkBg == "midnight"
-                DarkBackgroundOptionCard(
-                    title = "Midnight",
-                    canvasColor = Color(0xFF0B0E14),
-                    bubbleColor = Color(0xFF161B26),
-                    isSelected = isMidnightSelected,
-                    accentColor = effectiveAccentColor,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        TalosHaptics.sendHaptic(context)
-                        client.setDarkBackground("midnight")
-                        client.setThemePreset(MaterialThemePreset.APPLE_MIDNIGHT.name)
-                    }
-                )
-
-                // Black (AMOLED)
-                val isBlackSelected = darkBg == "black"
-                DarkBackgroundOptionCard(
-                    title = "Black",
-                    canvasColor = Color(0xFF000000),
-                    bubbleColor = Color(0xFF1C1C1E),
-                    isSelected = isBlackSelected,
-                    accentColor = effectiveAccentColor,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        TalosHaptics.sendHaptic(context)
-                        client.setDarkBackground("black")
-                        client.setThemePreset(MaterialThemePreset.APPLE_AMOLED_BLACK.name)
-                    }
-                )
-
-                // Gray (Space Gray)
-                val isGraySelected = darkBg == "gray"
-                DarkBackgroundOptionCard(
-                    title = "Gray",
-                    canvasColor = Color(0xFF1C1C1E),
-                    bubbleColor = Color(0xFF2C2C2E),
-                    isSelected = isGraySelected,
-                    accentColor = effectiveAccentColor,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        TalosHaptics.sendHaptic(context)
-                        client.setDarkBackground("gray")
-                        client.setThemePreset(MaterialThemePreset.APPLE_DARK_SLATE.name)
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            // -----------------------------------------------------------------
-            // 4. TYPOGRAPHY & TEXT SIZE (Unified Inset Section + Water Droplet Ripple)
+            // 3. TYPOGRAPHY & TEXT SIZE (Clean Unified Inset Card)
             // -----------------------------------------------------------------
             Text(
                 text = "Typography",
@@ -551,16 +529,8 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            var isApplyingFontAnimation by remember { mutableStateOf(false) }
-            var fontAnimJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
-            val coroutineScope = rememberCoroutineScope()
-
             var showFontLayer by remember { mutableStateOf(false) }
             var showSizeLayer by remember { mutableStateOf(false) }
-
-            var displayedFont by remember { mutableStateOf(currentFont) }
-            val dropletAnim = remember { Animatable(1f) }
-            var isDropletActive by remember { mutableStateOf(false) }
 
             val fontOptions = remember {
                 listOf(
@@ -572,7 +542,6 @@ fun LookAndFeelScreen(
                     Triple("Monospace", "Evenly spaced characters", androidx.compose.ui.text.font.FontFamily.Monospace)
                 )
             }
-            val activeFontModel = fontOptions.find { it.first == currentFont } ?: fontOptions[1]
 
             val textSizeOptions = remember {
                 listOf(
@@ -586,155 +555,9 @@ fun LookAndFeelScreen(
             }
             val activeSizeLabel = textSizeOptions.find { it.first == currentFontScale.lowercase() }?.second ?: "Small"
 
-            // Floating Dynamic Island Font Drop Banner
-            AnimatedVisibility(
-                visible = isApplyingFontAnimation,
-                enter = slideInVertically(animationSpec = spring(dampingRatio = 0.68f, stiffness = 400f)) { h -> -h } + fadeIn(),
-                exit = slideOutVertically(animationSpec = tween(400)) { h -> -h } + fadeOut(),
-                modifier = Modifier.padding(bottom = 8.dp)
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
-                    border = BorderStroke(0.8.dp, effectiveAccentColor.copy(alpha = 0.45f)),
-                    shadowElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(effectiveAccentColor)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Applying $currentFont Typography...",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                            letterSpacing = (-0.2).sp
-                        )
-                    }
-                }
-            }
-
-            // Live Typography Preview Card with Expanding Water Droplet Simulated Ripple
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(
-                    0.6.dp,
-                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    // Expanding Water Droplet Canvas Ripple
-                    if (isDropletActive) {
-                        val p = dropletAnim.value
-                        Canvas(modifier = Modifier.matchParentSize()) {
-                            val center = Offset(size.width * 0.5f, size.height * 0.45f)
-                            val maxR = kotlin.math.hypot(size.width, size.height) * 0.75f
-
-                            // Wave 1: Primary ripple ring
-                            val r1 = maxR * p
-                            val a1 = ((1f - p) * 0.85f).coerceIn(0f, 1f)
-                            drawCircle(
-                                color = effectiveAccentColor.copy(alpha = a1),
-                                radius = r1,
-                                center = center,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx() * (1f - p * 0.5f))
-                            )
-
-                            // Wave 2: Secondary echoing ripple
-                            if (p > 0.15f) {
-                                val p2 = (p - 0.15f) / 0.85f
-                                val r2 = maxR * p2
-                                val a2 = ((1f - p2) * 0.5f).coerceIn(0f, 1f)
-                                drawCircle(
-                                    color = effectiveAccentColor.copy(alpha = a2),
-                                    radius = r2,
-                                    center = center,
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
-                                )
-                            }
-
-                            // Wave 3: Delicate inner ripple
-                            if (p > 0.32f) {
-                                val p3 = (p - 0.32f) / 0.68f
-                                val r3 = maxR * p3
-                                val a3 = ((1f - p3) * 0.35f).coerceIn(0f, 1f)
-                                drawCircle(
-                                    color = effectiveAccentColor.copy(alpha = a3),
-                                    radius = r3,
-                                    center = center,
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
-                                )
-                            }
-
-                            // Liquid radial sheen
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        effectiveAccentColor.copy(alpha = (1f - p) * 0.18f),
-                                        Color.Transparent
-                                    ),
-                                    center = center,
-                                    radius = r1.coerceAtLeast(1f)
-                                ),
-                                radius = r1,
-                                center = center
-                            )
-                        }
-                    }
-
-                    val targetFontModel = fontOptions.find { it.first == displayedFont } ?: activeFontModel
-                    val liquidScale = if (isDropletActive) {
-                        val p = dropletAnim.value
-                        1f + 0.04f * kotlin.math.sin(p * Math.PI.toFloat())
-                    } else 1f
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 18.dp, vertical = 18.dp)
-                            .graphicsLayer {
-                                scaleX = liquidScale
-                                scaleY = liquidScale
-                            }
-                    ) {
-                        Text(
-                            text = displayedFont,
-                            fontSize = 21.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = targetFontModel.third,
-                            letterSpacing = (-0.4).sp,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "A clear view of your conversations.",
-                            fontSize = 15.sp,
-                            fontFamily = targetFontModel.third,
-                            letterSpacing = (-0.2).sp,
-                            color = talosTextMuted
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // -----------------------------------------------------------------
             // UNIFIED INSET CARD: Font & Text Size in the SAME Section
-            // -----------------------------------------------------------------
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(
                     0.6.dp,
@@ -799,25 +622,17 @@ fun LookAndFeelScreen(
                                                 client.setSelectedFont(fontName)
                                                 showFontLayer = false
 
-                                                fontAnimJob?.cancel()
-                                                isApplyingFontAnimation = true
-                                                fontAnimJob = coroutineScope.launch {
+                                                coroutineScope.launch {
                                                     isDropletActive = true
                                                     dropletAnim.snapTo(0f)
-                                                    launch {
-                                                        kotlinx.coroutines.delay(220)
-                                                        displayedFont = fontName
-                                                    }
                                                     dropletAnim.animateTo(
                                                         targetValue = 1f,
                                                         animationSpec = tween(
-                                                            durationMillis = 1400,
+                                                            durationMillis = 1100,
                                                             easing = androidx.compose.animation.core.FastOutSlowInEasing
                                                         )
                                                     )
                                                     isDropletActive = false
-                                                    kotlinx.coroutines.delay(200)
-                                                    isApplyingFontAnimation = false
                                                 }
                                             } else {
                                                 showFontLayer = false
@@ -959,7 +774,67 @@ fun LookAndFeelScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
         }
+
+        // FULL-SYSTEM WATER DROPLET RIPPLE ANIMATION (Covers entire screen as animated indicator)
+        if (isDropletActive) {
+            val p = dropletAnim.value
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val center = Offset(size.width * 0.5f, size.height * 0.45f)
+                val maxR = kotlin.math.hypot(size.width, size.height)
+
+                // Wave 1: Primary ripple wave across entire screen
+                val r1 = maxR * p
+                val a1 = ((1f - p) * 0.85f).coerceIn(0f, 1f)
+                drawCircle(
+                    color = effectiveAccentColor.copy(alpha = a1),
+                    radius = r1,
+                    center = center,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx() * (1f - p * 0.5f))
+                )
+
+                // Wave 2: Secondary trailing wave
+                if (p > 0.12f) {
+                    val p2 = (p - 0.12f) / 0.88f
+                    val r2 = maxR * p2
+                    val a2 = ((1f - p2) * 0.5f).coerceIn(0f, 1f)
+                    drawCircle(
+                        color = effectiveAccentColor.copy(alpha = a2),
+                        radius = r2,
+                        center = center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5.dp.toPx() * (1f - p2 * 0.5f))
+                    )
+                }
+
+                // Wave 3: Delicate inner water ring
+                if (p > 0.28f) {
+                    val p3 = (p - 0.28f) / 0.72f
+                    val r3 = maxR * p3
+                    val a3 = ((1f - p3) * 0.35f).coerceIn(0f, 1f)
+                    drawCircle(
+                        color = effectiveAccentColor.copy(alpha = a3),
+                        radius = r3,
+                        center = center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
+                    )
+                }
+
+                // Subtle radial liquid sheen wash across the entire window
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            effectiveAccentColor.copy(alpha = (1f - p) * 0.16f),
+                            Color.Transparent
+                        ),
+                        center = center,
+                        radius = r1.coerceAtLeast(1f)
+                    ),
+                    radius = r1,
+                    center = center
+                )
+            }
+        }
     }
+}
 }
 
 /**

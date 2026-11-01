@@ -148,21 +148,13 @@ fun NotificationsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f).padding(end = 12.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(RoundedCornerShape(7.dp))
-                                    .background(appleRed),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Notifications,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
                                     text = "Notifications allowed",
@@ -221,21 +213,13 @@ fun NotificationsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(RoundedCornerShape(7.dp))
-                                    .background(appleGray),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Text(
                                 text = "Open Android notification settings",
                                 fontSize = 15.sp,
@@ -326,21 +310,13 @@ fun NotificationsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(30.dp)
-                                        .clip(RoundedCornerShape(7.dp))
-                                        .background(item.iconBg),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = item.icon,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(17.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = null,
+                                    tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
                                 Text(
                                     text = item.title,
                                     fontSize = 15.sp,
@@ -396,21 +372,13 @@ fun NotificationsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f).padding(end = 12.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(RoundedCornerShape(7.dp))
-                                    .background(appleIndigo),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.SmartToy,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Icon(
+                                imageVector = Icons.Default.SmartToy,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Text(
                                 text = "Working Agents",
                                 fontSize = 16.sp,

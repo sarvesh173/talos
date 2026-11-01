@@ -2329,3 +2329,30 @@ Comprehensive implementation of all screens and preferences extracted from the o
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21078` and `versionName` to `"2.10.78"`.
+
+---
+
+## 109. Pure Minimalist SVG Icons & Clean Nous Mobile Inset Architecture
+
+Eliminated all colored squircle background boxes behind SVG icons across all settings screens to strictly match the authentic, understated minimalism shown in the official Nous Mobile specification screenshot on branch `feature/apple-design-remake`.
+
+### 1. Minimalist Icon Architecture (Zero Colored Boxes)
+- Stripped all `Box(30.dp).background(appleColor)` containers from:
+  - `SettingsScreen.kt`
+  - `ChatPreferencesScreen.kt`
+  - `SecurityScreen.kt`
+  - `CachingScreen.kt`
+  - `NotificationsScreen.kt`
+  - `LookAndFeelScreen.kt`
+- All leading icons now render as pure, crisp 22–24dp SVG outline glyphs directly against the card surface with `Color.White.copy(0.85f)` in dark and `#1D1D1F` in light mode.
+
+### 2. Authentic Nous Mobile Grouping & Typography
+- **Hero Member Card**: Sleek deep indigo/cyber blue banner with `TALOS PORTAL`, `[ AUTONOMOUS CORE ]` badge, and `SARVESH'S ACCOUNT`.
+- **Vertical Title/Subtitle Stacking**: Title (16sp Regular/Medium) with subtitle (13sp textMuted) directly beneath it, removing wide trailing text clutter.
+- **Card Spacing & Inset Dividers**: 20dp continuous squircle grouped cards with 14dp spacing and 56dp indented hairline dividers.
+- **Floating Circle Back Button**: Clean 42dp circular back button matching the reference screenshot.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21079` and `versionName` to `"2.10.79"`.

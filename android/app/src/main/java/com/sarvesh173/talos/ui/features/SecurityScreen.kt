@@ -127,22 +127,13 @@ fun SecurityScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f)
                         ) {
-                            // 30x30dp squircle leading icon badge (Green for Biometrics)
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(RoundedCornerShape(7.dp))
-                                    .background(appleGreen),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Fingerprint,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Icon(
+                                imageVector = Icons.Default.Fingerprint,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Text(
                                 text = "Require Biometrics",
                                 fontSize = 16.sp,
@@ -204,21 +195,13 @@ fun SecurityScreen(
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(RoundedCornerShape(7.dp))
-                                .background(appleIndigo),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(17.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = "Instance Tokens & Keys",
                             fontSize = 15.sp,
@@ -249,21 +232,13 @@ fun SecurityScreen(
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(RoundedCornerShape(7.dp))
-                                .background(appleGray),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(17.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = "Screen Lock Fallback",
                             fontSize = 15.sp,

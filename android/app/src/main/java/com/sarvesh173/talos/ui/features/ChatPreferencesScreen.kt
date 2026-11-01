@@ -271,22 +271,14 @@ private fun ChatPreferenceToggleRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(30.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .background(iconTint),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(17.dp)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+            modifier = Modifier.size(24.dp)
+        )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
         Column(
             modifier = Modifier

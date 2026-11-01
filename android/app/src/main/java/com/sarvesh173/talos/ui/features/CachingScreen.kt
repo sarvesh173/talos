@@ -135,21 +135,13 @@ fun CachingScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f).padding(end = 12.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(RoundedCornerShape(7.dp))
-                                    .background(appleBlue),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Forum,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Icon(
+                                imageVector = Icons.Default.Forum,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
                                     text = "Chat List",
@@ -191,21 +183,13 @@ fun CachingScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f).padding(end = 12.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(RoundedCornerShape(7.dp))
-                                    .background(applePurple),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.QuestionAnswer,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Icon(
+                                imageVector = Icons.Default.QuestionAnswer,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
                                     text = "Messages",

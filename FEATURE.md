@@ -2461,3 +2461,36 @@ Refined the Landing and Pairing Hero screen with authentic Apple typography and 
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21085` and `versionName` to `"2.10.85"`.
+
+---
+
+## 114. Exact Reference Alignment: 6-Font Suite, Live Typography Card & 6-Step Discrete Text Size Picker
+
+Overhauled `LookAndFeelScreen.kt` to mirror the authentic user-provided reference screenshots with pixel-exact precision:
+
+### 1. Canonical 6-Font Typography Suite with Inset Subtitles
+- Replaced simplified string lists with the exact 6-font family suite and contextual design subtitles:
+  - **System**: *System sans serif* (Default)
+  - **Nunito**: *Soft, rounded shapes - Default*
+  - **Manrope**: *Clean and spacious*
+  - **Serif**: *Traditional serif*
+  - **Lora**: *Literary serif*
+  - **Monospace**: *Evenly spaced characters*
+- Active selection renders in `effectiveAccentColor` with an authentic Apple checkmark.
+
+### 2. Live Typography Preview Card
+- Integrated dedicated preview card showing the selected typeface name in bold display and the live body preview:
+  `"A clear view of your conversations."`
+
+### 3. 6-Step Discrete Text Size Picker (Replacing Continuous Slider)
+- Removed continuous slider with A/A markers.
+- Built an authentic Apple Inset row: **Text Size: [Current] <>** expanding to reveal the 6 discrete steps:
+  - `Tiny`, `Extra Small`, `Small` (Default), `Medium`, `Large`, `Extra Large`.
+
+### 4. 3-Card Light Background Palette
+- Added **Android** (System Light `#F2F2F7`), **White** (`#FFFFFF`), and **Paper White** (`#F7F5F0`).
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21086` and `versionName` to `"2.10.86"`.

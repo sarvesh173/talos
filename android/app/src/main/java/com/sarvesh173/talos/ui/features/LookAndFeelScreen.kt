@@ -100,7 +100,7 @@ fun LookAndFeelScreen(
     val scrollState = rememberScrollState()
 
     var showColorPicker by remember { mutableStateOf(false) }
-    var showFontMenu by remember { mutableStateOf(false) }
+    var showSpectrumWheel by remember { mutableStateOf(false) }
 
     if (showColorPicker) {
         AppleColorPickerDialog(
@@ -414,8 +414,23 @@ fun LookAndFeelScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // Android Option Card (System Light)
+                val isAndroidSelected = lightBg == "android" || lightBg == "default"
+                BackgroundOptionCard(
+                    title = "Android",
+                    previewColor = Color(0xFFF2F2F7),
+                    isSelected = isAndroidSelected,
+                    accentColor = effectiveAccentColor,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        TalosHaptics.sendHaptic(context)
+                        client.setLightBackground("android")
+                        client.setThemePreset(MaterialThemePreset.APPLE_PURE_WHITE.name)
+                    }
+                )
+
                 // White Option Card
                 val isWhiteSelected = lightBg == "white"
                 BackgroundOptionCard(
@@ -517,10 +532,10 @@ fun LookAndFeelScreen(
             Spacer(modifier = Modifier.height(22.dp))
 
             // -----------------------------------------------------------------
-            // 4. FONT DROPDOWN
+            // 4. FONTS (Exact 6 Fonts from Reference)
             // -----------------------------------------------------------------
             Text(
-                text = "Font",
+                text = "Fonts",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = talosTextMuted,
@@ -528,105 +543,17 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(
-                    0.6.dp,
-                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .applePressable(0.97f) { showFontMenu = !showFontMenu }
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = currentFont,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            letterSpacing = (-0.2).sp,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
-                        )
-
-                        Icon(
-                            imageVector = Icons.Default.UnfoldMore,
-                            contentDescription = "Select Font",
-                            tint = talosTextMuted,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    AnimatedVisibility(visible = showFontMenu) {
-                        Column(modifier = Modifier.padding(top = 12.dp)) {
-                            val fontOptions = listOf("Nunito", "SF Pro", "Inter", "System", "Monospace")
-                            fontOptions.forEachIndexed { index, fontName ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            TalosHaptics.sendHaptic(context)
-                                            client.setSelectedFont(fontName)
-                                            showFontMenu = false
-                                        }
-                                        .padding(vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = fontName,
-                                        fontSize = 15.sp,
-                                        color = if (currentFont == fontName) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F)),
-                                        fontWeight = if (currentFont == fontName) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                    if (currentFont == fontName) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            tint = effectiveAccentColor,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                                if (index < fontOptions.size - 1) {
-                                    HorizontalDivider(
-                                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                                        thickness = 0.5.dp
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+            val fontOptions = remember {
+                listOf(
+                    Triple("System", "System sans serif", androidx.compose.ui.text.font.FontFamily.Default),
+                    Triple("Nunito", "Soft, rounded shapes - Default", androidx.compose.ui.text.font.FontFamily.SansSerif),
+                    Triple("Manrope", "Clean and spacious", androidx.compose.ui.text.font.FontFamily.SansSerif),
+                    Triple("Serif", "Traditional serif", androidx.compose.ui.text.font.FontFamily.Serif),
+                    Triple("Lora", "Literary serif", androidx.compose.ui.text.font.FontFamily.Serif),
+                    Triple("Monospace", "Evenly spaced characters", androidx.compose.ui.text.font.FontFamily.Monospace)
+                )
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "A clear view of your conversations.",
-                fontSize = 13.5.sp,
-                letterSpacing = (-0.15).sp,
-                color = talosTextMuted,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // -----------------------------------------------------------------
-            // 5. TEXT SIZE SLIDER (WITH A / A LABELS)
-            // -----------------------------------------------------------------
-            Text(
-                text = "Text Size",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = talosTextMuted,
-                letterSpacing = (-0.15).sp,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-            )
+            val activeFontModel = fontOptions.find { it.first == currentFont } ?: fontOptions[1]
 
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -637,56 +564,207 @@ fun LookAndFeelScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "A",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = talosTextMuted
-                    )
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    val scaleFloat = when (currentFontScale.lowercase()) {
-                        "compact" -> 0f
-                        "spacious" -> 2f
-                        else -> 1f
-                    }
-
-                    Slider(
-                        value = scaleFloat,
-                        onValueChange = { value ->
-                            val round = value.roundToInt()
-                            val key = when (round) {
-                                0 -> "compact"
-                                2 -> "spacious"
-                                else -> "standard"
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    fontOptions.forEachIndexed { index, (fontName, fontSubtitle, fontFamily) ->
+                        val isSelected = currentFont == fontName
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    TalosHaptics.sendHaptic(context)
+                                    client.setSelectedFont(fontName)
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = fontName,
+                                    fontSize = 16.sp,
+                                    fontFamily = fontFamily,
+                                    color = if (isSelected) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F)),
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                    letterSpacing = (-0.2).sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = fontSubtitle,
+                                    fontSize = 13.sp,
+                                    fontFamily = fontFamily,
+                                    color = talosTextMuted,
+                                    letterSpacing = (-0.1).sp
+                                )
                             }
-                            client.setFontScale(key)
-                        },
-                        valueRange = 0f..2f,
-                        steps = 1,
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color.White,
-                            activeTrackColor = effectiveAccentColor,
-                            inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = effectiveAccentColor,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        if (index < fontOptions.size - 1) {
+                            HorizontalDivider(
+                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                                thickness = 0.5.dp
+                            )
+                        }
+                    }
+                }
+            }
 
-                    Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
+            // Live Typography Preview Card
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                border = BorderStroke(
+                    0.6.dp,
+                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
                     Text(
-                        text = "A",
-                        fontSize = 18.sp,
+                        text = currentFont,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = activeFontModel.third,
+                        letterSpacing = (-0.4).sp,
                         color = if (isDark) Color.White else Color(0xFF1D1D1F)
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "A clear view of your conversations.",
+                        fontSize = 15.sp,
+                        fontFamily = activeFontModel.third,
+                        letterSpacing = (-0.2).sp,
+                        color = talosTextMuted
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(22.dp))
+
+            // -----------------------------------------------------------------
+            // 5. TEXT SIZE PICKER (Exact 6 Discrete Sizes from Screenshot)
+            // -----------------------------------------------------------------
+            Text(
+                text = "Text Size",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = talosTextMuted,
+                letterSpacing = (-0.15).sp,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            )
+
+            var showSizeMenu by remember { mutableStateOf(false) }
+            val textSizeOptions = remember {
+                listOf(
+                    "tiny" to "Tiny",
+                    "extra_small" to "Extra Small",
+                    "small" to "Small",
+                    "medium" to "Medium",
+                    "large" to "Large",
+                    "extra_large" to "Extra Large"
+                )
+            }
+            val activeSizeLabel = textSizeOptions.find { it.first == currentFontScale.lowercase() }?.second ?: "Small"
+
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                border = BorderStroke(
+                    0.6.dp,
+                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                TalosHaptics.sendHaptic(context)
+                                showSizeMenu = !showSizeMenu
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Text Size",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = activeSizeLabel,
+                                fontSize = 15.sp,
+                                color = talosTextMuted,
+                                letterSpacing = (-0.1).sp
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Default.UnfoldMore,
+                                contentDescription = "Change Text Size",
+                                tint = talosTextMuted.copy(alpha = 0.6f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(visible = showSizeMenu) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            HorizontalDivider(
+                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                                thickness = 0.5.dp
+                            )
+                            textSizeOptions.forEachIndexed { index, (sizeKey, sizeTitle) ->
+                                val isSelected = currentFontScale.lowercase() == sizeKey || (currentFontScale.lowercase() == "standard" && sizeKey == "small")
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            TalosHaptics.sendHaptic(context)
+                                            client.setFontScale(sizeKey)
+                                            showSizeMenu = false
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = sizeTitle,
+                                        fontSize = 15.sp,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = if (isSelected) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F))
+                                    )
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = effectiveAccentColor,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                                if (index < textSizeOptions.size - 1) {
+                                    HorizontalDivider(
+                                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                                        thickness = 0.5.dp
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
                 }
             }
 

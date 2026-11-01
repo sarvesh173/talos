@@ -1,6 +1,12 @@
 package com.sarvesh173.talos.ui.features
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -562,8 +568,8 @@ fun LookAndFeelScreen(
             // Floating Dynamic Island Font Drop Banner
             AnimatedVisibility(
                 visible = isApplyingFontAnimation,
-                enter = slideInVertically(animationSpec = spring(dampingRatio = 0.68f, stiffness = 400f)) { -it } + fadeIn(),
-                exit = slideOutVertically(animationSpec = tween(400)) { -it } + fadeOut(),
+                enter = slideInVertically(animationSpec = spring(dampingRatio = 0.68f, stiffness = 400f)) { h -> -h } + fadeIn(),
+                exit = slideOutVertically(animationSpec = tween(400)) { h -> -h } + fadeOut(),
                 modifier = Modifier.padding(bottom = 8.dp)
             ) {
                 Surface(
@@ -680,11 +686,11 @@ fun LookAndFeelScreen(
                         transitionSpec = {
                             (slideInVertically(
                                 animationSpec = spring(dampingRatio = 0.72f, stiffness = 320f)
-                            ) { it / 2 } + fadeIn(tween(500)))
+                            ) { h -> h / 2 } + fadeIn(tween(500)))
                                 .togetherWith(
                                     slideOutVertically(
                                         animationSpec = tween(300)
-                                    ) { -it / 3 } + fadeOut(tween(250))
+                                    ) { h -> -h / 3 } + fadeOut(tween(250))
                                 )
                         },
                         label = "FontDropTransition"

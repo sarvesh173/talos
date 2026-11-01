@@ -2519,3 +2519,26 @@ Resolved package installation failure on Vivo/Android PackageInstaller, wired dy
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21087` and `versionName` to `"2.10.87"`.
+
+---
+
+## 116. Dynamic Typography Resolution, Liquid Drop Banner & Robust Signature Packaging
+
+Fixed compile-time animation imports and runtime typography providers, enabling fluid drop animation transitions:
+
+### 1. Robust Signature Packaging & Vivo OS Compliance
+- Added explicit `enableV1Signing = true` and `enableV2Signing = true` to the release signing configuration.
+- Cleaned Android manifest declarations to prevent `INSTALL_FAILED_INVALID_APK` on Android 14/15 OEM package installers.
+
+### 2. Dynamic Typography Resolution & Full App Inheritance
+- Explicitly typed `LocalTalosFontFamily = compositionLocalOf<FontFamily>` and `LocalTalosFontScale = compositionLocalOf<Float>`.
+- Generated dynamic `Typography` using `remember(activeFontFamily, activeFontScale)` so all screens instantly re-render with the selected typeface.
+
+### 3. Cascading Drop Banner & Typeface Impression Animation
+- Added animated Dynamic Island drop capsule with spring physics (`slideInVertically(spring(...)) { h -> -h } + fadeIn()`) notifying the user as the font is applied.
+- Added animated cross-fade and vertical slide transitions to the typography preview card for a tangible "ink impression" visual effect.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21088` and `versionName` to `"2.10.88"`.

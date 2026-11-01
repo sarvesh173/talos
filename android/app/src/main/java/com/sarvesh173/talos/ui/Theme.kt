@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
@@ -482,7 +483,7 @@ fun buildTalosTypography(fontFamily: FontFamily, scale: Float): Typography {
     )
 }
 
-val LocalTalosFontFamily = compositionLocalOf { FontFamily.Default }
+val LocalTalosFontFamily = compositionLocalOf<FontFamily> { FontFamily.Default }
 val LocalTalosFontScale = compositionLocalOf { 1.0f }
 
 // Typography scale (Conforming to Google MD3 Typescale from hamen/material-3-skill)

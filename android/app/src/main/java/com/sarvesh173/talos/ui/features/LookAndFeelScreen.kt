@@ -586,9 +586,9 @@ fun LookAndFeelScreen(
                         border = BorderStroke(
                             width = if (isSelected) 1.2.dp else 0.8.dp,
                             color = if (isSelected) {
-                                (if (isDark) activeAccent.darkColor else activeAccent.lightColor).copy(alpha = 0.60f)
+                                (if (isDark) activeAccent.darkColor else activeAccent.lightColor).copy(alpha = 0.65f)
                             } else {
-                                if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                                if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)
                             }
                         ),
                         modifier = Modifier
@@ -611,22 +611,33 @@ fun LookAndFeelScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(26.dp)
+                                        .size(28.dp)
                                         .clip(CircleShape)
                                         .background(preset.seedColor)
-                                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f), CircleShape)
+                                        .border(
+                                            1.dp,
+                                            Brush.verticalGradient(
+                                                listOf(
+                                                    if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.20f),
+                                                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                                                )
+                                            ),
+                                            CircleShape
+                                        )
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
                                         text = title,
                                         fontSize = 13.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                        letterSpacing = (-0.2).sp,
                                         color = if (isSelected) (if (isDark) activeAccent.darkColor else activeAccent.lightColor) else (if (isDark) Color.White else Color(0xFF1D1D1F))
                                     )
                                     Text(
                                         text = desc,
-                                        fontSize = 10.sp,
+                                        fontSize = 10.5.sp,
+                                        letterSpacing = (-0.15).sp,
                                         color = talosTextMuted
                                     )
                                 }
@@ -645,7 +656,7 @@ fun LookAndFeelScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // -----------------------------------------------------------------
             // 5. TEXT SIZE & OPTICAL TRACKING
@@ -678,7 +689,7 @@ fun LookAndFeelScreen(
                     .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA))
                     .border(
                         0.8.dp,
-                        if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f),
+                        if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f),
                         RoundedCornerShape(16.dp)
                     )
                     .padding(4.dp)
@@ -693,7 +704,7 @@ fun LookAndFeelScreen(
                     label = "font_scale_pill_offset"
                 )
 
-                // Fluid sliding indicator pill
+                // Fluid sliding indicator pill with specular border
                 Box(
                     modifier = Modifier
                         .offset(x = pillOffset)
@@ -703,7 +714,12 @@ fun LookAndFeelScreen(
                         .background(if (isDark) Color(0xFF2C2C2E) else Color.White)
                         .border(
                             0.8.dp,
-                            if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.08f),
+                            Brush.verticalGradient(
+                                listOf(
+                                    if (isDark) Color.White.copy(alpha = 0.22f) else Color.White,
+                                    if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.08f)
+                                )
+                            ),
                             RoundedCornerShape(12.dp)
                         )
                 )
@@ -741,6 +757,7 @@ fun LookAndFeelScreen(
                                 text = scaleTitle,
                                 fontSize = 12.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                letterSpacing = (-0.15).sp,
                                 color = if (isSelected) {
                                     if (isDark) Color.White else Color(0xFF1D1D1F)
                                 } else talosTextMuted

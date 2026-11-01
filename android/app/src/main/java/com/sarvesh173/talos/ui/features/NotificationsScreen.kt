@@ -1,5 +1,6 @@
 package com.sarvesh173.talos.ui.features
 
+import com.sarvesh173.talos.ui.TalosIcons
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings

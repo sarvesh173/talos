@@ -2416,4 +2416,4 @@ Fix for the Android system back button exiting the app prematurely, graceful tas
 - [x] **Verification & Tests**:
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
-  - Bumped `versionCode` to `21082` and `versionName` to `"2.10.82"`.
+  - Bumped `versionCode` to `21083` and `versionName` to `"2.10.83"`.

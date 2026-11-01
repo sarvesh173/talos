@@ -1,5 +1,6 @@
 package com.sarvesh173.talos.ui.features
 
+import com.sarvesh173.talos.ui.TalosIcons
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

@@ -85,7 +85,7 @@ fun ChatPreferencesScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = TalosIcons.TalosBackArrow,
                             contentDescription = "Back",
                             tint = if (isDark) Color.White else Color(0xFF1D1D1F),
                             modifier = Modifier.size(20.dp)

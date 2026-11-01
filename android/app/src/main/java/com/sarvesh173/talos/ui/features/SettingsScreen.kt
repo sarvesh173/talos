@@ -94,7 +94,7 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TalosIcons.TalosBackArrow,
                         contentDescription = "Back",
                         tint = if (isDark) Color.White else Color(0xFF1D1D1F),
                         modifier = Modifier.size(20.dp)
@@ -213,7 +213,7 @@ fun SettingsScreen(
                     SettingsMinimalRow(
                         title = "Instances",
                         subtitle = if (client.baseUrl.isNotBlank()) "1 active" else "1",
-                        icon = Icons.Default.Dns,
+                        icon = TalosIcons.TalosHub,
                         showChevron = false,
                         onClick = { showTransportConfig = !showTransportConfig }
                     )
@@ -224,7 +224,7 @@ fun SettingsScreen(
                     SettingsMinimalRow(
                         title = "Security",
                         subtitle = if (biometricsState) "Biometrics On" else "Off",
-                        icon = Icons.Default.Lock,
+                        icon = TalosIcons.TalosVault,
                         showChevron = true,
                         onClick = onNavigateToSecurity
                     )
@@ -235,7 +235,7 @@ fun SettingsScreen(
                     SettingsMinimalRow(
                         title = "Caching",
                         subtitle = "On",
-                        icon = Icons.Default.Layers,
+                        icon = TalosIcons.TalosStorage,
                         showChevron = true,
                         onClick = onNavigateToCaching
                     )
@@ -266,7 +266,7 @@ fun SettingsScreen(
                     SettingsMinimalRow(
                         title = "Look & Feel",
                         subtitle = displayMode,
-                        icon = Icons.Default.Palette,
+                        icon = TalosIcons.TalosPalette,
                         showChevron = true,
                         onClick = onNavigateToLookAndFeel
                     )
@@ -277,7 +277,7 @@ fun SettingsScreen(
                     SettingsMinimalRow(
                         title = "Chat",
                         subtitle = "Bubbles",
-                        icon = Icons.Default.Forum,
+                        icon = TalosIcons.TalosChat,
                         showChevron = true,
                         onClick = onNavigateToChatPreferences
                     )
@@ -303,7 +303,7 @@ fun SettingsScreen(
                     SettingsMinimalRow(
                         title = "Notifications",
                         subtitle = if (notifAllowedState) "On" else "Off",
-                        icon = Icons.Default.Notifications,
+                        icon = TalosIcons.TalosBell,
                         showChevron = true,
                         onClick = onNavigateToNotifications
                     )
@@ -314,7 +314,7 @@ fun SettingsScreen(
                     SettingsMinimalRow(
                         title = "Contact",
                         subtitle = "7 Active Council Agents",
-                        icon = Icons.Default.Email,
+                        icon = TalosIcons.TalosMail,
                         showChevron = true,
                         onClick = {
                             Toast.makeText(context, "Council Agents: Active & Responding", Toast.LENGTH_SHORT).show()
@@ -341,8 +341,8 @@ fun SettingsScreen(
                     // Documentation
                     SettingsMinimalRow(
                         title = "Documentation",
-                        subtitle = "TALOS v2.10.79 (Apple HIG)",
-                        icon = Icons.Default.MenuBook,
+                        subtitle = "TALOS v2.10.82 (Apple HIG)",
+                        icon = TalosIcons.TalosDoc,
                         showChevron = true,
                         onClick = {
                             Toast.makeText(context, "TALOS Core v2.10.79 · Apple Inset Grouped", Toast.LENGTH_SHORT).show()
@@ -513,7 +513,7 @@ private fun SettingsMinimalRow(
 
         if (showChevron) {
             Icon(
-                imageVector = Icons.Default.ChevronRight,
+                imageVector = TalosIcons.TalosChevronRight,
                 contentDescription = null,
                 tint = talosTextMuted.copy(alpha = 0.45f),
                 modifier = Modifier.size(16.dp)

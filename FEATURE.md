@@ -2389,3 +2389,31 @@ Complete overhaul of `LookAndFeelScreen.kt` and color architecture matching user
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21081` and `versionName` to `"2.10.81"`.
+
+---
+
+## 111. System Back Navigation & Minimize Fix + Handcrafted Apple HIG Outline Vector Icons
+
+Fix for the Android system back button exiting the app prematurely, graceful task minimization to background, and replacement of all generic Material icons with bespoke mathematical Apple HIG vector glyphs (`TalosIcons`).
+
+### 1. Unified Hierarchical BackHandler & Minimize Architecture
+- **Root Screen Interceptor**: Placed a top-level `BackHandler` inside `MainActivity.kt` that intercepts system back presses across all settings child screens (`look_and_feel`, `chat_preferences`, `security`, `caching`, `notifications`) and cleanly pops them back to `"settings"` instead of exiting the activity.
+- **Settings-to-Main Transition**: Pressing back on the `"settings"` hub safely returns to `"main"`.
+- **Graceful Task Minimization**: Pressing system back on the `"main"` chat screen now calls `activity.moveTaskToBack(true)` rather than killing or resetting the application process.
+
+### 2. Handcrafted Apple HIG Vector Icon Suite (`TalosIcons.kt`)
+- **Zero Copied Material Icons**: Removed all standard `Icons.Default.*` filled Material icons.
+- **Custom Mathematical Geometries**:
+  - `TalosIcons.Appearance`: Sculpted artist palette with organic thumb cutout and pigment wells.
+  - `TalosIcons.SecurityLock`: Rounded Apple lock with circular shackle, curved housing, and keyhole.
+  - `TalosIcons.Storage`: Precision cache disk plates with 1.75dp outline stroke.
+  - `TalosIcons.ChatBubble`: iMessage style speech bubble with organic directional tail.
+  - `TalosIcons.Bell`: Apple chime notification bell with suspended clapper.
+  - `TalosIcons.Mail`: Rounded envelope geometry with triangular fold flap.
+  - `TalosIcons.Doc`: Folded top-right corner document with content rails.
+  - `TalosIcons.ChevronRight` & `TalosBackArrow`: Pure 1.5dp iOS outline navigation chevrons.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21082` and `versionName` to `"2.10.82"`.

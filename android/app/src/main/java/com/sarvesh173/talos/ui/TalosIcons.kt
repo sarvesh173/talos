@@ -533,6 +533,176 @@ object TalosIcons {
             return _talospin!!
         }
 
+    private var _taloschat: ImageVector? = null
+
+    /** Apple HIG Chat Bubble — custom speech glyph. */
+    val TalosChat: ImageVector
+        get() {
+            if (_taloschat != null) return _taloschat!!
+            _taloschat = materialIcon(name = "TalosChat") {
+                materialPath(pathFillType = PathFillType.EvenOdd) {
+                    moveTo(12.0f, 3.5f)
+                    curveTo(6.8f, 3.5f, 3.2f, 7.0f, 3.2f, 11.5f)
+                    curveTo(3.2f, 14.2f, 4.8f, 16.6f, 7.2f, 17.8f)
+                    lineTo(6.4f, 20.8f)
+                    curveTo(6.2f, 21.4f, 6.8f, 21.8f, 7.3f, 21.5f)
+                    lineTo(11.2f, 19.3f)
+                    curveTo(11.5f, 19.3f, 11.7f, 19.3f, 12.0f, 19.3f)
+                    curveTo(17.2f, 19.3f, 20.8f, 15.8f, 20.8f, 11.5f)
+                    curveTo(20.8f, 7.0f, 17.2f, 3.5f, 12.0f, 3.5f)
+                    close()
+                    // Inner knockout for outline feeling
+                    moveTo(12.0f, 5.3f)
+                    curveTo(16.2f, 5.3f, 19.0f, 8.1f, 19.0f, 11.5f)
+                    curveTo(19.0f, 14.9f, 16.2f, 17.5f, 12.0f, 17.5f)
+                    curveTo(11.7f, 17.5f, 11.4f, 17.5f, 11.1f, 17.4f)
+                    lineTo(8.2f, 19.1f)
+                    lineTo(8.8f, 16.8f)
+                    curveTo(6.8f, 15.8f, 5.0f, 13.8f, 5.0f, 11.5f)
+                    curveTo(5.0f, 8.1f, 7.8f, 5.3f, 12.0f, 5.3f)
+                    close()
+                }
+            }
+            return _taloschat!!
+        }
+
+    private var _talosbell: ImageVector? = null
+
+    /** Apple HIG Notification Bell — custom chime bell. */
+    val TalosBell: ImageVector
+        get() {
+            if (_talosbell != null) return _talosbell!!
+            _talosbell = materialIcon(name = "TalosBell") {
+                materialPath(pathFillType = PathFillType.EvenOdd) {
+                    moveTo(12.0f, 2.5f)
+                    curveTo(12.6f, 2.5f, 13.0f, 2.9f, 13.0f, 3.5f)
+                    lineTo(13.0f, 4.3f)
+                    curveTo(16.5f, 5.1f, 18.0f, 8.5f, 18.0f, 13.0f)
+                    lineTo(19.2f, 16.5f)
+                    lineTo(4.8f, 16.5f)
+                    lineTo(6.0f, 13.0f)
+                    curveTo(6.0f, 8.5f, 7.5f, 5.1f, 11.0f, 4.3f)
+                    lineTo(11.0f, 3.5f)
+                    curveTo(11.0f, 2.9f, 11.4f, 2.5f, 12.0f, 2.5f)
+                    close()
+                    moveTo(12.0f, 6.1f)
+                    curveTo(8.8f, 6.1f, 7.8f, 9.2f, 7.8f, 13.0f)
+                    lineTo(7.1f, 14.8f)
+                    lineTo(16.9f, 14.8f)
+                    lineTo(16.2f, 13.0f)
+                    curveTo(16.2f, 9.2f, 15.2f, 6.1f, 12.0f, 6.1f)
+                    close()
+                    // Clapper
+                    moveTo(10.0f, 18.0f)
+                    curveTo(10.0f, 19.3f, 10.9f, 20.5f, 12.0f, 20.5f)
+                    curveTo(13.1f, 20.5f, 14.0f, 19.3f, 14.0f, 18.0f)
+                    close()
+                }
+            }
+            return _talosbell!!
+        }
+
+    private var _talosstorage: ImageVector? = null
+
+    /** Apple HIG Storage / Cache Plates. */
+    val TalosStorage: ImageVector
+        get() {
+            if (_talosstorage != null) return _talosstorage!!
+            _talosstorage = materialIcon(name = "TalosStorage") {
+                materialPath(pathFillType = PathFillType.EvenOdd) {
+                    moveTo(4.0f, 6.5f)
+                    curveTo(4.0f, 4.5f, 7.5f, 3.5f, 12.0f, 3.5f)
+                    curveTo(16.5f, 3.5f, 20.0f, 4.5f, 20.0f, 6.5f)
+                    curveTo(20.0f, 8.5f, 16.5f, 9.5f, 12.0f, 9.5f)
+                    curveTo(7.5f, 9.5f, 4.0f, 8.5f, 4.0f, 6.5f)
+                    close()
+                    moveTo(12.0f, 5.2f)
+                    curveTo(8.0f, 5.2f, 5.8f, 6.0f, 5.8f, 6.5f)
+                    curveTo(5.8f, 7.0f, 8.0f, 7.8f, 12.0f, 7.8f)
+                    curveTo(16.0f, 7.8f, 18.2f, 7.0f, 18.2f, 6.5f)
+                    curveTo(18.2f, 6.0f, 16.0f, 5.2f, 12.0f, 5.2f)
+                    close()
+                    // Lower layer
+                    moveTo(4.0f, 11.5f)
+                    lineTo(4.0f, 14.5f)
+                    curveTo(4.0f, 16.5f, 7.5f, 17.5f, 12.0f, 17.5f)
+                    curveTo(16.5f, 17.5f, 20.0f, 16.5f, 20.0f, 14.5f)
+                    lineTo(20.0f, 11.5f)
+                    curveTo(18.5f, 13.0f, 15.5f, 13.8f, 12.0f, 13.8f)
+                    curveTo(8.5f, 13.8f, 5.5f, 13.0f, 4.0f, 11.5f)
+                    close()
+                }
+            }
+            return _talosstorage!!
+        }
+
+    private var _taloschevronright: ImageVector? = null
+
+    /** Apple HIG 1.5dp Outline Navigation Chevron. */
+    val TalosChevronRight: ImageVector
+        get() {
+            if (_taloschevronright != null) return _taloschevronright!!
+            _taloschevronright = materialIcon(name = "TalosChevronRight") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(9.5f, 6.0f)
+                    lineTo(15.5f, 12.0f)
+                    lineTo(9.5f, 18.0f)
+                    lineTo(8.2f, 16.7f)
+                    lineTo(12.9f, 12.0f)
+                    lineTo(8.2f, 7.3f)
+                    close()
+                }
+            }
+            return _taloschevronright!!
+        }
+
+    private var _talosbackarrow: ImageVector? = null
+
+    /** Apple HIG 1.5dp Outline Back Arrow. */
+    val TalosBackArrow: ImageVector
+        get() {
+            if (_talosbackarrow != null) return _talosbackarrow!!
+            _talosbackarrow = materialIcon(name = "TalosBackArrow") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(14.5f, 6.0f)
+                    lineTo(8.5f, 12.0f)
+                    lineTo(14.5f, 18.0f)
+                    lineTo(15.8f, 16.7f)
+                    lineTo(11.1f, 12.0f)
+                    lineTo(15.8f, 7.3f)
+                    close()
+                }
+            }
+            return _talosbackarrow!!
+        }
+
+    private var _talosmail: ImageVector? = null
+
+    /** Apple HIG Mail Envelope. */
+    val TalosMail: ImageVector
+        get() {
+            if (_talosmail != null) return _talosmail!!
+            _talosmail = materialIcon(name = "TalosMail") {
+                materialPath(pathFillType = PathFillType.EvenOdd) {
+                    moveTo(4.0f, 5.0f)
+                    lineTo(20.0f, 5.0f)
+                    curveTo(21.1f, 5.0f, 21.8f, 5.7f, 21.8f, 6.8f)
+                    lineTo(21.8f, 17.2f)
+                    curveTo(21.8f, 18.3f, 21.1f, 19.0f, 20.0f, 19.0f)
+                    lineTo(4.0f, 19.0f)
+                    curveTo(2.9f, 19.0f, 2.2f, 18.3f, 2.2f, 17.2f)
+                    lineTo(2.2f, 6.8f)
+                    curveTo(2.2f, 5.7f, 2.9f, 5.0f, 4.0f, 5.0f)
+                    close()
+                    moveTo(4.2f, 6.8f)
+                    lineTo(12.0f, 12.5f)
+                    lineTo(19.8f, 6.8f)
+                    close()
+                }
+            }
+            return _talosmail!!
+        }
+
     private var _talosdoc: ImageVector? = null
 
     /** Machined sheet with folded corner and content rails — document context. */
@@ -581,3 +751,9 @@ val TalosPalette: ImageVector get() = TalosIcons.TalosPalette
 val TalosSparkle: ImageVector get() = TalosIcons.TalosSparkle
 val TalosPin: ImageVector get() = TalosIcons.TalosPin
 val TalosDoc: ImageVector get() = TalosIcons.TalosDoc
+val TalosChat: ImageVector get() = TalosIcons.TalosChat
+val TalosBell: ImageVector get() = TalosIcons.TalosBell
+val TalosStorage: ImageVector get() = TalosIcons.TalosStorage
+val TalosChevronRight: ImageVector get() = TalosIcons.TalosChevronRight
+val TalosBackArrow: ImageVector get() = TalosIcons.TalosBackArrow
+val TalosMail: ImageVector get() = TalosIcons.TalosMail

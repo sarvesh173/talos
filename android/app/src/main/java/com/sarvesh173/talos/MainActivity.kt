@@ -316,6 +316,24 @@ class MainActivity : ComponentActivity() {
                     else -> if (isPaired) "main" else "landing"
                 }
 
+                val currentActivity = LocalContext.current as? Activity
+                BackHandler(enabled = true) {
+                    when (appScreen) {
+                        "look_and_feel", "chat_preferences", "security", "caching", "notifications" -> {
+                            appScreen = "settings"
+                        }
+                        "settings", "canvas", "diff", "hub", "gallery", "cli_manager" -> {
+                            appScreen = "main"
+                        }
+                        "main", "landing" -> {
+                            currentActivity?.moveTaskToBack(true)
+                        }
+                        else -> {
+                            currentActivity?.moveTaskToBack(true)
+                        }
+                    }
+                }
+
                 AnimatedContent(
                     targetState = activeTarget,
                     transitionSpec = {
@@ -659,7 +677,7 @@ fun MainScreen(
         } else if (activeSlotId != "chambers") {
             activeSlotId = "chambers"
         } else {
-            onExitToLanding()
+            (context as? Activity)?.moveTaskToBack(true)
         }
     }
     val featureScope = remember(client, scope) {

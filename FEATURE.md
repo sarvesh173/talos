@@ -2131,3 +2131,26 @@ Fixed overlapping between the floating Chamber Header capsule, the contextual na
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21070` and `versionName` to `"2.10.70"`.
+
+---
+
+## 101. Hermes & Apple HIG Monochromatic Finishes & Header Action Bar Cleanup
+
+Purged rainbow color presets and migrated appearance customization inside Settings on branch `feature/apple-design-remake`.
+
+### 1. Header Action Bar Cleanup (`MainActivity.kt`)
+- Completely removed the Palette icon button from the floating chamber header action row.
+- Relocated appearance configuration directly into `SettingsDialog` under an Apple-styled "Appearance & Tone" section.
+
+### 2. Apple & Hermes Monochromatic Finishes (`ui/Theme.kt`)
+- Replaced the rainbow of Material 3 color presets (Purple, Cobalt, Emerald, Coral, Amber) with 4 clean Apple/Hermes monochromatic options:
+  1. **AMOLED True Black:** `#000000` pitch canvas with `#1C1C1E` card surfaces.
+  2. **Dark Space Gray:** `#121214` deep slate canvas with `#222226` containers.
+  3. **Paper White:** `#F7F7F9` clean warm editorial surface.
+  4. **Pure White:** `#FFFFFF` stark minimalist light surface.
+- Updated `ThemeSelectionDialog` with Cupertino negative tracking and Apple Action Blue selections.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21071` and `versionName` to `"2.10.71"`.

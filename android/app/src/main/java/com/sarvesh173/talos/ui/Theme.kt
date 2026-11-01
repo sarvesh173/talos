@@ -142,132 +142,94 @@ val LightColorScheme = lightColorScheme(
 )
 
 // -----------------------------------------------------------------------------
-// DYNAMIC THEME PRESETS (APPLE CUPERTINO & PRO STYLES)
+// DYNAMIC THEME PRESETS (APPLE CUPERTINO & MONOCHROMATIC FINISHES)
+// Pure Hermes & Apple HIG palette: Pure AMOLED Black, Space Gray, Paper White, Pure White.
 // -----------------------------------------------------------------------------
 enum class MaterialThemePreset(val displayName: String, val seedColor: Color) {
-    APPLE_CUPERTINO("Apple Cupertino", Color(0xFF0071E3)),
-    APPLE_MIDNIGHT("Apple Midnight", Color(0xFF2997FF)),
-    APPLE_GRAPHITE("Apple Space Gray", Color(0xFF8E8E93)),
-    PURPLE_IRIS("Signature Purple", Color(0xFF6750A4)),
-    COBALT_OCEAN("Cobalt Ocean", Color(0xFF1E40AF)),
-    EMERALD_MINT("Cyber Emerald", Color(0xFF047857)),
-    CRIMSON_EMBER("Coral Rose", Color(0xFFB91C1C)),
-    MOLTEN_AMBER("Titanium Amber", Color(0xFFB45309))
+    APPLE_AMOLED_BLACK("AMOLED True Black", Color(0xFF000000)),
+    APPLE_DARK_SLATE("Dark Space Gray", Color(0xFF1C1C1E)),
+    APPLE_PAPER_WHITE("Paper White", Color(0xFFF5F5F7)),
+    APPLE_PURE_WHITE("Pure White", Color(0xFFFFFFFF)),
+
+    // Aliases to avoid any Deserialization crash if stored in SharedPreferences / config
+    APPLE_CUPERTINO("AMOLED True Black", Color(0xFF000000)),
+    APPLE_MIDNIGHT("Dark Space Gray", Color(0xFF1C1C1E)),
+    APPLE_GRAPHITE("Dark Space Gray", Color(0xFF1C1C1E)),
+    PURPLE_IRIS("AMOLED True Black", Color(0xFF000000)),
+    COBALT_OCEAN("AMOLED True Black", Color(0xFF000000)),
+    EMERALD_MINT("AMOLED True Black", Color(0xFF000000)),
+    CRIMSON_EMBER("AMOLED True Black", Color(0xFF000000)),
+    MOLTEN_AMBER("AMOLED True Black", Color(0xFF000000))
 }
 
 fun getPresetColorScheme(preset: MaterialThemePreset, isDark: Boolean): ColorScheme {
     return when (preset) {
-        MaterialThemePreset.APPLE_CUPERTINO -> if (isDark) DarkColorScheme else LightColorScheme
-        MaterialThemePreset.APPLE_MIDNIGHT -> if (isDark) {
-            DarkColorScheme.copy(
-                primary = Color(0xFF2997FF),
-                background = Color(0xFF000000),
-                surface = Color(0xFF000000),
-                surfaceContainer = Color(0xFF161618),
-                surfaceContainerHigh = Color(0xFF1C1C1E),
-                surfaceContainerHighest = Color(0xFF2C2C2E)
-            )
-        } else {
+        MaterialThemePreset.APPLE_AMOLED_BLACK,
+        MaterialThemePreset.APPLE_CUPERTINO,
+        MaterialThemePreset.PURPLE_IRIS,
+        MaterialThemePreset.COBALT_OCEAN,
+        MaterialThemePreset.EMERALD_MINT,
+        MaterialThemePreset.CRIMSON_EMBER,
+        MaterialThemePreset.MOLTEN_AMBER -> {
+            if (isDark) {
+                // Pitch AMOLED Black (#000000)
+                DarkColorScheme.copy(
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
+                    surfaceContainerLowest = Color(0xFF000000),
+                    surfaceContainerLow = Color(0xFF101012),
+                    surfaceContainer = Color(0xFF1C1C1E),
+                    surfaceContainerHigh = Color(0xFF2C2C2E),
+                    surfaceContainerHighest = Color(0xFF3A3A3C)
+                )
+            } else {
+                LightColorScheme.copy(
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceContainer = Color(0xFFF5F5F7)
+                )
+            }
+        }
+        MaterialThemePreset.APPLE_DARK_SLATE,
+        MaterialThemePreset.APPLE_MIDNIGHT,
+        MaterialThemePreset.APPLE_GRAPHITE -> {
+            if (isDark) {
+                // Space Gray (#121214)
+                DarkColorScheme.copy(
+                    background = Color(0xFF121214),
+                    surface = Color(0xFF121214),
+                    surfaceContainerLowest = Color(0xFF0C0C0E),
+                    surfaceContainerLow = Color(0xFF18181A),
+                    surfaceContainer = Color(0xFF222226),
+                    surfaceContainerHigh = Color(0xFF2C2C30),
+                    surfaceContainerHighest = Color(0xFF38383E)
+                )
+            } else {
+                LightColorScheme.copy(
+                    background = Color(0xFFF2F2F7),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceContainer = Color(0xFFE5E5EA)
+                )
+            }
+        }
+        MaterialThemePreset.APPLE_PAPER_WHITE -> {
+            // Paper White (#F7F7F9 / warm editorial clean)
             LightColorScheme.copy(
-                primary = Color(0xFF0071E3),
-                background = Color(0xFFF2F2F7),
+                background = Color(0xFFF7F7F9),
                 surface = Color(0xFFFFFFFF),
-                surfaceContainer = Color(0xFFF5F5F7)
+                surfaceContainer = Color(0xFFEBEBF0),
+                surfaceContainerHigh = Color(0xFFDFDFE6),
+                onBackground = Color(0xFF1D1D1F)
             )
         }
-        MaterialThemePreset.APPLE_GRAPHITE -> if (isDark) {
-            DarkColorScheme.copy(
-                primary = Color(0xFFE5E5EA),
-                primaryContainer = Color(0xFF3A3A3C),
-                background = Color(0xFF000000),
-                surface = Color(0xFF000000),
-                surfaceContainer = Color(0xFF1C1C1E),
-                surfaceContainerHigh = Color(0xFF2C2C2E),
-                surfaceContainerHighest = Color(0xFF3A3A3C)
-            )
-        } else {
+        MaterialThemePreset.APPLE_PURE_WHITE -> {
+            // Pure White (#FFFFFF / clean stark light)
             LightColorScheme.copy(
-                primary = Color(0xFF1D1D1F),
-                background = Color(0xFFF5F5F7),
+                background = Color(0xFFFFFFFF),
                 surface = Color(0xFFFFFFFF),
-                surfaceContainer = Color(0xFFE5E5EA)
-            )
-        }
-        MaterialThemePreset.PURPLE_IRIS -> if (isDark) DarkColorScheme else LightColorScheme
-        MaterialThemePreset.COBALT_OCEAN -> if (isDark) {
-            DarkColorScheme.copy(
-                primary = Color(0xFF93C5FD),
-                primaryContainer = Color(0xFF1E3A8A),
-                onPrimaryContainer = Color(0xFFDBEAFE),
-                tertiary = Color(0xFF38BDF8),
-                background = Color(0xFF0B1120),
-                surface = Color(0xFF0B1120),
-                surfaceContainer = Color(0xFF131D31),
-                surfaceContainerHigh = Color(0xFF1E293B),
-                surfaceContainerHighest = Color(0xFF334155)
-            )
-        } else {
-            LightColorScheme.copy(
-                primary = Color(0xFF1E40AF),
-                primaryContainer = Color(0xFFDBEAFE),
-                tertiary = Color(0xFF0284C7)
-            )
-        }
-        MaterialThemePreset.EMERALD_MINT -> if (isDark) {
-            DarkColorScheme.copy(
-                primary = Color(0xFF6EE7B7),
-                primaryContainer = Color(0xFF064E3B),
-                onPrimaryContainer = Color(0xFFD1FAE5),
-                tertiary = Color(0xFF2DD4BF),
-                background = Color(0xFF09120F),
-                surface = Color(0xFF09120F),
-                surfaceContainer = Color(0xFF10211B),
-                surfaceContainerHigh = Color(0xFF183028),
-                surfaceContainerHighest = Color(0xFF244439)
-            )
-        } else {
-            LightColorScheme.copy(
-                primary = Color(0xFF047857),
-                primaryContainer = Color(0xFFD1FAE5),
-                tertiary = Color(0xFF0D9488)
-            )
-        }
-        MaterialThemePreset.CRIMSON_EMBER -> if (isDark) {
-            DarkColorScheme.copy(
-                primary = Color(0xFFFCA5A5),
-                primaryContainer = Color(0xFF7F1D1D),
-                onPrimaryContainer = Color(0xFFFFE4E6),
-                tertiary = Color(0xFFFB7185),
-                background = Color(0xFF140A0D),
-                surface = Color(0xFF140A0D),
-                surfaceContainer = Color(0xFF241217),
-                surfaceContainerHigh = Color(0xFF331920),
-                surfaceContainerHighest = Color(0xFF44222B)
-            )
-        } else {
-            LightColorScheme.copy(
-                primary = Color(0xFFB91C1C),
-                primaryContainer = Color(0xFFFFE4E6),
-                tertiary = Color(0xFFE11D48)
-            )
-        }
-        MaterialThemePreset.MOLTEN_AMBER -> if (isDark) {
-            DarkColorScheme.copy(
-                primary = Color(0xFFFCD34D),
-                primaryContainer = Color(0xFF451A03),
-                onPrimaryContainer = Color(0xFFFEF3C7),
-                tertiary = Color(0xFFF59E0B),
-                background = Color(0xFF0E0C09),
-                surface = Color(0xFF0E0C09),
-                surfaceContainer = Color(0xFF1A1610),
-                surfaceContainerHigh = Color(0xFF262118),
-                surfaceContainerHighest = Color(0xFF383124)
-            )
-        } else {
-            LightColorScheme.copy(
-                primary = Color(0xFFB45309),
-                primaryContainer = Color(0xFFFEF3C7),
-                tertiary = Color(0xFFD97706)
+                surfaceContainer = Color(0xFFF2F2F7),
+                surfaceContainerHigh = Color(0xFFE5E5EA),
+                onBackground = Color(0xFF000000)
             )
         }
     }
@@ -477,7 +439,7 @@ fun TalosTheme(
 }
 
 /**
- * Material UI 3 Interactive Theme Preset Selector Dialog.
+ * Apple HIG & Hermes Monochromatic Appearance Selector Dialog.
  */
 @Composable
 fun ThemeSelectionDialog(
@@ -485,32 +447,56 @@ fun ThemeSelectionDialog(
     onSelectPreset: (MaterialThemePreset) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isDark = LocalIsDark.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = {
-            Icon(Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        },
+        containerColor = if (isDark) Color(0xFF1C1C1E) else Color.White,
         title = {
-            Text("Material UI 3 Themes", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "App Finish & Appearance",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.15).sp,
+                color = if (isDark) Color.White else Color(0xFF1D1D1F)
+            )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "Personalize your Material You system palette. Updates all surface containers, buttons, and specular highlights live.",
+                    text = "Clean monochromatic tones: AMOLED true black, dark space gray, and paper white.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = talosTextMuted
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                MaterialThemePreset.values().forEach { preset ->
-                    val isSelected = preset == currentPreset
+                val visiblePresets = listOf(
+                    MaterialThemePreset.APPLE_AMOLED_BLACK,
+                    MaterialThemePreset.APPLE_DARK_SLATE,
+                    MaterialThemePreset.APPLE_PAPER_WHITE,
+                    MaterialThemePreset.APPLE_PURE_WHITE
+                )
+                visiblePresets.forEach { preset ->
+                    val isSelected = when (currentPreset) {
+                        MaterialThemePreset.APPLE_AMOLED_BLACK,
+                        MaterialThemePreset.APPLE_CUPERTINO,
+                        MaterialThemePreset.PURPLE_IRIS,
+                        MaterialThemePreset.COBALT_OCEAN,
+                        MaterialThemePreset.EMERALD_MINT,
+                        MaterialThemePreset.CRIMSON_EMBER,
+                        MaterialThemePreset.MOLTEN_AMBER -> preset == MaterialThemePreset.APPLE_AMOLED_BLACK
+                        MaterialThemePreset.APPLE_DARK_SLATE,
+                        MaterialThemePreset.APPLE_MIDNIGHT,
+                        MaterialThemePreset.APPLE_GRAPHITE -> preset == MaterialThemePreset.APPLE_DARK_SLATE
+                        MaterialThemePreset.APPLE_PAPER_WHITE -> preset == MaterialThemePreset.APPLE_PAPER_WHITE
+                        MaterialThemePreset.APPLE_PURE_WHITE -> preset == MaterialThemePreset.APPLE_PURE_WHITE
+                    }
                     PressableSurface(
                         onClick = { onSelectPreset(preset) },
                         shape = RoundedCornerShape(16.dp),
                         pressedShape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerHighest,
+                        color = if (isSelected) Color(0xFF0071E3).copy(alpha = 0.16f) else (if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)),
                         border = BorderStroke(
-                            if (isSelected) 1.5.dp else 1.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                            if (isSelected) 1.2.dp else 0.8.dp,
+                            if (isSelected) Color(0xFF2997FF).copy(alpha = 0.6f) else (if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f))
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -519,7 +505,7 @@ fun ThemeSelectionDialog(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 10.dp)
+                                .padding(horizontal = 14.dp, vertical = 12.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
@@ -527,18 +513,19 @@ fun ThemeSelectionDialog(
                                         .size(24.dp)
                                         .clip(CircleShape)
                                         .background(preset.seedColor)
-                                        .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape)
+                                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f), CircleShape)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = preset.displayName,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    letterSpacing = (-0.1).sp,
+                                    color = if (isSelected) Color(0xFF2997FF) else (if (isDark) Color.White else Color(0xFF1D1D1F))
                                 )
                             }
                             if (isSelected) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF2997FF), modifier = Modifier.size(18.dp))
                             }
                         }
                     }
@@ -548,9 +535,10 @@ fun ThemeSelectionDialog(
         confirmButton = {
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0071E3))
             ) {
-                Text("Done", color = MaterialTheme.colorScheme.onPrimary)
+                Text("Done", color = Color.White, fontWeight = FontWeight.SemiBold)
             }
         }
     )

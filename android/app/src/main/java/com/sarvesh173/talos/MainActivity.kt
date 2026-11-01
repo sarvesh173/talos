@@ -1008,19 +1008,6 @@ fun MainScreen(
                                     )
                                 }
 
-                                // Material UI 3 Themes Selector
-                                IconButton(
-                                    onClick = onOpenThemeSelector,
-                                    modifier = Modifier.size(38.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Palette,
-                                        contentDescription = "Material UI Themes",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(19.dp)
-                                    )
-                                }
-
                                 val themeTransition = updateTransition(targetState = isDark, label = "m_theme_transition")
                                 val themeRot by themeTransition.animateFloat(
                                     transitionSpec = { M3EMotion.fastSpatial() },
@@ -1836,6 +1823,10 @@ fun MainScreen(
             onSave = { newUrl, newToken ->
                 client.updateConfig(newUrl, newToken)
                 showSettingsDialog = false
+            },
+            onOpenAppearance = {
+                showSettingsDialog = false
+                onOpenThemeSelector()
             }
         )
     }
@@ -1856,7 +1847,8 @@ fun MainScreen(
 fun SettingsDialog(
     client: TalosClient,
     onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit
+    onSave: (String, String) -> Unit,
+    onOpenAppearance: () -> Unit = {}
 ) {
     var urlText by remember { mutableStateOf(client.baseUrl) }
     var tokenText by remember { mutableStateOf(client.apiToken) }
@@ -1864,6 +1856,7 @@ fun SettingsDialog(
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var isSuccess by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val isDark = LocalIsDark.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1982,6 +1975,52 @@ fun SettingsDialog(
                     loading = isVerifying,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Text(
+                    text = "Appearance & Tone",
+                    color = TextPrimary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = (-0.1).sp
+                )
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = "OLED true black, dark space gray, and paper white finishes.",
+                    color = TextMuted,
+                    fontSize = 11.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                PressableSurface(
+                    onClick = onOpenAppearance,
+                    shape = RoundedCornerShape(12.dp),
+                    pressedShape = RoundedCornerShape(8.dp),
+                    color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
+                    border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)),
+                    modifier = Modifier.fillMaxWidth().height(42.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Customize Appearance",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        )
+                        Icon(
+                            imageVector = TalosSparkle,
+                            contentDescription = null,
+                            tint = Color(0xFF2997FF),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
             }
         },
         confirmButton = {},

@@ -319,23 +319,23 @@ fun MessageBubble(
         horizontalArrangement = if (isHuman) Arrangement.End else Arrangement.Start
     ) {
         if (!isHuman) {
-            // Official CLI Agent SVG Emblem inside Machined Obsidian Socket
+            // Clean Apple HIG Agent Emblem avatar
             val emblem = emblemBySender(msg.sender_name)
+            val isDark = LocalIsDark.current
             Box(
                 modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(EmblemSocket)
-                    .border(1.dp, emblem.accent.copy(alpha = 0.55f), RoundedCornerShape(16.dp)),
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA)),
                 contentAlignment = Alignment.Center
             ) {
-                AgentEmblemIcon(emblem = emblem, size = 22.dp, tint = null)
+                AgentEmblemIcon(emblem = emblem, size = 18.dp, tint = null)
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(8.dp))
         }
 
         Column(
-            modifier = Modifier.widthIn(max = 320.dp),
+            modifier = Modifier.fillMaxWidth(if (isHuman) 0.82f else 0.85f),
             horizontalAlignment = if (isHuman) Alignment.End else Alignment.Start
         ) {
             // Sender name header with matching brand accent and spec chip
@@ -343,25 +343,25 @@ fun MessageBubble(
                 val emblem = emblemBySender(msg.sender_name)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
                 ) {
                     Text(
                         text = msg.sender_name,
                         color = emblem.accent,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.1).sp
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Surface(
-                        shape = CircleShape,
-                        color = emblem.accent.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, emblem.accent.copy(alpha = 0.35f))
+                        shape = RoundedCornerShape(6.dp),
+                        color = emblem.accent.copy(alpha = 0.10f)
                     ) {
                         Text(
                             text = emblem.role.substringBefore(" · ").ifBlank { emblem.role },
                             color = emblem.accent,
                             fontSize = 9.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
@@ -425,33 +425,33 @@ fun MessageBubble(
                     )
                 }
                 else -> {
+                    val isDark = LocalIsDark.current
                     Surface(
                         color = if (isHuman) {
-                            MaterialTheme.colorScheme.primary // Apple Active System Accent
+                            MaterialTheme.colorScheme.primary
                         } else {
-                            MaterialTheme.colorScheme.surfaceContainer // Apple Secondary System Background
+                            if (isDark) Color(0xFF242426) else Color(0xFFE9E9EB)
                         },
                         tonalElevation = 0.dp,
                         shape = if (isHuman) {
                             RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 4.dp, bottomStart = 18.dp)
                         } else {
                             RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 4.dp)
-                        },
-                        border = if (isHuman) {
-                            BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f))
-                        } else {
-                            BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f))
                         }
                     ) {
                         Box(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
                         ) {
                             Text(
                                 text = msg.content,
-                                color = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                fontSize = 15.sp,
+                                color = if (isHuman) {
+                                    Color.White
+                                } else {
+                                    if (isDark) Color.White else Color(0xFF000000)
+                                },
+                                fontSize = 15.5.sp,
                                 lineHeight = 21.sp,
-                                letterSpacing = (-0.15).sp // Apple SF Pro clean negative tracking
+                                letterSpacing = (-0.2).sp
                             )
                         }
                     }

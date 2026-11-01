@@ -2417,3 +2417,28 @@ Fix for the Android system back button exiting the app prematurely, graceful tas
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21083` and `versionName` to `"2.10.83"`.
+
+---
+
+## 112. Apple iMessage Fluid Chat Architecture & Native Composer Dock
+
+Complete visual and interaction redesign of the Talos Main Chat interface adhering strictly to authentic Apple HIG specifications:
+
+### 1. Apple iMessage Fluid Message Bubbles
+- **Adaptive Proportions**: Bubbles now scale fluidly up to `82%` (`0.82f`) of screen width instead of rigid fixed-width constraints.
+- **Organic iOS Geometry**: Asymmetric corner radii (`RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)` for user messages, `(20.dp, 20.dp, 20.dp, 4.dp)` for agent messages).
+- **Pure Solid Surface Fills**: Removed harsh, distracting outlines. Human messages render in active vibrant system accent (`#007AFF` / selected theme accent) with crisp white text. Agent messages render in subtle iOS secondary system background (`#242426` in Dark, `#E9E9EB` in Light).
+- **SF Pro Typography**: Negative letter tracking (`-0.2sp`) and comfortable `21sp` line height.
+- **Unboxed Agent Headers**: Replaced bulky obsidian sockets with sleek, unboxed 32dp agent squircle avatars and clean accent tags.
+
+### 2. Apple HIG Composer Dock & Bespoke Vector Controls
+- **Refined Input Capsule**: Integrated clean 22dp pill capsule with calm surface fill and delicate 0.6dp border.
+- **Bespoke Apple Glyphs (`TalosIcons`)**:
+  - `TalosIcons.TalosPlus`: 1.75dp optical stroke `+` attachment button with tactile haptic response.
+  - `TalosIcons.TalosSendArrow`: Upward-pointing circular send arrow (↑) replacing generic Material send glyphs.
+  - Seamless animated handover between send arrow, microphone, and camera states.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21084` and `versionName` to `"2.10.84"`.

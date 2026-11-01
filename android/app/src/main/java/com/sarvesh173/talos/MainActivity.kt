@@ -1492,14 +1492,18 @@ fun MainScreen(
                                     }
                                 }
                             } else {
-                                // (A) Normal Input Capsule with Left Tool and Right Inline Actions
+                                // (A) Apple HIG Input Capsule with Left Attachment (+) Action
                                 Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
-                                    border = BorderStroke(if (isInputFocused) 1.5.dp else 1.2.dp, capsuleBorderBrush),
+                                    shape = RoundedCornerShape(22.dp),
+                                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                                    border = BorderStroke(
+                                        0.6.dp,
+                                        if (isInputFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                        else if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)
+                                    ),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(48.dp)
+                                        .height(46.dp)
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -1508,16 +1512,14 @@ fun MainScreen(
                                             .padding(horizontal = 4.dp)
                                     ) {
                                         IconButton(
-                                            onClick = {
-                                                inputText = if (inputText.startsWith("/")) "" else "/"
-                                            },
-                                            modifier = Modifier.size(38.dp)
+                                            onClick = { showAttachmentSheet = true },
+                                            modifier = Modifier.size(36.dp)
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.SentimentSatisfied,
-                                                contentDescription = "Agent & Tool Mode",
-                                                tint = if (inputText.startsWith("/")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(20.dp)
+                                                imageVector = TalosIcons.TalosPlus,
+                                                contentDescription = "Attach",
+                                                tint = talosTextMuted,
+                                                modifier = Modifier.size(18.dp)
                                             )
                                         }
 
@@ -1528,7 +1530,8 @@ fun MainScreen(
                                                 Text(
                                                     text = "Message $roomTitle...",
                                                     color = talosTextMuted,
-                                                    fontSize = 14.sp
+                                                    fontSize = 15.sp,
+                                                    letterSpacing = (-0.2).sp
                                                 )
                                             },
                                             singleLine = true,
@@ -1537,8 +1540,8 @@ fun MainScreen(
                                                 unfocusedContainerColor = Color.Transparent,
                                                 focusedBorderColor = Color.Transparent,
                                                 unfocusedBorderColor = Color.Transparent,
-                                                focusedTextColor = talosTextPrimary,
-                                                unfocusedTextColor = talosTextPrimary
+                                                focusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                                unfocusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F)
                                             ),
                                             modifier = Modifier
                                                 .weight(1f)
@@ -1547,18 +1550,6 @@ fun MainScreen(
                                                     contentDescription = "Message composition input field for $roomTitle"
                                                 }
                                         )
-
-                                        IconButton(
-                                            onClick = { showAttachmentSheet = true },
-                                            modifier = Modifier.size(38.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.AttachFile,
-                                                contentDescription = "Attach Context",
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
                                     }
                                 }
                             }
@@ -1850,7 +1841,7 @@ fun MainScreen(
                                         label = "ActionDialMorph"
                                     ) { state ->
                                         val (glyph, glyphDesc) = when (state) {
-                                            "send" -> Icons.AutoMirrored.Filled.Send to "Send Command"
+                                            "send" -> TalosIcons.TalosSendArrow to "Send Command"
                                             "mic" -> TalosIcons.TalosMic to "Voice Recording"
                                             else -> TalosIcons.TalosCamera to "Camera Mode"
                                         }

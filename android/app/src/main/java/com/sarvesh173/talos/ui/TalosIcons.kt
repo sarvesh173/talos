@@ -703,6 +703,66 @@ object TalosIcons {
             return _talosmail!!
         }
 
+    private var _talosplus: ImageVector? = null
+
+    /** Apple HIG Plus action glyph (+). */
+    val TalosPlus: ImageVector
+        get() {
+            if (_talosplus != null) return _talosplus!!
+            _talosplus = materialIcon(name = "TalosPlus") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(12.0f, 5.0f)
+                    curveTo(12.55f, 5.0f, 13.0f, 5.45f, 13.0f, 6.0f)
+                    lineTo(13.0f, 11.0f)
+                    lineTo(18.0f, 11.0f)
+                    curveTo(18.55f, 11.0f, 19.0f, 11.45f, 19.0f, 12.0f)
+                    curveTo(19.0f, 12.55f, 18.55f, 13.0f, 18.0f, 13.0f)
+                    lineTo(13.0f, 13.0f)
+                    lineTo(13.0f, 18.0f)
+                    curveTo(13.0f, 18.55f, 12.55f, 19.0f, 12.0f, 19.0f)
+                    curveTo(11.45f, 19.0f, 11.0f, 18.55f, 11.0f, 18.0f)
+                    lineTo(11.0f, 13.0f)
+                    lineTo(6.0f, 13.0f)
+                    curveTo(5.45f, 13.0f, 5.0f, 12.55f, 5.0f, 12.0f)
+                    curveTo(5.0f, 11.45f, 5.45f, 11.0f, 6.0f, 11.0f)
+                    lineTo(11.0f, 11.0f)
+                    lineTo(11.0f, 6.0f)
+                    curveTo(11.0f, 5.45f, 11.45f, 5.0f, 12.0f, 5.0f)
+                    close()
+                }
+            }
+            return _talosplus!!
+        }
+
+    private var _talossendarrow: ImageVector? = null
+
+    /** Apple iMessage Upward Circular Send Arrow (↑). */
+    val TalosSendArrow: ImageVector
+        get() {
+            if (_talossendarrow != null) return _talossendarrow!!
+            _talossendarrow = materialIcon(name = "TalosSendArrow") {
+                materialPath(pathFillType = PathFillType.NonZero) {
+                    moveTo(12.0f, 4.0f)
+                    curveTo(12.35f, 4.0f, 12.65f, 4.15f, 12.85f, 4.4f)
+                    lineTo(18.35f, 10.4f)
+                    curveTo(18.75f, 10.8f, 18.75f, 11.45f, 18.35f, 11.85f)
+                    curveTo(17.95f, 12.25f, 17.3f, 12.25f, 16.9f, 11.85f)
+                    lineTo(12.75f, 7.3f)
+                    lineTo(12.75f, 19.0f)
+                    curveTo(12.75f, 19.55f, 12.3f, 20.0f, 11.75f, 20.0f)
+                    curveTo(11.2f, 20.0f, 10.75f, 19.55f, 10.75f, 19.0f)
+                    lineTo(10.75f, 7.3f)
+                    lineTo(6.6f, 11.85f)
+                    curveTo(6.2f, 12.25f, 5.55f, 12.25f, 5.15f, 11.85f)
+                    curveTo(4.75f, 11.45f, 4.75f, 10.8f, 5.15f, 10.4f)
+                    lineTo(10.65f, 4.4f)
+                    curveTo(10.85f, 4.15f, 11.15f, 4.0f, 11.5f, 4.0f)
+                    close()
+                }
+            }
+            return _talossendarrow!!
+        }
+
     private var _talosdoc: ImageVector? = null
 
     /** Machined sheet with folded corner and content rails — document context. */
@@ -757,3 +817,5 @@ val TalosStorage: ImageVector get() = TalosIcons.TalosStorage
 val TalosChevronRight: ImageVector get() = TalosIcons.TalosChevronRight
 val TalosBackArrow: ImageVector get() = TalosIcons.TalosBackArrow
 val TalosMail: ImageVector get() = TalosIcons.TalosMail
+val TalosPlus: ImageVector get() = TalosIcons.TalosPlus
+val TalosSendArrow: ImageVector get() = TalosIcons.TalosSendArrow

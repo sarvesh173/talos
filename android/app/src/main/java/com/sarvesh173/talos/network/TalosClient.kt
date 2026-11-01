@@ -59,6 +59,10 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         private const val KEY_REDUCE_MOTION = "reduce_motion"
         private const val KEY_HAPTICS_ENABLED = "haptics_enabled"
         private const val KEY_APP_ICON = "app_icon"
+        private const val KEY_CUSTOM_PALETTE_COLORS = "custom_palette_colors"
+        private const val KEY_SELECTED_FONT = "selected_font"
+        private const val KEY_LIGHT_BACKGROUND = "light_background"
+        private const val KEY_DARK_BACKGROUND = "dark_background"
         private const val TAG = "TalosClient"
     }
 
@@ -583,6 +587,65 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     fun setAppIcon(iconKey: String) {
         _appIcon.value = iconKey
         prefs.edit().putString(KEY_APP_ICON, iconKey).apply()
+    }
+
+    // Custom Palette List
+    private val _customPaletteColors = MutableStateFlow<List<String>>(
+        prefs.getString(KEY_CUSTOM_PALETTE_COLORS, "")?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+    )
+    val customPaletteColors: StateFlow<List<String>> = _customPaletteColors.asStateFlow()
+
+    fun addCustomColor(hex: String) {
+        val clean = hex.trim().uppercase()
+        if (clean.isBlank()) return
+        val current = _customPaletteColors.value.toMutableList()
+        if (!current.contains(clean)) {
+            current.add(clean)
+            _customPaletteColors.value = current
+            prefs.edit().putString(KEY_CUSTOM_PALETTE_COLORS, current.joinToString(",")).apply()
+        }
+    }
+
+    fun removeCustomColor(hex: String) {
+        val clean = hex.trim().uppercase()
+        val current = _customPaletteColors.value.toMutableList()
+        if (current.remove(clean)) {
+            _customPaletteColors.value = current
+            prefs.edit().putString(KEY_CUSTOM_PALETTE_COLORS, current.joinToString(",")).apply()
+        }
+    }
+
+    // Selected Font (Nunito, SF Pro, Inter, System, Monospace)
+    private val _selectedFont = MutableStateFlow(
+        prefs.getString(KEY_SELECTED_FONT, "Nunito") ?: "Nunito"
+    )
+    val selectedFont: StateFlow<String> = _selectedFont.asStateFlow()
+
+    fun setSelectedFont(font: String) {
+        _selectedFont.value = font
+        prefs.edit().putString(KEY_SELECTED_FONT, font).apply()
+    }
+
+    // Light Background (white, paper_white)
+    private val _lightBackground = MutableStateFlow(
+        prefs.getString(KEY_LIGHT_BACKGROUND, "white") ?: "white"
+    )
+    val lightBackground: StateFlow<String> = _lightBackground.asStateFlow()
+
+    fun setLightBackground(bg: String) {
+        _lightBackground.value = bg
+        prefs.edit().putString(KEY_LIGHT_BACKGROUND, bg).apply()
+    }
+
+    // Dark Background (midnight, black, gray)
+    private val _darkBackground = MutableStateFlow(
+        prefs.getString(KEY_DARK_BACKGROUND, "black") ?: "black"
+    )
+    val darkBackground: StateFlow<String> = _darkBackground.asStateFlow()
+
+    fun setDarkBackground(bg: String) {
+        _darkBackground.value = bg
+        prefs.edit().putString(KEY_DARK_BACKGROUND, bg).apply()
     }
 
     // --- Nous Portal / Talos Advanced Preferences ---

@@ -2356,3 +2356,36 @@ Eliminated all colored squircle background boxes behind SVG icons across all set
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21079` and `versionName` to `"2.10.79"`.
+
+---
+
+## 110. Full Fidelity Nous Mobile "Look & Feel": 10-Swatch Grid, 2D Spectrum Wheel & Symmetrical Canvases
+
+Complete overhaul of `LookAndFeelScreen.kt` and color architecture matching user reference screenshot `img_c284b06ea586.jpg` on branch `feature/apple-design-remake`.
+
+### 1. Appearance & Accent Grid
+- **Appearance 3-Segment Pill**: `[ System | Light | Dark ]` with smooth sliding indicator pill inside `#F2F2F7` / `#2C2C2E` track.
+- **10 Circular Swatches (2 Rows of 5)**:
+  - Row 1: Deep Blue (`#0022FF`), Royal Blue (`#007AFF`), Cobalt (`#5856D6`), Teal (`#00A8A8`), Green (`#00A344`).
+  - Row 2: Gold (`#A37800`), Orange (`#E05500`), Red (`#E01020`), Magenta (`#D00060`), and 10th 360° Chromatic Rainbow Circle.
+- **Glitch-Free Accent Isolation**: Custom shades never trigger false selection jumps or jump animations on curated preset swatches.
+
+### 2. AppleColorPickerDialog (`ui/AppleColorPickerDialog.kt`)
+- **2D Chromatic Wheel**: Touch-driven 2D hue & saturation sweep/radial disk with continuous draggable crosshair thumb.
+- **Luminance Slider**: Brightness gradient track from `#000000` to full saturation.
+- **RGB Numeric Controls**: 3 channel sliders and numeric value badges for Red, Green, and Blue (0..255).
+- **Hex Input**: `#RRGGBB` input field with live bidirectional syncing.
+- **Custom Palette**: Save favorite shades to persistent user palette.
+
+### 3. Symmetrical Background Finish Cards
+- **Light Background**: Side-by-side cards for "White" (`#FFFFFF`) and "Paper White" (`#F7F5F0`), complete with active border highlight and checkmark badges.
+- **Dark Background**: Side-by-side cards for "Midnight" (`#0B0E14`), "Black" (`#000000` AMOLED), and "Gray" (`#1C1C1E`) with chat bubble mockups.
+
+### 4. Typography & Font Controls
+- **Font Dropdown**: Expandable font family picker (Nunito, SF Pro, Inter, System, Monospace) with "A clear view of your conversations."
+- **Text Size**: Clean typography scale slider bounded by small `A` and large `A` labels.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21080` and `versionName` to `"2.10.80"`.

@@ -142,6 +142,22 @@ val LightColorScheme = lightColorScheme(
 )
 
 // -----------------------------------------------------------------------------
+// APPLE SYSTEM ACCENTS & VIBRANCY TINTS
+// -----------------------------------------------------------------------------
+enum class AppleAccent(val displayName: String, val lightColor: Color, val darkColor: Color) {
+    BLUE("Cupertino Blue", Color(0xFF0071E3), Color(0xFF2997FF)),
+    EMERALD("Cyber Emerald", Color(0xFF047857), Color(0xFF30D158)),
+    INDIGO("Electric Indigo", Color(0xFF4338CA), Color(0xFF5E5CE6)),
+    TEAL("Skyline Teal", Color(0xFF0284C7), Color(0xFF64D2FF)),
+    AMBER("Solar Amber", Color(0xFFD97706), Color(0xFFFFD60A)),
+    CORAL("Sunset Coral", Color(0xFFEA580C), Color(0xFFFF9F0A)),
+    CRIMSON("System Red", Color(0xFFDC2626), Color(0xFFFF453A)),
+    VIOLET("Orchid Violet", Color(0xFF7C3AED), Color(0xFFBF5AF2))
+}
+
+val LocalAppleAccent = staticCompositionLocalOf { AppleAccent.BLUE }
+
+// -----------------------------------------------------------------------------
 // DYNAMIC THEME PRESETS (APPLE CUPERTINO & MONOCHROMATIC FINISHES)
 // Pure Hermes & Apple HIG palette: Pure AMOLED Black, Space Gray, Paper White, Pure White.
 // -----------------------------------------------------------------------------
@@ -405,7 +421,8 @@ private fun animatedColorSchemeOf(target: ColorScheme): ColorScheme {
 @Composable
 fun TalosTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
-    preset: MaterialThemePreset = MaterialThemePreset.PURPLE_IRIS,
+    preset: MaterialThemePreset = MaterialThemePreset.APPLE_AMOLED_BLACK,
+    accentName: String = "BLUE",
     remoteConfig: TalosThemeConfig? = null,
     content: @Composable () -> Unit
 ) {
@@ -415,10 +432,16 @@ fun TalosTheme(
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
 
-    // User's chosen preset is the single source of truth.
-    // Built-in presets (Signature Purple default, Cobalt, Emerald, etc.)
-    // will never be hijacked by stale legacy cache.
-    val targetScheme = getPresetColorScheme(preset, isDark)
+    val activeAccent = AppleAccent.values().find {
+        it.name.equals(accentName, ignoreCase = true)
+    } ?: AppleAccent.BLUE
+
+    val baseScheme = getPresetColorScheme(preset, isDark)
+    val accentColor = if (isDark) activeAccent.darkColor else activeAccent.lightColor
+    val targetScheme = baseScheme.copy(
+        primary = accentColor,
+        onPrimary = if (isDark) Color.Black else Color.White
+    )
     val animatedScheme = animatedColorSchemeOf(targetScheme)
     val statusColors = if (isDark) DarkStatusColors else LightStatusColors
 
@@ -426,6 +449,7 @@ fun TalosTheme(
         LocalIsDark provides isDark,
         LocalTalosStatus provides statusColors,
         LocalThemePreset provides preset,
+        LocalAppleAccent provides activeAccent,
         LocalTalosMotion provides (remoteConfig?.motion ?: MotionConfig())
     ) {
         MaterialExpressiveTheme(

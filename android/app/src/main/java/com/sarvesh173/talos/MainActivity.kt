@@ -98,6 +98,8 @@ import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.core.feature.FeatureCatalog
 import com.sarvesh173.talos.core.feature.FeatureScope
 import com.sarvesh173.talos.core.motion.MotionTokens
+import com.sarvesh173.talos.ui.features.SettingsScreen
+import com.sarvesh173.talos.ui.features.LookAndFeelScreen
 import com.sarvesh173.talos.ui.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -179,9 +181,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val storedTheme by client.themeMode.collectAsState()
-            val activeThemeMode = if (storedTheme == "LIGHT") AppThemeMode.LIGHT else AppThemeMode.DARK
+            val isSystemInDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val activeThemeMode = when (storedTheme.uppercase()) {
+                "LIGHT" -> AppThemeMode.LIGHT
+                "SYSTEM" -> if (isSystemInDark) AppThemeMode.DARK else AppThemeMode.LIGHT
+                else -> AppThemeMode.DARK
+            }
             val storedPresetName by client.themePreset.collectAsState()
-            val activePreset = MaterialThemePreset.values().find { it.name == storedPresetName } ?: MaterialThemePreset.PURPLE_IRIS
+            val activePreset = MaterialThemePreset.values().find { it.name == storedPresetName } ?: MaterialThemePreset.APPLE_AMOLED_BLACK
+            val storedAccent by client.accentColor.collectAsState()
             var showThemeDialog by remember { mutableStateOf(false) }
             var appScreen by remember { mutableStateOf(if (client.hasLaunched || client.isPaired.value) "main" else "landing") }
 
@@ -245,6 +253,7 @@ class MainActivity : ComponentActivity() {
             TalosTheme(
                 themeMode = activeThemeMode,
                 preset = activePreset,
+                accentName = storedAccent,
                 remoteConfig = remoteTheme
             ) {
                 if (showThemeDialog) {
@@ -378,8 +387,24 @@ class MainActivity : ComponentActivity() {
                                     appScreen = "cli_manager"
                                 },
                                 onOpenThemeSelector = {
-                                    showThemeDialog = true
+                                    appScreen = "look_and_feel"
+                                },
+                                onOpenSettings = {
+                                    appScreen = "settings"
                                 }
+                            )
+                        }
+                        "settings" -> {
+                            SettingsScreen(
+                                client = client,
+                                onBack = { appScreen = "main" },
+                                onNavigateToLookAndFeel = { appScreen = "look_and_feel" }
+                            )
+                        }
+                        "look_and_feel" -> {
+                            LookAndFeelScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
                             )
                         }
                         "canvas" -> {
@@ -489,7 +514,8 @@ fun MainScreen(
     onOpenHub: () -> Unit = {},
     onOpenGallery: () -> Unit = {},
     onOpenCliManager: () -> Unit = {},
-    onOpenThemeSelector: () -> Unit = {}
+    onOpenThemeSelector: () -> Unit = {},
+    onOpenSettings: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -1036,7 +1062,7 @@ fun MainScreen(
                                 }
 
                                 IconButton(
-                                    onClick = { showSettingsDialog = true },
+                                    onClick = onOpenSettings,
                                     modifier = Modifier.size(40.dp)
                                 ) {
                                     Icon(

@@ -412,7 +412,11 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     val themeMode: StateFlow<String> = _themeMode.asStateFlow()
 
     fun setThemeMode(mode: String) {
-        val normalized = if (mode.equals("LIGHT", ignoreCase = true)) "LIGHT" else "DARK"
+        val normalized = when (mode.uppercase()) {
+            "LIGHT" -> "LIGHT"
+            "SYSTEM" -> "SYSTEM"
+            else -> "DARK"
+        }
         _themeMode.value = normalized
         prefs.edit().putString(KEY_THEME_MODE, normalized).apply()
     }
@@ -423,13 +427,33 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     }
 
     private val _themePreset = MutableStateFlow(
-        prefs.getString("KEY_THEME_PRESET", "PURPLE_IRIS") ?: "PURPLE_IRIS"
+        prefs.getString("KEY_THEME_PRESET", "APPLE_AMOLED_BLACK") ?: "APPLE_AMOLED_BLACK"
     )
     val themePreset: StateFlow<String> = _themePreset.asStateFlow()
 
     fun setThemePreset(presetName: String) {
         _themePreset.value = presetName
         prefs.edit().putString("KEY_THEME_PRESET", presetName).apply()
+    }
+
+    private val _accentColor = MutableStateFlow(
+        prefs.getString("KEY_APPLE_ACCENT", "BLUE") ?: "BLUE"
+    )
+    val accentColor: StateFlow<String> = _accentColor.asStateFlow()
+
+    fun setAccentColor(accentName: String) {
+        _accentColor.value = accentName
+        prefs.edit().putString("KEY_APPLE_ACCENT", accentName).apply()
+    }
+
+    private val _fontScale = MutableStateFlow(
+        prefs.getString("KEY_FONT_SCALE", "standard") ?: "standard"
+    )
+    val fontScale: StateFlow<String> = _fontScale.asStateFlow()
+
+    fun setFontScale(scale: String) {
+        _fontScale.value = scale
+        prefs.edit().putString("KEY_FONT_SCALE", scale).apply()
     }
 
     private val _isAgentTyping = MutableStateFlow(false)

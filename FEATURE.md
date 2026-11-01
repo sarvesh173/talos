@@ -2154,3 +2154,31 @@ Purged rainbow color presets and migrated appearance customization inside Settin
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21071` and `versionName` to `"2.10.71"`.
+
+---
+
+## 102. Hierarchical Settings Architecture & Dedicated Apple "Look & Feel" Experience
+
+Implemented full hierarchical navigation for Settings, separating connection settings and creating a dedicated Apple HIG "Look & Feel" screen on branch `feature/apple-design-remake`.
+
+### 1. Dedicated Hierarchical Settings Screen (`ui/features/SettingsScreen.kt`)
+- Categorized into Apple Inset Grouped cards:
+  - **Appearance & Personality:** Direct entry point into dedicated "Look & Feel" sub-screen with squircle icon badge and chevron navigation.
+  - **Network & Core Transport:** Live Tailscale IP configuration, API Token input, and asynchronous handshake verification.
+  - **Council Agent Fleet:** Real-time summary of Hermes Core, OmniRush Council, and Alya anchor nodes.
+  - **About TALOS:** Engine specifications and open-source licensing.
+
+### 2. Dedicated Apple HIG "Look & Feel" Screen (`ui/features/LookAndFeelScreen.kt`)
+- **Live Interactive Preview Card (Hero):** Shows real-time simulated conversation bubbles updating dynamically as user tweaks appearance.
+- **Appearance Mode:** Apple glass pill segmented slider (`System Auto` | `Light` | `Dark`) reacting to Android OS night mode.
+- **8 Apple & Hermes Accent Swatches:** Tactile circular buttons with specular rims, inner shadows, and active checkmarks:
+  - Cupertino Blue (`#0071E3`), Cyber Emerald (`#30D158`), Electric Indigo (`#5E5CE6`), Skyline Teal (`#64D2FF`), Solar Amber (`#FFD60A`), Sunset Coral (`#FF9F0A`), System Red (`#FF453A`), Orchid Violet (`#BF5AF2`).
+- **Monochromatic Background Finishes:**
+  - Dark: AMOLED True Black (`#000000`), Dark Space Gray (`#121214`).
+  - Light: Paper White (`#F7F7F9` warm editorial), Pure White (`#FFFFFF`).
+- **Typography & Optical Sizing:** Compact, Standard, and Spacious tracking controls.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21072` and `versionName` to `"2.10.72"`.

@@ -426,7 +426,7 @@ fun MessageBubble(
                     val isDark = LocalIsDark.current
                     Surface(
                         color = if (isHuman) {
-                            Color(0xFF0071E3) // Apple Action Blue signature fill
+                            MaterialTheme.colorScheme.primary // Apple Active System Accent
                         } else {
                             if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA) // Apple Secondary System Background
                         },

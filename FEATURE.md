@@ -2228,3 +2228,26 @@ Fixed the core navigation interception bug where `activeTarget` was overriding `
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21074` and `versionName` to `"2.10.74"`.
+
+---
+
+## 105. Apple HIG Depth, Inset Grouped Hierarchy & Specular Swatches Elevate
+
+Completed comprehensive visual depth pass coordinated across parallel delegate subagents on `feature/apple-design-remake`.
+
+### 1. Inset Grouped Architecture & Specular Highlights (`SettingsScreen.kt`)
+- Converted all grouped sections into authentic iOS Inset Grouped cards with continuous 16dp rounded squircles and 0.8dp specular borders.
+- Re-architected the "Look & Feel" row with a rich squircle icon tile, inner radial glow, specular rim, and vibrant accent tint.
+- Refined Tailscale transport controls with native text field containers, 44dp tactile button with specular highlight, and dedicated status feedback capsule.
+- Upgraded Council Fleet with 34dp agent icon squircles, live indicator capsules, and 46dp inset dividers.
+
+### 2. Live Preview Hero Depth & Specular Swatches (`LookAndFeelScreen.kt`)
+- Multi-layer depth for the Hero Preview: frosted card backdrop with 1.2dp specular rim, realistic message bubble shadows, and live accent glow pill.
+- Enhanced all 8 Apple & Hermes accent color swatches with 1.2dp specular borders, radial gradients, drop shadows, and spring-scale tap feedback.
+- Enriched background canvas preset selector with custom preview miniatures and selection indicators.
+- Calibrated SF Pro negative letter-spacing (-0.15sp to -0.25sp) across all typography labels.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21075` and `versionName` to `"2.10.75"`.

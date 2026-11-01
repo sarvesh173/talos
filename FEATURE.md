@@ -2494,3 +2494,28 @@ Overhauled `LookAndFeelScreen.kt` to mirror the authentic user-provided referenc
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21086` and `versionName` to `"2.10.86"`.
+
+---
+
+## 115. True Dynamic Typography Pipeline, Liquid Drop Animation & Package Signing Fix
+
+Resolved package installation failure on Vivo/Android PackageInstaller, wired dynamic typography throughout the entire app hierarchy, and implemented liquid typography drop animations:
+
+### 1. Package Installation Fix (Vivo / Android PackageInstaller)
+- **APK Signature Scheme v1 & v2**: Explicitly activated `enableV1Signing = true` and `enableV2Signing = true` in `build.gradle.kts` release signing block.
+- **Manifest Sanitization**: Removed non-standard permission declarations in `AndroidManifest.xml` that caused `INSTALL_FAILED_INVALID_APK` on strict Android 14/15 OEM package parsers.
+- **Signature Conflict Guidance**: Vivo Funtouch OS translates signature mismatches over older debug installs into *"App not installed as package appears to be invalid"*.
+
+### 2. Global Live Dynamic Typography Pipeline
+- **Theme Wiring**: `selectedFont` and `fontScale` now flow directly from `TalosClient` into `TalosTheme`.
+- **Dynamic Typescale Generator**: Added `resolveFontFamily(...)` and `resolveFontScaleMultiplier(...)` constructing live `MaterialExpressiveTheme` typography on the fly.
+- Selected fonts (System, Nunito, Manrope, Serif, Lora, Monospace) now instantly apply across every screen, bubble, and label in the entire app.
+
+### 3. Liquid Typography Drop Animation & Dynamic Island Capsule
+- **Dynamic Island Drop Banner**: Selecting a new font triggers a floating capsule that drops from the top (`slideInVertically` with spring physics) displaying `"Applying [Font] Typography..."` with a glowing accent indicator.
+- **Cascading Preview Morph**: The typography preview card animates with `AnimatedContent`, sliding old text upward while the new typeface drops in like freshly pressed ink.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21087` and `versionName` to `"2.10.87"`.

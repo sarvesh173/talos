@@ -543,6 +543,10 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
+            var isApplyingFontAnimation by remember { mutableStateOf(false) }
+            var fontAnimJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+            val coroutineScope = rememberCoroutineScope()
+
             val fontOptions = remember {
                 listOf(
                     Triple("System", "System sans serif", androidx.compose.ui.text.font.FontFamily.Default),
@@ -554,6 +558,43 @@ fun LookAndFeelScreen(
                 )
             }
             val activeFontModel = fontOptions.find { it.first == currentFont } ?: fontOptions[1]
+
+            // Floating Dynamic Island Font Drop Banner
+            AnimatedVisibility(
+                visible = isApplyingFontAnimation,
+                enter = slideInVertically(animationSpec = spring(dampingRatio = 0.68f, stiffness = 400f)) { -it } + fadeIn(),
+                exit = slideOutVertically(animationSpec = tween(400)) { -it } + fadeOut(),
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
+                    border = BorderStroke(0.8.dp, effectiveAccentColor.copy(alpha = 0.45f)),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(effectiveAccentColor)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Applying $currentFont Typography...",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            letterSpacing = (-0.2).sp
+                        )
+                    }
+                }
+            }
 
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -573,6 +614,12 @@ fun LookAndFeelScreen(
                                 .clickable {
                                     TalosHaptics.sendHaptic(context)
                                     client.setSelectedFont(fontName)
+                                    fontAnimJob?.cancel()
+                                    isApplyingFontAnimation = true
+                                    fontAnimJob = coroutineScope.launch {
+                                        kotlinx.coroutines.delay(1600)
+                                        isApplyingFontAnimation = false
+                                    }
                                 }
                                 .padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -617,7 +664,7 @@ fun LookAndFeelScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Live Typography Preview Card
+            // Live Typography Preview Card with Cascading Drop Animation
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
@@ -628,22 +675,40 @@ fun LookAndFeelScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
-                    Text(
-                        text = currentFont,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = activeFontModel.third,
-                        letterSpacing = (-0.4).sp,
-                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "A clear view of your conversations.",
-                        fontSize = 15.sp,
-                        fontFamily = activeFontModel.third,
-                        letterSpacing = (-0.2).sp,
-                        color = talosTextMuted
-                    )
+                    AnimatedContent(
+                        targetState = currentFont,
+                        transitionSpec = {
+                            (slideInVertically(
+                                animationSpec = spring(dampingRatio = 0.72f, stiffness = 320f)
+                            ) { it / 2 } + fadeIn(tween(500)))
+                                .togetherWith(
+                                    slideOutVertically(
+                                        animationSpec = tween(300)
+                                    ) { -it / 3 } + fadeOut(tween(250))
+                                )
+                        },
+                        label = "FontDropTransition"
+                    ) { targetFontName ->
+                        val targetFontModel = fontOptions.find { it.first == targetFontName } ?: activeFontModel
+                        Column {
+                            Text(
+                                text = targetFontName,
+                                fontSize = 21.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = targetFontModel.third,
+                                letterSpacing = (-0.4).sp,
+                                color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "A clear view of your conversations.",
+                                fontSize = 15.sp,
+                                fontFamily = targetFontModel.third,
+                                letterSpacing = (-0.2).sp,
+                                color = talosTextMuted
+                            )
+                        }
+                    }
                 }
             }
 

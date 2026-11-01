@@ -197,6 +197,8 @@ class MainActivity : ComponentActivity() {
             val storedPresetName by client.themePreset.collectAsState()
             val activePreset = MaterialThemePreset.values().find { it.name == storedPresetName } ?: MaterialThemePreset.APPLE_AMOLED_BLACK
             val storedAccent by client.accentColor.collectAsState()
+            val storedFont by client.selectedFont.collectAsState()
+            val storedFontScale by client.fontScale.collectAsState()
             var showThemeDialog by remember { mutableStateOf(false) }
             var appScreen by remember { mutableStateOf(if (client.hasLaunched || client.isPaired.value) "main" else "landing") }
 
@@ -261,6 +263,8 @@ class MainActivity : ComponentActivity() {
                 themeMode = activeThemeMode,
                 preset = activePreset,
                 accentName = storedAccent,
+                selectedFontName = storedFont,
+                fontScaleName = storedFontScale,
                 remoteConfig = remoteTheme
             ) {
                 if (showThemeDialog) {

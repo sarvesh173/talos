@@ -442,6 +442,49 @@ val ShapeExtraLargeIncreased = androidx.compose.foundation.shape.RoundedCornerSh
 val ShapeFull = androidx.compose.foundation.shape.CircleShape
 
 // -----------------------------------------------------------------------------
+fun resolveFontFamily(fontName: String): FontFamily = when (fontName.lowercase()) {
+    "system" -> FontFamily.Default
+    "nunito" -> FontFamily.SansSerif
+    "manrope" -> FontFamily.SansSerif
+    "serif" -> FontFamily.Serif
+    "lora" -> FontFamily.Serif
+    "monospace" -> FontFamily.Monospace
+    else -> FontFamily.Default
+}
+
+fun resolveFontScaleMultiplier(scaleName: String): Float = when (scaleName.lowercase()) {
+    "tiny" -> 0.84f
+    "extra_small" -> 0.90f
+    "small", "compact" -> 0.96f
+    "medium", "standard" -> 1.0f
+    "large", "spacious" -> 1.10f
+    "extra_large" -> 1.22f
+    else -> 1.0f
+}
+
+fun buildTalosTypography(fontFamily: FontFamily, scale: Float): Typography {
+    return Typography(
+        displayLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = (57 * scale).sp, lineHeight = (64 * scale).sp, letterSpacing = (-0.25).sp),
+        displayMedium = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = (45 * scale).sp, lineHeight = (52 * scale).sp, letterSpacing = 0.sp),
+        displaySmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = (36 * scale).sp, lineHeight = (44 * scale).sp, letterSpacing = 0.sp),
+        headlineLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = (32 * scale).sp, lineHeight = (40 * scale).sp, letterSpacing = 0.sp),
+        headlineMedium = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = (28 * scale).sp, lineHeight = (36 * scale).sp, letterSpacing = 0.sp),
+        headlineSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = (24 * scale).sp, lineHeight = (32 * scale).sp, letterSpacing = 0.sp),
+        titleLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = (22 * scale).sp, lineHeight = (28 * scale).sp, letterSpacing = 0.sp),
+        titleMedium = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = (16 * scale).sp, lineHeight = (24 * scale).sp, letterSpacing = 0.15.sp),
+        titleSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Medium, fontSize = (14 * scale).sp, lineHeight = (20 * scale).sp, letterSpacing = 0.1.sp),
+        bodyLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = (16 * scale).sp, lineHeight = (24 * scale).sp, letterSpacing = 0.5.sp),
+        bodyMedium = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = (14 * scale).sp, lineHeight = (20 * scale).sp, letterSpacing = 0.25.sp),
+        bodySmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = (12 * scale).sp, lineHeight = (16 * scale).sp, letterSpacing = 0.4.sp),
+        labelLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = (14 * scale).sp, lineHeight = (20 * scale).sp, letterSpacing = 0.1.sp),
+        labelMedium = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = (12 * scale).sp, lineHeight = (16 * scale).sp, letterSpacing = 0.5.sp),
+        labelSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Medium, fontSize = (11 * scale).sp, lineHeight = (16 * scale).sp, letterSpacing = 0.5.sp)
+    )
+}
+
+val LocalTalosFontFamily = compositionLocalOf { FontFamily.Default }
+val LocalTalosFontScale = compositionLocalOf { 1.0f }
+
 // Typography scale (Conforming to Google MD3 Typescale from hamen/material-3-skill)
 // -----------------------------------------------------------------------------
 val TalosTypography = Typography(
@@ -550,6 +593,8 @@ fun TalosTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
     preset: MaterialThemePreset = MaterialThemePreset.APPLE_AMOLED_BLACK,
     accentName: String = "BLUE",
+    selectedFontName: String = "Nunito",
+    fontScaleName: String = "small",
     remoteConfig: TalosThemeConfig? = null,
     content: @Composable () -> Unit
 ) {
@@ -571,19 +616,27 @@ fun TalosTheme(
     )
     val statusColors = if (isDark) DarkStatusColors else LightStatusColors
 
+    val activeFontFamily = resolveFontFamily(selectedFontName)
+    val activeFontScale = resolveFontScaleMultiplier(fontScaleName)
+    val dynamicTypography = remember(activeFontFamily, activeFontScale) {
+        buildTalosTypography(activeFontFamily, activeFontScale)
+    }
+
     CompositionLocalProvider(
         LocalIsDark provides isDark,
         LocalTalosStatus provides statusColors,
         LocalThemePreset provides preset,
         LocalAppleAccent provides activeAccent,
         LocalAccentColor provides accentColor,
-        LocalTalosMotion provides (remoteConfig?.motion ?: MotionConfig())
+        LocalTalosMotion provides (remoteConfig?.motion ?: MotionConfig()),
+        LocalTalosFontFamily provides activeFontFamily,
+        LocalTalosFontScale provides activeFontScale
     ) {
         MaterialExpressiveTheme(
             colorScheme = targetScheme,
             motionScheme = MotionScheme.expressive(),
             shapes = TalosShapes,
-            typography = TalosTypography,
+            typography = dynamicTypography,
             content = content
         )
     }

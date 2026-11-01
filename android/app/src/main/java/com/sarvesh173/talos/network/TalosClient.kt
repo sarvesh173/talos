@@ -421,8 +421,18 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         prefs.edit().putString(KEY_THEME_MODE, normalized).apply()
     }
 
-    fun toggleTheme() {
-        val next = if (_themeMode.value == "DARK") "LIGHT" else "DARK"
+    fun toggleTheme(isCurrentlyDark: Boolean? = null) {
+        val next = if (isCurrentlyDark != null) {
+            if (isCurrentlyDark) "LIGHT" else "DARK"
+        } else {
+            val isSysDark = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+            when (_themeMode.value.uppercase()) {
+                "DARK" -> "LIGHT"
+                "LIGHT" -> "DARK"
+                "SYSTEM" -> if (isSysDark) "LIGHT" else "DARK"
+                else -> if (isSysDark) "LIGHT" else "DARK"
+            }
+        }
         setThemeMode(next)
     }
 
@@ -441,9 +451,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     )
     val accentColor: StateFlow<String> = _accentColor.asStateFlow()
 
-    fun setAccentColor(accentName: String) {
-        _accentColor.value = accentName
-        prefs.edit().putString("KEY_APPLE_ACCENT", accentName).apply()
+    fun setAccentColor(accentNameOrHex: String) {
+        _accentColor.value = accentNameOrHex
+        prefs.edit().putString("KEY_APPLE_ACCENT", accentNameOrHex).apply()
     }
 
     private val _fontScale = MutableStateFlow(

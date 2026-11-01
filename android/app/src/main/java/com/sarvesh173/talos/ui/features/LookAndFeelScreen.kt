@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.*
+import kotlin.math.roundToInt
 
 /**
  * Dedicated Apple HIG "Look & Feel" Screen.
@@ -53,6 +54,9 @@ fun LookAndFeelScreen(
     val activeAccent = AppleAccent.values().find {
         it.name.equals(currentAccentName, ignoreCase = true)
     } ?: AppleAccent.BLUE
+
+    val effectiveAccentColor = resolveAccentColor(currentAccentName, isDark)
+    val isCustomColor = parseHexColor(currentAccentName) != null
 
     val scrollState = rememberScrollState()
 
@@ -118,7 +122,7 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            val accentGlowColor = if (isDark) activeAccent.darkColor else activeAccent.lightColor
+            val accentGlowColor = effectiveAccentColor
 
             Box(
                 modifier = Modifier.fillMaxWidth()
@@ -220,7 +224,7 @@ fun LookAndFeelScreen(
                                     )
                                 ) {
                                     Text(
-                                        text = activeAccent.displayName,
+                                        text = if (isCustomColor) "Spectrum Custom (${currentAccentName.uppercase()})" else activeAccent.displayName,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = (-0.15).sp,
@@ -420,10 +424,10 @@ fun LookAndFeelScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // -----------------------------------------------------------------
-            // 3. ACCENT TINTS (APPLE SYSTEM PALETTE SWATCHES)
+            // 3. ACCENT TINTS & 360° COLOR SPECTRUM
             // -----------------------------------------------------------------
             Text(
-                text = "ACCENT TINT",
+                text = "ACCENT TINT & 360° SPECTRUM",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.8.sp,
@@ -431,11 +435,211 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
             Text(
-                text = "Tint applied to buttons, selected chips, and message bubbles.",
+                text = "Slide the 360° hue spectrum to choose any custom color, or select curated Apple swatches.",
                 fontSize = 11.sp,
                 letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
                 modifier = Modifier.padding(start = 4.dp, bottom = 10.dp)
+            )
+
+            // --- 360° HUE SPECTRUM CARD ---
+            Surface(
+                shape = RoundedCornerShape(18.dp),
+                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    var currentHue by remember(currentAccentName, isDark) {
+                        mutableFloatStateOf(hueFromAccentName(currentAccentName, isDark))
+                    }
+                    val liveColor = if (isCustomColor) effectiveAccentColor else colorFromHue(currentHue, isDark)
+                    val liveHex = if (isCustomColor) currentAccentName.uppercase() else hexFromHue(currentHue, isDark)
+
+                    // Top Bar: Live Swatch Preview + Angle/Hex Info + Mode Badge
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(liveColor)
+                                    .border(
+                                        1.5.dp,
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                Color.White.copy(alpha = 0.65f),
+                                                Color.White.copy(alpha = 0.15f)
+                                            )
+                                        ),
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.35f))
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                val hueDegrees = currentHue.roundToInt()
+                                val hueFamily = when (hueDegrees) {
+                                    in 0..15 -> "Crimson Red"
+                                    in 16..45 -> "Sunset Coral"
+                                    in 46..75 -> "Solar Amber"
+                                    in 76..150 -> "Cyber Emerald"
+                                    in 151..195 -> "Skyline Cyan"
+                                    in 196..255 -> "Cupertino Blue"
+                                    in 256..290 -> "Electric Indigo"
+                                    in 291..335 -> "Orchid Violet"
+                                    else -> "Crimson Red"
+                                }
+                                Text(
+                                    text = hueFamily,
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.15).sp,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                                Text(
+                                    text = "$hueDegrees° Spectrum  •  $liveHex",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = talosTextMuted
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = liveColor.copy(alpha = 0.14f),
+                            border = BorderStroke(0.6.dp, liveColor.copy(alpha = 0.35f))
+                        ) {
+                            Text(
+                                text = "360° LIVE",
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = liveColor,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.5.dp)
+                            )
+                        }
+                    }
+
+                    // 360° Rainbow Bar & Slider
+                    val rainbowGradient = remember {
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color(0xFFFF0000), // 0° Red
+                                Color(0xFFFF7F00), // 30° Orange
+                                Color(0xFFFFFF00), // 60° Yellow
+                                Color(0xFF00FF00), // 120° Green
+                                Color(0xFF00FFFF), // 180° Cyan
+                                Color(0xFF0000FF), // 240° Blue
+                                Color(0xFFFF00FF), // 300° Magenta
+                                Color(0xFFFF0000)  // 360° Red
+                            )
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(34.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Continuous 0° to 360° rainbow gradient bar
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(14.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(rainbowGradient)
+                                .border(
+                                    0.8.dp,
+                                    if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.12f),
+                                    RoundedCornerShape(7.dp)
+                                )
+                        )
+
+                        // Interactive slider overlay
+                        Slider(
+                            value = currentHue,
+                            onValueChange = { newHue ->
+                                currentHue = newHue
+                                val newHex = hexFromHue(newHue, isDark)
+                                client.setAccentColor(newHex)
+                            },
+                            valueRange = 0f..360f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = liveColor,
+                                activeTrackColor = Color.Transparent,
+                                inactiveTrackColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // 8 Quick-Jump Hue Points across the 360° circle
+                    val spectrumPoints = listOf(
+                        0f to "Red",
+                        40f to "Coral",
+                        60f to "Amber",
+                        120f to "Emerald",
+                        180f to "Teal",
+                        215f to "Blue",
+                        270f to "Indigo",
+                        315f to "Violet"
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        spectrumPoints.forEach { (pointHue, _) ->
+                            val isPointSelected = kotlin.math.abs(currentHue - pointHue) < 10f
+                            val pointColor = colorFromHue(pointHue, isDark)
+                            Box(
+                                modifier = Modifier
+                                    .size(if (isPointSelected) 22.dp else 17.dp)
+                                    .clip(CircleShape)
+                                    .background(pointColor)
+                                    .border(
+                                        if (isPointSelected) 2.dp else 0.8.dp,
+                                        if (isPointSelected) Color.White else (if (isDark) Color.White.copy(alpha = 0.3f) else Color.Black.copy(alpha = 0.2f)),
+                                        CircleShape
+                                    )
+                                    .clickable {
+                                        currentHue = pointHue
+                                        val newHex = hexFromHue(pointHue, isDark)
+                                        client.setAccentColor(newHex)
+                                    }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // --- CURATED APPLE HIG PRESETS ---
+            Text(
+                text = "CURATED APPLE HIG PRESETS",
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.6.sp,
+                color = talosTextMuted,
+                modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
             )
 
             Surface(
@@ -458,7 +662,7 @@ fun LookAndFeelScreen(
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
                             rowAccents.forEach { accent ->
-                                val isSelected = activeAccent == accent
+                                val isSelected = !isCustomColor && activeAccent == accent
                                 val swatchColor = if (isDark) accent.darkColor else accent.lightColor
 
                                 val swatchInteraction = remember { MutableInteractionSource() }
@@ -579,14 +783,14 @@ fun LookAndFeelScreen(
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (isSelected) {
-                            (if (isDark) activeAccent.darkColor else activeAccent.lightColor).copy(alpha = 0.12f)
+                            effectiveAccentColor.copy(alpha = 0.12f)
                         } else {
                             if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF)
                         },
                         border = BorderStroke(
                             width = if (isSelected) 1.2.dp else 0.8.dp,
                             color = if (isSelected) {
-                                (if (isDark) activeAccent.darkColor else activeAccent.lightColor).copy(alpha = 0.65f)
+                                effectiveAccentColor.copy(alpha = 0.65f)
                             } else {
                                 if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)
                             }
@@ -632,7 +836,7 @@ fun LookAndFeelScreen(
                                         fontSize = 13.sp,
                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                         letterSpacing = (-0.2).sp,
-                                        color = if (isSelected) (if (isDark) activeAccent.darkColor else activeAccent.lightColor) else (if (isDark) Color.White else Color(0xFF1D1D1F))
+                                        color = if (isSelected) effectiveAccentColor else (if (isDark) Color.White else Color(0xFF1D1D1F))
                                     )
                                     Text(
                                         text = desc,
@@ -647,7 +851,7 @@ fun LookAndFeelScreen(
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Active",
-                                    tint = if (isDark) activeAccent.darkColor else activeAccent.lightColor,
+                                    tint = effectiveAccentColor,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }

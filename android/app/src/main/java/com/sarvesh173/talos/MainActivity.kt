@@ -87,6 +87,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -184,7 +185,8 @@ class MainActivity : ComponentActivity() {
             val isSystemInDark = androidx.compose.foundation.isSystemInDarkTheme()
             val activeThemeMode = when (storedTheme.uppercase()) {
                 "LIGHT" -> AppThemeMode.LIGHT
-                "SYSTEM" -> if (isSystemInDark) AppThemeMode.DARK else AppThemeMode.LIGHT
+                "DARK" -> AppThemeMode.DARK
+                "SYSTEM" -> AppThemeMode.SYSTEM
                 else -> AppThemeMode.DARK
             }
             val storedPresetName by client.themePreset.collectAsState()
@@ -413,7 +415,7 @@ class MainActivity : ComponentActivity() {
                                 client = client,
                                 isDark = isCurrentlyDark,
                                 onToggleTheme = {
-                                    client.toggleTheme()
+                                    client.toggleTheme(isCurrentlyDark)
                                 },
                                 onExitToLanding = {
                                     appScreen = "landing"
@@ -507,7 +509,7 @@ class MainActivity : ComponentActivity() {
                             OnboardingWizard(
                                 client = client,
                                 onToggleTheme = {
-                                    client.toggleTheme()
+                                    client.toggleTheme(isCurrentlyDark)
                                 },
                                 onExitToLanding = {
                                     appScreen = "landing"
@@ -525,7 +527,7 @@ class MainActivity : ComponentActivity() {
                                 client = client,
                                 isDark = isCurrentlyDark,
                                 onToggleTheme = {
-                                    client.toggleTheme()
+                                    client.toggleTheme(isCurrentlyDark)
                                 },
                                 onGetStarted = {
                                     client.markLaunched()
@@ -972,14 +974,17 @@ fun MainScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                            // Left: Chamber Drawer Toggle & Machined Emblem Socket
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = { scope.launch { drawerState.open() } },
-                                    modifier = Modifier.size(40.dp)
+                                // Left: 36dp Translucent Glass Squircle for Menu button
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
+                                        .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                        .applePressable(0.94f) { scope.launch { drawerState.open() } },
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Menu,
@@ -988,38 +993,26 @@ fun MainScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(6.dp))
-                                val roomEmblem = activeRoom?.let { room ->
-                                    when {
-                                        room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
-                                        room.id == "the-council" -> emblemByKey("omnirush")
-                                        else -> emblemBySender(room.name)
-                                    }
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(EmblemSocket)
-                                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (roomEmblem != null) {
-                                        AgentEmblemIcon(emblem = roomEmblem, size = 20.dp, tint = null)
-                                    } else {
-                                        Icon(TalosHub, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                                    }
-                                }
+
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Column {
+
+                                // Center: Room title in SF Pro Semibold with a clean green presence dot and status text
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp),
+                                    verticalArrangement = Arrangement.Center
+                                ) {
                                     Text(
                                         text = roomTitle,
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = (-0.2).sp,
                                         color = talosTextPrimary,
-                                        maxLines = 1
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    // Real-Time Telemetry Capsule
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Box(
                                             modifier = Modifier
@@ -1032,65 +1025,85 @@ fun MainScreen(
                                             text = if (isConnected) "MESH LINKED · 12ms" else "OFFLINE",
                                             color = if (isConnected) StatusGreen else MaterialTheme.colorScheme.error,
                                             fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
                                             fontFamily = FontFamily.Monospace,
-                                            letterSpacing = 0.5.sp
+                                            letterSpacing = 0.4.sp,
+                                            maxLines = 1
                                         )
                                     }
                                 }
-                            }
 
-                            // Right: Action Capsule Controls (Clean Apple HIG Layout)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                val themeTransition = updateTransition(targetState = isDark, label = "m_theme_transition")
-                                val themeRot by themeTransition.animateFloat(
-                                    transitionSpec = { M3EMotion.fastSpatial() },
-                                    label = "m_theme_rot"
-                                ) { dark -> if (dark) 0f else 180f }
-                                val themeScale by themeTransition.animateFloat(
-                                    transitionSpec = { M3EMotion.fastSpatial() },
-                                    label = "m_theme_scale"
-                                ) { dark -> if (dark) 1.0f else 1.15f }
-                                IconButton(
-                                    onClick = onToggleTheme,
-                                    modifier = Modifier.size(40.dp)
+                                // Right: Uniformly sized (36dp squircle) glass action pills for Theme toggle (Sun/Moon), Settings gear, and Home button with 20dp centered glyphs and 8dp spacing
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                        contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode",
-                                        tint = MaterialTheme.colorScheme.primary,
+                                    val themeTransition = updateTransition(targetState = isDark, label = "m_theme_transition")
+                                    val themeRot by themeTransition.animateFloat(
+                                        transitionSpec = { M3EMotion.fastSpatial() },
+                                        label = "m_theme_rot"
+                                    ) { dark -> if (dark) 0f else 180f }
+                                    val themeScale by themeTransition.animateFloat(
+                                        transitionSpec = { M3EMotion.fastSpatial() },
+                                        label = "m_theme_scale"
+                                    ) { dark -> if (dark) 1.0f else 1.15f }
+
+                                    Box(
                                         modifier = Modifier
-                                            .size(20.dp)
-                                            .graphicsLayer {
-                                                rotationZ = themeRot
-                                                scaleX = themeScale
-                                                scaleY = themeScale
-                                            }
-                                    )
-                                }
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
+                                            .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                            .applePressable(0.94f) { onToggleTheme() },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                            contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .graphicsLayer {
+                                                    rotationZ = themeRot
+                                                    scaleX = themeScale
+                                                    scaleY = themeScale
+                                                }
+                                        )
+                                    }
 
-                                IconButton(
-                                    onClick = onOpenSettings,
-                                    modifier = Modifier.size(40.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Settings,
-                                        contentDescription = "Settings",
-                                        tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
+                                            .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                            .applePressable(0.94f) { onOpenSettings() },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Settings,
+                                            contentDescription = "Settings",
+                                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
 
-                                IconButton(
-                                    onClick = onExitToLanding,
-                                    modifier = Modifier.size(40.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Home,
-                                        contentDescription = "Return to Landing",
-                                        tint = talosTextMuted,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
+                                            .border(talosSpecularGlassBorder(isDark = isDark, strokeWidth = 0.8.dp))
+                                            .applePressable(0.94f) { onExitToLanding() },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Home,
+                                            contentDescription = "Return to Landing",
+                                            tint = talosTextMuted,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

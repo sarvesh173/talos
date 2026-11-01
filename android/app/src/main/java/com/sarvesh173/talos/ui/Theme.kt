@@ -156,6 +156,91 @@ enum class AppleAccent(val displayName: String, val lightColor: Color, val darkC
 }
 
 val LocalAppleAccent = staticCompositionLocalOf { AppleAccent.BLUE }
+val LocalAccentColor = staticCompositionLocalOf { Color(0xFF2997FF) }
+
+/**
+ * Parses a hex color string (e.g. "#FF3B30", "FF3B30", "#AARRGGBB") into a Compose Color.
+ */
+fun parseHexColor(hexString: String): Color? {
+    val clean = hexString.trim().removePrefix("#")
+    return try {
+        when (clean.length) {
+            6 -> {
+                val colorInt = clean.toLong(16)
+                Color(0xFF000000 or colorInt)
+            }
+            8 -> {
+                val colorInt = clean.toLong(16)
+                Color(colorInt)
+            }
+            else -> null
+        }
+    } catch (_: Exception) {
+        null
+    }
+}
+
+/**
+ * Resolves accent color from either a custom hex or a preset AppleAccent enum name.
+ */
+fun resolveAccentColor(accentName: String, isDark: Boolean): Color {
+    val clean = accentName.trim()
+    if (clean.startsWith("#") || (clean.length in listOf(6, 8) && clean.all { it.isDigit() || it in 'a'..'f' || it in 'A'..'F' })) {
+        val parsed = parseHexColor(clean)
+        if (parsed != null) return parsed
+    }
+    val preset = AppleAccent.values().find {
+        it.name.equals(accentName, ignoreCase = true)
+    } ?: AppleAccent.BLUE
+    return if (isDark) preset.darkColor else preset.lightColor
+}
+
+/**
+ * Generates a vibrant, high-contrast Compose Color from a 0°..360° hue angle.
+ */
+fun colorFromHue(hue: Float, isDark: Boolean = true): Color {
+    val clamped = ((hue % 360f) + 360f) % 360f
+    val saturation = if (isDark) 0.85f else 0.90f
+    val value = if (isDark) 0.98f else 0.85f
+    val rgb = android.graphics.Color.HSVToColor(floatArrayOf(clamped, saturation, value))
+    return Color(rgb)
+}
+
+/**
+ * Converts a 0°..360° hue angle into a standard #RRGGBB hex string.
+ */
+fun hexFromHue(hue: Float, isDark: Boolean = true): String {
+    val clamped = ((hue % 360f) + 360f) % 360f
+    val saturation = if (isDark) 0.85f else 0.90f
+    val value = if (isDark) 0.98f else 0.85f
+    val rgb = android.graphics.Color.HSVToColor(floatArrayOf(clamped, saturation, value))
+    return String.format("#%06X", 0xFFFFFF and rgb)
+}
+
+/**
+ * Extracts the 0°..360° hue from any Compose Color.
+ */
+fun hueFromColor(color: Color): Float {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(
+        android.graphics.Color.argb(
+            (color.alpha * 255).toInt().coerceIn(0, 255),
+            (color.red * 255).toInt().coerceIn(0, 255),
+            (color.green * 255).toInt().coerceIn(0, 255),
+            (color.blue * 255).toInt().coerceIn(0, 255)
+        ),
+        hsv
+    )
+    return hsv[0]
+}
+
+/**
+ * Extracts hue from an accent string (hex or preset name).
+ */
+fun hueFromAccentName(accentName: String, isDark: Boolean): Float {
+    val color = resolveAccentColor(accentName, isDark)
+    return hueFromColor(color)
+}
 
 // -----------------------------------------------------------------------------
 // DYNAMIC THEME PRESETS (APPLE CUPERTINO & MONOCHROMATIC FINISHES)
@@ -229,24 +314,66 @@ fun getPresetColorScheme(preset: MaterialThemePreset, isDark: Boolean): ColorSch
             }
         }
         MaterialThemePreset.APPLE_PAPER_WHITE -> {
-            // Paper White (#F7F7F9 / warm editorial clean)
-            LightColorScheme.copy(
-                background = Color(0xFFF7F7F9),
-                surface = Color(0xFFFFFFFF),
-                surfaceContainer = Color(0xFFEBEBF0),
-                surfaceContainerHigh = Color(0xFFDFDFE6),
-                onBackground = Color(0xFF1D1D1F)
-            )
+            if (isDark) {
+                // Paper Warm Graphite / Editorial Dark (#161618)
+                DarkColorScheme.copy(
+                    background = Color(0xFF161618),
+                    surface = Color(0xFF161618),
+                    surfaceContainerLowest = Color(0xFF101012),
+                    surfaceContainerLow = Color(0xFF1A1A1E),
+                    surfaceContainer = Color(0xFF242428),
+                    surfaceContainerHigh = Color(0xFF2E2E34),
+                    surfaceContainerHighest = Color(0xFF383840),
+                    onBackground = Color(0xFFF2F2F7),
+                    onSurface = Color(0xFFF2F2F7),
+                    outline = Color(0xFF3A3A40),
+                    outlineVariant = Color(0xFF2C2C32)
+                )
+            } else {
+                // Paper White (#F7F7F9 / warm editorial clean)
+                LightColorScheme.copy(
+                    background = Color(0xFFF7F7F9),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceContainerLowest = Color(0xFFFFFFFF),
+                    surfaceContainerLow = Color(0xFFFBFBFD),
+                    surfaceContainer = Color(0xFFEBEBF0),
+                    surfaceContainerHigh = Color(0xFFDFDFE6),
+                    surfaceContainerHighest = Color(0xFFD1D1D8),
+                    onBackground = Color(0xFF1D1D1F),
+                    onSurface = Color(0xFF1D1D1F)
+                )
+            }
         }
         MaterialThemePreset.APPLE_PURE_WHITE -> {
-            // Pure White (#FFFFFF / clean stark light)
-            LightColorScheme.copy(
-                background = Color(0xFFFFFFFF),
-                surface = Color(0xFFFFFFFF),
-                surfaceContainer = Color(0xFFF2F2F7),
-                surfaceContainerHigh = Color(0xFFE5E5EA),
-                onBackground = Color(0xFF000000)
-            )
+            if (isDark) {
+                // Pure Stark Dark / High Contrast OLED (#000000)
+                DarkColorScheme.copy(
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
+                    surfaceContainerLowest = Color(0xFF000000),
+                    surfaceContainerLow = Color(0xFF121214),
+                    surfaceContainer = Color(0xFF1C1C1E),
+                    surfaceContainerHigh = Color(0xFF2A2A2E),
+                    surfaceContainerHighest = Color(0xFF38383C),
+                    onBackground = Color(0xFFFFFFFF),
+                    onSurface = Color(0xFFFFFFFF),
+                    outline = Color(0xFF38383A),
+                    outlineVariant = Color(0xFF28282A)
+                )
+            } else {
+                // Pure White (#FFFFFF / clean stark light)
+                LightColorScheme.copy(
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceContainerLowest = Color(0xFFFFFFFF),
+                    surfaceContainerLow = Color(0xFFFBFBFD),
+                    surfaceContainer = Color(0xFFF2F2F7),
+                    surfaceContainerHigh = Color(0xFFE5E5EA),
+                    surfaceContainerHighest = Color(0xFFD8D8DE),
+                    onBackground = Color(0xFF000000),
+                    onSurface = Color(0xFF1D1D1F)
+                )
+            }
         }
     }
 }
@@ -436,8 +563,8 @@ fun TalosTheme(
         it.name.equals(accentName, ignoreCase = true)
     } ?: AppleAccent.BLUE
 
+    val accentColor = resolveAccentColor(accentName, isDark)
     val baseScheme = getPresetColorScheme(preset, isDark)
-    val accentColor = if (isDark) activeAccent.darkColor else activeAccent.lightColor
     val targetScheme = baseScheme.copy(
         primary = accentColor,
         onPrimary = if (isDark) Color.Black else Color.White
@@ -449,6 +576,7 @@ fun TalosTheme(
         LocalTalosStatus provides statusColors,
         LocalThemePreset provides preset,
         LocalAppleAccent provides activeAccent,
+        LocalAccentColor provides accentColor,
         LocalTalosMotion provides (remoteConfig?.motion ?: MotionConfig())
     ) {
         MaterialExpressiveTheme(

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
@@ -32,14 +33,19 @@ import kotlinx.coroutines.launch
 private data class SettingsFleetAgent(
     val name: String,
     val role: String,
-    val tintColor: Color,
     val icon: ImageVector
 )
 
 /**
  * Dedicated Apple HIG Hierarchical Settings Screen.
- * Categorizes settings into distinct sections: Appearance (Look & Feel),
- * Tailscale Connection & Host Node, Multi-Agent Fleet, and About TALOS.
+ * Overhauled to authentic iOS Inset Grouped list specifications:
+ * - 16dp horizontal margin, 12dp continuous squircle grouped cards.
+ * - 48dp standard row height with vertical centering.
+ * - 30x30dp squircle leading icon badges with Apple vibrant background tints:
+ *   (Blue for Look & Feel, Green for Network, Purple for Fleet, Gray for About).
+ * - Clean 54dp inset dividers between rows.
+ * - Trailing chevron indicators (14dp).
+ * - Apple spring press animations on all touchable rows.
  */
 @Composable
 fun SettingsScreen(
@@ -59,7 +65,13 @@ fun SettingsScreen(
     var isSuccess by remember { mutableStateOf(false) }
 
     val currentAccent = LocalAppleAccent.current
-    val accentTint = if (isDark) currentAccent.darkColor else currentAccent.lightColor
+    val accentTint = MaterialTheme.colorScheme.primary
+
+    // iOS System Vibrant Palette
+    val appleBlue = Color(0xFF007AFF)
+    val appleGreen = Color(0xFF34C759)
+    val applePurple = Color(0xFFAF52DE)
+    val appleGray = Color(0xFF8E8E93)
 
     Scaffold(
         topBar = {
@@ -73,16 +85,17 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val backInteraction = remember { MutableInteractionSource() }
-                    IconButton(
-                        onClick = onBack,
-                        interactionSource = backInteraction,
+                    Box(
                         modifier = Modifier
-                            .size(38.dp)
-                            .applePressScale(backInteraction, 0.97f)
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
+                            .border(BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
+                            .applePressable(0.94f) { onBack() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -91,11 +104,11 @@ fun SettingsScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Settings",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.25).sp,
                         color = if (isDark) Color.White else Color(0xFF1D1D1F)
                     )
@@ -109,110 +122,70 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             // -----------------------------------------------------------------
             // 1. APPEARANCE & LOOK AND FEEL CATEGORY
             // -----------------------------------------------------------------
             Text(
                 text = "APPEARANCE & PERSONALITY",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.8.sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
             )
 
-            val lookAndFeelInteraction = remember { MutableInteractionSource() }
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .applePressScale(lookAndFeelInteraction, 0.97f)
-                    .clickable(
-                        interactionSource = lookAndFeelInteraction,
-                        indication = null
-                    ) { onNavigateToLookAndFeel() }
+                border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .height(48.dp)
+                        .applePressable(0.97f) { onNavigateToLookAndFeel() }
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            accentTint.copy(alpha = 0.28f),
-                                            accentTint.copy(alpha = 0.12f)
-                                        )
-                                    )
-                                )
-                                .border(
-                                    0.8.dp,
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            Color.White.copy(alpha = if (isDark) 0.35f else 0.45f),
-                                            accentTint.copy(alpha = 0.30f)
-                                        )
-                                    ),
-                                    RoundedCornerShape(9.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(1.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(
-                                        Brush.radialGradient(
-                                            colors = listOf(
-                                                accentTint.copy(alpha = 0.35f),
-                                                Color.Transparent
-                                            )
-                                        )
-                                    )
-                            )
-                            Icon(
-                                imageVector = TalosSparkle,
-                                contentDescription = null,
-                                tint = accentTint,
-                                modifier = Modifier.size(19.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column {
-                            Text(
-                                text = "Look & Feel",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = (-0.2).sp,
-                                color = if (isDark) Color.White else Color(0xFF1D1D1F)
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Theme mode, accent tints, canvas depth & typography",
-                                fontSize = 11.5.sp,
-                                letterSpacing = (-0.15).sp,
-                                color = talosTextMuted
-                            )
-                        }
+                    // 30x30dp squircle leading icon badge (Blue for Look & Feel)
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(appleBlue),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = TalosSparkle,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(17.dp)
+                        )
                     }
-
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Look & Feel",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.2).sp,
+                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "Customize",
+                        fontSize = 13.sp,
+                        color = talosTextMuted,
+                        letterSpacing = (-0.15).sp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = "Open Look & Feel",
-                        tint = talosTextMuted,
-                        modifier = Modifier.size(18.dp)
+                        tint = talosTextMuted.copy(alpha = 0.5f),
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -224,154 +197,254 @@ fun SettingsScreen(
             // -----------------------------------------------------------------
             Text(
                 text = "NETWORK & CORE TRANSPORT",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.8.sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)),
+                border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Core Tailscale Address:",
-                        color = talosTextMuted,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = (-0.15).sp,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
-                    OutlinedTextField(
-                        value = urlText,
-                        onValueChange = {
-                            urlText = it
-                            statusMessage = null
-                            isSuccess = false
-                        },
-                        placeholder = { Text("http://100.x.y.z:8010", fontSize = 12.sp, letterSpacing = (-0.15).sp) },
-                        singleLine = true,
-                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, letterSpacing = (-0.15).sp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = if (isDark) Color(0xFF141416) else Color(0xFFF7F7F9),
-                            unfocusedContainerColor = if (isDark) Color(0xFF141416) else Color(0xFFF7F7F9),
-                            focusedBorderColor = accentTint,
-                            unfocusedBorderColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f),
-                            focusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F),
-                            unfocusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(
-                        text = "Host API Token (talos_sk_...):",
-                        color = talosTextMuted,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = (-0.15).sp,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
-                    OutlinedTextField(
-                        value = tokenText,
-                        onValueChange = {
-                            tokenText = it
-                            statusMessage = null
-                            isSuccess = false
-                        },
-                        placeholder = { Text("talos_sk_...", fontSize = 12.sp, letterSpacing = (-0.15).sp) },
-                        singleLine = true,
-                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, letterSpacing = (-0.15).sp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = if (isDark) Color(0xFF141416) else Color(0xFFF7F7F9),
-                            unfocusedContainerColor = if (isDark) Color(0xFF141416) else Color(0xFFF7F7F9),
-                            focusedBorderColor = accentTint,
-                            unfocusedBorderColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f),
-                            focusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F),
-                            unfocusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (statusMessage != null) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Row 1: 48dp standard row height with vertical centering & 30x30dp Green badge
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 30x30dp squircle leading icon badge (Green for Network)
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleGreen),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = TalosHub,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Tailscale Node",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.weight(1f)
+                        )
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (isSuccess) Color(0xFF30D158).copy(alpha = 0.12f) else Color(0xFFFF453A).copy(alpha = 0.12f),
-                            border = BorderStroke(0.8.dp, if (isSuccess) Color(0xFF30D158).copy(alpha = 0.35f) else Color(0xFFFF453A).copy(alpha = 0.35f)),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = CircleShape,
+                            color = (if (isSuccess || client.baseUrl.isNotBlank()) Color(0xFF30D158) else Color(0xFFFF9F0A)).copy(alpha = 0.12f),
+                            border = BorderStroke(0.6.dp, (if (isSuccess || client.baseUrl.isNotBlank()) Color(0xFF30D158) else Color(0xFFFF9F0A)).copy(alpha = 0.30f))
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(6.dp)
+                                        .size(5.dp)
                                         .clip(CircleShape)
-                                        .background(if (isSuccess) Color(0xFF30D158) else Color(0xFFFF453A))
+                                        .background(if (isSuccess || client.baseUrl.isNotBlank()) Color(0xFF30D158) else Color(0xFFFF9F0A))
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = statusMessage ?: "",
-                                    color = if (isSuccess) (if (isDark) Color(0xFF30D158) else Color(0xFF248A3D)) else (if (isDark) Color(0xFFFF453A) else Color(0xFFD70015)),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    letterSpacing = (-0.15).sp
+                                    text = if (isSuccess || client.baseUrl.isNotBlank()) "LINKED" else "PENDING",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp,
+                                    color = if (isSuccess || client.baseUrl.isNotBlank()) (if (isDark) Color(0xFF30D158) else Color(0xFF248A3D)) else (if (isDark) Color(0xFFFF9F0A) else Color(0xFFC97800))
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    // Clean 54dp inset divider
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
+                    )
 
-                    val verifyInteraction = remember { MutableInteractionSource() }
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                isVerifying = true
-                                statusMessage = null
-                                val cleanUrl = urlText.trim().trimEnd('/')
-                                val cleanToken = tokenText.trim()
-                                val (ok, msg) = client.verifyAndConnect(cleanUrl, cleanToken)
-                                isVerifying = false
-                                if (ok) {
-                                    isSuccess = true
-                                    statusMessage = "Verified & Connected (200 OK)"
-                                    client.updateConfig(cleanUrl, cleanToken)
-                                } else {
-                                    isSuccess = false
-                                    statusMessage = msg
-                                }
-                            }
-                        },
-                        enabled = !isVerifying,
-                        interactionSource = verifyInteraction,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = accentTint,
-                            disabledContainerColor = accentTint.copy(alpha = 0.5f)
-                        ),
-                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
+                    // Row 2: Host URL (48dp standard row height)
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
-                            .applePressScale(verifyInteraction, 0.97f)
+                            .height(48.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (isVerifying) "Verifying Handshake..." else "Verify & Update Handshake",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = (-0.2).sp
+                            text = "Host",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.width(60.dp)
                         )
+                        TextField(
+                            value = urlText,
+                            onValueChange = {
+                                urlText = it
+                                statusMessage = null
+                                isSuccess = false
+                            },
+                            placeholder = { Text("http://100.x.y.z:8010", fontSize = 14.sp, color = talosTextMuted.copy(alpha = 0.5f), letterSpacing = (-0.15).sp) },
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, letterSpacing = (-0.15).sp, color = if (isDark) Color.White else Color(0xFF1D1D1F)),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Clean 54dp inset divider
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
+                    )
+
+                    // Row 3: Host API Token (48dp standard row height)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Token",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = (-0.2).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            modifier = Modifier.width(60.dp)
+                        )
+                        TextField(
+                            value = tokenText,
+                            onValueChange = {
+                                tokenText = it
+                                statusMessage = null
+                                isSuccess = false
+                            },
+                            placeholder = { Text("talos_sk_...", fontSize = 14.sp, color = talosTextMuted.copy(alpha = 0.5f), letterSpacing = (-0.15).sp) },
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, letterSpacing = (-0.15).sp, color = if (isDark) Color.White else Color(0xFF1D1D1F)),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Clean 54dp inset divider
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
+                    )
+
+                    // Row 4: Verify Touch Action (48dp standard row height, Apple spring press)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) {
+                                if (!isVerifying) {
+                                    scope.launch {
+                                        isVerifying = true
+                                        statusMessage = null
+                                        val cleanUrl = urlText.trim().trimEnd('/')
+                                        val cleanToken = tokenText.trim()
+                                        val (ok, msg) = client.verifyAndConnect(cleanUrl, cleanToken)
+                                        isVerifying = false
+                                        if (ok) {
+                                            isSuccess = true
+                                            statusMessage = "Verified & Connected (200 OK)"
+                                            client.updateConfig(cleanUrl, cleanToken)
+                                        } else {
+                                            isSuccess = false
+                                            statusMessage = msg
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (isVerifying) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = appleBlue
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Verifying Handshake...",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = appleBlue
+                            )
+                        } else {
+                            Text(
+                                text = "Verify & Update Handshake",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = appleBlue
+                            )
+                        }
+                    }
+
+                    if (statusMessage != null) {
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            thickness = 0.5.dp,
+                            modifier = Modifier.padding(start = 54.dp)
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isSuccess) Color(0xFF30D158) else Color(0xFFFF453A))
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = statusMessage ?: "",
+                                color = if (isSuccess) (if (isDark) Color(0xFF30D158) else Color(0xFF248A3D)) else (if (isDark) Color(0xFFFF453A) else Color(0xFFD70015)),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = (-0.15).sp
+                            )
+                        }
                     }
                 }
             }
@@ -383,71 +456,69 @@ fun SettingsScreen(
             // -----------------------------------------------------------------
             Text(
                 text = "COUNCIL AGENT FLEET",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.8.sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)),
+                border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    val agents = listOf(
-                        SettingsFleetAgent("Hermes Core", "Nous Research Agent Engine (Tools & Code)", Color(0xFF2997FF), TalosTerminal),
-                        SettingsFleetAgent("OmniRush Council", "Autonomous Background Execution & Model Dispatch", Color(0xFF5E5CE6), TalosHub),
-                        SettingsFleetAgent("Alya", "Emotional Anchor & Companion System", Color(0xFFFF9F0A), TalosSparkle)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    val fleetAgents = listOf(
+                        SettingsFleetAgent("Hermes Core", "Nous Research Agent Engine", TalosTerminal),
+                        SettingsFleetAgent("OmniRush Council", "Autonomous Background Execution", TalosHub),
+                        SettingsFleetAgent("Alya", "Companion & Emotional Anchor", TalosSparkle)
                     )
 
-                    agents.forEachIndexed { index, agent ->
+                    fleetAgents.forEachIndexed { index, agent ->
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .applePressable(0.97f) { /* Apple tactile tap */ }
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // 30x30dp squircle leading icon badge (Purple for Fleet)
                             Box(
                                 modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(
-                                        Brush.verticalGradient(
-                                            listOf(
-                                                agent.tintColor.copy(alpha = 0.22f),
-                                                agent.tintColor.copy(alpha = 0.10f)
-                                            )
-                                        )
-                                    )
-                                    .border(0.8.dp, agent.tintColor.copy(alpha = 0.35f), RoundedCornerShape(8.dp)),
+                                    .size(30.dp)
+                                    .clip(RoundedCornerShape(7.dp))
+                                    .background(applePurple),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = agent.icon,
                                     contentDescription = null,
-                                    tint = agent.tintColor,
+                                    tint = Color.White,
                                     modifier = Modifier.size(17.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = agent.name,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     letterSpacing = (-0.2).sp,
-                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                    maxLines = 1
                                 )
-                                Spacer(modifier = Modifier.height(1.dp))
                                 Text(
                                     text = agent.role,
-                                    fontSize = 11.5.sp,
+                                    fontSize = 11.sp,
                                     letterSpacing = (-0.15).sp,
-                                    color = talosTextMuted
+                                    color = talosTextMuted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
                             Surface(
                                 shape = CircleShape,
                                 color = Color(0xFF30D158).copy(alpha = 0.12f),
@@ -473,11 +544,19 @@ fun SettingsScreen(
                                     )
                                 }
                             }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = talosTextMuted.copy(alpha = 0.5f),
+                                modifier = Modifier.size(14.dp)
+                            )
                         }
-                        if (index < agents.size - 1) {
+                        if (index < fleetAgents.size - 1) {
                             HorizontalDivider(
-                                color = if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.05f),
-                                modifier = Modifier.padding(start = 46.dp, top = 10.dp, bottom = 10.dp)
+                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(start = 54.dp)
                             )
                         }
                     }
@@ -491,87 +570,176 @@ fun SettingsScreen(
             // -----------------------------------------------------------------
             Text(
                 text = "ABOUT TALOS",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.8.sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
-                border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)),
+                border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Row 1: Release Version (48dp height, 30x30dp Gray badge, 14dp chevron)
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { /* Tactile tap */ }
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // 30x30dp squircle leading icon badge (Gray for About)
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Release Version",
-                            fontSize = 13.sp,
-                            letterSpacing = (-0.15).sp,
-                            color = talosTextMuted
-                        )
-                        Text(
-                            text = "v2.10.72 (Apple HIG)",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
                             letterSpacing = (-0.2).sp,
                             color = if (isDark) Color.White else Color(0xFF1D1D1F)
                         )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "v2.10.72 (Apple HIG)",
+                            fontSize = 14.sp,
+                            color = talosTextMuted,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
+                        )
                     }
 
+                    // Clean 54dp inset divider
                     HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.05f),
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
                     )
 
+                    // Row 2: Design System (48dp height, 30x30dp Gray badge, 14dp chevron)
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { /* Tactile tap */ }
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // 30x30dp squircle leading icon badge (Gray for About)
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Palette,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Design System",
-                            fontSize = 13.sp,
-                            letterSpacing = (-0.15).sp,
-                            color = talosTextMuted
-                        )
-                        Text(
-                            text = "Apple Cupertino & Monochromatic",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
                             letterSpacing = (-0.2).sp,
-                            color = accentTint
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "Apple Cupertino",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = accentTint,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
                         )
                     }
 
+                    // Clean 54dp inset divider
                     HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.05f),
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 54.dp)
                     )
 
+                    // Row 3: Engine Architecture (48dp height, 30x30dp Gray badge, 14dp chevron)
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .applePressable(0.97f) { /* Tactile tap */ }
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // 30x30dp squircle leading icon badge (Gray for About)
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(appleGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Terminal,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Engine Architecture",
-                            fontSize = 13.sp,
-                            letterSpacing = (-0.15).sp,
-                            color = talosTextMuted
-                        )
-                        Text(
-                            text = "Hermes Agent + Compose M3E",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
                             letterSpacing = (-0.2).sp,
-                            color = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F)
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "Hermes Agent + Compose",
+                            fontSize = 14.sp,
+                            color = talosTextMuted,
+                            letterSpacing = (-0.15).sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = talosTextMuted.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }

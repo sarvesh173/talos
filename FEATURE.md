@@ -2251,3 +2251,34 @@ Completed comprehensive visual depth pass coordinated across parallel delegate s
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21075` and `versionName` to `"2.10.75"`.
+
+---
+
+## 106. 360° Color Spectrum Wheel, Robust Theme Inversion & Authentic iOS Inset Alignment
+
+Overhauled theme mode switching, implemented the 360° Hue Color Spectrum Slider with custom hex support, redesigned the top navigation bar with 36dp squircle glass pills, and restructured SettingsScreen to authentic Apple iOS Inset Grouped design on branch `feature/apple-design-remake`.
+
+### 1. Robust Dark / Light / System Mode Switching & 360° Spectrum Picker (`TalosClient.kt`, `Theme.kt`, `LookAndFeelScreen.kt`)
+- Fixed `getPresetColorScheme()`: Presets like `APPLE_PAPER_WHITE` and `APPLE_PURE_WHITE` now supply exquisite dark tones in dark mode, eliminating the bug where light presets remained stuck when dark mode was toggled.
+- Fixed `toggleTheme()` to dynamically read active configuration and invert state correctly even from `SYSTEM` mode.
+- Implemented **360° Hue Color Spectrum Slider** in `LookAndFeelScreen.kt`:
+  - Continuous rainbow gradient track (`0°` to `360°`).
+  - Draggable thumb with live color preview chip and hex display (e.g. `#FF3B30`).
+  - `resolveAccentColor()` and `TalosClient.setAccentColor()` now parse ANY custom hex color alongside preset Apple swatches.
+
+### 2. Apple Navigation Bar & Symmetrical Action Layout (`MainActivity.kt`)
+- Symmetrically balanced top bar layout:
+  - Left: 36dp translucent glass squircle for Menu button with 20dp centered icon.
+  - Center: Room title in SF Pro Semibold (`15.sp`, `-0.2sp` tracking) with a live green indicator dot and monospace status telemetry.
+  - Right: Uniformly sized 36dp glass action pills with 20dp centered glyphs and 8dp spacing for Theme toggle (Sun/Moon), Settings gear, and Home button.
+  - Integrated `Modifier.applePressable(0.94f)` across all action buttons for responsive tactile feedback.
+
+### 3. Authentic iOS Inset Grouped Architecture (`SettingsScreen.kt`)
+- Grouped cards now strictly adhere to iOS Inset Grouped specifications: 16dp margins, 12dp continuous squircles, and 48dp standard row heights.
+- Added 30x30dp squircle leading icon badges with Apple vibrant background tints (Blue for Look & Feel, Green for Network, Purple for Fleet, Gray for About).
+- Clean 54dp inset hairline dividers between rows and trailing 14dp chevron indicators.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21076` and `versionName` to `"2.10.76"`.

@@ -2094,3 +2094,20 @@ Refactored `LandingScreen.kt` from Material 3 noisy fills to Apple's minimalist,
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21068` and `versionName` to `"2.10.68"`.
+
+---
+
+## 99. Apple Design System Integration & Vector Icon Alignment
+
+Applied Apple WWDC Design foundations (response, direct manipulation, typography optical sizing, and translucent chrome) across TALOS on branch `feature/apple-design-remake`.
+
+### 1. Vector Icon Alignment (`ui/LandingScreen.kt`)
+- Replaced missing stock Material icon references with custom hand-crafted `TalosSparkle` vector glyphs to maintain 100% vector craftsmanship across all setup actions.
+
+### 2. Apple Typography Optical Sizing (`-0.15sp` Tracking)
+- Clean negative letter tracking enforced across all primary headline and action triggers.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21069` and `versionName` to `"2.10.69"`.

@@ -541,7 +541,7 @@ fun LandingScreen(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.AutoFixHigh,
+                                imageVector = TalosSparkle,
                                 contentDescription = null,
                                 tint = Color(0xFF2997FF),
                                 modifier = Modifier.size(15.dp)

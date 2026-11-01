@@ -182,9 +182,23 @@ fun LookAndFeelScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            val dentScale = if (isDropletActive) {
+                val t = dropletAnim.value
+                when {
+                    t < 0.18f -> 1.0f - (t / 0.18f) * 0.024f // Impact: surface pushes down (dent) to 0.976
+                    t < 0.42f -> 0.976f + ((t - 0.18f) / 0.24f) * 0.036f // Rebound: pushes up to 1.012
+                    t < 0.68f -> 1.012f - ((t - 0.42f) / 0.26f) * 0.016f // Secondary depth dip: dips back down to 0.996
+                    else -> 0.996f + ((t - 0.68f) / 0.32f) * 0.004f // Smooth physical settle to 1.0
+                }
+            } else 1.0f
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = dentScale
+                        scaleY = dentScale
+                    }
                     .verticalScroll(scrollState)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
@@ -631,8 +645,8 @@ fun LookAndFeelScreen(
                                         dropletAnim.animateTo(
                                             targetValue = 1f,
                                             animationSpec = tween(
-                                                durationMillis = 1100,
-                                                easing = androidx.compose.animation.core.FastOutSlowInEasing
+                                                durationMillis = 2600,
+                                                easing = androidx.compose.animation.core.CubicBezierEasing(0.22f, 0.1f, 0.25f, 1f)
                                             )
                                         )
                                         isDropletActive = false
@@ -785,54 +799,123 @@ fun LookAndFeelScreen(
             Spacer(modifier = Modifier.height(28.dp))
         }
 
-        // FULL-SYSTEM WATER DROPLET RIPPLE ANIMATION (Covers entire screen as animated indicator)
+        // FULL-SYSTEM LIQUID WATER DROPLET PHYSICS (Surface Dent, Rebound, 3D Wave Depth & Caustics)
         if (isDropletActive) {
             val p = dropletAnim.value
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val center = Offset(size.width * 0.5f, size.height * 0.45f)
                 val maxR = kotlin.math.hypot(size.width, size.height)
 
-                // Wave 1: Primary ripple wave across entire screen
-                val r1 = maxR * p
-                val a1 = ((1f - p) * 0.85f).coerceIn(0f, 1f)
-                drawCircle(
-                    color = effectiveAccentColor.copy(alpha = a1),
-                    radius = r1,
-                    center = center,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx() * (1f - p * 0.5f))
-                )
+                // 1. IMPACT BEAD & CAVITY DENT (Micro-particle impact at the center)
+                if (p < 0.32f) {
+                    val impactP = p / 0.32f
+                    val beadR = 26.dp.toPx() * (1f - impactP)
+                    val dentAlpha = ((1f - impactP) * 0.30f).coerceIn(0f, 1f)
 
-                // Wave 2: Secondary trailing wave
-                if (p > 0.12f) {
-                    val p2 = (p - 0.12f) / 0.88f
-                    val r2 = maxR * p2
-                    val a2 = ((1f - p2) * 0.5f).coerceIn(0f, 1f)
+                    // Cavity depth shadow (surface pushed inward into glass)
                     drawCircle(
-                        color = effectiveAccentColor.copy(alpha = a2),
-                        radius = r2,
-                        center = center,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5.dp.toPx() * (1f - p2 * 0.5f))
+                        color = Color.Black.copy(alpha = dentAlpha),
+                        radius = beadR + 6.dp.toPx(),
+                        center = center
+                    )
+                    // Specular glowing droplet bead on glass
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = (1f - impactP) * 0.95f),
+                                effectiveAccentColor.copy(alpha = (1f - impactP) * 0.75f),
+                                Color.Transparent
+                            ),
+                            center = center.copy(y = center.y - 3.dp.toPx()),
+                            radius = beadR.coerceAtLeast(1f)
+                        ),
+                        radius = beadR,
+                        center = center
                     )
                 }
 
-                // Wave 3: Delicate inner water ring
-                if (p > 0.28f) {
-                    val p3 = (p - 0.28f) / 0.72f
+                // 2. PRIMARY 3D FLUID WAVE (Shadow Trough + Liquid Body + Specular Highlight)
+                val r1 = maxR * p
+                if (r1 > 2f) {
+                    // Trough: Shadow cast behind the wave creating real 3D depth into the glass
+                    val shadowAlpha = ((1f - p) * (if (isDark) 0.35f else 0.18f)).coerceIn(0f, 1f)
+                    drawCircle(
+                        color = Color.Black.copy(alpha = shadowAlpha),
+                        radius = (r1 - 4.dp.toPx()).coerceAtLeast(0f),
+                        center = center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 6.dp.toPx() * (1f - p * 0.4f))
+                    )
+
+                    // Wave Crest Body: Rich liquid color
+                    val bodyAlpha = ((1f - p) * 0.85f).coerceIn(0f, 1f)
+                    drawCircle(
+                        color = effectiveAccentColor.copy(alpha = bodyAlpha),
+                        radius = r1,
+                        center = center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.5.dp.toPx() * (1f - p * 0.45f))
+                    )
+
+                    // Specular Glint: Light catching the peak of the liquid wave
+                    val specAlpha = ((1f - p) * 0.75f).coerceIn(0f, 1f)
+                    drawCircle(
+                        color = Color.White.copy(alpha = specAlpha),
+                        radius = r1 + 1.8.dp.toPx(),
+                        center = center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx() * (1f - p * 0.4f))
+                    )
+                }
+
+                // 3. SECONDARY REBOUND WAVE (Echoing liquid wave from the upward rebound)
+                if (p > 0.16f) {
+                    val p2 = (p - 0.16f) / 0.84f
+                    val r2 = maxR * p2
+                    if (r2 > 2f) {
+                        // Shadow
+                        val s2Alpha = ((1f - p2) * (if (isDark) 0.25f else 0.12f)).coerceIn(0f, 1f)
+                        drawCircle(
+                            color = Color.Black.copy(alpha = s2Alpha),
+                            radius = (r2 - 3.dp.toPx()).coerceAtLeast(0f),
+                            center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
+                        )
+                        // Body
+                        val b2Alpha = ((1f - p2) * 0.55f).coerceIn(0f, 1f)
+                        drawCircle(
+                            color = effectiveAccentColor.copy(alpha = b2Alpha),
+                            radius = r2,
+                            center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx())
+                        )
+                        // Specular
+                        val spec2Alpha = ((1f - p2) * 0.45f).coerceIn(0f, 1f)
+                        drawCircle(
+                            color = Color.White.copy(alpha = spec2Alpha),
+                            radius = r2 + 1.2.dp.toPx(),
+                            center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
+                        )
+                    }
+                }
+
+                // 4. TERTIARY MICRO-RIPPLE (Fine surface tension settling)
+                if (p > 0.36f) {
+                    val p3 = (p - 0.36f) / 0.64f
                     val r3 = maxR * p3
-                    val a3 = ((1f - p3) * 0.35f).coerceIn(0f, 1f)
+                    val a3 = ((1f - p3) * 0.32f).coerceIn(0f, 1f)
                     drawCircle(
                         color = effectiveAccentColor.copy(alpha = a3),
                         radius = r3,
                         center = center,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.6.dp.toPx())
                     )
                 }
 
-                // Subtle radial liquid sheen wash across the entire window
+                // 5. CAUSTIC LIQUID WASH (Expanding radial sheen with refraction gradient)
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            effectiveAccentColor.copy(alpha = (1f - p) * 0.16f),
+                            effectiveAccentColor.copy(alpha = (1f - p) * 0.14f),
+                            Color.White.copy(alpha = (1f - p) * 0.08f),
                             Color.Transparent
                         ),
                         center = center,

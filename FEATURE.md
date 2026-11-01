@@ -2644,3 +2644,28 @@ Replaced inline expandable section with the exact floating popup menu layout fro
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21093` and `versionName` to `"2.10.93"`.
+
+---
+
+## 122. True 3D Fluid Water Droplet Physics (Micro-Dent, Rebound, Specular & Caustic Waves)
+
+Re-engineered the water droplet animation from a flat line into an authentic physical liquid simulation:
+
+### 1. Micro-Particle Surface Dent & Elastic Rebound
+- The entire screen content deforms in 3D when the droplet impacts:
+  - `t < 0.18f`: Compresses down into the surface (`scale = 0.976f`) creating a physical indentation/dent.
+  - `t < 0.42f`: Springs up in an elastic rebound crest (`scale = 1.012f`).
+  - `t < 0.68f`: Dips down in secondary depth damping (`scale = 0.996f`).
+  - `t >= 0.68f`: Settles smoothly to rest (`1.0f`).
+
+### 2. Physical 3D Liquid Wavefronts
+- **Impact Cavity Bead:** A glowing fluid bead with specular highlight at the impact epicenter.
+- **Wave Crest & Shadow Trough:** The primary wave renders a 3D shadow trough behind the crest, giving the liquid physical raised height above the glass.
+- **Specular Glint:** A bright hairline highlight catching the peak of the expanding fluid wave.
+- **Rebound & Harmonic Ripples:** Secondary echoing waves generated from the upward bounce.
+- **Pacing:** Slowed from 1100ms to 2600ms with Apple fluid cubic bezier easing (`0.22, 0.1, 0.25, 1`).
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21094` and `versionName` to `"2.10.94"`.

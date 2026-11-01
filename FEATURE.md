@@ -2111,3 +2111,23 @@ Applied Apple WWDC Design foundations (response, direct manipulation, typography
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21069` and `versionName` to `"2.10.69"`.
+
+---
+
+## 100. Apple Glassmorphic Header & Segmented Navigation Layout Decoupling
+
+Fixed overlapping between the floating Chamber Header capsule, the contextual navigation rail chips, and the underlying chat telemetry bubble on branch `feature/apple-design-remake`.
+
+### 1. Vertical Layout Decoupling (`MainActivity.kt`)
+- Wrapped the floating Apple Glassmorphic Chamber Header (`Surface`) and the Contextual Navigation Rail (`LazyRow`) into a unified `Column` with 6.dp vertical separation inside `topBar`.
+- Eliminated coordinate collision at `(0, 0)` that caused navigation chips (`The Council`, `War Room`, `Direct Comms`) to render on top of the chamber title and drawer toggle.
+- Enabled `Scaffold`'s `paddingValues.calculateTopPadding()` to accurately measure the full height of the header + rail stack, ensuring chat items (e.g. `LocationPinBubble`) start cleanly below the navigation chips at resting scroll.
+
+### 2. Apple Segmented Pill Navigation & Geolocation Bubble
+- Refactored `FilterChip` items into Apple Segmented Pills with `RoundedCornerShape(16.dp)`, Apple Action Blue active fills (`#0071E3`), pure white labels, and subtle specular borders.
+- Refactored `LocationPinBubble` in `ui/Components.kt` into an Apple Secondary card (`#1C1C1E`) with high-contrast coordinate typography and Apple Action Blue copy/map buttons.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21070` and `versionName` to `"2.10.70"`.

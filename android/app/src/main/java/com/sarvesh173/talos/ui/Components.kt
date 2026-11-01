@@ -990,10 +990,11 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
     val lat = latMatch?.groupValues?.get(1)
     val lon = lonMatch?.groupValues?.get(1)
 
+    val isDark = LocalIsDark.current
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.2.dp, metallicBorderBrush()),
+        color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -1007,14 +1008,14 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(accent.copy(alpha = 0.15f))
-                            .border(1.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF0071E3).copy(alpha = 0.16f))
+                            .border(0.8.dp, Color(0xFF2997FF).copy(alpha = 0.40f), RoundedCornerShape(12.dp))
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = accent,
+                            tint = Color(0xFF2997FF),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1024,7 +1025,8 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             text = "MESH NODE GEOLOCATION",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            letterSpacing = (-0.1).sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
                         )
                         Text(
                             text = "Tailscale Encrypted Proximity",
@@ -1054,9 +1056,9 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
 
             if (lat != null && lon != null) {
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
+                    border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -1065,13 +1067,13 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                         modifier = Modifier.padding(vertical = 10.dp)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("LATITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("$lat°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("LATITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = talosTextMuted)
+                            Text("$lat°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = if (isDark) Color.White else Color(0xFF1D1D1F))
                         }
-                        Box(modifier = Modifier.height(28.dp).width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                        Box(modifier = Modifier.height(28.dp).width(1.dp).background(if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("LONGITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("$lon°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("LONGITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = talosTextMuted)
+                            Text("$lon°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = if (isDark) Color.White else Color(0xFF1D1D1F))
                         }
                     }
                 }
@@ -1088,19 +1090,19 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
                             context.startActivity(intent)
                         },
-                        shape = RoundedCornerShape(16.dp),
-                        pressedShape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        modifier = Modifier.weight(1f).height(44.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        pressedShape = RoundedCornerShape(10.dp),
+                        color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
+                        border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f)),
+                        modifier = Modifier.weight(1f).height(42.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(Icons.Default.Map, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Map, contentDescription = null, tint = Color(0xFF2997FF), modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Open Maps", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                            Text("Open Maps", fontSize = 12.sp, color = if (isDark) Color.White else Color(0xFF1D1D1F), fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -1109,19 +1111,20 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             clipboardManager.setText(AnnotatedString("$lat, $lon"))
                             android.widget.Toast.makeText(context, "Coordinates copied!", android.widget.Toast.LENGTH_SHORT).show()
                         },
-                        shape = RoundedCornerShape(16.dp),
-                        pressedShape = RoundedCornerShape(12.dp),
-                        color = accent,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.weight(1f).height(44.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        pressedShape = RoundedCornerShape(10.dp),
+                        color = Color(0xFF0071E3),
+                        contentColor = Color.White,
+                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.30f)),
+                        modifier = Modifier.weight(1f).height(42.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Copy", color = MaterialTheme.colorScheme.onPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Copy", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }

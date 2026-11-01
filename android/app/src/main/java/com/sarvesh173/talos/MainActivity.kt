@@ -873,33 +873,35 @@ fun MainScreen(
                                 )
                             )
                     )
-                    // Floating M3 Glassmorphic Chamber Header with Specular Rim
-                    Surface(
+                    // Floating Apple Glassmorphic Chamber Header & Segmented Navigation
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(22.dp))
-                            .hazeChild(
-                                state = hazeState,
-                                shape = RoundedCornerShape(22.dp),
-                                style = HazeDefaults.style(
-                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.58f),
-                                    blurRadius = 24.dp
-                                )
-                            )
-                            .padding(horizontal = 14.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(22.dp),
-                        // Translucent capsule: the blurred backdrop shows through,
-                        // giving a true glass header instead of a painted panel.
-                        color = Color.Transparent,
-                        border = talosSpecularGlassBorder(isDark = isDark, strokeWidth = 1.2.dp)
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
-                        Row(
+                        Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .clip(RoundedCornerShape(20.dp))
+                                .hazeChild(
+                                    state = hazeState,
+                                    shape = RoundedCornerShape(20.dp),
+                                    style = HazeDefaults.style(
+                                        backgroundColor = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.75f) else Color(0xFFF2F2F7).copy(alpha = 0.85f),
+                                        blurRadius = 24.dp
+                                    )
+                                ),
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color.Transparent,
+                            border = talosSpecularGlassBorder(isDark = isDark, strokeWidth = 1.dp)
                         ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                             // Left: Chamber Drawer Toggle & Machined Emblem Socket
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(
@@ -1073,11 +1075,13 @@ fun MainScreen(
                         }
                     }
 
-                    // Single Unified Contextual Navigation Rail (Anti-Slop: Zero Stacked Rows)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Single Unified Contextual Navigation Rail (Apple Segmented Pills)
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 2.dp),
+                            .padding(horizontal = 2.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (activeSlotId == "chambers") {
@@ -1099,20 +1103,22 @@ fun MainScreen(
                                         Text(
                                             text = room.name,
                                             fontSize = 12.sp,
+                                            letterSpacing = (-0.1).sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                         )
                                     },
-                                    shape = ShapeLargeIncreased,
+                                    shape = RoundedCornerShape(16.dp),
                                     colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                        labelColor = talosTextPrimary
+                                        selectedContainerColor = Color(0xFF0071E3),
+                                        selectedLabelColor = Color.White,
+                                        selectedLeadingIconColor = Color.White,
+                                        containerColor = if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA),
+                                        labelColor = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F)
                                     ),
                                     border = FilterChipDefaults.filterChipBorder(
                                         enabled = true,
                                         selected = isSelected,
-                                        borderColor = MaterialTheme.colorScheme.outlineVariant
+                                        borderColor = if (isSelected) Color(0xFF2997FF).copy(alpha = 0.45f) else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f))
                                     )
                                 )
                             }
@@ -1135,25 +1141,27 @@ fun MainScreen(
                                     Text(
                                         text = slot.title,
                                         fontSize = 12.sp,
+                                        letterSpacing = (-0.1).sp,
                                         fontWeight = if (isSlotActive) FontWeight.Bold else FontWeight.Medium
                                     )
                                 },
-                                shape = ShapeLargeIncreased,
+                                shape = RoundedCornerShape(16.dp),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    labelColor = talosTextPrimary,
-                                    iconColor = talosTextMuted
+                                    selectedContainerColor = Color(0xFF0071E3),
+                                    selectedLabelColor = Color.White,
+                                    selectedLeadingIconColor = Color.White,
+                                    containerColor = if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA),
+                                    labelColor = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                    iconColor = if (isDark) Color.White.copy(alpha = 0.70f) else Color(0xFF1D1D1F)
                                 ),
                                 border = FilterChipDefaults.filterChipBorder(
                                     enabled = true,
                                     selected = isSlotActive,
-                                    borderColor = MaterialTheme.colorScheme.outlineVariant
+                                    borderColor = if (isSlotActive) Color(0xFF2997FF).copy(alpha = 0.45f) else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f))
                                 )
                             )
                         }
+                    }
                     }
                 }
             },

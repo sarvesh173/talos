@@ -442,7 +442,6 @@ fun TalosTheme(
         primary = accentColor,
         onPrimary = if (isDark) Color.Black else Color.White
     )
-    val animatedScheme = animatedColorSchemeOf(targetScheme)
     val statusColors = if (isDark) DarkStatusColors else LightStatusColors
 
     CompositionLocalProvider(
@@ -453,7 +452,7 @@ fun TalosTheme(
         LocalTalosMotion provides (remoteConfig?.motion ?: MotionConfig())
     ) {
         MaterialExpressiveTheme(
-            colorScheme = animatedScheme,
+            colorScheme = targetScheme,
             motionScheme = MotionScheme.expressive(),
             shapes = TalosShapes,
             typography = TalosTypography,

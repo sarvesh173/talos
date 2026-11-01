@@ -993,47 +993,8 @@ fun MainScreen(
                                 }
                             }
 
-                            // Right: Action Capsule Controls (40dp Accessible Touch Targets)
+                            // Right: Action Capsule Controls (Clean Apple HIG Layout)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Agent Canvas View
-                                IconButton(
-                                    onClick = onOpenCanvas,
-                                    modifier = Modifier.size(38.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = TalosHub,
-                                        contentDescription = "Agent Canvas",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(19.dp)
-                                    )
-                                }
-
-                                // Code Changes Diff Viewer
-                                IconButton(
-                                    onClick = onOpenDiff,
-                                    modifier = Modifier.size(38.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = TalosCode,
-                                        contentDescription = "Code Changes",
-                                        tint = MaterialTheme.colorScheme.tertiary,
-                                        modifier = Modifier.size(19.dp)
-                                    )
-                                }
-
-                                // GCompris-Inspired Activity Hub
-                                IconButton(
-                                    onClick = onOpenHub,
-                                    modifier = Modifier.size(38.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Dashboard,
-                                        contentDescription = "Activity Hub",
-                                        tint = MaterialTheme.colorScheme.tertiary,
-                                        modifier = Modifier.size(19.dp)
-                                    )
-                                }
-
                                 val themeTransition = updateTransition(targetState = isDark, label = "m_theme_transition")
                                 val themeRot by themeTransition.animateFloat(
                                     transitionSpec = { M3EMotion.fastSpatial() },
@@ -1052,7 +1013,7 @@ fun MainScreen(
                                         contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode",
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
-                                            .size(19.dp)
+                                            .size(20.dp)
                                             .graphicsLayer {
                                                 rotationZ = themeRot
                                                 scaleX = themeScale
@@ -1068,8 +1029,8 @@ fun MainScreen(
                                     Icon(
                                         imageVector = Icons.Default.Settings,
                                         contentDescription = "Settings",
-                                        tint = talosTextMuted,
-                                        modifier = Modifier.size(19.dp)
+                                        tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
 
@@ -1081,7 +1042,7 @@ fun MainScreen(
                                         imageVector = Icons.Default.Home,
                                         contentDescription = "Return to Landing",
                                         tint = talosTextMuted,
-                                        modifier = Modifier.size(19.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }

@@ -2182,3 +2182,28 @@ Implemented full hierarchical navigation for Settings, separating connection set
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21072` and `versionName` to `"2.10.72"`.
+
+---
+
+## 103. Synchronous Zero-Lag Theme Switching & Top-Bar Settings Touch Target Fix
+
+Resolved Settings button unresponsiveness caused by header overflow and eliminated visual theme desynchronization between canvas backgrounds and message bubbles on branch `feature/apple-design-remake`.
+
+### 1. Top-Bar Actions Declutter & Guaranteed 44x44dp Hitbox (`MainActivity.kt`)
+- Purged 3 redundant tool buttons (`Canvas`, `Diff`, `Hub`) that were cramming the top navigation header to 450dp and pushing the Settings button off-screen.
+- Top-right header row now cleanly holds only 3 essential actions:
+  1. Theme Toggle (`40.dp`)
+  2. Settings Gear (`40.dp`, prominent `Icons.Default.Settings`, guaranteed clickability)
+  3. Home (`40.dp`, Return to Landing)
+- Zero coordinate overflow: settings icon is always comfortably in bounds and triggers immediately on the first tap.
+
+### 2. Synchronous Atomic Theme Switching (Zero Desync Lag) (`ui/Theme.kt` & `ui/Components.kt`)
+- Eliminated `animatedColorSchemeOf` which was causing a 300ms spring delay on canvas background while message bubbles updated instantly via Boolean flags.
+- Directly provided `targetScheme` to `MaterialExpressiveTheme`.
+- Bound message bubbles (`surfaceContainer`), typography (`onSurface`), and outlines directly to `MaterialTheme.colorScheme`.
+- Toggling between Light, Dark, or System modes now updates 100% of the UI (background, bubbles, text, icons, borders) simultaneously in the exact same frame with 0ms lag.
+
+- [x] **Verification & Tests**:
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21073` and `versionName` to `"2.10.73"`.

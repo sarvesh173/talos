@@ -423,12 +423,11 @@ fun MessageBubble(
                     )
                 }
                 else -> {
-                    val isDark = LocalIsDark.current
                     Surface(
                         color = if (isHuman) {
                             MaterialTheme.colorScheme.primary // Apple Active System Accent
                         } else {
-                            if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA) // Apple Secondary System Background
+                            MaterialTheme.colorScheme.surfaceContainer // Apple Secondary System Background
                         },
                         tonalElevation = 0.dp,
                         shape = if (isHuman) {
@@ -439,7 +438,7 @@ fun MessageBubble(
                         border = if (isHuman) {
                             BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f))
                         } else {
-                            BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f))
+                            BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f))
                         }
                     ) {
                         Box(
@@ -447,7 +446,7 @@ fun MessageBubble(
                         ) {
                             Text(
                                 text = msg.content,
-                                color = if (isHuman) Color.White else (if (isDark) Color.White else Color(0xFF1D1D1F)),
+                                color = if (isHuman) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                 fontSize = 15.sp,
                                 lineHeight = 21.sp,
                                 letterSpacing = (-0.15).sp // Apple SF Pro clean negative tracking

@@ -67,20 +67,20 @@ fun ChatPreferencesScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
                             .border(
                                 BorderStroke(
                                     0.6.dp,
                                     if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)
                                 ),
-                                RoundedCornerShape(10.dp)
+                                RoundedCornerShape(12.dp)
                             )
                             .applePressable(0.94f) { onBack() },
                         contentAlignment = Alignment.Center
@@ -94,8 +94,8 @@ fun ChatPreferencesScreen(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Chat Preferences",
-                        fontSize = 18.sp,
+                        text = "Chat preferences",
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.25).sp,
                         color = if (isDark) Color.White else Color(0xFF1D1D1F)
@@ -110,22 +110,22 @@ fun ChatPreferencesScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             // -----------------------------------------------------------------
             // 1. INTELLIGENCE & ACTIONS (Thinking, Device actions, Links)
             // -----------------------------------------------------------------
             Text(
-                text = "INTELLIGENCE & ACTIONS",
-                fontSize = 11.5.sp,
+                text = "Intelligence & actions",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(
                     0.6.dp,
@@ -148,7 +148,7 @@ fun ChatPreferencesScreen(
                     HorizontalDivider(
                         color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
                         thickness = 0.5.dp,
-                        modifier = Modifier.padding(start = 54.dp)
+                        modifier = Modifier.padding(start = 56.dp)
                     )
 
                     // Device actions
@@ -165,7 +165,7 @@ fun ChatPreferencesScreen(
                     HorizontalDivider(
                         color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
                         thickness = 0.5.dp,
-                        modifier = Modifier.padding(start = 54.dp)
+                        modifier = Modifier.padding(start = 56.dp)
                     )
 
                     // Link previews
@@ -182,7 +182,7 @@ fun ChatPreferencesScreen(
                     HorizontalDivider(
                         color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
                         thickness = 0.5.dp,
-                        modifier = Modifier.padding(start = 54.dp)
+                        modifier = Modifier.padding(start = 56.dp)
                     )
 
                     // Open links in app
@@ -204,16 +204,16 @@ fun ChatPreferencesScreen(
             // 2. ACTIVITY (Memory updates)
             // -----------------------------------------------------------------
             Text(
-                text = "ACTIVITY",
-                fontSize = 11.5.sp,
+                text = "Activity",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(
                     0.6.dp,
@@ -224,7 +224,7 @@ fun ChatPreferencesScreen(
                 ChatPreferenceToggleRow(
                     title = "Memory updates",
                     description = "Show a note when Hermes updates its memory or skills after a turn.",
-                    icon = Icons.Default.AutoAwesome,
+                    icon = Icons.Default.Memory,
                     iconTint = applePink,
                     checked = isMemoryUpdates,
                     onCheckedChange = { client.setMemoryUpdatesEnabled(it) },
@@ -288,7 +288,7 @@ private fun ChatPreferenceToggleRow(
         ) {
             Text(
                 text = title,
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.2).sp,
                 color = if (isDark) Color.White else Color(0xFF1D1D1F)

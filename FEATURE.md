@@ -2709,3 +2709,27 @@ Audited and hardened `SettingsScreen.kt` using `enmerasoftware/ai-design-check` 
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21096` and `versionName` to `"2.10.96"`.
+
+---
+
+## 125. Full `ai-design-check` Suite Hardening (ChatPreferences, Security & Notifications)
+
+Audited and hardened `ChatPreferencesScreen.kt`, `SecurityScreen.kt`, and `NotificationsScreen.kt` using `enmerasoftware/ai-design-check` zero-dependency verification:
+
+### 1. Zero-Warning Scale & Grid Alignment
+- Aligned all three screens to the 4px/8px spatial grid (`16.dp`, `12.dp`, `8.dp`, `4.dp`).
+- Standardized all group surfaces to `RoundedCornerShape(20.dp)` cards and `12.dp` navigation buttons.
+- Replaced non-standard divider paddings (`54.dp`, `58.dp`) with uniform `56.dp` grid insets.
+
+### 2. Sentence Case & Quiet Typography
+- Replaced uppercase loud section kickers with quiet, elegant sentence-case headers:
+  - `"Intelligence & actions"`, `"Activity"`
+  - `"Biometrics & app lock"`, `"Credential coverage"`
+  - `"On this device"`, `"Categories"`, `"Working agents"`
+- Replaced `Icons.Default.AutoAwesome` (AI sparkle icon flagged by `no-sparkle-for-ai`) with semantic `Icons.Default.Memory`.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings across all 3 screens.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21097` and `versionName` to `"2.10.97"`.

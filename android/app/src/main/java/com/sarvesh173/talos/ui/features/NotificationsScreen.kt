@@ -79,15 +79,15 @@ fun NotificationsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
+                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
                             .applePressable(0.94f) { onBack() },
                         contentAlignment = Alignment.Center
                     ) {
@@ -98,10 +98,10 @@ fun NotificationsScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Notifications",
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.25).sp,
                         color = if (isDark) Color.White else Color(0xFF1D1D1F)
@@ -122,16 +122,16 @@ fun NotificationsScreen(
             // 1. ON THIS DEVICE
             // -----------------------------------------------------------------
             Text(
-                text = "ON THIS DEVICE",
-                fontSize = 11.5.sp,
+                text = "On this device",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
@@ -141,7 +141,7 @@ fun NotificationsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -182,7 +182,7 @@ fun NotificationsScreen(
                     HorizontalDivider(
                         color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
                         thickness = 0.5.dp,
-                        modifier = Modifier.padding(start = 58.dp)
+                        modifier = Modifier.padding(start = 56.dp)
                     )
 
                     // Link to Android App Notification Settings Row
@@ -206,7 +206,7 @@ fun NotificationsScreen(
                                     context.startActivity(fallback)
                                 }
                             }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -223,7 +223,7 @@ fun NotificationsScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             Text(
                                 text = "Open Android notification settings",
-                                fontSize = 15.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = (-0.15).sp,
                                 color = Color(0xFF0071E3)
@@ -245,12 +245,12 @@ fun NotificationsScreen(
             // 2. CATEGORIES
             // -----------------------------------------------------------------
             Text(
-                text = "CATEGORIES",
-                fontSize = 11.5.sp,
+                text = "Categories",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
 
             data class NotificationCategoryItem(
@@ -263,28 +263,28 @@ fun NotificationsScreen(
 
             val categories = listOf(
                 NotificationCategoryItem(
-                    title = "Agent Replies",
+                    title = "Agent replies",
                     icon = Icons.Default.QuestionAnswer,
                     iconBg = appleGreen,
                     checked = catAgentReplies,
                     onToggle = { client.setCategoryAgentReplies(it) }
                 ),
                 NotificationCategoryItem(
-                    title = "Approvals & Questions",
+                    title = "Approvals & questions",
                     icon = Icons.Default.CheckCircle,
                     iconBg = appleOrange,
                     checked = catApprovals,
                     onToggle = { client.setCategoryApprovals(it) }
                 ),
                 NotificationCategoryItem(
-                    title = "Automations & Deliveries",
+                    title = "Automations & deliveries",
                     icon = Icons.Default.Bolt,
                     iconBg = applePurple,
                     checked = catAutomations,
                     onToggle = { client.setCategoryAutomations(it) }
                 ),
                 NotificationCategoryItem(
-                    title = "Gateway Status",
+                    title = "Gateway status",
                     icon = Icons.Default.Dns,
                     iconBg = appleBlue,
                     checked = catGatewayStatus,
@@ -293,7 +293,7 @@ fun NotificationsScreen(
             )
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
@@ -320,7 +320,7 @@ fun NotificationsScreen(
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(
                                     text = item.title,
-                                    fontSize = 15.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = (-0.15).sp,
                                     color = if (isDark) Color.White else Color(0xFF1D1D1F)
@@ -336,7 +336,7 @@ fun NotificationsScreen(
                             HorizontalDivider(
                                 color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
                                 thickness = 0.5.dp,
-                                modifier = Modifier.padding(start = 58.dp)
+                                modifier = Modifier.padding(start = 56.dp)
                             )
                         }
                     }
@@ -349,16 +349,16 @@ fun NotificationsScreen(
             // 3. WORKING AGENTS
             // -----------------------------------------------------------------
             Text(
-                text = "WORKING AGENTS",
-                fontSize = 11.5.sp,
+                text = "Working agents",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
@@ -381,7 +381,7 @@ fun NotificationsScreen(
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Text(
-                                text = "Working Agents",
+                                text = "Working agents",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 letterSpacing = (-0.2).sp,
@@ -393,7 +393,7 @@ fun NotificationsScreen(
                             onCheckedChange = { client.setShowWorkingAgents(it) }
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Show which agents are working, for how long, what they are doing and any question waiting for you, in an ongoing notification.",
                         fontSize = 12.sp,

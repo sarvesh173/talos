@@ -101,7 +101,7 @@ fun WhiteboardSheet(
             ) {
                 Column {
                     Text(
-                        text = "OpenBoard Whiteboard",
+                        text = "OpenBoard whiteboard",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -165,7 +165,7 @@ fun WhiteboardSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(
                         selected = activeTool == OpenBoardTool.PEN,
                         onClick = {
@@ -192,7 +192,7 @@ fun WhiteboardSheet(
                     )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     val backgrounds = listOf("DotGrid", "GraphGrid", "Ruled", "Obsidian")
                     val nextBg = backgrounds[(backgrounds.indexOf(canvasBackground) + 1).coerceAtLeast(0) % backgrounds.size]
                     FilterChip(
@@ -206,11 +206,11 @@ fun WhiteboardSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Color Palette
             Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 colorPalette.forEach { color ->
@@ -391,7 +391,7 @@ fun WhiteboardSheet(
             ) {
                 Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Send Sketch to Agents", color = MaterialTheme.colorScheme.onPrimary)
+                Text("Send sketch to agents", color = MaterialTheme.colorScheme.onPrimary)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

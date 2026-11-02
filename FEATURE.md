@@ -2778,4 +2778,28 @@ Audited and hardened `AppleColorPickerDialog.kt`, `AttachmentBottomSheet.kt`, `C
 - [x] **Verification & Tests**:
   - `npx @enmera/ai-design-check` pass with 0 warnings & 0 accessibility issues across all 4 files.
   - Remote GitHub Actions CI build & release verification.
-- [x] **Incremented Version Code & Name**:\n  - Bumped `versionCode` to `21099` and `versionName` to `"2.10.99"`.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21099` and `versionName` to `"2.10.99"`.
+
+---
+
+## 128. Creative Canvas & Tooling Zero-Warning Audit (Gallery, Obscura & Whiteboard)
+
+Audited and hardened `ImageGalleryScreen.kt`, `ObscuraBrowserScreen.kt`, `WhiteboardScreen.kt`, and `WhiteboardSheet.kt` using `enmerasoftware/ai-design-check`:
+
+### 1. 48dp Touch Targets & Accessibility
+- Upgraded close/clear/forward buttons in `ObscuraBrowserScreen` and color swatches in `WhiteboardScreen` to standard `48.dp` finger touch targets.
+- Standardized all cards to `20.dp` rounded surfaces.
+
+### 2. Sentence Case & Quiet Copywriting
+- Fixed noisy Title Case across all creative interfaces:
+  - `"AI image studio"`, `"Image gallery ready"`, `"Artistic style"`, `"Aspect ratio"`
+  - `"Obscura browser"`, `"Ready to navigate"`
+  - `"OpenBoard whiteboard"`, `"Send sketch to agents"`
+- Removed exclamation copy from gallery forward toasts, clipboard toasts, and sketch attachment notifications.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings & 0 accessibility issues across all 4 files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21100` and `versionName` to `"2.11.00"`.

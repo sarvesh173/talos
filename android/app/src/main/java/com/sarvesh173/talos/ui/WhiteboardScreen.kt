@@ -97,7 +97,7 @@ fun WhiteboardScreen(
                 title = {
                     Column {
                         Text(
-                            text = "OpenBoard Whiteboard",
+                            text = "OpenBoard whiteboard",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -150,7 +150,7 @@ fun WhiteboardScreen(
                             redoPages.add(mutableStateListOf())
                             currentPageIndex = pages.size - 1
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            Toast.makeText(context, "Page ${pages.size} added!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Page ${pages.size} added", Toast.LENGTH_SHORT).show()
                         }
                     ) {
                         Icon(Icons.Default.PostAdd, contentDescription = "Add Page", tint = MaterialTheme.colorScheme.primary)
@@ -203,10 +203,10 @@ fun WhiteboardScreen(
                                 } else {
                                     client.sendMessage("[OpenBoard Sketch Attached: ${paths.size} strokes]")
                                 }
-                                Toast.makeText(context, "Sketch attached to Council Room!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Sketch attached to Council Room", Toast.LENGTH_SHORT).show()
                                 onBack()
                             } else {
-                                Toast.makeText(context, "Draw something first!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Draw something first", Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {
@@ -289,7 +289,7 @@ fun WhiteboardScreen(
                             )
                         }
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             FilterChip(
                                 selected = strokeWidth == 4f,
                                 onClick = { strokeWidth = 4f },
@@ -313,11 +313,11 @@ fun WhiteboardScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Color Palette with 48dp minimum touch bounds
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         colorPalette.forEach { color ->
@@ -325,7 +325,7 @@ fun WhiteboardScreen(
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(48.dp)
                                     .clickable { currentColor = color }
                             ) {
                                 Box(
@@ -348,7 +348,7 @@ fun WhiteboardScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(20.dp),
             color = when (canvasBackground) {
                 "DarkSlate" -> Color(0xFF1E293B)
                 else -> Color(0xFF0A0C10)

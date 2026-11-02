@@ -53,7 +53,7 @@ fun ImageGalleryScreen(
                 title = {
                     Column {
                         Text(
-                            text = "AI Image Studio",
+                            text = "AI image studio",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -114,7 +114,7 @@ fun ImageGalleryScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Image Gallery Ready",
+                        text = "Image gallery ready",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -172,7 +172,7 @@ fun ImageGalleryScreen(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        .padding(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
                                     Text(
                                         text = image.style.uppercase(),
@@ -227,7 +227,7 @@ fun ImageGalleryScreen(
                 Text("Image Artifact (${image.style})", style = MaterialTheme.typography.titleMedium)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         text = image.prompt,
                         style = MaterialTheme.typography.bodyMedium,
@@ -249,7 +249,7 @@ fun ImageGalleryScreen(
                     Button(
                         onClick = {
                             client.sendMessage("[Hermes Generated Image: ${image.style}]\nPrompt: ${image.prompt}")
-                            Toast.makeText(context, "Forwarded to Council Room!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Forwarded to Council Room", Toast.LENGTH_SHORT).show()
                             selectedImage = null
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -262,7 +262,7 @@ fun ImageGalleryScreen(
                     OutlinedButton(
                         onClick = {
                             clipboardManager.setText(AnnotatedString(image.prompt))
-                            Toast.makeText(context, "Prompt copied!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Prompt copied", Toast.LENGTH_SHORT).show()
                         }
                     ) {
                         Text("Copy")
@@ -309,9 +309,9 @@ fun ImageGalleryScreen(
                         enabled = !isGenerating
                     )
 
-                    Text("Artistic Style", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text("Artistic style", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         listOf("cinematic", "anime", "cyberpunk", "watercolor").forEach { style ->
@@ -324,9 +324,9 @@ fun ImageGalleryScreen(
                         }
                     }
 
-                    Text("Aspect Ratio", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text("Aspect ratio", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         listOf("1:1", "16:9", "9:16").forEach { ratio ->
@@ -355,7 +355,7 @@ fun ImageGalleryScreen(
                             client.generateImage(promptText, selectedStyle, selectedRatio) {
                                 isGenerating = false
                                 showGenerateDialog = false
-                                Toast.makeText(context, "AI Art synthesized and stored in SQLite!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "AI art synthesized and stored in SQLite", Toast.LENGTH_SHORT).show()
                             }
                         }
                     },

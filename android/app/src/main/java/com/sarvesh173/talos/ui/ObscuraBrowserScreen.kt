@@ -87,7 +87,7 @@ fun ObscuraBrowserScreen(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Obscura Browser",
+                                text = "Obscura browser",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -97,7 +97,7 @@ fun ObscuraBrowserScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = if (isStealthActive) "STEALTH ACTIVE" else "STANDARD",
@@ -196,7 +196,7 @@ fun ObscuraBrowserScreen(
                     if (urlInput.isNotBlank()) {
                         IconButton(
                             onClick = { urlInput = "" },
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(48.dp)
                         ) {
                             Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                         }
@@ -204,7 +204,7 @@ fun ObscuraBrowserScreen(
 
                     IconButton(
                         onClick = { executeFetch() },
-                        modifier = Modifier.size(44.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         if (isLoading) {
                             MetallicCircularLoader(
@@ -236,7 +236,7 @@ fun ObscuraBrowserScreen(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
                             Icon(Icons.Default.BookmarkBorder, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
@@ -252,9 +252,9 @@ fun ObscuraBrowserScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("text" to "Text Reader", "links" to "Links", "assets" to "Assets").forEach { (mode, label) ->
                         val isSelected = selectedDumpMode == mode
                         FilterChip(
@@ -284,7 +284,7 @@ fun ObscuraBrowserScreen(
 
             // Render Output Area
             Surface(
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerLowest,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier
@@ -316,7 +316,7 @@ fun ObscuraBrowserScreen(
                         }
                     }
                     result != null -> {
-                        Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+                        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -342,7 +342,7 @@ fun ObscuraBrowserScreen(
                                     IconButton(
                                         onClick = {
                                             clipboardManager.setText(AnnotatedString(result.content))
-                                            Toast.makeText(context, "Content copied!", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Content copied", Toast.LENGTH_SHORT).show()
                                         },
                                         modifier = Modifier.size(48.dp)
                                     ) {
@@ -353,7 +353,7 @@ fun ObscuraBrowserScreen(
                                         onClick = {
                                             val excerpt = result.content.take(600).trim()
                                             client.sendMessage("[Obscura Web Excerpt: ${result.url}]\n$excerpt...")
-                                            Toast.makeText(context, "Forwarded to Council Room!", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Forwarded to Council Room", Toast.LENGTH_SHORT).show()
                                         },
                                         modifier = Modifier.size(48.dp)
                                     ) {
@@ -364,7 +364,7 @@ fun ObscuraBrowserScreen(
 
                             HorizontalDivider(
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                                modifier = Modifier.padding(vertical = 10.dp)
+                                modifier = Modifier.padding(vertical = 12.dp)
                             )
 
                             LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -394,12 +394,12 @@ fun ObscuraBrowserScreen(
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    text = "Ready to Navigate",
+                                    text = "Ready to navigate",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Type any URL above or choose a bookmark to extract clean text, links, or assets via the Rust Obscura engine.",
                                     style = MaterialTheme.typography.bodySmall,

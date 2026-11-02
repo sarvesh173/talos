@@ -141,7 +141,7 @@ fun SettingsScreen(
                                 )
                             )
                         )
-                        .padding(horizontal = 18.dp, vertical = 18.dp)
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
@@ -158,22 +158,22 @@ fun SettingsScreen(
                             )
 
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape(8.dp),
                                 color = Color.White.copy(alpha = 0.12f),
                                 border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.35f))
                             ) {
                                 Text(
                                     text = "AUTONOMOUS CORE",
-                                    fontSize = 9.5.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.6.sp,
                                     color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(18.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
                             text = "MEMBER",
@@ -264,7 +264,7 @@ fun SettingsScreen(
                         else -> "System"
                     }
                     SettingsMinimalRow(
-                        title = "Look & Feel",
+                        title = "Look & feel",
                         subtitle = displayMode,
                         icon = TalosIcons.TalosPalette,
                         showChevron = true,
@@ -284,7 +284,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // -----------------------------------------------------------------
             // GROUP 3: Notifications, Contact & Fleet
@@ -323,7 +323,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // -----------------------------------------------------------------
             // GROUP 4: Documentation & Network Transport
@@ -353,7 +353,7 @@ fun SettingsScreen(
 
                     // Core Transport
                     SettingsMinimalRow(
-                        title = "Core Transport",
+                        title = "Core transport",
                         subtitle = if (client.baseUrl.isNotBlank()) "Linked: ${client.baseUrl}" else "Configure Endpoint",
                         icon = TalosHub,
                         showChevron = true,
@@ -368,7 +368,7 @@ fun SettingsScreen(
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut()
             ) {
-                Column(modifier = Modifier.padding(top = 14.dp)) {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
                     Surface(
                         shape = RoundedCornerShape(20.dp),
                         color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
@@ -378,10 +378,10 @@ fun SettingsScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 text = "CORE TRANSPORT CONFIGURATION",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.6.sp,
                                 color = talosTextMuted
@@ -401,7 +401,7 @@ fun SettingsScreen(
                                 shape = RoundedCornerShape(12.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             OutlinedTextField(
                                 value = tokenText,
@@ -416,7 +416,7 @@ fun SettingsScreen(
                                 shape = RoundedCornerShape(12.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             Button(
                                 onClick = {
@@ -426,7 +426,7 @@ fun SettingsScreen(
                                         isSuccess = true
                                         statusMessage = "Handshake verified successfully"
                                         isVerifying = false
-                                        Toast.makeText(context, "Transport updated!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Transport updated", Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 modifier = Modifier
@@ -445,7 +445,7 @@ fun SettingsScreen(
                                     )
                                 } else {
                                     Text(
-                                        text = "Save & Verify Handshake",
+                                        text = "Save & verify handshake",
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -478,7 +478,7 @@ private fun SettingsMinimalRow(
         modifier = Modifier
             .fillMaxWidth()
             .applePressable(0.97f) { onClick() }
-            .padding(horizontal = 18.dp, vertical = 15.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Pure SVG Icon — ZERO background box!
@@ -504,7 +504,7 @@ private fun SettingsMinimalRow(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     letterSpacing = (-0.1).sp,
                     color = talosTextMuted
                 )

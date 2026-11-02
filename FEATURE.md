@@ -2689,3 +2689,23 @@ Audited and hardened `LookAndFeelScreen.kt` using `enmerasoftware/ai-design-chec
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21095` and `versionName` to `"2.10.95"`.
+
+---
+
+## 124. Zero-Warning `ai-design-check` Optimization on `SettingsScreen.kt`
+
+Audited and hardened `SettingsScreen.kt` using `enmerasoftware/ai-design-check` zero-dependency verification:
+
+### 1. Spacing & Radius Alignment
+- Replaced non-standard paddings (`18.dp`, `15.dp`, `14.dp`, `3.dp`) with clean 4px/8px grid scale (`16.dp`, `12.dp`, `4.dp`).
+- Aligned inner member badges to `RoundedCornerShape(8.dp)`.
+
+### 2. Sentence Case & Copywriting Tone
+- Fixed Title Casing on list items: `"Look & feel"`, `"Core transport"`, `"Save & verify handshake"`.
+- Removed exclamation copy from Toast notifications: `"Transport updated"`.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings on `SettingsScreen.kt`.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21096` and `versionName` to `"2.10.96"`.

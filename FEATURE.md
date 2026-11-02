@@ -2987,3 +2987,26 @@ Comprehensive system upgrade resolving connection gate design, Tailscale diagnos
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21107` and `versionName` to `"2.11.07"`.
+
+---
+
+## 136. Live Theme Reactivity & Dynamic ColorScheme Decoupling Across Feature Screens
+
+Resolved theme selection application, screen background decoupling, and live appearance synchronization:
+
+### 1. Root Cause of Theme Application Failure
+- `LookAndFeelScreen`, `SettingsScreen`, `ChatPreferencesScreen`, `SecurityScreen`, `NotificationsScreen`, and `CachingScreen` had hardcoded `containerColor = if (isDark) Color(0xFF000000) else Color(0xFFF2F2F7)` and `color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF)`.
+- Consequently, selecting Midnight, Space Gray, or Paper White updated the theme state, but the screen scaffolds and cards remained visually locked to pitch black or light gray.
+- Furthermore, clicking a light background while in dark mode did not switch `themeMode` to `"LIGHT"`, preventing the light canvas from rendering.
+
+### 2. Live Dynamic Theme Switching
+- Replaced all hardcoded screen and card colors with `MaterialTheme.colorScheme.background` and `MaterialTheme.colorScheme.surfaceContainer`.
+- Overhauled `LookAndFeelScreen` to display both **Dark Finishes** (Midnight `#0B0E14`, Black `#000000`, Gray `#1C1C1E`) and **Light Finishes** (Soft White `#F6F6F9`, Paper White `#F9F5EC`).
+- Tapping any finish card now atomically sets both `themeMode` (`"DARK"` or `"LIGHT"`) and the exact preset (`setThemePreset`), triggering an instantaneous full-app visual transformation.
+- Switching appearance mode (`System | Light | Dark`) automatically syncs the preferred light/dark background preset.
+
+- [x] **Verification & Tests**:
+  - Python AST syntax and brace check pass across all 6 modified files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21108` and `versionName` to `"2.11.08"`.

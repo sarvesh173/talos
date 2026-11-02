@@ -144,7 +144,7 @@ fun LookAndFeelScreen(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                             .border(
                                 BorderStroke(
                                     0.6.dp,
@@ -158,7 +158,7 @@ fun LookAndFeelScreen(
                         Icon(
                             imageVector = TalosIcons.TalosBackArrow,
                             contentDescription = "Back",
-                            tint = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -170,12 +170,12 @@ fun LookAndFeelScreen(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.3).sp,
-                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
         },
-        containerColor = if (isDark) Color(0xFF000000) else Color(0xFFF2F2F7)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -207,7 +207,7 @@ fun LookAndFeelScreen(
             // -----------------------------------------------------------------
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -283,6 +283,17 @@ fun LookAndFeelScreen(
                                         .applePressable(0.96f) {
                                             TalosHaptics.sendHaptic(context)
                                             client.setThemeMode(modeKey)
+                                            if (modeKey == "LIGHT" && isDark) {
+                                                val target = if (lightBg == "paper_white") MaterialThemePreset.APPLE_PAPER_WHITE else MaterialThemePreset.APPLE_PURE_WHITE
+                                                client.setThemePreset(target.name)
+                                            } else if (modeKey == "DARK" && !isDark) {
+                                                val target = when (darkBg) {
+                                                    "midnight" -> MaterialThemePreset.APPLE_MIDNIGHT
+                                                    "gray" -> MaterialThemePreset.APPLE_DARK_SLATE
+                                                    else -> MaterialThemePreset.APPLE_AMOLED_BLACK
+                                                }
+                                                client.setThemePreset(target.name)
+                                            }
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -431,10 +442,10 @@ fun LookAndFeelScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // -----------------------------------------------------------------
-            // 2. BACKGROUND CANVAS (Contextual: White/Paper for Light; Midnight/Black/Gray for Dark)
+            // 2. BACKGROUND CANVAS FINISH (Dark: Midnight, Black, Gray | Light: Soft White, Paper White)
             // -----------------------------------------------------------------
             Text(
-                text = "Background",
+                text = "Dark finishes",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = talosTextMuted,
@@ -442,93 +453,105 @@ fun LookAndFeelScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            if (!isDark) {
-                // Light mode canvases: Soft White & Paper White (2 spacious cards)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val isWhiteSelected = currentPresetName == MaterialThemePreset.APPLE_PURE_WHITE.name || (currentPresetName != MaterialThemePreset.APPLE_PAPER_WHITE.name && lightBg != "paper_white")
-                    BackgroundOptionCard(
-                        title = "Soft white",
-                        previewColor = Color(0xFFF5F5F7),
-                        isSelected = isWhiteSelected,
-                        accentColor = effectiveAccentColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            TalosHaptics.sendHaptic(context)
-                            client.setLightBackground("white")
-                            client.setThemePreset(MaterialThemePreset.APPLE_PURE_WHITE.name)
-                        }
-                    )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val isMidnightSelected = isDark && currentPresetName == MaterialThemePreset.APPLE_MIDNIGHT.name
+                DarkBackgroundOptionCard(
+                    title = "Midnight",
+                    canvasColor = Color(0xFF0B0E14),
+                    bubbleColor = Color(0xFF161B26),
+                    isSelected = isMidnightSelected,
+                    accentColor = effectiveAccentColor,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        TalosHaptics.sendHaptic(context)
+                        client.setThemeMode("DARK")
+                        client.setDarkBackground("midnight")
+                        client.setThemePreset(MaterialThemePreset.APPLE_MIDNIGHT.name)
+                    }
+                )
 
-                    val isPaperSelected = currentPresetName == MaterialThemePreset.APPLE_PAPER_WHITE.name
-                    BackgroundOptionCard(
-                        title = "Paper white",
-                        previewColor = Color(0xFFF6F0E0),
-                        isSelected = isPaperSelected,
-                        accentColor = effectiveAccentColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            TalosHaptics.sendHaptic(context)
-                            client.setLightBackground("paper_white")
-                            client.setThemePreset(MaterialThemePreset.APPLE_PAPER_WHITE.name)
-                        }
-                    )
-                }
-            } else {
-                // Dark mode canvases: Midnight, Black, Gray (3 cards with clean spacing)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val isMidnightSelected = currentPresetName == MaterialThemePreset.APPLE_MIDNIGHT.name
-                    DarkBackgroundOptionCard(
-                        title = "Midnight",
-                        canvasColor = Color(0xFF0B0E14),
-                        bubbleColor = Color(0xFF161B26),
-                        isSelected = isMidnightSelected,
-                        accentColor = effectiveAccentColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            TalosHaptics.sendHaptic(context)
-                            client.setDarkBackground("midnight")
-                            client.setThemePreset(MaterialThemePreset.APPLE_MIDNIGHT.name)
-                        }
-                    )
+                val isBlackSelected = isDark && (currentPresetName == MaterialThemePreset.APPLE_AMOLED_BLACK.name ||
+                        currentPresetName == MaterialThemePreset.APPLE_CUPERTINO.name ||
+                        (currentPresetName != MaterialThemePreset.APPLE_MIDNIGHT.name && currentPresetName != MaterialThemePreset.APPLE_DARK_SLATE.name && currentPresetName != MaterialThemePreset.APPLE_GRAPHITE.name && currentPresetName != MaterialThemePreset.APPLE_PAPER_WHITE.name && currentPresetName != MaterialThemePreset.APPLE_PURE_WHITE.name))
+                DarkBackgroundOptionCard(
+                    title = "Black",
+                    canvasColor = Color(0xFF000000),
+                    bubbleColor = Color(0xFF1C1C1E),
+                    isSelected = isBlackSelected,
+                    accentColor = effectiveAccentColor,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        TalosHaptics.sendHaptic(context)
+                        client.setThemeMode("DARK")
+                        client.setDarkBackground("black")
+                        client.setThemePreset(MaterialThemePreset.APPLE_AMOLED_BLACK.name)
+                    }
+                )
 
-                    val isBlackSelected = currentPresetName == MaterialThemePreset.APPLE_AMOLED_BLACK.name ||
-                            currentPresetName == MaterialThemePreset.APPLE_CUPERTINO.name ||
-                            (currentPresetName != MaterialThemePreset.APPLE_MIDNIGHT.name && currentPresetName != MaterialThemePreset.APPLE_DARK_SLATE.name && currentPresetName != MaterialThemePreset.APPLE_GRAPHITE.name && currentPresetName != MaterialThemePreset.APPLE_PAPER_WHITE.name)
-                    DarkBackgroundOptionCard(
-                        title = "Black",
-                        canvasColor = Color(0xFF000000),
-                        bubbleColor = Color(0xFF1C1C1E),
-                        isSelected = isBlackSelected,
-                        accentColor = effectiveAccentColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            TalosHaptics.sendHaptic(context)
-                            client.setDarkBackground("black")
-                            client.setThemePreset(MaterialThemePreset.APPLE_AMOLED_BLACK.name)
-                        }
-                    )
+                val isGraySelected = isDark && (currentPresetName == MaterialThemePreset.APPLE_DARK_SLATE.name || currentPresetName == MaterialThemePreset.APPLE_GRAPHITE.name)
+                DarkBackgroundOptionCard(
+                    title = "Gray",
+                    canvasColor = Color(0xFF1C1C1E),
+                    bubbleColor = Color(0xFF2C2C2E),
+                    isSelected = isGraySelected,
+                    accentColor = effectiveAccentColor,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        TalosHaptics.sendHaptic(context)
+                        client.setThemeMode("DARK")
+                        client.setDarkBackground("gray")
+                        client.setThemePreset(MaterialThemePreset.APPLE_DARK_SLATE.name)
+                    }
+                )
+            }
 
-                    val isGraySelected = currentPresetName == MaterialThemePreset.APPLE_DARK_SLATE.name || currentPresetName == MaterialThemePreset.APPLE_GRAPHITE.name
-                    DarkBackgroundOptionCard(
-                        title = "Gray",
-                        canvasColor = Color(0xFF1C1C1E),
-                        bubbleColor = Color(0xFF2C2C2E),
-                        isSelected = isGraySelected,
-                        accentColor = effectiveAccentColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            TalosHaptics.sendHaptic(context)
-                            client.setDarkBackground("gray")
-                            client.setThemePreset(MaterialThemePreset.APPLE_DARK_SLATE.name)
-                        }
-                    )
-                }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Light finishes",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = talosTextMuted,
+                letterSpacing = (-0.15).sp,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val isWhiteSelected = !isDark && (currentPresetName == MaterialThemePreset.APPLE_PURE_WHITE.name || currentPresetName == MaterialThemePreset.APPLE_AMOLED_BLACK.name)
+                BackgroundOptionCard(
+                    title = "Soft white",
+                    previewColor = Color(0xFFF5F5F7),
+                    isSelected = isWhiteSelected,
+                    accentColor = effectiveAccentColor,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        TalosHaptics.sendHaptic(context)
+                        client.setThemeMode("LIGHT")
+                        client.setLightBackground("white")
+                        client.setThemePreset(MaterialThemePreset.APPLE_PURE_WHITE.name)
+                    }
+                )
+
+                val isPaperSelected = !isDark && currentPresetName == MaterialThemePreset.APPLE_PAPER_WHITE.name
+                BackgroundOptionCard(
+                    title = "Paper white",
+                    previewColor = Color(0xFFF6F0E0),
+                    isSelected = isPaperSelected,
+                    accentColor = effectiveAccentColor,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        TalosHaptics.sendHaptic(context)
+                        client.setThemeMode("LIGHT")
+                        client.setLightBackground("paper_white")
+                        client.setThemePreset(MaterialThemePreset.APPLE_PAPER_WHITE.name)
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -564,7 +587,7 @@ fun LookAndFeelScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                     border = BorderStroke(
                         0.6.dp,
                         if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -586,7 +609,7 @@ fun LookAndFeelScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             letterSpacing = (-0.2).sp,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Icon(
                             imageVector = Icons.Default.UnfoldMore,
@@ -603,7 +626,7 @@ fun LookAndFeelScreen(
                     onDismissRequest = { showFontMenu = false },
                     modifier = Modifier
                         .background(
-                            if (isDark) Color(0xFF2C2C2E) else Color(0xFFFFFFFF),
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
                             RoundedCornerShape(20.dp)
                         )
                         .border(
@@ -683,7 +706,7 @@ fun LookAndFeelScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                     border = BorderStroke(
                         0.6.dp,
                         if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -705,7 +728,7 @@ fun LookAndFeelScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             letterSpacing = (-0.2).sp,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Icon(
                             imageVector = Icons.Default.UnfoldMore,
@@ -722,7 +745,7 @@ fun LookAndFeelScreen(
                     onDismissRequest = { showSizeMenu = false },
                     modifier = Modifier
                         .background(
-                            if (isDark) Color(0xFF2C2C2E) else Color(0xFFFFFFFF),
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
                             RoundedCornerShape(20.dp)
                         )
                         .border(

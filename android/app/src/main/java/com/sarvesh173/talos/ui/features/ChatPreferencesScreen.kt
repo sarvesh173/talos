@@ -58,7 +58,7 @@ fun ChatPreferencesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding(),
-                color = if (isDark) Color(0xFF000000).copy(alpha = 0.85f) else Color(0xFFFFFFFF).copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -88,7 +88,7 @@ fun ChatPreferencesScreen(
                         Icon(
                             imageVector = TalosIcons.TalosBackArrow,
                             contentDescription = "Back",
-                            tint = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -98,7 +98,7 @@ fun ChatPreferencesScreen(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.25).sp,
-                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -126,7 +126,7 @@ fun ChatPreferencesScreen(
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -214,7 +214,7 @@ fun ChatPreferencesScreen(
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)

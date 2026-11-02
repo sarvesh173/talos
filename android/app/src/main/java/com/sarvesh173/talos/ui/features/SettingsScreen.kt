@@ -82,7 +82,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .border(
                             BorderStroke(
                                 0.6.dp,
@@ -201,7 +201,7 @@ fun SettingsScreen(
             // -----------------------------------------------------------------
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -249,7 +249,7 @@ fun SettingsScreen(
             // -----------------------------------------------------------------
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -291,7 +291,7 @@ fun SettingsScreen(
             // -----------------------------------------------------------------
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -330,7 +330,7 @@ fun SettingsScreen(
             // -----------------------------------------------------------------
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
@@ -371,7 +371,7 @@ fun SettingsScreen(
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                         border = BorderStroke(
                             0.6.dp,
                             if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)

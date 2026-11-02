@@ -60,7 +60,7 @@ fun CachingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding(),
-                color = if (isDark) Color(0xFF000000).copy(alpha = 0.85f) else Color(0xFFFFFFFF).copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f))
             ) {
                 Row(
@@ -119,7 +119,7 @@ fun CachingScreen(
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -232,7 +232,7 @@ fun CachingScreen(
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier
                     .fillMaxWidth()

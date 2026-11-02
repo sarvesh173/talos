@@ -2669,3 +2669,23 @@ Re-engineered the water droplet animation from a flat line into an authentic phy
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21094` and `versionName` to `"2.10.94"`.
+
+---
+
+## 123. Integrated `ai-design-check` Standards & Design Scale Hardening
+
+Audited and hardened `LookAndFeelScreen.kt` using `enmerasoftware/ai-design-check` zero-dependency verification:
+
+### 1. Zero-Warning Scale Calibration
+- Replaced non-grid margins (`14.dp`, `18.dp`, `10.dp`, `3.dp`) with the exact 4px/8px design grid (`12.dp`, `16.dp`, `20.dp`, `4.dp`).
+- Standardized corner radii across surfaces to canonical `20.dp` cards, `12.dp` buttons, and `12.dp` segmented capsules.
+
+### 2. Sentence Case & Label Discipline
+- Eliminated loud Title Casing in labels: `"Look & feel"`, `"Saved shades"`, `"Paper white"`, `"Select font"`, `"Select text size"`.
+- Calibrated typographic hierarchy to standard optical scales (12sp, 14sp, 16sp, 20sp).
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21095` and `versionName` to `"2.10.95"`.

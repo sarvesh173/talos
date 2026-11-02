@@ -166,7 +166,7 @@ fun LookAndFeelScreen(
                     Spacer(modifier = Modifier.width(14.dp))
 
                     Text(
-                        text = "Look & Feel",
+                        text = "Look & feel",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.3).sp,
@@ -206,7 +206,7 @@ fun LookAndFeelScreen(
             // 1. APPEARANCE & ACCENT (MATCHING SCREENSHOT)
             // -----------------------------------------------------------------
             Surface(
-                shape = RoundedCornerShape(22.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(
                     0.6.dp,
@@ -214,16 +214,16 @@ fun LookAndFeelScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Appearance",
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = talosTextMuted,
                         letterSpacing = (-0.15).sp
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // 3-Segment Control (System / Light / Dark)
                     val appearanceModes = listOf(
@@ -241,9 +241,9 @@ fun LookAndFeelScreen(
                     BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFFF2F2F7))
-                            .padding(3.dp)
+                            .padding(4.dp)
                     ) {
                         val segmentWidth = maxWidth / appearanceModes.size
                         val pillOffset by animateDpAsState(
@@ -258,14 +258,14 @@ fun LookAndFeelScreen(
                                 .offset(x = pillOffset)
                                 .width(segmentWidth)
                                 .height(36.dp)
-                                .clip(RoundedCornerShape(11.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(if (isDark) Color(0xFF3A3A3C) else Color.White)
                                 .border(
                                     BorderStroke(
                                         0.6.dp,
                                         if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
                                     ),
-                                    RoundedCornerShape(11.dp)
+                                    RoundedCornerShape(12.dp)
                                 )
                         )
 
@@ -288,7 +288,7 @@ fun LookAndFeelScreen(
                                 ) {
                                     Text(
                                         text = modeTitle,
-                                        fontSize = 13.5.sp,
+                                        fontSize = 14.sp,
                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                         letterSpacing = (-0.15).sp,
                                         color = if (isSelected) {
@@ -304,19 +304,19 @@ fun LookAndFeelScreen(
 
                     Text(
                         text = "Accent",
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = talosTextMuted,
                         letterSpacing = (-0.15).sp
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // 10 Circular Swatches in 2 Rows of 5
                     val row1Swatches = officialCuratedSwatches.take(5)
                     val row2Swatches = officialCuratedSwatches.drop(5) // 4 items + 10th is Rainbow
 
-                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         // Row 1 (5 items)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -373,24 +373,24 @@ fun LookAndFeelScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Saved Shades",
-                                fontSize = 11.5.sp,
+                                text = "Saved shades",
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = talosTextMuted
                             )
 
                             Text(
                                 text = "Tap to select • Long-press to remove",
-                                fontSize = 10.5.sp,
+                                fontSize = 12.sp,
                                 color = talosTextMuted.copy(alpha = 0.7f)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             customPalette.forEach { hex ->
@@ -428,14 +428,14 @@ fun LookAndFeelScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // -----------------------------------------------------------------
             // 2. BACKGROUND CANVAS (Contextual: White/Paper for Light; Midnight/Black/Gray for Dark)
             // -----------------------------------------------------------------
             Text(
                 text = "Background",
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = talosTextMuted,
                 letterSpacing = (-0.15).sp,
@@ -464,7 +464,7 @@ fun LookAndFeelScreen(
 
                     val isPaperSelected = lightBg == "paper_white"
                     BackgroundOptionCard(
-                        title = "Paper White",
+                        title = "Paper white",
                         previewColor = Color(0xFFF7F5F0),
                         isSelected = isPaperSelected,
                         accentColor = effectiveAccentColor,
@@ -480,7 +480,7 @@ fun LookAndFeelScreen(
                 // Dark mode canvases: Midnight, Black, Gray (3 cards with clean spacing)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     val isMidnightSelected = darkBg == "midnight"
                     DarkBackgroundOptionCard(
@@ -536,7 +536,7 @@ fun LookAndFeelScreen(
             // -----------------------------------------------------------------
             Text(
                 text = "Typography",
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = talosTextMuted,
                 letterSpacing = (-0.15).sp,
@@ -560,7 +560,7 @@ fun LookAndFeelScreen(
             // 1. FONT SELECTION BUTTON (Opens Floating Popup Menu)
             Box(modifier = Modifier.fillMaxWidth()) {
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
                     border = BorderStroke(
                         0.6.dp,
@@ -574,7 +574,7 @@ fun LookAndFeelScreen(
                         }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -587,7 +587,7 @@ fun LookAndFeelScreen(
                         )
                         Icon(
                             imageVector = Icons.Default.UnfoldMore,
-                            contentDescription = "Select Font",
+                            contentDescription = "Select font",
                             tint = talosTextMuted.copy(alpha = 0.7f),
                             modifier = Modifier.size(18.dp)
                         )
@@ -679,7 +679,7 @@ fun LookAndFeelScreen(
 
             Box(modifier = Modifier.fillMaxWidth()) {
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
                     border = BorderStroke(
                         0.6.dp,
@@ -693,7 +693,7 @@ fun LookAndFeelScreen(
                         }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -706,7 +706,7 @@ fun LookAndFeelScreen(
                         )
                         Icon(
                             imageVector = Icons.Default.UnfoldMore,
-                            contentDescription = "Select Text Size",
+                            contentDescription = "Select text size",
                             tint = talosTextMuted.copy(alpha = 0.7f),
                             modifier = Modifier.size(18.dp)
                         )
@@ -1058,7 +1058,7 @@ private fun BackgroundOptionCard(
             ) {
                 Text(
                     text = title,
-                    fontSize = 13.5.sp,
+                    fontSize = 14.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     letterSpacing = (-0.15).sp,
                     color = Color(0xFF1D1D1F)
@@ -1115,7 +1115,7 @@ private fun DarkBackgroundOptionCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(10.dp),
+                .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Simulated chat bubble preview
@@ -1123,7 +1123,7 @@ private fun DarkBackgroundOptionCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(bubbleColor)
             )
 
@@ -1134,7 +1134,7 @@ private fun DarkBackgroundOptionCard(
             ) {
                 Text(
                     text = title,
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     letterSpacing = (-0.15).sp,
                     color = Color.White

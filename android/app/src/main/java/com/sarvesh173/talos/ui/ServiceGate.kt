@@ -223,7 +223,7 @@ fun ServiceGateScreen(
             // Direct Address Configuration Card
             MetalCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Core Tailscale Address & Host Key",
+                    text = "Core Tailscale address & host key",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = scheme.onSurface
@@ -285,7 +285,7 @@ fun ServiceGateScreen(
             // Action Buttons
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetalButton(
                     text = if (checking) "Checking Connection..." else "Retry Connection",

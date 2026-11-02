@@ -50,7 +50,7 @@ fun MetallicCard(
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed && onClick != null) 0.96f else 1.0f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium),
         label = "MetallicCardScale"
     )
 
@@ -124,7 +124,7 @@ fun MetallicButton(
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1.0f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium),
         label = "MetallicButtonScale"
     )
 

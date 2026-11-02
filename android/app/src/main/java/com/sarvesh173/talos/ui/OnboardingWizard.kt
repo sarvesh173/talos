@@ -325,7 +325,7 @@ fun OnboardingWizard(
                         exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
                     ) {
                         Column {
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
@@ -597,7 +597,7 @@ private fun WizardBottomBar(
 @Composable
 private fun OverviewStep() {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // M3 Surface Header with authentic TALOS mesh vector emblem
         Box(
@@ -621,10 +621,10 @@ private fun OverviewStep() {
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Initialize Your TALOS Mesh",
+            text = "Initialize your TALOS mesh",
             color = WizardText,
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
@@ -743,7 +743,7 @@ private fun OverviewElevatedCard(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = title,
                         color = WizardText,
@@ -801,7 +801,7 @@ private fun MeshStep(
     var tokenInput by remember(initialToken) { mutableStateOf(initialToken) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Static Machined Header
         Box(
@@ -825,7 +825,7 @@ private fun MeshStep(
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Tailscale mesh & host link",
@@ -834,7 +834,7 @@ private fun MeshStep(
             fontWeight = FontWeight.Bold,
             lineHeight = 30.sp
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Direct encrypted WireGuard connection to your laptop agent. No public ports.",
             color = WizardMuted,
@@ -842,7 +842,7 @@ private fun MeshStep(
             lineHeight = 18.sp
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Card 1: Agent Setup Prompt (One-Click Copy)
         Card(
@@ -902,16 +902,16 @@ private fun MeshStep(
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = null,
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(text = "Copy agent prompt", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Card 2: Tailscale Host Address & API Key Form
         Card(
@@ -1086,7 +1086,7 @@ private fun TokenStep(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // M3 Key Emblem Surface Header
         Box(
@@ -1110,10 +1110,10 @@ private fun TokenStep(
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Host API Key Authorization",
+            text = "Host API key authorization",
             color = WizardText,
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
@@ -1149,10 +1149,10 @@ private fun TokenStep(
                     ) {
                         KeyBadge(tint = MaterialTheme.colorScheme.primary)
                     }
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Host API Token",
+                            text = "Host API token",
                             color = WizardText,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold
@@ -1181,7 +1181,7 @@ private fun TokenStep(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (!token.isNullOrBlank()) {
                     Row(
@@ -1207,7 +1207,7 @@ private fun TokenStep(
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = if (isCopied) "Copied" else "Copy Key",
                                 fontSize = 13.sp,
@@ -1216,7 +1216,7 @@ private fun TokenStep(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
@@ -1261,10 +1261,10 @@ private fun TokenStep(
         }
 
         if (errorMessage != null) {
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             val danger = WizardDanger
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Canvas(modifier = Modifier.size(14.dp)) {
+                Canvas(modifier = Modifier.size(16.dp)) {
                     drawCircle(danger)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -1287,7 +1287,7 @@ private fun TokenStep(
 private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
     val isDark = LocalIsDark.current
     Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // M3 Surface Header with Groups emblem
         Box(
@@ -1311,7 +1311,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Welcome to TALOS",
@@ -1329,7 +1329,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
             lineHeight = 20.sp
         )
 
-        Spacer(modifier = Modifier.height(22.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Registered Agents Grid Header
         Row(
@@ -1472,7 +1472,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -1502,7 +1502,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
 /** Step 1 badge 1 — shield over a LAN link. */
 @Composable
 private fun ShieldLanBadge(tint: Color) {
-    Canvas(modifier = Modifier.size(26.dp)) {
+    Canvas(modifier = Modifier.size(24.dp)) {
         val w = size.width
         val h = size.height
         // Shield body
@@ -1541,7 +1541,7 @@ private fun ShieldLanBadge(tint: Color) {
 /** Step 1 badge 2 — agent fleet marks (three pill agents). */
 @Composable
 private fun AgentFleetBadge(tint: Color) {
-    Canvas(modifier = Modifier.size(26.dp)) {
+    Canvas(modifier = Modifier.size(24.dp)) {
         val w = size.width
         val h = size.height
         // Centre agent (larger)
@@ -1581,7 +1581,7 @@ private fun AgentFleetBadge(tint: Color) {
 /** Step 1 badge 3 — terminal window over a bus line. */
 @Composable
 private fun TerminalBusBadge(tint: Color) {
-    Canvas(modifier = Modifier.size(26.dp)) {
+    Canvas(modifier = Modifier.size(24.dp)) {
         val w = size.width
         val h = size.height
         // Terminal frame

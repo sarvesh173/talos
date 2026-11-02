@@ -53,7 +53,7 @@ fun talosSpecularGlassBorder(
  */
 fun Modifier.talosGlassSurface(
     hazeState: HazeState,
-    shape: Shape = RoundedCornerShape(22.dp),
+    shape: Shape = RoundedCornerShape(20.dp),
     backgroundColor: Color,
     blurRadius: Dp = 24.dp
 ): Modifier = this

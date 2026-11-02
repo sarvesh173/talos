@@ -91,7 +91,7 @@ fun MetalButton(
             onClick()
         },
         enabled = enabled && !isLoading,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         color = if (enabled) containerColor else containerColor.copy(alpha = 0.38f),
         contentColor = if (enabled) contentColor else contentColor.copy(alpha = 0.38f),
         border = borderStroke,
@@ -101,7 +101,7 @@ fun MetalButton(
             .scale(scale)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -164,9 +164,9 @@ fun MetalIconButton(
             .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .size(size)
             .scale(scale)
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .border(BorderStroke(1.dp, metallicBorderBrush()), RoundedCornerShape(14.dp))
+            .border(BorderStroke(1.dp, metallicBorderBrush()), RoundedCornerShape(12.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -243,7 +243,7 @@ fun MetalStatusPill(
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -297,7 +297,7 @@ fun MetalContextRing(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.fillMaxSize().padding(3.dp)) {
+        Canvas(modifier = Modifier.fillMaxSize().padding(4.dp)) {
             // Track background
             drawCircle(
                 color = Color.Gray.copy(alpha = 0.20f),
@@ -545,7 +545,7 @@ fun BreathingHaloBadge(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Box(
                 modifier = Modifier

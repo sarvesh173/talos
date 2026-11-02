@@ -409,7 +409,7 @@ fun AgentCanvasScreen(
                             scope.launch {
                                 val ok = client.setAgentCommandLimit(node.id, commandLimit.toInt())
                                 if (ok) {
-                                    Toast.makeText(context, "Command limit saved (${commandLimit.toInt()} turns)!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Command limit saved (${commandLimit.toInt()} turns)", Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(context, "Limit updated locally (${commandLimit.toInt()} turns)", Toast.LENGTH_SHORT).show()
                                 }
@@ -421,7 +421,7 @@ fun AgentCanvasScreen(
                         )
                     ) {
                         Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text("Apply command limit", fontSize = 12.sp)
                     }
                 }
@@ -713,7 +713,7 @@ private fun AgentNodeCard(
                                 }
                             )
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = agent.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -725,7 +725,7 @@ private fun AgentNodeCard(
                 StatusPill(status = agent.status)
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "${agent.tier} • ${agent.cliEngine}",
@@ -753,11 +753,11 @@ private fun AgentNodeCard(
             ) {
                 MetallicLoadingBar(
                     progress = progress,
-                    height = 6.dp,
+                    height = 8.dp,
                     accentColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "${agent.turnsUsed}/${agent.commandLimit} turns",
                     style = MaterialTheme.typography.labelSmall,

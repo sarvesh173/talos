@@ -66,7 +66,7 @@ fun AnimatedTalosIcon(
     val bodyScale by animateFloatAsState(
         targetValue = targetScale,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
+            dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessMediumLow
         ),
         label = "talos_icon_body_scale"
@@ -84,7 +84,7 @@ fun AnimatedTalosIcon(
     val popScale by animateFloatAsState(
         targetValue = if (activationPop) 1.22f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
+            dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessMedium
         ),
         label = "talos_icon_pop"

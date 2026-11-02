@@ -166,7 +166,7 @@ fun M3ETonalButton(
         modifier = modifier.m3ePressScale(interaction),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Busy state keeps the label: the indicator takes the leading

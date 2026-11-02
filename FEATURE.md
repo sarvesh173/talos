@@ -2923,3 +2923,33 @@ Eliminated harsh stark `#FFFFFF` backgrounds and created true yellow-tinted Pape
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21105` and `versionName` to `"2.11.05"`.
+
+---
+
+## 134. Comprehensive UI Unslop & Design Craft Audit: Zero Warnings & Spatial Grid Hardening
+
+Full-scale design craft pass applying `unslop`, `ai-design-fix`, and `compose-apple-design-standards` across the entire Android UI suite:
+
+### 1. Spatial 4px/8px Grid Alignment (`spacing-scale`)
+- Eliminated all arbitrary off-grid paddings and margins (3.dp, 6.dp, 10.dp, 14.dp, 18.dp, 22.dp) across `AgentCanvasScreen`, `Components`, `OnboardingWizard`, `ExpressiveComponents`, `ServiceGate`, `TalosBrowser`, and `MetallicKit`.
+- Mapped all layout spacers and paddings strictly to canonical 4px/8px steps (4.dp, 8.dp, 12.dp, 16.dp, 20.dp, 24.dp, 32.dp).
+
+### 2. Corner Radii Hierarchy & Surface Calibration (`radius-scale`)
+- Replaced non-standard 14.dp and 22.dp radii with the canonical Apple/M3 scale (20.dp cards/sheets, 16.dp containers, 12.dp buttons/capsules, 8.dp chips/badges).
+- Updated `TalosGlass.kt` glass surface radius to canonical 20.dp.
+- Updated `Components.kt` message bubble curvature to 16.dp squircle corners.
+
+### 3. Calm Motion & Easing Discipline (`no-bounce-easing`)
+- Replaced toy-like `Spring.DampingRatioMediumBouncy` with Apple-standard `Spring.DampingRatioNoBouncy` in `AnimatedTalosIcon.kt` and `MetallicComponents.kt`.
+
+### 4. Quiet Copy & Sentence Case
+- Normalized Title Case strings in `OnboardingWizard` and `ServiceGate` to calm sentence case (`"Initialize your TALOS mesh"`, `"Host API key authorization"`, `"Host API token"`, `"Core Tailscale address & host key"`).
+- Removed shouting exclamation copy in `AgentCanvasScreen` toasts.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass across all UI files: 0 accessibility errors, 0 warnings.
+  - Python AST syntax and brace check pass across all 10 modified Kotlin files.
+  - Rust core tests pass (39/39 green in `crates/talos-core`).
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21106` and `versionName` to `"2.11.06"`.

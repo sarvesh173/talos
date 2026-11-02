@@ -443,15 +443,15 @@ fun LookAndFeelScreen(
             )
 
             if (!isDark) {
-                // Light mode canvases: White & Paper White (2 spacious cards)
+                // Light mode canvases: Soft White & Paper White (2 spacious cards)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     val isWhiteSelected = lightBg == "white" || lightBg == "default"
                     BackgroundOptionCard(
-                        title = "White",
-                        previewColor = Color(0xFFFFFFFF),
+                        title = "Soft white",
+                        previewColor = Color(0xFFF5F5F7),
                         isSelected = isWhiteSelected,
                         accentColor = effectiveAccentColor,
                         modifier = Modifier.weight(1f),
@@ -465,7 +465,7 @@ fun LookAndFeelScreen(
                     val isPaperSelected = lightBg == "paper_white"
                     BackgroundOptionCard(
                         title = "Paper white",
-                        previewColor = Color(0xFFF7F5F0),
+                        previewColor = Color(0xFFF6F0E0),
                         isSelected = isPaperSelected,
                         accentColor = effectiveAccentColor,
                         modifier = Modifier.weight(1f),
@@ -1051,7 +1051,7 @@ private fun BackgroundOptionCard(
                     .fillMaxWidth(0.7f)
                     .height(20.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Black.copy(alpha = 0.04f))
+                    .background(if (title.contains("paper", ignoreCase = true)) Color(0xFFFFFDF8) else Color(0xFFFFFFFF))
             )
 
             Row(

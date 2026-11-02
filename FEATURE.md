@@ -2902,3 +2902,24 @@ Replaced generic fallback strings with genuine bundled typefaces chosen from mod
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21104` and `versionName` to `"2.11.04"`.
+
+---
+
+## 133. Light Theme Refinement: Soft White & Warm Paper Cream Contrast
+
+Eliminated harsh stark `#FFFFFF` backgrounds and created true yellow-tinted Paper White:
+
+### 1. Replaced Stark White with Apple Soft White
+- Replaced eye-straining `#FFFFFF` full-screen backgrounds with gentle, calm Apple off-white (`#F6F6F9` background, `#FFFFFF` elevated cards, `#F5F5F7` preview).
+- Named cleanly as **Soft White** in presets and Look & Feel selection.
+
+### 2. True Paper White (Warm Yellow + White Blend)
+- Tuned **Paper White** into a warm parchment / Japanese washi blend (`#F9F5EC` background with subtle cream undertone, `#FFFDF8` card surfaces, `#F2ECE0` card containers).
+- Preview swatch in Look & Feel now displays `#F6F0E0` with a warm white interior pill (`#FFFDF8`), creating an unmistakable visual distinction between Soft White and Paper White.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` verification: 0 warnings, 0 accessibility issues.
+  - Python AST syntax check pass across all Kotlin files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21105` and `versionName` to `"2.11.05"`.

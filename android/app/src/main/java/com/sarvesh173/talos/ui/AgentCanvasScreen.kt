@@ -394,7 +394,9 @@ fun AgentCanvasScreen(
                     steps = 17,
                     colors = SliderDefaults.colors(
                         thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        activeTickColor = Color.Transparent,
+                        inactiveTickColor = Color.Transparent
                     )
                 )
 

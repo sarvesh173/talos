@@ -787,9 +787,11 @@ fun LookAndFeelScreen(
                 valueRange = 0f..5f,
                 steps = 4,
                 colors = SliderDefaults.colors(
-                    thumbColor = Color.White,
+                    thumbColor = effectiveAccentColor,
                     activeTrackColor = effectiveAccentColor,
-                    inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.1f)
+                    inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.1f),
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

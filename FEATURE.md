@@ -2852,3 +2852,23 @@ Audited and hardened `Components.kt`, `LandingScreen.kt`, and `OnboardingWizard.
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21102` and `versionName` to `"2.11.02"`.
+
+---
+
+## 131. Slider Accent Theming & Clean Track Polishing (Remove Dots & Dynamic Thumb Color)
+
+Addressed user visual feedback on Look & Feel and Swarm sliders:
+
+### 1. Dynamic Accent Thumb Color
+- Replaced hardcoded `thumbColor = Color.White` in `LookAndFeelScreen.kt` with `thumbColor = effectiveAccentColor`.
+- When the user selects yellow (Amber, Gold, or custom hex), the thumb now dynamically adapts to that exact color instead of remaining static white.
+
+### 2. Dotless Clean Slider Track
+- Removed visible tick marks/dots on discrete sliders by setting `activeTickColor = Color.Transparent` and `inactiveTickColor = Color.Transparent` in both `LookAndFeelScreen.kt` and `AgentCanvasScreen.kt`.
+- Clean, continuous un-cluttered visual track with zero dot artifacts.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` verification: 0 warnings, 0 accessibility issues.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21103` and `versionName` to `"2.11.03"`.

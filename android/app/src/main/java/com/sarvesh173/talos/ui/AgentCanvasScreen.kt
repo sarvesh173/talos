@@ -173,7 +173,7 @@ fun AgentCanvasScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Multi-Agent Canvas",
+                            text = "Multi-agent canvas",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -201,11 +201,11 @@ fun AgentCanvasScreen(
                             if (isSwarmPaused) {
                                 val ok = client.resumeAllAgents()
                                 if (ok) isSwarmPaused = false
-                                Toast.makeText(context, if (ok) "Swarm Resumed!" else "Resume failed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, if (ok) "Swarm resumed" else "Resume failed", Toast.LENGTH_SHORT).show()
                             } else {
                                 val ok = client.pauseAllAgents()
                                 if (ok) isSwarmPaused = true
-                                Toast.makeText(context, if (ok) "Swarm Paused!" else "Pause failed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, if (ok) "Swarm paused" else "Pause failed", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }) {
@@ -317,7 +317,7 @@ fun AgentCanvasScreen(
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f)
@@ -420,7 +420,7 @@ fun AgentCanvasScreen(
                     ) {
                         Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Apply Command Limit", fontSize = 12.sp)
+                        Text("Apply command limit", fontSize = 12.sp)
                     }
                 }
 
@@ -428,17 +428,17 @@ fun AgentCanvasScreen(
 
                 // Metadata Card
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Assigned Model", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Assigned model", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(node.model, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
@@ -446,7 +446,7 @@ fun AgentCanvasScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Reasoning Effort", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Reasoning effort", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(node.reasoningEffort, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
@@ -454,7 +454,7 @@ fun AgentCanvasScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Turns Used / Cap", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Turns used / cap", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("${node.turnsUsed} / ${commandLimit.toInt()}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
@@ -485,7 +485,7 @@ fun AgentCanvasScreen(
                 )
 
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                 ) {
                     items(modelOptions) { modelName ->
@@ -562,12 +562,12 @@ fun AgentCanvasScreen(
                             onClick = {
                                 client.updateDelegateQuota(node.id, commandLimit.toInt(), node.reasoningEffort)
                                 selectedNode = null
-                                Toast.makeText(context, "Quota updated to ${commandLimit.toInt()} turns!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Quota updated to ${commandLimit.toInt()} turns", Toast.LENGTH_SHORT).show()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Apply Quota", color = MaterialTheme.colorScheme.onPrimary)
+                            Text("Apply quota", color = MaterialTheme.colorScheme.onPrimary)
                         }
                     } else {
                         Button(
@@ -575,7 +575,7 @@ fun AgentCanvasScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Close Inspector", color = MaterialTheme.colorScheme.onPrimary)
+                            Text("Close inspector", color = MaterialTheme.colorScheme.onPrimary)
                         }
                     }
                 }
@@ -597,26 +597,26 @@ fun AgentCanvasScreen(
                 Icon(Icons.Default.AddCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             title = {
-                Text("Spawn Delegated Subagent", style = MaterialTheme.typography.titleMedium)
+                Text("Spawn delegated subagent", style = MaterialTheme.typography.titleMedium)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = subagentName,
                         onValueChange = { subagentName = it },
-                        label = { Text("Subagent Name") },
+                        label = { Text("Subagent name") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = taskGoal,
                         onValueChange = { taskGoal = it },
-                        label = { Text("Task Goal") },
+                        label = { Text("Task goal") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3
                     )
                     Text("Host CLI Engine", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("omnirush", "opencode", "codex").forEach { engineId ->
                             FilterChip(
                                 selected = selectedEngineId == engineId,
@@ -635,7 +635,7 @@ fun AgentCanvasScreen(
                                 ?: "lead-$selectedEngineId-main"
                             client.spawnChildSubagent(delegateId, subagentName, taskGoal)
                             showSpawnDialog = false
-                            Toast.makeText(context, "Subagent spawned under $selectedEngineId!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Subagent spawned under $selectedEngineId", Toast.LENGTH_SHORT).show()
                         }
                     },
                     enabled = subagentName.isNotBlank() && taskGoal.isNotBlank(),
@@ -674,7 +674,7 @@ private fun AgentNodeCard(
     // expressed through the border + container step, never a tint overlay.
     val pressSource = remember { MutableInteractionSource() }
     Surface(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         border = BorderStroke(
             if (isSelected) 1.5.dp else 1.dp,
@@ -778,9 +778,9 @@ private fun StatusPill(status: AgentStatus) {
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(bg)
-            .padding(horizontal = 8.dp, vertical = 3.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
             text = label,
@@ -931,7 +931,7 @@ private fun CanvasNodeView(
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onClick()
         },
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
                 else MaterialTheme.colorScheme.surfaceContainerHigh,
         border = BorderStroke(
@@ -944,7 +944,7 @@ private fun CanvasNodeView(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
@@ -1024,7 +1024,7 @@ private fun CanvasNodeView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(3.dp)
-                        .clip(RoundedCornerShape(6.dp)),
+                        .clip(RoundedCornerShape(8.dp)),
                     color = if (node.isPaused) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f) else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                 )

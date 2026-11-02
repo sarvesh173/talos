@@ -2803,3 +2803,26 @@ Audited and hardened `ImageGalleryScreen.kt`, `ObscuraBrowserScreen.kt`, `Whiteb
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21100` and `versionName` to `"2.11.00"`.
+
+---
+
+## 129. Agent Swarm & CLI Governance Zero-Warning Audit (Canvas & CliToolManager)
+
+Audited and hardened `AgentCanvasScreen.kt` and `CliToolManager.kt` using `enmerasoftware/ai-design-check`:
+
+### 1. Spatial Grid & Corner Radii Scale
+- Aligned inspector surfaces and node cards to canonical `20.dp` / `16.dp` scale.
+- Aligned internal paddings and lazy list spacing to exact 4px/8px grid (`16.dp`, `12.dp`, `8.dp`).
+
+### 2. Quiet Sentence Case & Calibrated Copywriting
+- Fixed noisy Title Case:
+  - `"Multi-agent canvas"`, `"CLI & agent governance"`
+  - `"Apply command limit"`, `"Assigned model"`, `"Reasoning effort"`, `"Turns used / cap"`
+  - `"Apply quota"`, `"Close inspector"`, `"Spawn delegated subagent"`, `"Subagent name"`, `"Task goal"`, `"Spawn subagent"`
+- Replaced exclamation mark notifications with quiet confirmation toasts (`"Swarm resumed"`, `"Swarm paused"`, `"Quota updated to turns"`).
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings across both files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21101` and `versionName` to `"2.11.01"`.

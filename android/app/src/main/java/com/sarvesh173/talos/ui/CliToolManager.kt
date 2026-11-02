@@ -102,7 +102,7 @@ fun CliToolManagerScreen(
                 title = {
                     Column {
                         Text(
-                            text = "CLI & Agent Governance",
+                            text = "CLI & agent governance",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -180,10 +180,10 @@ fun CliToolManagerScreen(
                 Icon(Icons.Default.PersonAdd, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             title = {
-                Text("Spawn Child Subagent", style = MaterialTheme.typography.titleMedium)
+                Text("Spawn child subagent", style = MaterialTheme.typography.titleMedium)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = subagentName,
                         onValueChange = { subagentName = it },
@@ -318,12 +318,12 @@ private fun DelegateLeadCard(
     var reasoning by remember(delegate.reasoning_effort) { mutableStateOf(delegate.reasoning_effort) }
 
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -343,7 +343,7 @@ private fun DelegateLeadCard(
                     )
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val haptic = LocalHapticFeedback.current
                     // Pause / Resume Toggle
                     IconButton(
@@ -528,14 +528,14 @@ private fun DelegateLeadCard(
                     }
                 }
             } else {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onSpawnChild,
                     modifier = Modifier.align(Alignment.End).defaultMinSize(minHeight = 48.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Spawn Subagent", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                    Text("Spawn subagent", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                 }
             }
         }

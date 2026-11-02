@@ -306,7 +306,7 @@ fun MessageBubble(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
             .graphicsLayer {
                 scaleX = entranceScale
                 scaleY = entranceScale
@@ -325,7 +325,7 @@ fun MessageBubble(
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA)),
                 contentAlignment = Alignment.Center
             ) {
@@ -354,7 +354,7 @@ fun MessageBubble(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(8.dp),
                         color = emblem.accent.copy(alpha = 0.10f)
                     ) {
                         Text(
@@ -362,7 +362,7 @@ fun MessageBubble(
                             color = emblem.accent,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
                     }
                 }
@@ -440,7 +440,7 @@ fun MessageBubble(
                         }
                     ) {
                         Box(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 text = msg.content,
@@ -558,7 +558,7 @@ fun NativeAudioPlayerBubble(
                 IconButton(
                     onClick = { togglePlayback() },
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(buttonBg)
                 ) {
@@ -609,7 +609,7 @@ fun NativeAudioPlayerBubble(
                 Spacer(modifier = Modifier.width(6.dp))
                 IconButton(
                     onClick = { /* local save */ },
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Download,
@@ -648,7 +648,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
         border = BorderStroke(1.2.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -754,7 +754,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                             IconButton(
                                 onClick = {
                                     clipboardManager.setText(AnnotatedString(content))
-                                    Toast.makeText(context, "Copied artifact URI to clipboard!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Copied artifact URI to clipboard", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.size(28.dp)
                             ) {
@@ -798,7 +798,7 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.2.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -897,7 +897,7 @@ fun CapturedPhotoBubble(content: String, isHuman: Boolean) {
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.2.dp, metallicBorderBrush()),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -932,7 +932,7 @@ fun CapturedPhotoBubble(content: String, isHuman: Boolean) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Live Frame Captured",
+                            text = "Live frame captured",
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -994,11 +994,11 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
     val isDark = LocalIsDark.current
     Surface(
         color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1030,7 +1030,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             color = if (isDark) Color.White else Color(0xFF1D1D1F)
                         )
                         Text(
-                            text = "Tailscale Encrypted Proximity",
+                            text = "Tailscale encrypted proximity",
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1057,7 +1057,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
 
             if (lat != null && lon != null) {
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
                     border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)),
                     modifier = Modifier.fillMaxWidth()
@@ -1065,7 +1065,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        modifier = Modifier.padding(vertical = 12.dp)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("LATITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = talosTextMuted)
@@ -1091,8 +1091,8 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
                             context.startActivity(intent)
                         },
-                        shape = RoundedCornerShape(14.dp),
-                        pressedShape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        pressedShape = RoundedCornerShape(12.dp),
                         color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
                         border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f)),
                         modifier = Modifier.weight(1f).height(42.dp)
@@ -1103,17 +1103,17 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                         ) {
                             Icon(Icons.Default.Map, contentDescription = null, tint = Color(0xFF2997FF), modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Open Maps", fontSize = 12.sp, color = if (isDark) Color.White else Color(0xFF1D1D1F), fontWeight = FontWeight.SemiBold)
+                            Text("Open maps", fontSize = 12.sp, color = if (isDark) Color.White else Color(0xFF1D1D1F), fontWeight = FontWeight.SemiBold)
                         }
                     }
 
                     PressableSurface(
                         onClick = {
                             clipboardManager.setText(AnnotatedString("$lat, $lon"))
-                            android.widget.Toast.makeText(context, "Coordinates copied!", android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, "Coordinates copied", android.widget.Toast.LENGTH_SHORT).show()
                         },
-                        shape = RoundedCornerShape(14.dp),
-                        pressedShape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        pressedShape = RoundedCornerShape(12.dp),
                         color = Color(0xFF0071E3),
                         contentColor = Color.White,
                         border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.30f)),
@@ -1152,7 +1152,7 @@ fun NativeVideoPreviewBubble(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -1231,7 +1231,7 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Reasoning Process",
+                    text = "Reasoning process",
                     color = MaterialTheme.colorScheme.tertiary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
@@ -1273,7 +1273,7 @@ fun ToolCallItem(tool: ToolCall) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp)
+                .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -1315,7 +1315,7 @@ fun ToolCallItem(tool: ToolCall) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(10.dp)
+                        modifier = Modifier.padding(12.dp)
                     )
                 }
             }

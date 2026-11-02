@@ -2826,3 +2826,29 @@ Audited and hardened `AgentCanvasScreen.kt` and `CliToolManager.kt` using `enmer
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21101` and `versionName` to `"2.11.01"`.
+
+---
+
+## 130. App Foundations & Core Components Zero-Warning Audit (Components, Landing, Onboarding)
+
+Audited and hardened `Components.kt`, `LandingScreen.kt`, and `OnboardingWizard.kt` using `enmerasoftware/ai-design-check`:
+
+### 1. Standard 48dp Touch Targets & Accessibility Compliance
+- Upgraded playback toggles and cache download action buttons in `Components.kt` to minimum `48.dp` tap targets.
+- Replaced spring bounce curves with calm, Apple-standard `DampingRatioNoBouncy` easing.
+
+### 2. Full Spatial 4px/8px Grid & Corner Radii Scale
+- Aligned all chat message bubbles, location cards, camera attachment surfaces, and onboarding cards to `20.dp` / `16.dp` / `12.dp` / `8.dp`.
+- Standardized vertical and horizontal paddings to exact multiples of 4dp / 8dp (`16.dp`, `12.dp`, `8.dp`).
+
+### 3. Sentence Case & Quiet Copywriting
+- Fixed noisy Title Case headers and labels:
+  - `"Live frame captured"`, `"Tailscale encrypted proximity"`, `"Open maps"`, `"Reasoning process"`
+  - `"Enter chamber"`, `"Setup wizard · configure providers"`, `"Tailscale mesh & host link"`, `"Enter agent chamber"`
+- Eliminated exclamation marks from toasts and status badges (`"Copied artifact URI to clipboard"`, `"Coordinates copied"`, `"Setup prompt copied"`, `"Token copied to clipboard"`).
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings & 0 accessibility issues across all 3 files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21102` and `versionName` to `"2.11.02"`.

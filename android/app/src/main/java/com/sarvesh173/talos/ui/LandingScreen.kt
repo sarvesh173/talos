@@ -206,7 +206,7 @@ fun LandingScreen(
                 fromKey = "claude",
                 toKey = "opencode",
                 taskText = "Deep terminal AST analysis required. Summoning @opencode CLI agent...",
-                replyText = "OpenCode online! AST & terminal tools ready.",
+                replyText = "OpenCode online: AST & terminal tools ready.",
                 actionType = DelegationAction.SUMMON_OPENCODE
             ),
             DelegationEvent(
@@ -338,7 +338,7 @@ fun LandingScreen(
                         )
                     )
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.62f))
-                    .padding(horizontal = MdSpacing.sm, vertical = 6.dp)
+                    .padding(horizontal = MdSpacing.sm, vertical = 8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -347,7 +347,7 @@ fun LandingScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
                             text = "TALOS",
@@ -362,9 +362,9 @@ fun LandingScreen(
                             shape = CircleShape
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -395,7 +395,7 @@ fun LandingScreen(
                     PressableSurface(
                         onClick = onToggleTheme,
                         shape = CircleShape,
-                        pressedShape = RoundedCornerShape(14.dp),
+                        pressedShape = RoundedCornerShape(16.dp),
                         color = if (isCurrentDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                         border = BorderStroke(
                             0.6.dp,
@@ -450,7 +450,7 @@ fun LandingScreen(
                         .padding(bottom = MdSpacing.xxs)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -507,7 +507,7 @@ fun LandingScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Enter Chamber",
+                            text = "Enter chamber",
                             style = MaterialTheme.typography.labelLarge,
                             letterSpacing = (-0.2).sp,
                             fontWeight = FontWeight.SemiBold,
@@ -544,7 +544,7 @@ fun LandingScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Setup Wizard · Configure Providers",
+                                text = "Setup wizard · configure providers",
                                 style = MaterialTheme.typography.labelMedium,
                                 letterSpacing = (-0.1).sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -779,7 +779,7 @@ fun LandingScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = MdSpacing.xs, vertical = 10.dp),
+                            .padding(horizontal = MdSpacing.xs, vertical = 12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -787,7 +787,7 @@ fun LandingScreen(
                             text = "TALOS",
                             color = scheme.onSurface,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.Bold,
                             letterSpacing = 2.sp
                         )
 
@@ -821,7 +821,7 @@ fun LandingScreen(
                                 color = scheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
                         }
                     }
@@ -850,7 +850,7 @@ fun LandingScreen(
                 onTap = {
                     activeSender = "openclaw"
                     activeReceiver = "hermes"
-                    senderTask = "Hi @hermes, delegate automated task!"
+                    senderTask = "Hi @hermes, delegate automated task"
                     receiverReply = null
                     isReceiverSpeaking = false
                 }
@@ -931,7 +931,7 @@ fun LandingScreen(
                 onTap = {
                     activeSender = "hermes"
                     activeReceiver = "claude"
-                    senderTask = "Hi @claude, start architecture pass!"
+                    senderTask = "Hi @claude, start architecture pass"
                     receiverReply = null
                     isReceiverSpeaking = false
                 }
@@ -956,7 +956,7 @@ fun LandingScreen(
                 onTap = {
                     activeSender = "codex"
                     activeReceiver = "openclaw"
-                    senderTask = "Hi @openclaw, verify automation tests!"
+                    senderTask = "Hi @openclaw, verify automation tests"
                     receiverReply = null
                     isReceiverSpeaking = false
                 }
@@ -1329,12 +1329,12 @@ private fun AgentNodeWithBubble(
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
                     modifier = Modifier
-                        .padding(bottom = 6.dp)
+                        .padding(bottom = 8.dp)
                         .widthIn(max = 168.dp)
                         .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color.Black.copy(alpha = 0.25f))
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -1389,7 +1389,7 @@ private fun AgentNodeWithBubble(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(7.dp),
+                    .padding(8.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -1436,12 +1436,12 @@ private fun AgentNodeWithBubble(
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
                     modifier = Modifier
-                        .padding(top = 6.dp)
+                        .padding(top = 8.dp)
                         .widthIn(max = 168.dp)
                         .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color.Black.copy(alpha = 0.25f))
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -1491,7 +1491,7 @@ fun MicCameraActionTile(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1.0f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
+            dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessMedium
         ),
         label = "MicCameraActionTileScale"

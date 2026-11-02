@@ -301,7 +301,7 @@ fun OnboardingWizard(
                             onRefresh = { refreshMesh() },
                             onCopyPrompt = { prompt ->
                                 clipboardManager.setText(AnnotatedString(prompt))
-                                copiedNotice = "Setup prompt copied!"
+                                copiedNotice = "Setup prompt copied"
                             }
                         )
                         2 -> TokenStep(
@@ -314,7 +314,7 @@ fun OnboardingWizard(
                             onGenerateToken = {},
                             onCopyToken = { t ->
                                 clipboardManager.setText(AnnotatedString(t))
-                                copiedNotice = "Token copied to clipboard!"
+                                copiedNotice = "Token copied to clipboard"
                             }
                         )
                         else -> WelcomeStep(onEnterChamber = onComplete)
@@ -333,7 +333,7 @@ fun OnboardingWizard(
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(StatusGreen.copy(alpha = 0.15f))
                                     .border(1.dp, StatusGreen.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
@@ -501,10 +501,10 @@ private fun WizardTopBar(
 
         // Dynamic Segmented Progress Rail with M3 Morphing Weight
         Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 12.dp, start = 6.dp, end = 6.dp)
+                .padding(top = 12.dp, bottom = 12.dp, start = 8.dp, end = 8.dp)
         ) {
             for (i in 0 until 4) {
                 val isCurrent = i == step
@@ -527,7 +527,7 @@ private fun WizardTopBar(
                     modifier = Modifier
                         .weight(animatedWeight)
                         .height(6.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(animatedColor)
                 )
             }
@@ -573,7 +573,7 @@ private fun WizardBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(WizardBg)
-            .padding(horizontal = 22.dp, vertical = 10.dp)
+            .padding(horizontal = 24.dp, vertical = 12.dp)
     ) {
         // M3E CTA: scheme color roles, spring press physics, circle->scallop
         // morph on press, canonical LoadingIndicator while busy.
@@ -627,7 +627,7 @@ private fun OverviewStep() {
             text = "Initialize Your TALOS Mesh",
             color = WizardText,
             style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.5).sp
             )
         )
@@ -662,7 +662,7 @@ private fun OverviewStep() {
             )
             OverviewElevatedCard(
                 index = 2,
-                title = "Pair with Autonomous Agent Fleet",
+                title = "Pair with autonomous agent fleet",
                 body = "One handshake brings every always-on agent into the mesh.",
                 badgeTint = CyberViolet,
                 badge = {
@@ -676,7 +676,7 @@ private fun OverviewStep() {
             )
             OverviewElevatedCard(
                 index = 3,
-                title = "Real-Time Collaboration & Tool Bus",
+                title = "Real-time collaboration & tool bus",
                 body = "Shared event bus, tool calls and presence in a single stream.",
                 badgeTint = MaterialTheme.colorScheme.primary,
                 badge = {
@@ -715,7 +715,7 @@ private fun OverviewElevatedCard(
             .fillMaxWidth()
             .scale(cardScale)
             .clickable(interactionSource = interactionSource, indication = null) { },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = WizardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Zero shadow pass = 60fps locked
         border = BorderStroke(1.2.dp, metallicBorderBrush())
@@ -828,10 +828,10 @@ private fun MeshStep(
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-            text = "Tailscale Mesh & Host Link",
+            text = "Tailscale mesh & host link",
             color = WizardText,
             fontSize = 24.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             lineHeight = 30.sp
         )
         Spacer(modifier = Modifier.height(6.dp))
@@ -859,7 +859,7 @@ private fun MeshStep(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "1. Agent Setup Prompt (Laptop / Desktop)",
+                    text = "1. Agent setup prompt (laptop / desktop)",
                     color = WizardText,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
@@ -873,10 +873,10 @@ private fun MeshStep(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(16.dp))
                         .background(talosBg)
-                        .border(1.dp, WizardBorder, RoundedCornerShape(14.dp))
-                        .padding(10.dp)
+                        .border(1.dp, WizardBorder, RoundedCornerShape(16.dp))
+                        .padding(12.dp)
                 ) {
                     Text(
                         text = hostSetupPrompt,
@@ -896,7 +896,7 @@ private fun MeshStep(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(16.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Icon(
@@ -905,7 +905,7 @@ private fun MeshStep(
                             modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Copy Agent Prompt", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text(text = "Copy agent prompt", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -925,7 +925,7 @@ private fun MeshStep(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -945,18 +945,18 @@ private fun MeshStep(
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f))
                         ) {
                             Text(
-                                text = "Connected (200 OK)",
+                                text = "Connected (200 ok)",
                                 color = MaterialTheme.colorScheme.tertiary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                     }
                 }
 
                 Text(
-                    text = "Core Tailscale Address:",
+                    text = "Core tailscale address:",
                     color = WizardMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold
@@ -1012,7 +1012,7 @@ private fun MeshStep(
                     },
                     enabled = !isChecking,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(38.dp)
@@ -1035,7 +1035,7 @@ private fun MeshRow(key: String, value: String, last: Boolean = false) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 11.dp)
+                .padding(vertical = 12.dp)
         ) {
             Text(
                 text = key,
@@ -1116,7 +1116,7 @@ private fun TokenStep(
             text = "Host API Key Authorization",
             color = WizardText,
             style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.5).sp
             )
         )
@@ -1132,19 +1132,19 @@ private fun TokenStep(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = WizardSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             border = BorderStroke(1.2.dp, metallicBorderBrush())
         ) {
-            Column(modifier = Modifier.padding(18.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(46.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.20f))
-                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f), RoundedCornerShape(14.dp)),
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f), RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         KeyBadge(tint = MaterialTheme.colorScheme.primary)
@@ -1174,7 +1174,7 @@ private fun TokenStep(
                         inputToken = it
                         onTokenChanged(it.trim())
                     },
-                    label = { Text("API Key (talos_sk_...)") },
+                    label = { Text("API key (talos_sk_...)") },
                     placeholder = { Text("Paste host-generated API key") },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
@@ -1186,7 +1186,7 @@ private fun TokenStep(
                 if (!token.isNullOrBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
                             onClick = {
@@ -1209,7 +1209,7 @@ private fun TokenStep(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isCopied) "Copied!" else "Copy Key",
+                                text = if (isCopied) "Copied" else "Copy Key",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1243,9 +1243,9 @@ private fun TokenStep(
             colors = CardDefaults.cardColors(containerColor = WizardSurface),
             border = BorderStroke(1.dp, talosBorder)
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Generate on Laptop / Computer:",
+                    text = "Generate on laptop / computer:",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -1317,7 +1317,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
             text = "Welcome to TALOS",
             color = WizardText,
             style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.5).sp
             )
         )
@@ -1350,7 +1350,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                 border = BorderStroke(1.dp, StatusGreen.copy(alpha = 0.35f))
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -1374,17 +1374,17 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
 
         // Display all 10 registered agents using AgentEmblemIcon (tint=null) in a clean 2-column grid
         Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             AgentEmblems.chunked(2).forEach { rowPair ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     rowPair.forEach { emblem ->
                         Card(
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = WizardSurfaceAlt),
                             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                             border = BorderStroke(1.2.dp, metallicBorderBrush()),
@@ -1393,7 +1393,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                                    .padding(horizontal = 12.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
@@ -1464,7 +1464,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Enter Agent Chamber",
+                    text = "Enter agent chamber",
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp

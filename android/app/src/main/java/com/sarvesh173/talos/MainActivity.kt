@@ -217,12 +217,13 @@ class MainActivity : ComponentActivity() {
             var gateState by remember { mutableStateOf(ServiceGateState.Checking) }
             var gateNonce by remember { mutableStateOf(0) }
             var manualSetup by remember { mutableStateOf(false) }
+            var failedProbesCount by remember { mutableStateOf(0) }
 
-            // Automatic periodic retry when gate is not ready
+            // Automatic periodic retry when gate is not ready (pause retrying on persistent timeout to prevent screen thrashing)
             LaunchedEffect(gateState) {
-                if (gateState != ServiceGateState.Ready) {
-                    while (gateState != ServiceGateState.Ready) {
-                        kotlinx.coroutines.delay(3000)
+                if (gateState != ServiceGateState.Ready && gateState != ServiceGateState.TailscaleTimeout) {
+                    while (gateState != ServiceGateState.Ready && gateState != ServiceGateState.TailscaleTimeout) {
+                        kotlinx.coroutines.delay(4000)
                         gateNonce++
                     }
                 }
@@ -233,6 +234,7 @@ class MainActivity : ComponentActivity() {
             DisposableEffect(lifecycleOwner) {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                        failedProbesCount = 0
                         gateNonce++
                     }
                 }
@@ -241,7 +243,9 @@ class MainActivity : ComponentActivity() {
             }
 
             LaunchedEffect(gateNonce) {
-                gateState = ServiceGateState.Checking
+                if (gateState != ServiceGateState.TailscaleTimeout) {
+                    gateState = ServiceGateState.Checking
+                }
 
                 val mesh = withContext(Dispatchers.IO) {
                     var status = client.resolveCore()
@@ -252,10 +256,20 @@ class MainActivity : ComponentActivity() {
                     status
                 }
 
-                gateState = when {
-                    mesh != null && mesh.tailscale_enabled != false -> ServiceGateState.Ready
-                    mesh != null && mesh.tailscale_enabled == false -> ServiceGateState.TailscaleRequired
-                    else -> ServiceGateState.NodeUnreachable
+                if (mesh != null && mesh.tailscale_enabled != false) {
+                    failedProbesCount = 0
+                    gateState = ServiceGateState.Ready
+                } else if (mesh != null && mesh.tailscale_enabled == false) {
+                    failedProbesCount = 0
+                    gateState = ServiceGateState.TailscaleRequired
+                } else {
+                    failedProbesCount++
+                    if (failedProbesCount >= 5) {
+                        // After ~20-25 seconds of failed probes, show clear Tailscale inactive diagnostic warning
+                        gateState = ServiceGateState.TailscaleTimeout
+                    } else {
+                        gateState = ServiceGateState.NodeUnreachable
+                    }
                 }
             }
 
@@ -288,7 +302,10 @@ class MainActivity : ComponentActivity() {
                 if (isPaired && gateState != ServiceGateState.Ready && !manualSetup) {
                     ServiceGateScreen(
                         state = gateState,
-                        onRetry = { gateNonce++ },
+                        onRetry = {
+                            failedProbesCount = 0
+                            gateNonce++
+                        },
                         initialUrl = client.baseUrl,
                         initialToken = client.apiToken,
                         onUpdateUrl = { newUrl ->
@@ -300,7 +317,10 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         onManualSetup = {
                             manualSetup = true
-                            appScreen = "wizard"
+                            appScreen = "main"
+                        },
+                        onToggleTheme = {
+                            client.toggleTheme(isCurrentlyDark)
                         }
                     )
                 } else {

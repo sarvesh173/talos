@@ -2953,3 +2953,37 @@ Full-scale design craft pass applying `unslop`, `ai-design-fix`, and `compose-ap
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21106` and `versionName` to `"2.11.06"`.
+
+---
+
+## 135. Apple Loading Design, Tailscale Inactive Diagnostic Timeout, Host API Key Visibility & Theme System Fix
+
+Comprehensive system upgrade resolving connection gate design, Tailscale diagnostic feedback, credential security, and theme switching:
+
+### 1. Apple-Standard Loading & Activity Indicator Design
+- Replaced giant 130dp/88dp glowing circular orb with a 64dp Apple squircle glass emblem (`RoundedCornerShape(16.dp)`) featuring subtle specular glass borders (`0.8dp`).
+- Added a refined Apple Activity Indicator (26dp quiet spinner) and a sleek 3dp horizontal indeterminate progress capsule with a fluid specular gradient sweep.
+
+### 2. Tailscale Inactive Diagnostic Timeout (30s)
+- Replaced infinite 3-second resetting loop in `MainActivity.kt` with persistent failure counter tracking (`failedProbesCount`).
+- After ~20-25 seconds of unsuccessful connection attempts, transitions to a dedicated `ServiceGateState.TailscaleTimeout` diagnostic card:
+  - Clear diagnosis: *"Tailscale may be inactive or disconnected. Please check that Tailscale is connected on both this phone and your host machine."*
+  - Direct *"Open Tailscale app"* action button launching the native Tailscale VPN client.
+  - Manual escape hatch: *"Continue to app / Setup"* allowing navigation to settings without getting locked out.
+
+### 3. Host API Key Password Visibility Toggle
+- Added password show/hide visibility toggle to the Host API Key field (`PasswordVisualTransformation()` by default) with an Eye / EyeOff icon button.
+- Protects sensitive daemon credentials from being displayed in plain text on screen.
+
+### 4. Authoritative AMOLED Black Default & Theme System Fix
+- Restored `APPLE_AMOLED_BLACK` as authoritative system default across `TalosClient` and `Theme.kt`, removing forced Paper White defaults.
+- Added dedicated color schemes for `APPLE_MIDNIGHT` (deep navy `#0B0E14`), `APPLE_AMOLED_BLACK` (true pitch black `#000000`), `APPLE_DARK_SLATE` (Space Gray `#1C1C1E`), `APPLE_PURE_WHITE` (Soft White `#F6F6F9`), and `APPLE_PAPER_WHITE` (warm parchment cream `#F9F5EC`).
+- Overhauled `LookAndFeelScreen.kt` card selection logic to bind directly to `currentPresetName` so tapping any background card immediately applies both the preset and the background color.
+- Added top header on `ServiceGateScreen` with Theme Toggle (Sun/Moon) and Settings buttons so users can change themes directly even from the connection gate.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass on `ServiceGate.kt`: 0 accessibility errors, 0 warnings.
+  - Python AST syntax and brace check pass across all modified Kotlin files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21107` and `versionName` to `"2.11.07"`.

@@ -448,7 +448,7 @@ fun LookAndFeelScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    val isWhiteSelected = lightBg == "white" || lightBg == "default"
+                    val isWhiteSelected = currentPresetName == MaterialThemePreset.APPLE_PURE_WHITE.name || (currentPresetName != MaterialThemePreset.APPLE_PAPER_WHITE.name && lightBg != "paper_white")
                     BackgroundOptionCard(
                         title = "Soft white",
                         previewColor = Color(0xFFF5F5F7),
@@ -462,7 +462,7 @@ fun LookAndFeelScreen(
                         }
                     )
 
-                    val isPaperSelected = lightBg == "paper_white"
+                    val isPaperSelected = currentPresetName == MaterialThemePreset.APPLE_PAPER_WHITE.name
                     BackgroundOptionCard(
                         title = "Paper white",
                         previewColor = Color(0xFFF6F0E0),
@@ -482,7 +482,7 @@ fun LookAndFeelScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    val isMidnightSelected = darkBg == "midnight"
+                    val isMidnightSelected = currentPresetName == MaterialThemePreset.APPLE_MIDNIGHT.name
                     DarkBackgroundOptionCard(
                         title = "Midnight",
                         canvasColor = Color(0xFF0B0E14),
@@ -497,7 +497,9 @@ fun LookAndFeelScreen(
                         }
                     )
 
-                    val isBlackSelected = darkBg == "black" || darkBg == "default"
+                    val isBlackSelected = currentPresetName == MaterialThemePreset.APPLE_AMOLED_BLACK.name ||
+                            currentPresetName == MaterialThemePreset.APPLE_CUPERTINO.name ||
+                            (currentPresetName != MaterialThemePreset.APPLE_MIDNIGHT.name && currentPresetName != MaterialThemePreset.APPLE_DARK_SLATE.name && currentPresetName != MaterialThemePreset.APPLE_GRAPHITE.name && currentPresetName != MaterialThemePreset.APPLE_PAPER_WHITE.name)
                     DarkBackgroundOptionCard(
                         title = "Black",
                         canvasColor = Color(0xFF000000),
@@ -512,7 +514,7 @@ fun LookAndFeelScreen(
                         }
                     )
 
-                    val isGraySelected = darkBg == "gray"
+                    val isGraySelected = currentPresetName == MaterialThemePreset.APPLE_DARK_SLATE.name || currentPresetName == MaterialThemePreset.APPLE_GRAPHITE.name
                     DarkBackgroundOptionCard(
                         title = "Gray",
                         canvasColor = Color(0xFF1C1C1E),

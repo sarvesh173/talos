@@ -252,12 +252,12 @@ fun hueFromAccentName(accentName: String, isDark: Boolean): Float {
 enum class MaterialThemePreset(val displayName: String, val seedColor: Color) {
     APPLE_AMOLED_BLACK("AMOLED True Black", Color(0xFF000000)),
     APPLE_DARK_SLATE("Dark Space Gray", Color(0xFF1C1C1E)),
+    APPLE_MIDNIGHT("Midnight Navy", Color(0xFF0B0E14)),
     APPLE_PAPER_WHITE("Paper White", Color(0xFFF6F0E0)),
     APPLE_PURE_WHITE("Soft White", Color(0xFFF5F5F7)),
 
     // Aliases to avoid any Deserialization crash if stored in SharedPreferences / config
     APPLE_CUPERTINO("AMOLED True Black", Color(0xFF000000)),
-    APPLE_MIDNIGHT("Dark Space Gray", Color(0xFF1C1C1E)),
     APPLE_GRAPHITE("Dark Space Gray", Color(0xFF1C1C1E)),
     PURPLE_IRIS("AMOLED True Black", Color(0xFF000000)),
     COBALT_OCEAN("AMOLED True Black", Color(0xFF000000)),
@@ -284,35 +284,84 @@ fun getPresetColorScheme(preset: MaterialThemePreset, isDark: Boolean): ColorSch
                     surfaceContainerLow = Color(0xFF101012),
                     surfaceContainer = Color(0xFF1C1C1E),
                     surfaceContainerHigh = Color(0xFF2C2C2E),
-                    surfaceContainerHighest = Color(0xFF3A3A3C)
+                    surfaceContainerHighest = Color(0xFF3A3A3C),
+                    onBackground = Color(0xFFFFFFFF),
+                    onSurface = Color(0xFFFFFFFF),
+                    outline = Color(0xFF2C2C2E),
+                    outlineVariant = Color(0xFF1C1C1E)
                 )
             } else {
                 LightColorScheme.copy(
-                    background = Color(0xFFF6F6F9),
+                    background = Color(0xFFFFFFFF),
                     surface = Color(0xFFFFFFFF),
-                    surfaceContainer = Color(0xFFF2F2F7)
+                    surfaceContainerLowest = Color(0xFFFFFFFF),
+                    surfaceContainerLow = Color(0xFFF8F9FA),
+                    surfaceContainer = Color(0xFFF2F2F7),
+                    surfaceContainerHigh = Color(0xFFE5E5EA),
+                    surfaceContainerHighest = Color(0xFFD1D1D6),
+                    onBackground = Color(0xFF000000),
+                    onSurface = Color(0xFF000000)
+                )
+            }
+        }
+        MaterialThemePreset.APPLE_MIDNIGHT -> {
+            if (isDark) {
+                // Midnight Navy (#0B0E14, cards #161B26, border #242E42)
+                DarkColorScheme.copy(
+                    background = Color(0xFF0B0E14),
+                    surface = Color(0xFF0B0E14),
+                    surfaceContainerLowest = Color(0xFF07090E),
+                    surfaceContainerLow = Color(0xFF10141E),
+                    surfaceContainer = Color(0xFF161B26),
+                    surfaceContainerHigh = Color(0xFF1E2536),
+                    surfaceContainerHighest = Color(0xFF283248),
+                    onBackground = Color(0xFFF0F4FC),
+                    onSurface = Color(0xFFF0F4FC),
+                    outline = Color(0xFF2E3A52),
+                    outlineVariant = Color(0xFF1E2536)
+                )
+            } else {
+                LightColorScheme.copy(
+                    background = Color(0xFFF0F4F8),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceContainerLowest = Color(0xFFFFFFFF),
+                    surfaceContainerLow = Color(0xFFF4F7FB),
+                    surfaceContainer = Color(0xFFE8EEF5),
+                    surfaceContainerHigh = Color(0xFFDCE4EE),
+                    surfaceContainerHighest = Color(0xFFCCD6E2),
+                    onBackground = Color(0xFF0F172A),
+                    onSurface = Color(0xFF0F172A)
                 )
             }
         }
         MaterialThemePreset.APPLE_DARK_SLATE,
-        MaterialThemePreset.APPLE_MIDNIGHT,
         MaterialThemePreset.APPLE_GRAPHITE -> {
             if (isDark) {
-                // Space Gray (#121214)
+                // Space Gray (#1C1C1E, cards #2C2C2E)
                 DarkColorScheme.copy(
-                    background = Color(0xFF121214),
-                    surface = Color(0xFF121214),
-                    surfaceContainerLowest = Color(0xFF0C0C0E),
-                    surfaceContainerLow = Color(0xFF18181A),
-                    surfaceContainer = Color(0xFF222226),
-                    surfaceContainerHigh = Color(0xFF2C2C30),
-                    surfaceContainerHighest = Color(0xFF38383E)
+                    background = Color(0xFF1C1C1E),
+                    surface = Color(0xFF1C1C1E),
+                    surfaceContainerLowest = Color(0xFF141416),
+                    surfaceContainerLow = Color(0xFF222226),
+                    surfaceContainer = Color(0xFF2C2C2E),
+                    surfaceContainerHigh = Color(0xFF3A3A3E),
+                    surfaceContainerHighest = Color(0xFF48484E),
+                    onBackground = Color(0xFFF2F2F7),
+                    onSurface = Color(0xFFF2F2F7),
+                    outline = Color(0xFF48484E),
+                    outlineVariant = Color(0xFF38383E)
                 )
             } else {
                 LightColorScheme.copy(
                     background = Color(0xFFF2F2F7),
                     surface = Color(0xFFFFFFFF),
-                    surfaceContainer = Color(0xFFE5E5EA)
+                    surfaceContainerLowest = Color(0xFFFFFFFF),
+                    surfaceContainerLow = Color(0xFFF8F8FA),
+                    surfaceContainer = Color(0xFFE5E5EA),
+                    surfaceContainerHigh = Color(0xFFD8D8DE),
+                    surfaceContainerHighest = Color(0xFFC7C7CC),
+                    onBackground = Color(0xFF1C1C1E),
+                    onSurface = Color(0xFF1C1C1E)
                 )
             }
         }

@@ -6,38 +6,48 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.core.motion.MotionTokens
-
 import kotlinx.coroutines.launch
 
 enum class ServiceGateState {
     Checking,
     Ready,
     TailscaleRequired,
-    NodeUnreachable
+    NodeUnreachable,
+    TailscaleTimeout
 }
 
 private fun systemAnimationsEnabled(context: Context): Boolean = runCatching {
@@ -57,19 +67,21 @@ fun ServiceGateScreen(
     initialToken: String = "",
     onUpdateUrl: ((String) -> Unit)? = null,
     onVerifyAndConnect: (suspend (String, String) -> Pair<Boolean, String>)? = null,
-    onManualSetup: (() -> Unit)? = null
+    onManualSetup: (() -> Unit)? = null,
+    onToggleTheme: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
+    val isDark = LocalIsDark.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val motionOn = remember { systemAnimationsEnabled(context) }
     val scrollState = rememberScrollState()
 
-    val iconScale = remember { Animatable(0.8f) }
+    val iconScale = remember { Animatable(0.9f) }
 
     LaunchedEffect(state) {
         if (motionOn) {
-            iconScale.snapTo(0.8f)
+            iconScale.snapTo(0.9f)
             iconScale.animateTo(1f, MotionTokens.fastSpatial())
         } else {
             iconScale.snapTo(1f)
@@ -79,9 +91,11 @@ fun ServiceGateScreen(
     val checking = state == ServiceGateState.Checking
     val blocked = state == ServiceGateState.TailscaleRequired
     val unreachable = state == ServiceGateState.NodeUnreachable
+    val timeout = state == ServiceGateState.TailscaleTimeout
 
     var customEndpoint by remember(initialUrl) { mutableStateOf(initialUrl) }
     var customApiKey by remember(initialToken) { mutableStateOf(initialToken) }
+    var isKeyVisible by remember { mutableStateOf(false) }
     var verifyError by remember { mutableStateOf<String?>(null) }
     var isVerifying by remember { mutableStateOf(false) }
 
@@ -92,77 +106,129 @@ fun ServiceGateScreen(
             .statusBarsPadding()
             .navigationBarsPadding()
             .imePadding()
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(scrollState)
         ) {
-            // Breathing halo container
-            Box(contentAlignment = Alignment.Center) {
-                if (motionOn) {
-                    val halo = rememberInfiniteTransition(label = "gate_halo")
-                    val pulse by halo.animateFloat(
-                        initialValue = 0.95f,
-                        targetValue = 1.05f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1800),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "gate_halo_scale"
-                    )
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Transparent,
+            // Top Bar: Brand + Quick Theme & Settings Access
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
                         modifier = Modifier
-                            .size(130.dp)
-                            .scale(pulse)
-                            .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        (if (blocked || unreachable) scheme.error else scheme.primary).copy(alpha = 0.20f),
-                                        Color.Transparent
-                                    )
-                                ),
-                                shape = CircleShape
-                            )
-                    ) {}
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(if (checking) scheme.primary else if (timeout || unreachable || blocked) Color(0xFFFF9F0A) else Color(0xFF30D158))
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "TALOS MESH",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        color = scheme.onSurfaceVariant
+                    )
                 }
 
-                Surface(
-                    shape = CircleShape,
-                    color = if (blocked || unreachable) scheme.errorContainer else scheme.surfaceContainerHigh,
-                    border = androidx.compose.foundation.BorderStroke(1.2.dp, metallicBorderBrush()),
-                    modifier = Modifier
-                        .size(88.dp)
-                        .graphicsLayer {
-                            scaleX = iconScale.value
-                            scaleY = iconScale.value
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (onToggleTheme != null) {
+                        Surface(
+                            onClick = onToggleTheme,
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA),
+                            border = androidx.compose.foundation.BorderStroke(
+                                0.8.dp,
+                                if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f)
+                            ),
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                    contentDescription = "Toggle theme",
+                                    tint = scheme.onSurface,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (checking) {
-                            CircularProgressIndicator(
-                                color = scheme.primary,
-                                modifier = Modifier.size(36.dp),
-                                strokeWidth = 3.dp
-                            )
-                        } else {
-                            Icon(
-                                imageVector = when {
-                                    blocked -> Icons.Default.Lock
-                                    unreachable -> Icons.Default.Router
-                                    else -> Icons.Default.Router
-                                },
-                                contentDescription = null,
-                                tint = if (blocked || unreachable) scheme.onErrorContainer else scheme.primary,
-                                modifier = Modifier.size(38.dp)
-                            )
+                    }
+
+                    if (onManualSetup != null) {
+                        Surface(
+                            onClick = onManualSetup,
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA),
+                            border = androidx.compose.foundation.BorderStroke(
+                                0.8.dp,
+                                if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f)
+                            ),
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = scheme.onSurface,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Apple-Standard Squircle Glass Status Emblem (64dp, 16dp radius)
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = if (isDark) Color(0xFF1C1C1E) else Color.White,
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.08f)
+                ),
+                modifier = Modifier
+                    .size(64.dp)
+                    .graphicsLayer {
+                        scaleX = iconScale.value
+                        scaleY = iconScale.value
+                    }
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (checking) {
+                        // Apple-style quiet activity indicator
+                        CircularProgressIndicator(
+                            color = scheme.primary,
+                            modifier = Modifier.size(26.dp),
+                            strokeWidth = 2.4.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = when {
+                                state == ServiceGateState.Ready -> Icons.Default.Check
+                                blocked -> Icons.Default.Lock
+                                timeout -> Icons.Default.WarningAmber
+                                else -> Icons.Default.Router
+                            },
+                            contentDescription = null,
+                            tint = when {
+                                state == ServiceGateState.Ready -> Color(0xFF30D158)
+                                timeout -> Color(0xFFFF9F0A)
+                                blocked -> Color(0xFFFF453A)
+                                else -> scheme.primary
+                            },
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
             }
@@ -172,10 +238,11 @@ fun ServiceGateScreen(
             // Title
             Text(
                 text = when {
-                    checking -> "Verifying Mesh Connection"
-                    blocked -> "Tailscale Required On Host"
-                    unreachable -> "Mesh Node Unreachable"
-                    else -> "Connection Ready"
+                    checking -> "Verifying mesh connection"
+                    timeout -> "Tailscale may be inactive"
+                    blocked -> "Tailscale required on host"
+                    unreachable -> "Mesh node unreachable"
+                    else -> "Connection ready"
                 },
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -189,36 +256,120 @@ fun ServiceGateScreen(
             Text(
                 text = when {
                     checking -> "Probing TALOS Core daemon across Tailscale mesh..."
+                    timeout -> "No response after multiple connection attempts. Please verify Tailscale is running on both this phone and your host computer."
                     blocked -> "The core reports Tailscale overlay is inactive on the host. Ensure the computer has Tailscale active."
-                    unreachable -> "Could not connect to TALOS Core. Enter the computer's Tailscale IP or tap below to retry."
+                    unreachable -> "Could not connect to TALOS Core. Enter the computer's Tailscale IP or tap retry below."
                     else -> ""
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier.padding(horizontal = 12.dp)
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(16.dp))
 
-            // Auto-retrying status pill
-            if (!checking) {
-                MetalStatusPill(
-                    text = "Auto-Retrying Every 3s",
-                    isActive = false,
-                    activeColor = StatusGreen,
-                    inactiveColor = StatusAmber
-                )
+            // Apple Progress Capsule (3dp height with gentle indeterminate sweep)
+            if (checking) {
+                Box(
+                    modifier = Modifier
+                        .width(160.dp)
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f))
+                ) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "apple_progress")
+                    val sweep by infiniteTransition.animateFloat(
+                        initialValue = -0.5f,
+                        targetValue = 1.5f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1400, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart
+                        ),
+                        label = "apple_progress_sweep"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(0.35f)
+                            .align(Alignment.CenterStart)
+                            .graphicsLayer {
+                                translationX = sweep * 160.dp.toPx()
+                            }
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color.Transparent,
+                                        scheme.primary,
+                                        scheme.primary,
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+                }
             } else {
                 MetalStatusPill(
-                    text = "Probing Endpoints...",
-                    isActive = true,
+                    text = if (timeout) "Tailscale Check Recommended" else "Auto-Retrying Connection",
+                    isActive = false,
                     activeColor = StatusGreen,
-                    inactiveColor = StatusAmber
+                    inactiveColor = if (timeout) Color(0xFFFF9F0A) else StatusAmber
                 )
             }
 
             Spacer(Modifier.height(20.dp))
+
+            // Tailscale Diagnostic Card (Shows when timed out or blocked)
+            if (timeout || blocked) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        Color(0xFFFF9F0A).copy(alpha = 0.40f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.WarningAmber,
+                                contentDescription = null,
+                                tint = Color(0xFFFF9F0A),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "Tailscale connection checklist",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = scheme.onSurface
+                            )
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "1. Confirm Tailscale VPN is turned ON on this phone.\n2. Confirm Tailscale is running on your host computer.\n3. Make sure the Tailscale IP below matches your host's 100.x.y.z address.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = scheme.onSurfaceVariant,
+                            lineHeight = 18.sp
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        MetalButton(
+                            text = "Open Tailscale app",
+                            onClick = { launchTailscale(context) },
+                            leadingIcon = Icons.AutoMirrored.Filled.OpenInNew,
+                            variant = MetalButtonVariant.Primary,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
 
             // Direct Address Configuration Card
             MetalCard(modifier = Modifier.fillMaxWidth()) {
@@ -228,7 +379,8 @@ fun ServiceGateScreen(
                     fontWeight = FontWeight.Bold,
                     color = scheme.onSurface
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = customEndpoint,
                     onValueChange = { customEndpoint = it; verifyError = null },
@@ -237,15 +389,29 @@ fun ServiceGateScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(Modifier.height(8.dp))
+
+                // API Key with Password Visibility Toggle (Hidden Button)
                 OutlinedTextField(
                     value = customApiKey,
                     onValueChange = { customApiKey = it; verifyError = null },
-                    label = { Text("Host API Key (talos_sk_...)") },
+                    label = { Text("Host API key (talos_sk_...)") },
                     placeholder = { Text("Paste key from laptop") },
                     singleLine = true,
+                    visualTransformation = if (isKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { isKeyVisible = !isKeyVisible }) {
+                            Icon(
+                                imageVector = if (isKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (isKeyVisible) "Hide API key" else "Show API key",
+                                tint = scheme.onSurfaceVariant
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 if (verifyError != null) {
                     Spacer(Modifier.height(8.dp))
                     Text(
@@ -254,9 +420,11 @@ fun ServiceGateScreen(
                         color = scheme.error
                     )
                 }
+
                 Spacer(Modifier.height(12.dp))
+
                 MetalButton(
-                    text = if (isVerifying) "Verifying..." else "Verify & Connect to Laptop",
+                    text = if (isVerifying) "Verifying..." else "Verify & connect to laptop",
                     isLoading = isVerifying,
                     onClick = {
                         if (customEndpoint.isNotBlank() && onVerifyAndConnect != null) {
@@ -288,7 +456,7 @@ fun ServiceGateScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetalButton(
-                    text = if (checking) "Checking Connection..." else "Retry Connection",
+                    text = if (checking) "Checking connection..." else "Retry connection",
                     onClick = onRetry,
                     isLoading = checking,
                     leadingIcon = Icons.Default.Refresh,
@@ -296,12 +464,21 @@ fun ServiceGateScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                if (blocked || unreachable) {
+                if (blocked || unreachable || timeout) {
                     MetalButton(
-                        text = "Open Tailscale App",
+                        text = "Open Tailscale app",
                         onClick = { launchTailscale(context) },
                         leadingIcon = Icons.AutoMirrored.Filled.OpenInNew,
                         variant = MetalButtonVariant.Tonal,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                if (onManualSetup != null) {
+                    MetalButton(
+                        text = "Continue to app / Setup",
+                        onClick = onManualSetup,
+                        variant = MetalButtonVariant.Outlined,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

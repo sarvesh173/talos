@@ -53,13 +53,13 @@ fun ContextTelemetryScreen(client: TalosClient) {
         ) {
             Column {
                 Text(
-                    text = "Context Telemetry",
+                    text = "Context telemetry",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Live 1M Token Saturation & Velocity",
+                    text = "Live 1M token saturation & velocity",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -80,7 +80,7 @@ fun ContextTelemetryScreen(client: TalosClient) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Hermes Agent Window",
+                        text = "Hermes agent window",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -110,27 +110,27 @@ fun ContextTelemetryScreen(client: TalosClient) {
         // Room Breakdown Card
         MetalCard(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "Active Chamber Context Breakdown",
+                text = "Active chamber context breakdown",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("System Prompt Tokens:", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("System prompt tokens:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${roomBreakdown?.systemTokens ?: 0}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Message History Tokens:", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Message history tokens:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${roomBreakdown?.historyTokens ?: 0}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Completion Tokens:", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Completion tokens:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${roomBreakdown?.completionTokens ?: 0}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Usage Saturation:", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text("Usage saturation:", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Text("%.2f%%".format((roomBreakdown?.usagePct ?: 0f) * 100), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
         }

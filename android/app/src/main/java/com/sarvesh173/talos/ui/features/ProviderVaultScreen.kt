@@ -49,13 +49,13 @@ fun ProviderVaultScreen(client: TalosClient) {
         ) {
             Column {
                 Text(
-                    text = "Provider Vault",
+                    text = "Provider vault",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Encrypted 0600 Core Secret Storage",
+                    text = "Encrypted 0600 core secret storage",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -146,14 +146,14 @@ fun ProviderVaultScreen(client: TalosClient) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
             title = {
-                Text(text = "Add Custom Provider", color = MaterialTheme.colorScheme.onSurface)
+                Text(text = "Add custom provider", color = MaterialTheme.colorScheme.onSurface)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Provider Name (e.g. OpenRouter)") },
+                        label = { Text("Provider name (e.g. OpenRouter)") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
@@ -165,7 +165,7 @@ fun ProviderVaultScreen(client: TalosClient) {
                     OutlinedTextField(
                         value = apiKey,
                         onValueChange = { apiKey = it },
-                        label = { Text("API Key") },
+                        label = { Text("API key") },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

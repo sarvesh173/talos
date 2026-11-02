@@ -66,15 +66,15 @@ fun CachingScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
+                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
                             .applePressable(0.94f) { onBack() },
                         contentAlignment = Alignment.Center
                     ) {
@@ -85,10 +85,10 @@ fun CachingScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Caching",
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.25).sp,
                         color = if (isDark) Color.White else Color(0xFF1D1D1F)
@@ -109,16 +109,16 @@ fun CachingScreen(
             // 1. CACHED ON THIS DEVICE
             // -----------------------------------------------------------------
             Text(
-                text = "CACHED ON THIS DEVICE",
-                fontSize = 11.5.sp,
+                text = "Cached on this device",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
@@ -128,7 +128,7 @@ fun CachingScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -145,7 +145,7 @@ fun CachingScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
-                                    text = "Chat List",
+                                    text = "Chat list",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     letterSpacing = (-0.2).sp,
@@ -169,14 +169,14 @@ fun CachingScreen(
                     HorizontalDivider(
                         color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
                         thickness = 0.5.dp,
-                        modifier = Modifier.padding(start = 58.dp)
+                        modifier = Modifier.padding(start = 56.dp)
                     )
 
                     // Messages Row
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -222,16 +222,16 @@ fun CachingScreen(
             // 2. CLEAR CACHE ACTION (Tactile Apple Pressable Card)
             // -----------------------------------------------------------------
             Text(
-                text = "STORAGE & PURGE",
-                fontSize = 11.5.sp,
+                text = "Storage & purge",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = (-0.15).sp,
                 color = talosTextMuted,
-                modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
                 modifier = Modifier
@@ -247,15 +247,14 @@ fun CachingScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Box(
                         modifier = Modifier
                             .size(30.dp)
-                            .clip(RoundedCornerShape(7.dp))
-                            .background(appleRed.copy(alpha = 0.15f)),
+                            .clip(RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -265,10 +264,10 @@ fun CachingScreen(
                             modifier = Modifier.size(18.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Clear Local Device Cache",
-                        fontSize = 15.sp,
+                        text = "Clear local device cache",
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.2).sp,
                         color = appleRed
@@ -278,8 +277,8 @@ fun CachingScreen(
 
             Text(
                 text = "Purges locally stored offline message transcripts and temporary thumbnails. Your remote gateway conversations will resynchronize when connected.",
-                fontSize = 12.5.sp,
-                lineHeight = 17.sp,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
                 color = talosTextMuted,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
             )

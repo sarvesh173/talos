@@ -2733,3 +2733,26 @@ Audited and hardened `ChatPreferencesScreen.kt`, `SecurityScreen.kt`, and `Notif
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21097` and `versionName` to `"2.10.97"`.
+
+---
+
+## 126. Secondary Suite Zero-Warning Audit (Fleet, Vault, Telemetry & Caching)
+
+Audited and hardened `AgentFleetScreen.kt`, `ProviderVaultScreen.kt`, `ContextTelemetryScreen.kt`, and `CachingScreen.kt` using `enmerasoftware/ai-design-check`:
+
+### 1. Spatial Grid & Corner Radii
+- All dialogue and action cards aligned to canonical `20.dp` / `12.dp` / `8.dp` corner radii scale.
+- Padding and internal item margins mapped to exact 4px/8px grid (`16.dp`, `12.dp`, `8.dp`).
+
+### 2. Quiet Sentence Case Architecture
+- Eliminated loud Title Case and tracked uppercase headers across all 4 screens:
+  - `"Agent fleet"`, `"Supported models:"`
+  - `"Provider vault"`, `"Encrypted 0600 core secret storage"`, `"Add custom provider"`
+  - `"Context telemetry"`, `"Live 1M token saturation & velocity"`, `"Hermes agent window"`, `"Active chamber context breakdown"`
+  - `"Cached on this device"`, `"Chat list"`, `"Storage & purge"`, `"Clear local device cache"`
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings across all 4 screens.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21098` and `versionName` to `"2.10.98"`.

@@ -58,7 +58,7 @@ fun AgentFleetScreen(client: TalosClient) {
         ) {
             Column {
                 Text(
-                    text = "Agent Fleet",
+                    text = "Agent fleet",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -167,7 +167,7 @@ fun AgentFleetScreen(client: TalosClient) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Supported Models:",
+                        text = "Supported models:",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -193,7 +193,7 @@ fun AgentFleetScreen(client: TalosClient) {
                     Text("Close", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                 }
             },
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(20.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }

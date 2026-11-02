@@ -56,7 +56,7 @@ fun ModuleActivityHub(
         listOf(
             ActivityModuleItem(
                 id = "canvas",
-                title = "Multi-Agent Canvas",
+                title = "Multi-agent canvas",
                 subtitle = "Spatial mesh of parallel running agents and child subagents",
                 icon = TalosHub,
                 category = "Intelligence & Coding",
@@ -66,7 +66,7 @@ fun ModuleActivityHub(
             ),
             ActivityModuleItem(
                 id = "diff",
-                title = "Code & File Changes",
+                title = "Code & file changes",
                 subtitle = "Unified syntax-colored diffs for git working tree",
                 icon = TalosCode,
                 category = "Intelligence & Coding",
@@ -75,7 +75,7 @@ fun ModuleActivityHub(
             ),
             ActivityModuleItem(
                 id = "cli_manager",
-                title = "Multi-CLI Governance",
+                title = "Multi-CLI governance",
                 subtitle = "OmniRush, OpenCode, Codex & command quota sliders",
                 icon = TalosTerminal,
                 category = "Intelligence & Coding",
@@ -84,7 +84,7 @@ fun ModuleActivityHub(
             ),
             ActivityModuleItem(
                 id = "whiteboard",
-                title = "OpenBoard Whiteboard",
+                title = "OpenBoard whiteboard",
                 subtitle = "Touch drawing canvas with dot grid and architectural sketch attachments",
                 icon = TalosBoard,
                 category = "Creative & Canvas",
@@ -93,7 +93,7 @@ fun ModuleActivityHub(
             ),
             ActivityModuleItem(
                 id = "gallery",
-                title = "AI Image Studio",
+                title = "AI image studio",
                 subtitle = "Bento gallery of generated images with pinch-zoom lightbox",
                 icon = TalosSparkle,
                 category = "Creative & Canvas",
@@ -101,7 +101,7 @@ fun ModuleActivityHub(
             ),
             ActivityModuleItem(
                 id = "browser",
-                title = "Obscura Browser",
+                title = "Obscura browser",
                 subtitle = "Anti-detection web view with session tabs and script injection",
                 icon = TalosBrowser,
                 category = "System & Gateway",
@@ -127,7 +127,7 @@ fun ModuleActivityHub(
                 title = {
                     Column {
                         Text(
-                            text = "Activity Hub",
+                            text = "Activity hub",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -207,7 +207,7 @@ private fun ActivityCard(
     val interactionSource = remember { MutableInteractionSource() }
     // M3E disabled state: 38% content opacity, no press scale, muted border.
     Surface(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         color = if (enabled) MaterialTheme.colorScheme.surfaceContainerHigh
         else MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.outlineVariant
@@ -261,11 +261,11 @@ private fun ActivityCard(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(module.color.copy(alpha = 0.2f))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = module.badge,
-                                fontSize = 9.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = module.color
                             )

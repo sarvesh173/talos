@@ -64,7 +64,7 @@ fun CodeDiffViewer(
                 title = {
                     Column {
                         Text(
-                            text = "Code & File Changes",
+                            text = "Code & file changes",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -102,7 +102,7 @@ fun CodeDiffViewer(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             val fullDiff = currentFile.lines.joinToString("\n") { it.content }
                             clipboardManager.setText(AnnotatedString(fullDiff))
-                            Toast.makeText(context, "File diff copied to clipboard!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "File diff copied to clipboard", Toast.LENGTH_SHORT).show()
                         }) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
@@ -168,7 +168,7 @@ fun CodeDiffViewer(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Working Tree Clean",
+                            text = "Working tree clean",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface

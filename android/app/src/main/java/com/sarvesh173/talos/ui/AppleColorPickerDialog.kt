@@ -126,7 +126,7 @@ fun AppleColorPickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Color Spectrum",
+                        text = "Color spectrum",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.25).sp,
@@ -135,7 +135,7 @@ fun AppleColorPickerDialog(
 
                     IconButton(
                         onClick = onDismissRequest,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -167,21 +167,21 @@ fun AppleColorPickerDialog(
                         Box(
                             modifier = Modifier
                                 .size(width = 72.dp, height = 36.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(initialColor)
                                 .border(
                                     BorderStroke(
                                         0.8.dp,
                                         if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.10f)
                                     ),
-                                    RoundedCornerShape(10.dp)
+                                    RoundedCornerShape(12.dp)
                                 )
                         )
                     }
 
                     // Hex Display Pill
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f),
                         border = BorderStroke(
                             0.6.dp,
@@ -218,7 +218,7 @@ fun AppleColorPickerDialog(
                                 imeAction = ImeAction.Done
                             ),
                             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     }
 
@@ -235,14 +235,14 @@ fun AppleColorPickerDialog(
                         Box(
                             modifier = Modifier
                                 .size(width = 72.dp, height = 36.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(currentColor)
                                 .border(
                                     BorderStroke(
                                         0.8.dp,
                                         if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f)
                                     ),
-                                    RoundedCornerShape(10.dp)
+                                    RoundedCornerShape(12.dp)
                                 )
                         )
                     }
@@ -374,7 +374,7 @@ fun AppleColorPickerDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(30.dp)
-                        .clip(RoundedCornerShape(15.dp))
+                        .clip(RoundedCornerShape(16.dp))
                         .background(
                             Brush.horizontalGradient(
                                 listOf(Color.Black, fullBrightnessColor)
@@ -385,7 +385,7 @@ fun AppleColorPickerDialog(
                                 0.6.dp,
                                 if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.10f)
                             ),
-                            RoundedCornerShape(15.dp)
+                            RoundedCornerShape(16.dp)
                         )
                 ) {
                     Slider(
@@ -458,7 +458,7 @@ fun AppleColorPickerDialog(
                 // -------------------------------------------------------------
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (onAddToPalette != null) {
                         OutlinedButton(
@@ -511,7 +511,7 @@ fun AppleColorPickerDialog(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Apply Shade",
+                            text = "Apply shade",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -558,7 +558,7 @@ private fun RgbChannelRow(
         )
 
         Surface(
-            shape = RoundedCornerShape(6.dp),
+            shape = RoundedCornerShape(8.dp),
             color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f),
             border = BorderStroke(
                 0.6.dp,

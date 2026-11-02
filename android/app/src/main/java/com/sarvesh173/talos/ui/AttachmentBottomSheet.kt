@@ -77,7 +77,7 @@ fun AttachmentBottomSheet(
             bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, stream)
             val sizeKb = stream.size() / 1024
             onSendText("[Live Camera Snapshot Attached • ${bitmap.width}x${bitmap.height} • ${sizeKb}KB • Tailscale Verified]")
-            Toast.makeText(context, "Captured photo attached to context!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Captured photo attached to context", Toast.LENGTH_SHORT).show()
             onDismiss()
         }
     }
@@ -158,7 +158,7 @@ fun AttachmentBottomSheet(
                 .padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
             Text(
-                text = "Attach to Context",
+                text = "Attach to context",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -180,7 +180,7 @@ fun AttachmentBottomSheet(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -263,7 +263,7 @@ fun AttachmentBottomSheet(
 
                 AttachmentTile(
                     icon = TalosSparkle,
-                    title = "AI Image",
+                    title = "AI image",
                     color = MaterialTheme.colorScheme.tertiary
                 ) {
                     showImageGenDialog = true
@@ -278,7 +278,7 @@ fun AttachmentBottomSheet(
             ) {
                 AttachmentTile(
                     icon = TalosCode,
-                    title = "Source Diff",
+                    title = "Source diff",
                     color = StatusGreen
                 ) {
                     onSendText("/status [Reviewing live git working tree]")
@@ -323,7 +323,7 @@ fun AttachmentBottomSheet(
                 )
             },
             title = {
-                Text(text = "Permission Required", style = MaterialTheme.typography.titleMedium)
+                Text(text = "Permission required", style = MaterialTheme.typography.titleMedium)
             },
             text = {
                 Text(text = showPermissionRationale ?: "", style = MaterialTheme.typography.bodyMedium)
@@ -367,7 +367,7 @@ fun AttachmentBottomSheet(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         styles.forEach { style ->
@@ -438,8 +438,8 @@ private fun AttachmentTile(
 ) {
     PressableSurface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
-        pressedShape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(20.dp),
+        pressedShape = RoundedCornerShape(16.dp),
         color = Color.Transparent,
         modifier = Modifier.padding(4.dp)
     ) {
@@ -451,9 +451,9 @@ private fun AttachmentTile(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(18.dp))
+                    .clip(RoundedCornerShape(20.dp))
                     .background(color.copy(alpha = 0.15f))
-                    .border(BorderStroke(1.dp, color.copy(alpha = 0.4f)), RoundedCornerShape(18.dp))
+                    .border(BorderStroke(1.dp, color.copy(alpha = 0.4f)), RoundedCornerShape(20.dp))
             ) {
                 Icon(
                     imageVector = icon,
@@ -462,7 +462,7 @@ private fun AttachmentTile(
                     modifier = Modifier.size(26.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,

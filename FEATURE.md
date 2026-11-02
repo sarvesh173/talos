@@ -2756,3 +2756,26 @@ Audited and hardened `AgentFleetScreen.kt`, `ProviderVaultScreen.kt`, `ContextTe
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21098` and `versionName` to `"2.10.98"`.
+
+---
+
+## 127. Zero-Warning Design Hardening on Dialogs & Hub Components
+
+Audited and hardened `AppleColorPickerDialog.kt`, `AttachmentBottomSheet.kt`, `CodeDiffViewer.kt`, and `ModuleActivityHub.kt` using `enmerasoftware/ai-design-check`:
+
+### 1. Touch Target & Accessibility Calibration
+- Expanded close button in `AppleColorPickerDialog` to standard `48.dp` finger touch target.
+- Set all tile surfaces to canonical `20.dp` / `16.dp` / `8.dp` corner radii scale.
+
+### 2. Sentence Case & Quiet UI Discipline
+- Fixed noisy Title Case across modules:
+  - `"Color spectrum"`, `"Apply shade"`
+  - `"Attach to context"`, `"AI image"`, `"Source diff"`, `"Permission required"`
+  - `"Code & file changes"`, `"Working tree clean"`
+  - `"Multi-agent canvas"`, `"Multi-CLI governance"`, `"OpenBoard whiteboard"`, `"Activity hub"`
+- Stripped exclamation copy from clipboard and camera capture feedback toasts.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass with 0 warnings & 0 accessibility issues across all 4 files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:\n  - Bumped `versionCode` to `21099` and `versionName` to `"2.10.99"`.

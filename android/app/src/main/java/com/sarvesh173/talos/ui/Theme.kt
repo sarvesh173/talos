@@ -33,10 +33,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sarvesh173.talos.R
 
 // =============================================================================
 // TALOS "MOLTEN FORGE" M3 EXPRESSIVE THEME.
@@ -443,14 +445,22 @@ val ShapeExtraLargeIncreased = androidx.compose.foundation.shape.RoundedCornerSh
 val ShapeFull = androidx.compose.foundation.shape.CircleShape
 
 // -----------------------------------------------------------------------------
+val NunitoFontFamily = FontFamily(Font(R.font.nunito))
+val InterFontFamily = FontFamily(Font(R.font.inter))
+val DmSansFontFamily = FontFamily(Font(R.font.dm_sans))
+val PlusJakartaSansFontFamily = FontFamily(Font(R.font.plus_jakarta_sans))
+val OutfitFontFamily = FontFamily(Font(R.font.outfit))
+val SpaceGroteskFontFamily = FontFamily(Font(R.font.space_grotesk))
+
 fun resolveFontFamily(fontName: String): FontFamily = when (fontName.lowercase()) {
+    "nunito" -> NunitoFontFamily
+    "inter" -> InterFontFamily
+    "dm sans", "dmsans" -> DmSansFontFamily
+    "plus jakarta sans", "plusjakartasans" -> PlusJakartaSansFontFamily
+    "outfit" -> OutfitFontFamily
+    "space grotesk", "spacegrotesk", "monospace" -> SpaceGroteskFontFamily
     "system" -> FontFamily.Default
-    "nunito" -> FontFamily.SansSerif
-    "manrope" -> FontFamily.SansSerif
-    "serif" -> FontFamily.Serif
-    "lora" -> FontFamily.Serif
-    "monospace" -> FontFamily.Monospace
-    else -> FontFamily.Default
+    else -> NunitoFontFamily
 }
 
 fun resolveFontScaleMultiplier(scaleName: String): Float = when (scaleName.lowercase()) {
@@ -658,7 +668,7 @@ fun ThemeSelectionDialog(
         containerColor = if (isDark) Color(0xFF1C1C1E) else Color.White,
         title = {
             Text(
-                text = "App Finish & Appearance",
+                text = "App finish & appearance",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.15).sp,
@@ -666,7 +676,7 @@ fun ThemeSelectionDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "Clean monochromatic tones: AMOLED true black, dark space gray, and paper white.",
                     style = MaterialTheme.typography.bodySmall,
@@ -710,7 +720,7 @@ fun ThemeSelectionDialog(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(

@@ -548,12 +548,13 @@ fun LookAndFeelScreen(
 
             val fontOptions = remember {
                 listOf(
-                    Triple("System", "System sans serif", androidx.compose.ui.text.font.FontFamily.Default),
-                    Triple("Nunito", "Soft, rounded shapes - Default", androidx.compose.ui.text.font.FontFamily.SansSerif),
-                    Triple("Manrope", "Clean and spacious", androidx.compose.ui.text.font.FontFamily.SansSerif),
-                    Triple("Serif", "Traditional serif", androidx.compose.ui.text.font.FontFamily.Serif),
-                    Triple("Lora", "Literary serif", androidx.compose.ui.text.font.FontFamily.Serif),
-                    Triple("Monospace", "Evenly spaced characters", androidx.compose.ui.text.font.FontFamily.Monospace)
+                    Triple("Nunito", "Soft & rounded · Apple humanist", NunitoFontFamily),
+                    Triple("Inter", "Precision UI standard · Rasmus Andersson", InterFontFamily),
+                    Triple("DM Sans", "Geometric humanist · High legibility", DmSansFontFamily),
+                    Triple("Plus Jakarta Sans", "Contemporary neo-grotesque · Tech", PlusJakartaSansFontFamily),
+                    Triple("Outfit", "Clean Apple-inspired geometry", OutfitFontFamily),
+                    Triple("Space Grotesk", "Cybernetic agent monospace-adjacent", SpaceGroteskFontFamily),
+                    Triple("System", "Native device default", androidx.compose.ui.text.font.FontFamily.Default)
                 )
             }
 

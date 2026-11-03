@@ -3111,3 +3111,28 @@ Implemented Apple HIG progress indicators, rounded stroke caps, and Tailscale co
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21112` and `versionName` to `"2.11.12"`.
+
+---
+
+## 141. Mobile Settings Navigation Ergonomics, Secret Token Masking & 48dp Tap Targets
+
+Standardized mobile settings screens and navigation hitboxes according to `mobile-settings-design-patterns`:
+
+### 1. 48dp Minimum Finger Tap Targets on Navigation Back Buttons
+- Upgraded back action containers across `SettingsScreen`, `ChatPreferencesScreen`, `SecurityScreen`, `NotificationsScreen`, `CachingScreen`, and `LookAndFeelScreen` to 48dp centered hitboxes (`.size(48.dp)`).
+- Eliminated physical touch misses while retaining compact 36–42dp visual circles and 0.6dp hairline borders.
+
+### 2. Bearer / Host API Token Masking with Interactive Visibility Toggle
+- In `SettingsScreen`, added `PasswordVisualTransformation` and an interactive Eye / EyeOff 48dp `IconButton` toggle to the `Bearer / Host API Token` input.
+- Prevents sensitive host credentials from being displayed in plaintext while editing transport configuration.
+
+### 3. Spatial 4px Grid Alignment & Typography Token Decoupling
+- Adjusted bottom spacer in `SettingsScreen` to 32dp and back button margin in `LookAndFeelScreen` to 16dp on the 4px grid.
+- Bound all back button icons and text elements to dynamic `MaterialTheme.colorScheme.onSurface`.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 findings across the full UI suite.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21113` and `versionName` to `"2.11.13"`.

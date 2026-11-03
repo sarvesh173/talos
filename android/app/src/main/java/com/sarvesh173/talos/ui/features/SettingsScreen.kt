@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
@@ -77,28 +79,34 @@ fun SettingsScreen(
                     .statusBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                // Floating clean circle back button matching screenshot
+                // Floating clean circle back button with 48dp minimum touch target
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .border(
-                            BorderStroke(
-                                0.6.dp,
-                                if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-                            ),
-                            CircleShape
-                        )
+                        .size(48.dp)
                         .applePressable(0.94f) { onBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = TalosIcons.TalosBackArrow,
-                        contentDescription = "Back",
-                        tint = if (isDark) Color.White else Color(0xFF1D1D1F),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .border(
+                                BorderStroke(
+                                    0.6.dp,
+                                    if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
+                                ),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = TalosIcons.TalosBackArrow,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         },
@@ -403,6 +411,8 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
+                            var isTokenVisible by remember { mutableStateOf(false) }
+
                             OutlinedTextField(
                                 value = tokenText,
                                 onValueChange = {
@@ -412,6 +422,19 @@ fun SettingsScreen(
                                 },
                                 label = { Text("Bearer / Host API Token") },
                                 singleLine = true,
+                                visualTransformation = if (isTokenVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = { isTokenVisible = !isTokenVisible },
+                                        modifier = Modifier.size(48.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isTokenVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = if (isTokenVisible) "Hide token" else "Show token",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -431,7 +454,7 @@ fun SettingsScreen(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(46.dp),
+                                    .height(48.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary
@@ -455,7 +478,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -485,7 +508,7 @@ private fun SettingsMinimalRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(22.dp)
         )
 
@@ -498,7 +521,7 @@ private fun SettingsMinimalRow(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Normal,
                 letterSpacing = (-0.2).sp,
-                color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                color = MaterialTheme.colorScheme.onSurface
             )
             if (!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(2.dp))

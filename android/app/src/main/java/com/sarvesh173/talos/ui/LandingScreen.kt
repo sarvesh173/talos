@@ -89,7 +89,8 @@ fun LandingScreen(
 ) {
     val context = LocalContext.current
     val scheme = MaterialTheme.colorScheme
-    val effectiveAccent = client.effectiveAccentColor.value
+    val currentAccentName by client.accentColor.collectAsState()
+    val effectiveAccent = resolveAccentColor(currentAccentName, isDark)
 
     var selectedTopTab by remember { mutableIntStateOf(1) } // 0 = Chat, 1 = Agents
     var isAgentsSectionExpanded by remember { mutableStateOf(true) }

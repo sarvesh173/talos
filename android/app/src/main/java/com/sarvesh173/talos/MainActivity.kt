@@ -201,6 +201,11 @@ class MainActivity : ComponentActivity() {
             val storedFontScale by client.fontScale.collectAsState()
             var showThemeDialog by remember { mutableStateOf(false) }
             var appScreen by remember { mutableStateOf("main") }
+            var activeSessionId by remember { mutableStateOf("ses_default") }
+            var activeSessionTitle by remember { mutableStateOf("Interactive Session") }
+            var activeAgentName by remember { mutableStateOf("OpenCode") }
+            var activeAgentIcon by remember { mutableIntStateOf(R.drawable.ic_opencode) }
+            var activeAgentColor by remember { mutableStateOf(Color(0xFF2563EB)) }
 
             // Flexible theming: tokens from talos-core /api/theme (cached),
             // falling back to the built-in scheme when unreachable.
@@ -464,7 +469,7 @@ class MainActivity : ComponentActivity() {
                     label = "AppScreenTransition"
                 ) { screenKey ->
                     when (screenKey) {
-                        "main", "landing", "chat" -> {
+                        "main", "landing" -> {
                             LandingScreen(
                                 client = client,
                                 isDark = isCurrentlyDark,
@@ -478,7 +483,28 @@ class MainActivity : ComponentActivity() {
                                 onOpenSettings = {
                                     appScreen = "settings"
                                 },
-                                onOpenAgentChat = { _ -> }
+                                onOpenAgentChat = { sId, sTitle, aName, aIcon, aColor ->
+                                    activeSessionId = sId
+                                    activeSessionTitle = sTitle
+                                    activeAgentName = aName
+                                    activeAgentIcon = aIcon
+                                    activeAgentColor = aColor
+                                    appScreen = "agent_chat"
+                                }
+                            )
+                        }
+                        "agent_chat", "chat" -> {
+                            AppleAgentChatScreen(
+                                client = client,
+                                sessionId = activeSessionId,
+                                sessionTitle = activeSessionTitle,
+                                agentName = activeAgentName,
+                                agentIconRes = activeAgentIcon,
+                                brandColor = activeAgentColor,
+                                isDark = isCurrentlyDark,
+                                onBack = {
+                                    appScreen = "main"
+                                }
                             )
                         }
                         "disabled_chat" -> {

@@ -3607,3 +3607,35 @@ Integrated real-time OpenCode CLI bridge with dedicated GitHub plugin release:
   - Remote GitHub Actions CI build and release verification.
 - [x] Incremented Version Code and Name:
   - Bumped versionCode to 21129 and versionName to 2.11.29.
+
+---
+
+## 158. Direct Single-Agent CLI Hub & Scratch-Built Apple Liquid Glass Chat Screen
+
+Delivered major architectural overhaul meeting all direct user specifications:
+
+### 1. Single Agent per CLI Tool (No Intermediate Model Lists)
+- Removed artificial sub-agent lists per CLI tool.
+- Each CLI engine directly represents its autonomous agent with real-time active sessions.
+- Tapping a tool enters its sessions list and prominent `Create session` action immediately.
+
+### 2. Scratch-Built Apple Liquid Glass Native Chat Screen (`AppleAgentChatScreen.kt`)
+- Designed and built 100% from scratch using loaded Apple Design Skills.
+- Translucent top bar with back navigation (`<`), agent avatar, status dot (`● Active`), and session title.
+- Floating bottom Liquid Glass input dock with specular rim border (`Brush.verticalGradient`), attachment button (`+`), and spring-animated send button.
+- iMessage-inspired squircle message bubbles:
+  - User: Vibrant accent-colored squircle (`RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)`).
+  - Agent: Liquid glass card with hairline specular highlight and syntax-highlighted monospace code blocks.
+- Emil Kowalski kinematics with critically damped spring transitions (`dampingRatio = 0.80f, stiffness = 400f`).
+
+### 3. Full Navigation & BackHandler Interception
+- Clicking any session or `Create session` on the Hub directly opens `AppleAgentChatScreen`.
+- Top capsule `Chat` button enters active dialogue.
+- Android system back gesture and back button return gracefully to the CLI Hub.
+
+- [x] Verification and Tests:
+  - npx @enmera/ai-design-check: 0 errors, 0 warnings across all screens.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build and release verification.
+- [x] Incremented Version Code and Name:
+  - Bumped versionCode to 21130 and versionName to 2.11.30.

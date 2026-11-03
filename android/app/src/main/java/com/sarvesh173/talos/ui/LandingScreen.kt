@@ -19,8 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
@@ -29,18 +27,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,14 +47,14 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * TALOS 3-Tier Aggressive Apple Liquid Glass Hub
+ * TALOS Native CLI Agents Hub (Direct Single-Agent Architecture)
  * 
- * Synthesized across all loaded Apple Design skills:
- * 1. apple-agent-drilldown-architecture: 3-tier progressive disclosure (CLI Tools -> Agents -> Sessions + Create).
- * 2. apple-liquid-glass-architecture: Optical specular rim highlights, continuous tree geometry, and tactile depth.
- * 3. emil-apple-design: Instant touch-down feedback, interruptible spring kinematics, optical sizing & negative tracking.
- * 4. apple-hig-reviewer: Strict sentence case, accessibility minimum 48dp targets, 4px/8px spatial grid.
- * 5. compose-apple-design-standards: Full BackHandler integration & haptic feedback on all interactions.
+ * Strict refinements based on direct user instructions:
+ * 1. Single agent per CLI tool: No fake sub-agent or model lists.
+ * 2. Direct drill-down: Tapping a CLI tool goes directly to its active sessions and "Create session" action.
+ * 3. Native chat invocation: Tapping any session or Create Session directly opens AppleAgentChatScreen.
+ * 4. Apple Liquid Glass: Specular top-rim borders, critically damped spring physics, optical tracking.
+ * 5. Full BackHandler integration & strict 48dp minimum touch targets.
  */
 
 data class AgentSession(
@@ -71,23 +65,13 @@ data class AgentSession(
     val turnsCount: Int = 1
 )
 
-data class DelegateAgent(
-    val id: String,
-    val name: String,
-    val activity: String,
-    val iconRes: Int,
-    val accentColor: Color,
-    val isOnline: Boolean = true,
-    val sessions: List<AgentSession>
-)
-
 data class CliToolAgent(
     val id: String,
     val name: String,
     val description: String,
     val iconRes: Int,
     val brandColor: Color,
-    val delegates: List<DelegateAgent>
+    val sessions: List<AgentSession>
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,15 +84,14 @@ fun LandingScreen(
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
-    onOpenAgentChat: ((String) -> Unit)? = null
+    onOpenAgentChat: ((String, String, String, Int, Color) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val currentAccentName by client.accentColor.collectAsState()
     val effectiveAccent = resolveAccentColor(currentAccentName, isDark)
 
-    // Tier navigation state
+    // Active tool state (null = Root Hub, non-null = Tool Sessions)
     var selectedToolId by remember { mutableStateOf<String?>(null) }
-    var selectedAgentId by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
     // Dynamic sessions map for live session creation
@@ -116,7 +99,7 @@ fun LandingScreen(
         mutableStateMapOf<String, MutableList<AgentSession>>()
     }
 
-    // Tier 1: Pure Developer CLI Engines
+    // Single-agent CLI Tools with real-time linked sessions
     val cliTools = remember {
         listOf(
             CliToolAgent(
@@ -125,52 +108,13 @@ fun LandingScreen(
                 description = "Pulse engine with max reasoning & stealth models",
                 iconRes = R.drawable.ic_opencode,
                 brandColor = Color(0xFF2563EB),
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "opencode_pulse",
-                        name = "Pulse Alpha Engine",
-                        activity = "Autonomous coding with reasoning max",
-                        iconRes = R.drawable.ic_opencode,
-                        accentColor = Color(0xFF2563EB),
-                        sessions = listOf(
-                            AgentSession("ses_e5dcc117fffePxuWJE6NrZxZhE", "LandingScreen 3-tier navigation design", "Just now", "Active", 20),
-                            AgentSession("ses_e5e5c8d1fffe6DqRGlZ47M0eTV", "Top 3 longest Kotlin files line counts", "3h ago", "Completed", 11),
-                            AgentSession("ses_e5e861b56ffeUVpjWqUAcuVCFL", "TALOS Android: Liquid Glass, Compose performance", "3h ago", "Completed", 22),
-                            AgentSession("ses_e5e69286affe4FWfpjXuY7eMoz", "Liquid Glass HIG audit", "3h ago", "Completed", 62),
-                            AgentSession("ses_e5e83ee12ffeofZa3GLd50S5b4", "Touch target audit", "3h ago", "Completed", 182),
-                            AgentSession("ses_e5e8131deffend7h5wuRHaMEgq", "Liquid Glass, 48dp targets, state hoisting", "4h ago", "Completed", 23)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "opencode_watchman",
-                        name = "Watchman Sentry",
-                        activity = "Process supervision & webhook alert dispatch",
-                        iconRes = R.drawable.ic_core,
-                        accentColor = Color(0xFF10B981),
-                        sessions = listOf(
-                            AgentSession("op_sess_3", "Background agent lifecycle monitor", "5m ago", "Active", 4)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "opencode_beam",
-                        name = "Beam Coder",
-                        activity = "High-speed linting & diff repair",
-                        iconRes = R.drawable.ic_deepseek,
-                        accentColor = Color(0xFF4D6BFE),
-                        sessions = listOf(
-                            AgentSession("op_sess_4", "Design tokens consistency check", "45m ago", "Completed", 3)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "opencode_auditor",
-                        name = "Architecture Auditor",
-                        activity = "Design compliance & anti-slop verification",
-                        iconRes = R.drawable.ic_gemini,
-                        accentColor = Color(0xFF007AFF),
-                        sessions = listOf(
-                            AgentSession("op_sess_5", "Liquid glass touch target audit", "2h ago", "Completed", 8)
-                        )
-                    )
+                sessions = listOf(
+                    AgentSession("ses_e5dcc117fffePxuWJE6NrZxZhE", "LandingScreen 3-tier navigation design", "Just now", "Active", 20),
+                    AgentSession("ses_e5e5c8d1fffe6DqRGlZ47M0eTV", "Top 3 longest Kotlin files line counts", "3h ago", "Completed", 11),
+                    AgentSession("ses_e5e861b56ffeUVpjWqUAcuVCFL", "TALOS Android: Liquid Glass, Compose performance", "3h ago", "Completed", 22),
+                    AgentSession("ses_e5e69286affe4FWfpjXuY7eMoz", "Liquid Glass HIG audit", "3h ago", "Completed", 62),
+                    AgentSession("ses_e5e83ee12ffeofZa3GLd50S5b4", "Touch target audit", "3h ago", "Completed", 182),
+                    AgentSession("ses_e5e8131deffend7h5wuRHaMEgq", "Liquid Glass, 48dp targets, state hoisting", "4h ago", "Completed", 23)
                 )
             ),
             CliToolAgent(
@@ -179,47 +123,11 @@ fun LandingScreen(
                 description = "Nous Research autonomous multimodal gateway",
                 iconRes = R.drawable.ic_hermes,
                 brandColor = Color(0xFF7C4DFF),
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "hermes_swe",
-                        name = "SWE Architect",
-                        activity = "Refactoring AST & design check",
-                        iconRes = R.drawable.ic_codex,
-                        accentColor = Color(0xFF007AFF),
-                        sessions = listOf(
-                            AgentSession("h_sess_1", "Kotlin Compose hierarchy cleanup", "12m ago", "Active", 9)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "hermes_sec",
-                        name = "Security Auditor",
-                        activity = "Taint analysis & credential guard",
-                        iconRes = R.drawable.ic_deepseek,
-                        accentColor = Color(0xFF4D6BFE),
-                        sessions = listOf(
-                            AgentSession("h_sess_2", "Secret scope & memory quarantine", "1h ago", "Completed", 5)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "hermes_vis",
-                        name = "Vision Inspector",
-                        activity = "UI hierarchy & liquid glass diffs",
-                        iconRes = R.drawable.ic_gemini,
-                        accentColor = Color(0xFF3186FF),
-                        sessions = listOf(
-                            AgentSession("h_sess_3", "Screenshot coordinate comparison", "3h ago", "Completed", 14)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "hermes_orch",
-                        name = "Task Orchestrator",
-                        activity = "Subagent fan-out synthesis",
-                        iconRes = R.drawable.ic_qwen,
-                        accentColor = Color(0xFFA855F7),
-                        sessions = listOf(
-                            AgentSession("h_sess_4", "Multi-unit workstream pipeline", "6h ago", "Completed", 22)
-                        )
-                    )
+                sessions = listOf(
+                    AgentSession("h_sess_1", "Kotlin Compose hierarchy cleanup", "12m ago", "Active", 9),
+                    AgentSession("h_sess_2", "Secret scope & memory quarantine", "1h ago", "Completed", 5),
+                    AgentSession("h_sess_3", "Screenshot coordinate comparison", "3h ago", "Completed", 14),
+                    AgentSession("h_sess_4", "Multi-unit workstream pipeline", "6h ago", "Completed", 22)
                 )
             ),
             CliToolAgent(
@@ -228,37 +136,10 @@ fun LandingScreen(
                 description = "Anthropic architecture & synthesis suite",
                 iconRes = R.drawable.ic_claude,
                 brandColor = Color(0xFFD97757),
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "claude_planner",
-                        name = "Planning Maestro",
-                        activity = "PRD & task breakdown",
-                        iconRes = R.drawable.ic_claude,
-                        accentColor = Color(0xFFD97757),
-                        sessions = listOf(
-                            AgentSession("c_sess_1", "Apple design spec decomposition", "30m ago", "Active", 4)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "claude_tester",
-                        name = "Test Engineer",
-                        activity = "Red-green-refactor suite",
-                        iconRes = R.drawable.ic_mistral,
-                        accentColor = Color(0xFFFF8205),
-                        sessions = listOf(
-                            AgentSession("c_sess_2", "UI touch target red-green matrix", "2h ago", "Completed", 7)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "claude_simplifier",
-                        name = "Code Simplifier",
-                        activity = "Complexity & anti-slop audit",
-                        iconRes = R.drawable.ic_openai,
-                        accentColor = Color(0xFF10A37F),
-                        sessions = listOf(
-                            AgentSession("c_sess_3", "State hoisting refactor pass", "4h ago", "Completed", 3)
-                        )
-                    )
+                sessions = listOf(
+                    AgentSession("c_sess_1", "Apple design spec decomposition", "30m ago", "Active", 4),
+                    AgentSession("c_sess_2", "UI touch target red-green matrix", "2h ago", "Completed", 7),
+                    AgentSession("c_sess_3", "State hoisting refactor pass", "4h ago", "Completed", 3)
                 )
             ),
             CliToolAgent(
@@ -267,27 +148,9 @@ fun LandingScreen(
                 description = "OpenAI high-throughput code synthesis",
                 iconRes = R.drawable.ic_codex,
                 brandColor = Color(0xFF10A37F),
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "codex_synthesizer",
-                        name = "Code Synthesizer",
-                        activity = "High-speed implementation & unit tests",
-                        iconRes = R.drawable.ic_codex,
-                        accentColor = Color(0xFF10A37F),
-                        sessions = listOf(
-                            AgentSession("cx_sess_1", "Compose vector drawable exporter", "1h ago", "Active", 2)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "codex_benchmark",
-                        name = "Benchmark Runner",
-                        activity = "SWE-bench evaluation & telemetry",
-                        iconRes = R.drawable.ic_core,
-                        accentColor = Color(0xFF007AFF),
-                        sessions = listOf(
-                            AgentSession("cx_sess_2", "Inference latency profiling", "5h ago", "Completed", 11)
-                        )
-                    )
+                sessions = listOf(
+                    AgentSession("cx_sess_1", "Compose vector drawable exporter", "1h ago", "Active", 2),
+                    AgentSession("cx_sess_2", "Inference latency profiling", "5h ago", "Completed", 11)
                 )
             ),
             CliToolAgent(
@@ -296,39 +159,19 @@ fun LandingScreen(
                 description = "Sandboxed autonomous agent orchestrator",
                 iconRes = R.drawable.ic_omnirush,
                 brandColor = Color(0xFFA855F7),
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "omnirush_sandbox",
-                        name = "Sandbox Executor",
-                        activity = "Bwrap isolated runtime supervision",
-                        iconRes = R.drawable.ic_omnirush,
-                        accentColor = Color(0xFFA855F7),
-                        sessions = listOf(
-                            AgentSession("om_sess_1", "Rootfs sandbox isolation pass", "40m ago", "Active", 5)
-                        )
-                    ),
-                    DelegateAgent(
-                        id = "omnirush_runner",
-                        name = "Workflow Runner",
-                        activity = "Multi-stage agent pipelining",
-                        iconRes = R.drawable.ic_openclaw,
-                        accentColor = Color(0xFFEC4899),
-                        sessions = listOf(
-                            AgentSession("om_sess_2", "Parallel fan-out dispatch", "3h ago", "Completed", 16)
-                        )
-                    )
+                sessions = listOf(
+                    AgentSession("om_sess_1", "Rootfs sandbox isolation pass", "40m ago", "Active", 5),
+                    AgentSession("om_sess_2", "Parallel fan-out dispatch", "3h ago", "Completed", 16)
                 )
             )
         )
     }
 
-    // Populate initial dynamic sessions
+    // Populate initial dynamic sessions map
     LaunchedEffect(cliTools) {
         cliTools.forEach { tool ->
-            tool.delegates.forEach { delegate ->
-                if (!dynamicSessions.containsKey(delegate.id)) {
-                    dynamicSessions[delegate.id] = delegate.sessions.toMutableList()
-                }
+            if (!dynamicSessions.containsKey(tool.id)) {
+                dynamicSessions[tool.id] = tool.sessions.toMutableList()
             }
         }
     }
@@ -336,18 +179,11 @@ fun LandingScreen(
     val currentTool = remember(selectedToolId, cliTools) {
         cliTools.firstOrNull { it.id == selectedToolId }
     }
-    val currentAgent = remember(selectedAgentId, currentTool) {
-        currentTool?.delegates?.firstOrNull { it.id == selectedAgentId }
-    }
 
-    // Intercept back gesture across the 3-tier hierarchy
+    // BackHandler: Gracefully navigates back to Root Hub
     BackHandler(enabled = selectedToolId != null) {
         TalosHaptics.sendHaptic(context)
-        if (selectedAgentId != null) {
-            selectedAgentId = null
-        } else {
-            selectedToolId = null
-        }
+        selectedToolId = null
     }
 
     val filteredTools = remember(searchQuery, cliTools) {
@@ -427,12 +263,12 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // MAIN 3-TIER PROGRESSIVE DISCLOSURE SURFACE
+        // MAIN SURFACE WITH FLUID ANIMATED TRANSITION
         // ==============================================================
         AnimatedContent(
-            targetState = Triple(selectedToolId, selectedAgentId, currentTool),
+            targetState = Pair(selectedToolId, currentTool),
             transitionSpec = {
-                val isAdvancing = targetState.second != null || (targetState.first != null && initialState.first == null)
+                val isAdvancing = targetState.first != null
                 val slideDir = if (isAdvancing) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End
 
                 (fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) +
@@ -447,10 +283,10 @@ fun LandingScreen(
                 ))
             },
             modifier = Modifier.fillMaxSize()
-        ) { (toolId, agentId, tool) ->
+        ) { (toolId, tool) ->
             if (toolId == null || tool == null) {
                 // ======================================================
-                // TIER 1: PURE DEVELOPER CLI ENGINES HUB
+                // ROOT HUB: PURE CLI TOOLS (Single Agent Per Tool)
                 // ======================================================
                 LazyColumn(
                     modifier = Modifier
@@ -498,6 +334,8 @@ fun LandingScreen(
                     }
 
                     items(filteredTools, key = { it.id }) { cliTool ->
+                        val sessionsCount = dynamicSessions[cliTool.id]?.size ?: cliTool.sessions.size
+
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = if (isDark) Color(0xFF161820).copy(alpha = 0.84f) else Color.White.copy(alpha = 0.92f),
@@ -526,7 +364,6 @@ fun LandingScreen(
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Official SVG Vector Logo inside Specular Squircle
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
@@ -577,7 +414,7 @@ fun LandingScreen(
                                                         .background(StatusGreen)
                                                 )
                                                 Text(
-                                                    text = "${cliTool.delegates.size} agents",
+                                                    text = "$sessionsCount sessions",
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Medium,
                                                     color = cliTool.brandColor
@@ -608,10 +445,12 @@ fun LandingScreen(
                         }
                     }
                 }
-            } else if (agentId == null) {
+            } else {
                 // ======================================================
-                // TIER 2: SELECTED CLI TOOL ACTIVE AGENTS
+                // DIRECT TOOL SESSIONS & PROMINENT CREATE ACTION
                 // ======================================================
+                val sessions = dynamicSessions[tool.id] ?: tool.sessions
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -654,216 +493,7 @@ fun LandingScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Selected Tool Hero Card
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = tool.brandColor.copy(alpha = if (isDark) 0.16f else 0.10f),
-                            border = BorderStroke(1.dp, tool.brandColor.copy(alpha = 0.30f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(tool.brandColor.copy(alpha = 0.20f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = tool.iconRes),
-                                        contentDescription = tool.name,
-                                        modifier = Modifier.size(26.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                Column {
-                                    Text(
-                                        text = "${tool.name} agents",
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                        letterSpacing = (-0.15).sp
-                                    )
-                                    Text(
-                                        text = "Select an agent to view and create active sessions",
-                                        fontSize = 12.sp,
-                                        color = if (isDark) Color.White.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.50f)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
-                    // Active Agents List
-                    items(tool.delegates, key = { it.id }) { agent ->
-                        val sessionsCount = dynamicSessions[agent.id]?.size ?: agent.sessions.size
-
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (isDark) Color(0xFF161820).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.92f),
-                            border = BorderStroke(
-                                1.dp,
-                                Brush.verticalGradient(
-                                    listOf(
-                                        if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.80f),
-                                        if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.03f)
-                                    )
-                                )
-                            ),
-                            shadowElevation = 2.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .applePressable(0.97f) {
-                                    TalosHaptics.sendHaptic(context)
-                                    selectedAgentId = agent.id
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 56.dp)
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(34.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(agent.accentColor.copy(alpha = if (isDark) 0.18f else 0.12f))
-                                        .border(
-                                            BorderStroke(0.8.dp, agent.accentColor.copy(alpha = 0.35f)),
-                                            RoundedCornerShape(8.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = agent.iconRes),
-                                        contentDescription = agent.name,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Text(
-                                            text = agent.name,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
-                                        )
-
-                                        Box(
-                                            modifier = Modifier
-                                                .size(5.dp)
-                                                .clip(CircleShape)
-                                                .background(StatusGreen)
-                                        )
-
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
-                                            modifier = Modifier.height(18.dp)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier.padding(horizontal = 8.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    text = "$sessionsCount sessions",
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = if (isDark) Color.White.copy(alpha = 0.65f) else Color(0xFF1D1D1F)
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(2.dp))
-
-                                    Text(
-                                        text = agent.activity,
-                                        fontSize = 12.sp,
-                                        color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                Icon(
-                                    imageVector = TalosIcons.TalosChevronRight,
-                                    contentDescription = "Open ${agent.name} sessions",
-                                    tint = if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.30f),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            } else {
-                // ======================================================
-                // TIER 3: AGENT SESSIONS + PROMINENT "CREATE SESSION"
-                // ======================================================
-                val agent = currentAgent
-                val sessions = dynamicSessions[agentId] ?: emptyList()
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(top = 96.dp, bottom = 110.dp)
-                ) {
-                    item {
-                        // Back Navigation Breadcrumb
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 48.dp)
-                                .applePressable(0.96f) {
-                                    TalosHaptics.sendHaptic(context)
-                                    selectedAgentId = null
-                                }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back to agents",
-                                tint = effectiveAccent,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "${tool.name} agents",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = effectiveAccent
-                            )
-                            Text(
-                                text = " / ${agent?.name ?: "Agent"}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isDark) Color.White.copy(alpha = 0.70f) else Color.Black.copy(alpha = 0.60f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Prominent Apple Liquid Glass "Create session" Pill Action
+                        // Prominent Liquid Glass "Create session" Action Button
                         Surface(
                             shape = RoundedCornerShape(20.dp),
                             color = tool.brandColor,
@@ -884,15 +514,16 @@ fun LandingScreen(
                                     TalosHaptics.sendHaptic(context)
                                     val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
                                     val newId = "sess_${System.currentTimeMillis()}"
+                                    val newTitle = "New ${tool.name} session"
                                     val newSess = AgentSession(
                                         id = newId,
-                                        title = "New interactive session",
+                                        title = newTitle,
                                         timestamp = "$now (Just created)",
                                         status = "Active",
                                         turnsCount = 1
                                     )
-                                    dynamicSessions.getOrPut(agentId) { mutableListOf() }.add(0, newSess)
-                                    onOpenAgentChat?.invoke(newId)
+                                    dynamicSessions.getOrPut(tool.id) { mutableListOf() }.add(0, newSess)
+                                    onOpenAgentChat?.invoke(newId, newTitle, tool.name, tool.iconRes, tool.brandColor)
                                 }
                         ) {
                             Row(
@@ -987,7 +618,7 @@ fun LandingScreen(
                                     .padding(vertical = 4.dp)
                                     .applePressable(0.97f) {
                                         TalosHaptics.sendHaptic(context)
-                                        onOpenAgentChat?.invoke(session.id)
+                                        onOpenAgentChat?.invoke(session.id, session.title, tool.name, tool.iconRes, tool.brandColor)
                                     }
                             ) {
                                 Row(
@@ -1057,7 +688,7 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // TOP FLOATING LIQUID GLASS BAR (Dynamic Breadcrumb Navigation)
+        // TOP FLOATING LIQUID GLASS BAR (Header with Chat / Agents Capsule)
         // ==============================================================
         Row(
             modifier = Modifier
@@ -1088,8 +719,7 @@ fun LandingScreen(
                                 .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
                                 .applePressable(0.94f) {
                                     TalosHaptics.sendHaptic(context)
-                                    if (selectedAgentId != null) selectedAgentId = null
-                                    else selectedToolId = null
+                                    selectedToolId = null
                                 }
                                 .padding(horizontal = 12.dp),
                             contentAlignment = Alignment.Center
@@ -1113,6 +743,27 @@ fun LandingScreen(
                             }
                         }
                     } else {
+                        // Chat Button: Opens AppleAgentChatScreen
+                        Box(
+                            modifier = Modifier
+                                .size(width = 44.dp, height = 34.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .applePressable(0.94f) {
+                                    TalosHaptics.sendHaptic(context)
+                                    val defaultTool = cliTools.first()
+                                    onOpenAgentChat?.invoke("sess_active", "Active conversation", defaultTool.name, defaultTool.iconRes, defaultTool.brandColor)
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = TalosIcons.TalosChat,
+                                contentDescription = "Chat",
+                                tint = if (isDark) Color.White.copy(alpha = 0.60f) else Color(0xFF1D1D1F).copy(alpha = 0.50f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        // Agents Button: Stays on Hub
                         Box(
                             modifier = Modifier
                                 .size(width = 44.dp, height = 34.dp)
@@ -1124,26 +775,9 @@ fun LandingScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = TalosIcons.TalosChat,
-                                contentDescription = "Chat",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .size(width = 44.dp, height = 34.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .applePressable(0.94f) {
-                                    TalosHaptics.sendHaptic(context)
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
                                 imageVector = TalosIcons.TalosHub,
                                 contentDescription = "Agents",
-                                tint = if (isDark) Color.White.copy(alpha = 0.60f) else Color(0xFF1D1D1F).copy(alpha = 0.50f),
+                                tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -1255,11 +889,7 @@ fun LandingScreen(
                         decorationBox = { innerTextField ->
                             if (searchQuery.isEmpty()) {
                                 Text(
-                                    text = when {
-                                        selectedAgentId != null -> "Search active sessions"
-                                        selectedToolId != null -> "Search ${currentTool?.name ?: ""} agents"
-                                        else -> "Search cli tools and engines"
-                                    },
+                                    text = if (selectedToolId != null) "Search active sessions" else "Search cli tools and engines",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Normal,
                                     color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.35f),
@@ -1285,22 +915,19 @@ fun LandingScreen(
                     .size(54.dp)
                     .applePressable(0.92f) {
                         TalosHaptics.sendHaptic(context)
-                        val targetAgent = selectedAgentId ?: currentTool?.delegates?.firstOrNull()?.id
-                        if (targetAgent != null) {
-                            val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-                            val newId = "sess_${System.currentTimeMillis()}"
-                            val newSess = AgentSession(
-                                id = newId,
-                                title = "New interactive session",
-                                timestamp = "$now (Just created)",
-                                status = "Active",
-                                turnsCount = 1
-                            )
-                            dynamicSessions.getOrPut(targetAgent) { mutableListOf() }.add(0, newSess)
-                            onOpenAgentChat?.invoke(newId)
-                        } else {
-                            selectedToolId = "opencode"
-                        }
+                        val tool = currentTool ?: cliTools.first()
+                        val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+                        val newId = "sess_${System.currentTimeMillis()}"
+                        val newTitle = "New ${tool.name} session"
+                        val newSess = AgentSession(
+                            id = newId,
+                            title = newTitle,
+                            timestamp = "$now (Just created)",
+                            status = "Active",
+                            turnsCount = 1
+                        )
+                        dynamicSessions.getOrPut(tool.id) { mutableListOf() }.add(0, newSess)
+                        onOpenAgentChat?.invoke(newId, newTitle, tool.name, tool.iconRes, tool.brandColor)
                     }
             ) {
                 Box(

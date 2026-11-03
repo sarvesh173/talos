@@ -200,7 +200,7 @@ class MainActivity : ComponentActivity() {
             val storedFont by client.selectedFont.collectAsState()
             val storedFontScale by client.fontScale.collectAsState()
             var showThemeDialog by remember { mutableStateOf(false) }
-            var appScreen by remember { mutableStateOf(if (client.hasLaunched || client.isPaired.value) "main" else "landing") }
+            var appScreen by remember { mutableStateOf("main") }
 
             // Flexible theming: tokens from talos-core /api/theme (cached),
             // falling back to the built-in scheme when unreachable.
@@ -338,7 +338,8 @@ class MainActivity : ComponentActivity() {
                     "hub" -> "hub"
                     "gallery" -> "gallery"
                     "cli_manager" -> "cli_manager"
-                    else -> if (isPaired) "main" else "landing"
+                    "chat" -> "chat"
+                    else -> "main"
                 }
 
                 val currentActivity = LocalContext.current as? Activity
@@ -347,7 +348,7 @@ class MainActivity : ComponentActivity() {
                         "look_and_feel", "chat_preferences", "security", "caching", "notifications" -> {
                             appScreen = "settings"
                         }
-                        "settings", "canvas", "diff", "hub", "gallery", "cli_manager" -> {
+                        "settings", "canvas", "diff", "hub", "gallery", "cli_manager", "chat" -> {
                             appScreen = "main"
                         }
                         "main", "landing" -> {
@@ -463,7 +464,34 @@ class MainActivity : ComponentActivity() {
                     label = "AppScreenTransition"
                 ) { screenKey ->
                     when (screenKey) {
-                        "main" -> {
+                        "main", "landing" -> {
+                            LandingScreen(
+                                client = client,
+                                isDark = isCurrentlyDark,
+                                onToggleTheme = {
+                                    client.toggleTheme(isCurrentlyDark)
+                                },
+                                onGetStarted = {
+                                    appScreen = "chat"
+                                },
+                                onOpenWizard = {
+                                    appScreen = "settings"
+                                },
+                                onOpenSettings = {
+                                    appScreen = "settings"
+                                },
+                                onOpenAgentChat = { agentKey ->
+                                    when (agentKey) {
+                                        "hermes" -> client.switchRoom("hermes")
+                                        "claudecode" -> client.switchRoom("claude")
+                                        "alya" -> client.switchRoom("the-council")
+                                        else -> client.switchRoom("the-council")
+                                    }
+                                    appScreen = "chat"
+                                }
+                            )
+                        }
+                        "chat" -> {
                             MainScreen(
                                 client = client,
                                 isDark = isCurrentlyDark,
@@ -471,7 +499,7 @@ class MainActivity : ComponentActivity() {
                                     client.toggleTheme(isCurrentlyDark)
                                 },
                                 onExitToLanding = {
-                                    appScreen = "landing"
+                                    appScreen = "main"
                                 },
                                 onOpenCanvas = {
                                     appScreen = "canvas"
@@ -1064,12 +1092,12 @@ fun MainScreen(
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
                                         .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
-                                        .applePressable(0.94f) { scope.launch { drawerState.open() } },
+                                        .applePressable(0.94f) { onExitToLanding() },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Menu,
-                                        contentDescription = "Chambers menu",
+                                        imageVector = TalosIcons.TalosBackArrow,
+                                        contentDescription = "Back to Agents Hub",
                                         tint = talosTextPrimary,
                                         modifier = Modifier.size(20.dp)
                                     )

@@ -3370,3 +3370,33 @@ Directly implemented the new simplified interface matching `img_036cefc1179d.jpg
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21121` and `versionName` to `"2.11.21"`.
+
+---
+
+## 150. Direct Default Root to Simplified Agents & Sessions Hub & 1:1 Reference Match
+
+Resolved root navigation so the app opens immediately into the Agents & Sessions Hub (`img_eb6491dca02a.jpg`):
+
+### 1. Root Screen Navigation Refactoring (`MainActivity.kt`)
+- Changed `appScreen` initial routing: `appScreen = "main"` now renders `LandingScreen` (the simplified Agents Hub) directly on app launch.
+- Tapping any agent row, delegate, session leaf, or the compose FAB seamlessly pushes to `"chat"` (`MainScreen`), opening the conversation chamber.
+- In `MainScreen`, the top-left button is updated to an authentic Apple Back Arrow (`TalosBackArrow`) with `.applePressable(0.94f) { onExitToLanding() }`, returning directly to the Agents Hub.
+- BackHandler routes `"chat"` back to `"main"`.
+
+### 2. 1:1 Pixel-Perfect Visual Fidelity with Reference Screenshot (`LandingScreen.kt`)
+- Light/Dark adaptive background: Clean white (`Color(0xFFFFFFFF)`) in Light Mode matching `img_eb6491dca02a.jpg`.
+- Ethereal line-art background: A monochrome figure cradling a glowing sphere drawn in Compose `Canvas` at the bottom of the screen.
+- Exact Mascot Squircles & Capsules:
+  - Purple squircle for Hermes (`Color(0xFF7C4DFF)`) with white/dark expressive eyes.
+  - Red cloud for alya (`Color(0xFFEF4444)`) with white/dark expressive eyes.
+  - Pink capsule for mom (`Color(0xFFEC4899)`) with white/dark expressive eyes.
+  - Terracotta squircle for Cloud Code (`Color(0xFFD97757)`).
+- Subtitles & session leaves: `225 more sessions >`, `2 more sessions >`, `9 more sessions >`, `48 more sessions >`.
+- Lavender circular compose FAB (`Color(0xFFD4D0E2)`) with dark pencil glyph.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21122` and `versionName` to `"2.11.22"`.

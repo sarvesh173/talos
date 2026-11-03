@@ -48,13 +48,15 @@ import com.sarvesh173.talos.R
 import com.sarvesh173.talos.network.TalosClient
 
 /**
- * TALOS Simplified Agents Hub (Apple HIG Liquid Glass Architecture)
+ * TALOS Simplified Agents & Sessions Hub (Apple HIG Liquid Glass Architecture)
  * 
- * Directly matching img_036cefc1179d.jpg:
- * 1. Prioritizes CLI agents (Hermes, Cloud Code, Alya, Mom) over direct direct agents.
- * 2. Displays current agent count and activity.
- * 3. Supports multiple delegate agents via Apple tree-branch curved connectors (╰─).
- * 4. Aggressive Apple Liquid Glass styling, specular borders, and 100% SVG iconography.
+ * Pixel-perfect 1:1 match of img_eb6491dca02a.jpg:
+ * 1. Prioritizes CLI agents (Hermes, alya, mom, Cloud Code) over direct agents.
+ * 2. Displays agent descriptions and session branches ("225 more sessions >").
+ * 3. Indented Apple tree-branch curved connectors (╰─).
+ * 4. Ethereal monochrome figure holding glowing sphere in the background.
+ * 5. Floating dual-mode capsule [Chat | Agents] and [Filter | More] header.
+ * 6. Floating search bar ("Search agents and sessions") + Circular pencil FAB.
  */
 
 data class DelegateAgent(
@@ -85,7 +87,9 @@ fun LandingScreen(
     onToggleTheme: () -> Unit = {},
     onGetStarted: () -> Unit,
     onConnect: ((String, String) -> Unit)? = null,
-    onOpenWizard: (() -> Unit)? = null
+    onOpenWizard: (() -> Unit)? = null,
+    onOpenSettings: (() -> Unit)? = null,
+    onOpenAgentChat: ((String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scheme = MaterialTheme.colorScheme
@@ -97,16 +101,16 @@ fun LandingScreen(
     var searchQuery by remember { mutableStateOf("") }
 
     // State for expanded CLI tools
-    var expandedToolId by remember { mutableStateOf<String?>("hermes") }
+    var expandedToolId by remember { mutableStateOf<String?>(null) }
 
-    // Pre-populated CLI Tools and their Delegate Agents with SVG icons
+    // Pre-populated CLI Tools and their Delegate Agents matching img_eb6491dca02a.jpg
     val cliTools = remember {
         listOf(
             CliToolAgent(
                 id = "hermes",
                 name = "Hermes",
                 description = "No conversations yet — say hi",
-                mascotColor = Color(0xFF7C4DFF), // Purple mascot
+                mascotColor = Color(0xFF7C4DFF), // Purple squircle
                 mascotShape = "squircle",
                 delegateCount = 4,
                 sessionCountText = "225 more sessions",
@@ -142,10 +146,53 @@ fun LandingScreen(
                 )
             ),
             CliToolAgent(
+                id = "alya",
+                name = "alya",
+                description = "Alya - helper agent linked to main system (same model, sepa\u2026",
+                mascotColor = Color(0xFFEF4444), // Red cloud
+                mascotShape = "cloud",
+                delegateCount = 2,
+                sessionCountText = "2 more sessions",
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "alya_anchor",
+                        name = "Emotional Anchor",
+                        activity = "Active listener & responsive empathy engine",
+                        iconRes = R.drawable.ic_hermes,
+                        accentColor = Color(0xFFFF2D55)
+                    ),
+                    DelegateAgent(
+                        id = "alya_wish",
+                        name = "Wish Synthesizer",
+                        activity = "Preserving 7 core memory wishes",
+                        iconRes = R.drawable.ic_omnirush,
+                        accentColor = Color(0xFFAF52DE)
+                    )
+                )
+            ),
+            CliToolAgent(
+                id = "mom",
+                name = "mom",
+                description = "No conversations yet — say hi",
+                mascotColor = Color(0xFFEC4899), // Pink pill
+                mascotShape = "pill",
+                delegateCount = 1,
+                sessionCountText = "9 more sessions",
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "mom_care",
+                        name = "Family Hearth",
+                        activity = "Warm guidance & blessing guardrails",
+                        iconRes = R.drawable.ic_openclaw,
+                        accentColor = Color(0xFFEC4899)
+                    )
+                )
+            ),
+            CliToolAgent(
                 id = "claudecode",
                 name = "Cloud Code",
                 description = "Anthropic architecture & synthesis suite",
-                mascotColor = Color(0xFFD97757), // Terracotta mascot
+                mascotColor = Color(0xFFD97757), // Terracotta squircle
                 mascotShape = "squircle",
                 delegateCount = 3,
                 sessionCountText = "48 more sessions",
@@ -172,49 +219,6 @@ fun LandingScreen(
                         accentColor = Color(0xFF10A37F)
                     )
                 )
-            ),
-            CliToolAgent(
-                id = "alya",
-                name = "alya",
-                description = "Alya - helper agent linked to main system (same model, sepa\u2026",
-                mascotColor = Color(0xFFEF4444), // Red cloud mascot
-                mascotShape = "cloud",
-                delegateCount = 2,
-                sessionCountText = "2 more sessions",
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "alya_anchor",
-                        name = "Emotional Anchor",
-                        activity = "Active listener & responsive empathy engine",
-                        iconRes = R.drawable.ic_hermes,
-                        accentColor = Color(0xFFFF2D55)
-                    ),
-                    DelegateAgent(
-                        id = "alya_wish",
-                        name = "Wish Synthesizer",
-                        activity = "Preserving 7 core memory wishes",
-                        iconRes = R.drawable.ic_omnirush,
-                        accentColor = Color(0xFFAF52DE)
-                    )
-                )
-            ),
-            CliToolAgent(
-                id = "mom",
-                name = "mom",
-                description = "No conversations yet — say hi",
-                mascotColor = Color(0xFFEC4899), // Pink pill mascot
-                mascotShape = "pill",
-                delegateCount = 1,
-                sessionCountText = "9 more sessions",
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "mom_care",
-                        name = "Family Hearth",
-                        activity = "Warm guidance & blessing guardrails",
-                        iconRes = R.drawable.ic_openclaw,
-                        accentColor = Color(0xFFEC4899)
-                    )
-                )
             )
         )
     }
@@ -232,12 +236,108 @@ fun LandingScreen(
         }
     }
 
+    val backgroundColor = if (isDark) Color(0xFF000000) else Color(0xFFFFFFFF)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (isDark) Color(0xFF000000) else Color(0xFFFBFBFC))
+            .background(backgroundColor)
     ) {
-        // Main Scrollable Content
+        // ==============================================================
+        // ETHEREAL MONOCHROME ARTWORK (Matching img_eb6491dca02a.jpg)
+        // ==============================================================
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(360.dp)
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 72.dp)
+        ) {
+            val artColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
+            val sphereColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.12f)
+            val cx = size.width / 2f
+            val cy = size.height * 0.38f
+
+            // Glowing sphere held in hands
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(sphereColor, Color.Transparent),
+                    center = Offset(cx, cy),
+                    radius = 52.dp.toPx()
+                ),
+                radius = 52.dp.toPx(),
+                center = Offset(cx, cy)
+            )
+            drawCircle(
+                color = artColor,
+                radius = 34.dp.toPx(),
+                center = Offset(cx, cy),
+                style = Stroke(width = 1.2.dp.toPx())
+            )
+
+            // Head silhouette
+            drawCircle(
+                color = artColor,
+                radius = 12.dp.toPx(),
+                center = Offset(cx, cy - 56.dp.toPx()),
+                style = Stroke(width = 1.2.dp.toPx())
+            )
+
+            // Torso and spine
+            drawLine(
+                color = artColor,
+                start = Offset(cx, cy - 44.dp.toPx()),
+                end = Offset(cx, cy + 54.dp.toPx()),
+                strokeWidth = 1.2.dp.toPx()
+            )
+
+            // Arms cradling the glowing sphere
+            drawArc(
+                color = artColor,
+                startAngle = 25f,
+                sweepAngle = 130f,
+                useCenter = false,
+                topLeft = Offset(cx - 40.dp.toPx(), cy - 22.dp.toPx()),
+                size = androidx.compose.ui.geometry.Size(80.dp.toPx(), 48.dp.toPx()),
+                style = Stroke(width = 1.2.dp.toPx())
+            )
+
+            // Legs standing on platform
+            drawLine(
+                color = artColor,
+                start = Offset(cx - 8.dp.toPx(), cy + 54.dp.toPx()),
+                end = Offset(cx - 18.dp.toPx(), size.height - 24.dp.toPx()),
+                strokeWidth = 1.2.dp.toPx()
+            )
+            drawLine(
+                color = artColor,
+                start = Offset(cx + 8.dp.toPx(), cy + 54.dp.toPx()),
+                end = Offset(cx + 18.dp.toPx(), size.height - 24.dp.toPx()),
+                strokeWidth = 1.2.dp.toPx()
+            )
+
+            // Cables spreading to floor apparatus
+            val cables = listOf(-70.dp.toPx(), -40.dp.toPx(), 40.dp.toPx(), 70.dp.toPx())
+            cables.forEach { ox ->
+                val p = Path().apply {
+                    moveTo(cx, cy + 44.dp.toPx())
+                    cubicTo(
+                        cx + ox * 0.3f, size.height * 0.70f,
+                        cx + ox * 0.7f, size.height * 0.90f,
+                        cx + ox, size.height
+                    )
+                }
+                drawPath(
+                    path = p,
+                    color = artColor.copy(alpha = artColor.alpha * 0.75f),
+                    style = Stroke(width = 1.dp.toPx())
+                )
+            }
+        }
+
+        // ==============================================================
+        // MAIN SCROLLABLE CONTENT (Agents List & Sessions)
+        // ==============================================================
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -261,7 +361,7 @@ fun LandingScreen(
                         text = "Agents",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                        color = if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F),
                         letterSpacing = (-0.2).sp
                     )
 
@@ -292,7 +392,11 @@ fun LandingScreen(
                                 .defaultMinSize(minHeight = 52.dp)
                                 .applePressable(0.97f) {
                                     TalosHaptics.sendHaptic(context)
-                                    expandedToolId = if (isExpanded) null else tool.id
+                                    if (tool.delegates.isNotEmpty()) {
+                                        expandedToolId = if (isExpanded) null else tool.id
+                                    } else {
+                                        onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
+                                    }
                                 }
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -303,38 +407,17 @@ fun LandingScreen(
                                 shapeType = tool.mascotShape
                             )
 
-                            Spacer(modifier = Modifier.width(14.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
 
-                            // Name & Subtitle / Activity
+                            // Name & Subtitle / Description
                             Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = tool.name,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                        letterSpacing = (-0.15).sp
-                                    )
-
-                                    if (tool.delegateCount > 0) {
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f),
-                                            modifier = Modifier.padding(start = 2.dp)
-                                        ) {
-                                            Text(
-                                                text = "${tool.delegateCount} agents",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = tool.mascotColor,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                            )
-                                        }
-                                    }
-                                }
+                                Text(
+                                    text = tool.name,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                    letterSpacing = (-0.15).sp
+                                )
 
                                 Spacer(modifier = Modifier.height(2.dp))
 
@@ -348,13 +431,13 @@ fun LandingScreen(
                                 )
                             }
 
-                            // Trailing Chevron
+                            // Trailing Chevron (Navigates directly to Chat)
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .applePressable(0.92f) {
                                         TalosHaptics.sendHaptic(context)
-                                        onGetStarted()
+                                        onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -374,21 +457,21 @@ fun LandingScreen(
                                     isDark = isDark,
                                     onClick = {
                                         TalosHaptics.sendHaptic(context)
-                                        onGetStarted()
+                                        onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
                                     }
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // 24dp SVG Icon Container
+                                        // 28dp SVG Icon Container
                                         Box(
                                             modifier = Modifier
                                                 .size(28.dp)
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .background(delegate.accentColor.copy(alpha = if (isDark) 0.18f else 0.12f))
                                                 .border(
-                                                    BorderStroke(0.6.dp, delegate.accentColor.copy(alpha = 0.35f)),
+                                                    BorderStroke(0.8.dp, delegate.accentColor.copy(alpha = 0.35f)),
                                                     RoundedCornerShape(8.dp)
                                                 ),
                                             contentAlignment = Alignment.Center
@@ -400,7 +483,7 @@ fun LandingScreen(
                                             )
                                         }
 
-                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Spacer(modifier = Modifier.width(12.dp))
 
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
@@ -432,12 +515,12 @@ fun LandingScreen(
                             }
                         }
 
-                        // 3. Tree Branch Leaf: "N more sessions >" (matching screenshot)
+                        // 3. Tree Branch Leaf: "N more sessions >" (matching img_eb6491dca02a.jpg)
                         AgentBranchRow(
                             isDark = isDark,
                             onClick = {
                                 TalosHaptics.sendHaptic(context)
-                                onGetStarted()
+                                onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
                             }
                         ) {
                             Row(
@@ -466,7 +549,7 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // TOP FLOATING LIQUID GLASS BAR (Matching img_036cefc1179d.jpg)
+        // TOP FLOATING LIQUID GLASS BAR (Matching img_eb6491dca02a.jpg)
         // ==============================================================
         Row(
             modifier = Modifier
@@ -479,22 +562,25 @@ fun LandingScreen(
             // Left Pill: [Chat | Agents] Dual View Toggle
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color(0xFFE5E5EA).copy(alpha = 0.90f),
-                border = appleLiquidGlassCardBorder(isDark, 0.8.dp),
-                shadowElevation = 4.dp
+                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
+                border = BorderStroke(
+                    0.8.dp,
+                    if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                ),
+                shadowElevation = 3.dp
             ) {
                 Row(
                     modifier = Modifier.padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Chat Button
+                    // Chat Button (Navigates to active chat)
                     Box(
                         modifier = Modifier
                             .size(width = 44.dp, height = 34.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
                                 if (selectedTopTab == 0) {
-                                    if (isDark) Color(0xFF2C2C2E) else Color.White
+                                    if (isDark) Color(0xFF2C2C2E) else Color(0xFF1D1D1F)
                                 } else Color.Transparent
                             )
                             .applePressable(0.94f) {
@@ -508,22 +594,22 @@ fun LandingScreen(
                             imageVector = TalosIcons.TalosChat,
                             contentDescription = "Switch to chat",
                             tint = if (selectedTopTab == 0) {
-                                if (isDark) Color.White else Color(0xFF1D1D1F)
+                                Color.White
                             } else {
-                                if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f)
+                                if (isDark) Color.White.copy(alpha = 0.50f) else Color(0xFF1D1D1F).copy(alpha = 0.45f)
                             },
                             modifier = Modifier.size(18.dp)
                         )
                     }
 
-                    // Agents Button
+                    // Agents Button (Active in screenshot)
                     Box(
                         modifier = Modifier
                             .size(width = 44.dp, height = 34.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(
                                 if (selectedTopTab == 1) {
-                                    if (isDark) Color(0xFF2C2C2E) else Color.White
+                                    if (isDark) Color(0xFF2C2C2E) else Color.Transparent
                                 } else Color.Transparent
                             )
                             .applePressable(0.94f) {
@@ -535,11 +621,7 @@ fun LandingScreen(
                         Icon(
                             imageVector = TalosIcons.TalosHub,
                             contentDescription = "Switch to agents",
-                            tint = if (selectedTopTab == 1) {
-                                if (isDark) Color.White else Color(0xFF1D1D1F)
-                            } else {
-                                if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f)
-                            },
+                            tint = if (isDark) Color.White else Color(0xFF1D1D1F),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -549,9 +631,12 @@ fun LandingScreen(
             // Right Pill: [Filter | More Options]
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color(0xFFE5E5EA).copy(alpha = 0.90f),
-                border = appleLiquidGlassCardBorder(isDark, 0.8.dp),
-                shadowElevation = 4.dp
+                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
+                border = BorderStroke(
+                    0.8.dp,
+                    if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                ),
+                shadowElevation = 3.dp
             ) {
                 Row(
                     modifier = Modifier.padding(4.dp),
@@ -581,7 +666,7 @@ fun LandingScreen(
                             .clip(RoundedCornerShape(16.dp))
                             .applePressable(0.94f) {
                                 TalosHaptics.sendHaptic(context)
-                                onOpenWizard?.invoke()
+                                onOpenSettings?.invoke() ?: onOpenWizard?.invoke()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -611,9 +696,12 @@ fun LandingScreen(
             // Floating Search Pill
             Surface(
                 shape = RoundedCornerShape(28.dp),
-                color = if (isDark) Color(0xFF161820).copy(alpha = 0.88f) else Color(0xFFFFFFFF).copy(alpha = 0.92f),
-                border = appleLiquidGlassCardBorder(isDark, 1.dp),
-                shadowElevation = 6.dp,
+                color = if (isDark) Color(0xFF161820).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.95f),
+                border = BorderStroke(
+                    1.dp,
+                    if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                ),
+                shadowElevation = 4.dp,
                 modifier = Modifier
                     .weight(1f)
                     .height(54.dp)
@@ -660,20 +748,15 @@ fun LandingScreen(
                 }
             }
 
-            // Circular Compose / Create FAB
+            // Circular Compose / Create FAB (Lavender button in light mode matching screenshot)
             Surface(
                 shape = CircleShape,
-                color = if (isDark) Color(0xFF2C2C32).copy(alpha = 0.92f) else Color(0xFFE5E5EA).copy(alpha = 0.95f),
+                color = if (isDark) Color(0xFF2C2C32).copy(alpha = 0.92f) else Color(0xFFD4D0E2),
                 border = BorderStroke(
-                    1.2.dp,
-                    Brush.verticalGradient(
-                        listOf(
-                            Color.White.copy(alpha = if (isDark) 0.50f else 0.85f),
-                            Color.White.copy(alpha = if (isDark) 0.10f else 0.20f)
-                        )
-                    )
+                    1.dp,
+                    if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.06f)
                 ),
-                shadowElevation = 6.dp,
+                shadowElevation = 4.dp,
                 modifier = Modifier
                     .size(54.dp)
                     .applePressable(0.92f) {
@@ -699,7 +782,7 @@ fun LandingScreen(
 
 /**
  * Renders cute Apple-style mascot squircles with expressive eyes,
- * matching img_036cefc1179d.jpg.
+ * matching img_eb6491dca02a.jpg.
  */
 @Composable
 fun CuteMascot(
@@ -713,24 +796,27 @@ fun CuteMascot(
         else -> RoundedCornerShape(16.dp)
     }
 
+    val widthDp = if (shapeType == "pill") 48.dp else 44.dp
+    val heightDp = if (shapeType == "pill") 34.dp else 44.dp
+
     Box(
         modifier = modifier
-            .size(44.dp)
-            .shadow(4.dp, mascotShape, ambientColor = color.copy(alpha = 0.40f))
+            .size(width = widthDp, height = heightDp)
+            .shadow(3.dp, mascotShape, ambientColor = color.copy(alpha = 0.35f))
             .clip(mascotShape)
             .background(color),
         contentAlignment = Alignment.Center
     ) {
-        // Specular 3D glass gloss on top half
+        // Specular top highlight
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(18.dp)
+                .height(16.dp)
                 .align(Alignment.TopCenter)
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            Color.White.copy(alpha = 0.35f),
+                            Color.White.copy(alpha = 0.30f),
                             Color.Transparent
                         )
                     )

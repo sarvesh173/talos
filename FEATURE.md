@@ -3219,3 +3219,39 @@ Incorporated all findings from the OmniRush CLI sandbox audit (`AUDIT_REPORT.md`
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21116` and `versionName` to `"2.11.16"`.
+
+---
+
+## 145. Apple ID-Grade Interactive Sarvesh Account Card, Account Detail Sheet & Clean SVG Settings Architecture
+
+Integrated the complete settings refactor designed and audited by GPT Astra in the OmniRush sandbox:
+
+### 1. Apple ID-Grade Sarvesh Account Surface (`SettingsScreen.kt`)
+- Replaced the static member banner with a full-width interactive Apple ID-grade personal card (`applePressable(0.94f)`).
+- Custom `'S'` monogram badge encircled by a subtle theme-derived linear gradient ring.
+- SF Pro typography hierarchy:
+  - Header: `"TALOS portal"` with status capsule `"Autonomous core"`
+  - Identity: `"Sarvesh"`
+  - Subtitle: `"Owner • Autonomous mesh architect"`
+  - Verification: `"Tailscale encrypted subnet • Node verified"`
+- Added **`AccountDetailBottomSheet`**:
+  - Displays linked node encryption fingerprint (`"Protected by the linked node"` or caller-provided key).
+  - Live session active badge (`"Encrypted session live"`).
+  - Direct quick navigation to Transport management and Security review.
+  - 48dp `"Done"` dismiss action.
+
+### 2. Functional Settings Architecture & Clean SVG Glyphs
+- Standardized all leading row icons to direct 22dp `TalosIcons` outline glyphs with zero colored background boxes.
+- Made settings controls fully functional:
+  - Transport protocol toggle with inline animated expandable configuration form, handshake tester, and masked bearer token toggle.
+  - Biometrics and Notifications toggles bound directly to persistent client flows.
+  - Dual-layer caching control with granular access affordance.
+- Built-in `applePressable` tactile micro-interactions and smooth spring transitions across all rows.
+- 48dp minimum finger touch target guaranteed on all switches, disclosure rows, text-field actions, and buttons.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21117` and `versionName` to `"2.11.17"`.

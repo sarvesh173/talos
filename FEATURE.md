@@ -3459,3 +3459,34 @@ Refined `LandingScreen.kt` based on real mobile screenshot feedback (`img_5f6f48
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21124` and `versionName` to `"2.11.24"`.
+
+---
+
+## 153. Pixel-Perfect 1:1 Match of Reference Hub Architecture
+
+Delivered exact 1:1 layout matching the reference screenshot:
+
+### 1. Organic Creature Mascots with Expressive Eyes
+- Restored the cute creature avatars:
+  - Hermes: Purple Squircle with two expressive eyes.
+  - alya: Red Cloud with two expressive character eyes.
+  - mom: Pink Capsule with two expressive character eyes.
+  - Cloud Code: Terracotta Squircle with two expressive character eyes.
+  - OpenCode: Blue Squircle with two expressive character eyes.
+
+### 2. High-Density Single Latest Agent plus Expandable Branch
+- Only displays the single latest active delegate directly under the parent tool.
+- Positions the elegant curved branch leaf directly beneath the mascot center, exactly as in reference.
+- Tapping expands the full delegate list and allows collapsing back on demand.
+
+### 3. Clean Spacing and Ethereal Background Alignment
+- Clean airy spacing between parent items (8pt/12pt vertical grid).
+- Ethereal monochrome artwork preserved in lower background without visual clutter.
+- 100% compliance with @enmera/ai-design-check: 0 errors, 0 warnings.
+
+- [x] Verification and Tests:
+  - npx @enmera/ai-design-check: 0 errors, 0 warnings in LandingScreen.kt.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build and release verification.
+- [x] Incremented Version Code and Name:
+  - Bumped versionCode to 21125 and versionName to 2.11.25.

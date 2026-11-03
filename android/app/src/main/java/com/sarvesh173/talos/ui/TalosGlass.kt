@@ -2,8 +2,14 @@ package com.sarvesh173.talos.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -154,7 +160,7 @@ fun AppleLiquidGlassFloatingButton(
 ) {
     val isDark = LocalIsDark.current
     Surface(
-        shape = androidx.compose.foundation.shape.CircleShape,
+        shape = CircleShape,
         color = if (isDark) Color(0xFF242630).copy(alpha = 0.75f) else Color(0xFFFFFFFF).copy(alpha = 0.82f),
         border = BorderStroke(
             1.2.dp,
@@ -167,12 +173,12 @@ fun AppleLiquidGlassFloatingButton(
         ),
         shadowElevation = 6.dp,
         modifier = modifier
-            .androidx.compose.foundation.layout.size(48.dp)
+            .size(48.dp)
             .applePressable(0.92f) { onClick() }
     ) {
-        androidx.compose.foundation.layout.Box(
-            modifier = Modifier.androidx.compose.foundation.layout.fillMaxSize(),
-            contentAlignment = androidx.compose.ui.Alignment.Center
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
             icon()
         }

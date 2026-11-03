@@ -205,12 +205,14 @@ fun LookAndFeelScreen(
             // -----------------------------------------------------------------
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                border = BorderStroke(
-                    0.6.dp,
-                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
-                ),
-                modifier = Modifier.fillMaxWidth()
+                color = if (isDark) Color(0xFF161820).copy(alpha = 0.82f) else Color(0xFFFFFFFF).copy(alpha = 0.88f),
+                border = appleLiquidGlassCardBorder(isDark, 1.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = appleLiquidGlassBackground(isDark, effectiveAccentColor),
+                        shape = RoundedCornerShape(20.dp)
+                    )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -240,11 +242,19 @@ fun LookAndFeelScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (isDark) Color(0xFF161618) else Color(0xFFE5E5EA))
+                            .background(
+                                if (isDark) Color(0xFF0F1014).copy(alpha = 0.85f)
+                                else Color(0xFFE2E4EA).copy(alpha = 0.90f)
+                            )
                             .border(
                                 BorderStroke(
-                                    0.6.dp,
-                                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                                    0.8.dp,
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            if (isDark) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.60f),
+                                            Color.Transparent
+                                        )
+                                    )
                                 ),
                                 RoundedCornerShape(12.dp)
                             )
@@ -257,20 +267,38 @@ fun LookAndFeelScreen(
                             label = "appearance_pill_offset"
                         )
 
-                        // Elevated sliding pill
+                        // Elevated sliding Liquid Glass pill with caustic depth
                         Surface(
                             modifier = Modifier
                                 .offset(x = pillOffset)
                                 .width(segmentWidth)
                                 .height(40.dp),
                             shape = RoundedCornerShape(8.dp),
-                            color = if (isDark) Color(0xFF3A3A3C) else Color.White,
+                            color = Color.Transparent,
                             border = BorderStroke(
-                                0.6.dp,
-                                if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                                1.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = if (isDark) 0.45f else 0.85f),
+                                        Color.White.copy(alpha = if (isDark) 0.10f else 0.20f)
+                                    )
+                                )
                             ),
-                            shadowElevation = 2.dp
-                        ) {}
+                            shadowElevation = 4.dp
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                if (isDark) Color(0xFF383A44).copy(alpha = 0.94f) else Color(0xFFFFFFFF).copy(alpha = 0.96f),
+                                                if (isDark) Color(0xFF282A32).copy(alpha = 0.94f) else Color(0xFFF2F4F8).copy(alpha = 0.96f)
+                                            )
+                                        )
+                                    )
+                            )
+                        }
 
                         Row(
                             modifier = Modifier
@@ -283,7 +311,7 @@ fun LookAndFeelScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .fillMaxHeight()
-                                        .applePressable(0.96f) {
+                                        .applePressable(0.94f) {
                                             TalosHaptics.sendHaptic(context)
                                             client.setThemeMode(modeKey)
                                             if (modeKey == "LIGHT" && isDark) {
@@ -592,14 +620,11 @@ fun LookAndFeelScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    border = BorderStroke(
-                        0.6.dp,
-                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
-                    ),
+                    color = if (isDark) Color(0xFF161820).copy(alpha = 0.82f) else Color(0xFFFFFFFF).copy(alpha = 0.88f),
+                    border = appleLiquidGlassCardBorder(isDark, 1.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .applePressable(0.96f) {
                             TalosHaptics.sendHaptic(context)
                             showFontMenu = true
                         }
@@ -692,7 +717,7 @@ fun LookAndFeelScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 2. TEXT SIZE SELECTION BUTTON (Opens Floating Popup Menu matching img_adec807ee049.jpg)
             val popupSizeList = remember {
@@ -711,14 +736,11 @@ fun LookAndFeelScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    border = BorderStroke(
-                        0.6.dp,
-                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
-                    ),
+                    color = if (isDark) Color(0xFF161820).copy(alpha = 0.82f) else Color(0xFFFFFFFF).copy(alpha = 0.88f),
+                    border = appleLiquidGlassCardBorder(isDark, 1.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .applePressable(0.96f) {
                             TalosHaptics.sendHaptic(context)
                             showSizeMenu = true
                         }
@@ -795,7 +817,7 @@ fun LookAndFeelScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // 3. CONTINUOUS TEXT SIZE SLIDER (Shown directly below the button in img_adec807ee049.jpg)
             val sliderValue = when (currentFontScale.lowercase()) {
@@ -976,10 +998,10 @@ private fun AccentSwatchCircle(
 
     Box(
         modifier = Modifier
-            .size(46.dp)
+            .size(48.dp)
             .then(
                 if (isSelected) {
-                    Modifier.border(2.5.dp, if (isDark) Color.White else Color(0xFF1D1D1F), CircleShape)
+                    Modifier.border(2.dp, Brush.sweepGradient(listOf(color, Color.White, color)), CircleShape)
                 } else Modifier
             ),
         contentAlignment = Alignment.Center
@@ -992,6 +1014,22 @@ private fun AccentSwatchCircle(
                 .applePressable(0.92f) { onClick() },
             contentAlignment = Alignment.Center
         ) {
+            // 3D Apple Optical Glass Specular Bevel
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.45f),
+                                Color.White.copy(alpha = 0.08f),
+                                Color.Transparent
+                            ),
+                            startY = 0f,
+                            endY = 45f
+                        )
+                    )
+            )
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
@@ -1017,32 +1055,50 @@ private fun RainbowColorWheelSwatch(
 
     Box(
         modifier = Modifier
-            .size(46.dp)
+            .size(48.dp)
             .then(
                 if (isSelected) {
-                    Modifier.border(2.5.dp, if (isDark) Color.White else Color(0xFF1D1D1F), CircleShape)
+                    Modifier.border(2.dp, Brush.sweepGradient(listOf(Color.Red, Color.Yellow, Color.Cyan, Color.Red)), CircleShape)
                 } else Modifier
             ),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(
+        Box(
             modifier = Modifier
                 .size(38.dp)
                 .clip(CircleShape)
-                .applePressable(0.92f) { onClick() }
+                .applePressable(0.92f) { onClick() },
+            contentAlignment = Alignment.Center
         ) {
-            val sweepColors = listOf(
-                Color.Red,
-                Color.Yellow,
-                Color.Green,
-                Color.Cyan,
-                Color.Blue,
-                Color.Magenta,
-                Color.Red
-            )
-            drawCircle(
-                brush = Brush.sweepGradient(sweepColors, center),
-                radius = size.width / 2f
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val sweepColors = listOf(
+                    Color.Red,
+                    Color.Yellow,
+                    Color.Green,
+                    Color.Cyan,
+                    Color.Blue,
+                    Color.Magenta,
+                    Color.Red
+                )
+                drawCircle(
+                    brush = Brush.sweepGradient(sweepColors, center),
+                    radius = size.width / 2f
+                )
+            }
+            // Specular glass crescent over rainbow circle
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.50f),
+                                Color.Transparent
+                            ),
+                            startY = 0f,
+                            endY = 40f
+                        )
+                    )
             )
         }
     }
@@ -1063,9 +1119,19 @@ private fun BackgroundOptionCard(
         shape = RoundedCornerShape(16.dp),
         color = previewColor,
         border = BorderStroke(
-            width = if (isSelected) 2.dp else 0.8.dp,
-            color = if (isSelected) accentColor else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f))
+            width = if (isSelected) 2.dp else 1.dp,
+            brush = if (isSelected) {
+                Brush.sweepGradient(listOf(accentColor, Color.White.copy(alpha = 0.8f), accentColor))
+            } else {
+                Brush.verticalGradient(
+                    listOf(
+                        if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.12f),
+                        if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f)
+                    )
+                )
+            }
         ),
+        shadowElevation = if (isSelected) 6.dp else 0.dp,
         modifier = modifier
             .height(96.dp)
             .applePressable(0.96f) { onClick() }
@@ -1082,6 +1148,10 @@ private fun BackgroundOptionCard(
                     .height(20.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(if (title.contains("paper", ignoreCase = true)) Color(0xFFFFFDF8) else Color(0xFFFFFFFF))
+                    .border(
+                        BorderStroke(0.6.dp, Color.Black.copy(alpha = 0.06f)),
+                        RoundedCornerShape(8.dp)
+                    )
             )
 
             Row(
@@ -1138,9 +1208,19 @@ private fun DarkBackgroundOptionCard(
         shape = RoundedCornerShape(16.dp),
         color = canvasColor,
         border = BorderStroke(
-            width = if (isSelected) 2.dp else 0.8.dp,
-            color = if (isSelected) accentColor else Color.White.copy(alpha = 0.12f)
+            width = if (isSelected) 2.dp else 1.dp,
+            brush = if (isSelected) {
+                Brush.sweepGradient(listOf(accentColor, Color.White.copy(alpha = 0.8f), accentColor))
+            } else {
+                Brush.verticalGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.25f),
+                        Color.White.copy(alpha = 0.05f)
+                    )
+                )
+            }
         ),
+        shadowElevation = if (isSelected) 6.dp else 0.dp,
         modifier = modifier
             .height(115.dp)
             .applePressable(0.96f) { onClick() }
@@ -1151,13 +1231,17 @@ private fun DarkBackgroundOptionCard(
                 .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Simulated chat bubble preview
+            // Simulated chat bubble preview with specular edge
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(44.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(bubbleColor)
+                    .border(
+                        BorderStroke(0.6.dp, Color.White.copy(alpha = 0.10f)),
+                        RoundedCornerShape(12.dp)
+                    )
             )
 
             Row(

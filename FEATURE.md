@@ -3277,3 +3277,31 @@ Fixed screenshot findings in `LookAndFeelScreen.kt` and unified all settings sub
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21118` and `versionName` to `"2.11.18"`.
+
+---
+
+## 147. Aggressive Apple Liquid Glass Material Architecture & Interactive Optical Swatches
+
+Synthesized official Apple HIG Liquid Glass (iOS 26+), Emil Kowalski fluid interactions, and Anthropic frontend design principles into an aggressive glass aesthetic:
+
+### 1. Translucent Frosted Glass & Caustic Backlight (`TalosGlass.kt` & `LookAndFeelScreen.kt`)
+- Added `appleLiquidGlassCardBorder`: Directional specular top highlight (`Color.White.copy(alpha = 0.38f)` in dark / `0.75f` in light) fading to a faint bottom rim.
+- Added `appleLiquidGlassBackground`: Radial caustic glow reflecting the active accent color directly through the translucent glass matrix (`alpha = 0.82f`).
+- Upgraded primary `Appearance` surface into an authentic Liquid Glass container with continuous 20dp squircle curvature.
+
+### 2. Hyper-Glassy Segmented Pill Control
+- Recessed frosted capsule track with top-edge directional hairline highlight.
+- Sliding indicator pill upgraded to a multi-layered Liquid Glass slab with 4dp caustic drop shadow (`effectiveAccentColor` ambient tint) and smooth critically damped spring interpolation (`dampingRatio = 0.85f, stiffness = 420f`).
+- Tactile hover and press physics (`applePressable(0.94f)`) on each segment.
+
+### 3. Optical Glass Jewel Swatches & Background Option Cards
+- Upgraded color swatches to 48dp minimum touch targets with an iridescent chromatic halo border on selection and a 3D optical glass specular crescent highlight across the top arc.
+- Enhanced `DarkBackgroundOptionCard` and `BackgroundOptionCard` with specular liquid glass borders and elevated caustic shadows on active selection.
+- Refined spacing in typography controls to strict 4px grid (`12.dp` and `16.dp`).
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21119` and `versionName` to `"2.11.19"`.

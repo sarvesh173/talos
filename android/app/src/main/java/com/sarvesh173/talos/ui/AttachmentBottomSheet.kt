@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
 import com.sarvesh173.talos.network.TalosClient
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,16 +72,28 @@ fun AttachmentBottomSheet(
         }
     }
 
+    val scope = rememberCoroutineScope()
+
     // (1) Camera Capture & Permission Launcher
+    // TakePicturePreview returns a downscaled bitmap with no file behind it, so
+    // the frame used to be compressed, described in text and thrown away. The
+    // capture now uploads to the core and attaches the returned media URL, so
+    // the agent actually receives pixels.
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
-        if (bitmap != null) {
+        if (bitmap == null) return@rememberLauncherForActivityResult
+        scope.launch {
             val stream = java.io.ByteArrayOutputStream()
-            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, stream)
-            val sizeKb = stream.size() / 1024
-            onSendText("[Live camera snapshot attached • ${bitmap.width}x${bitmap.height} • ${sizeKb}KB • Tailscale verified]")
-            Toast.makeText(context, "Captured photo attached to context", Toast.LENGTH_SHORT).show()
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 88, stream)
+            val bytes = stream.toByteArray()
+            val uploaded = client.uploadMedia(bytes, "camera_${System.currentTimeMillis()}.jpg")
+            if (uploaded != null) {
+                onSendText("[Live camera snapshot • ${bitmap.width}x${bitmap.height} • ${bytes.size / 1024}KB]\n${uploaded}")
+            } else {
+                onSendText("[Live camera snapshot captured but upload failed — check the mesh link]")
+            }
+            Toast.makeText(context, "Camera snapshot attached", Toast.LENGTH_SHORT).show()
             onDismiss()
         }
     }

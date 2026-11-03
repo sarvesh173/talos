@@ -107,6 +107,7 @@ import com.sarvesh173.talos.ui.features.SecurityScreen
 import com.sarvesh173.talos.ui.features.CachingScreen
 import com.sarvesh173.talos.ui.features.NotificationsScreen
 import com.sarvesh173.talos.ui.*
+import com.sarvesh173.talos.ui.TalosHaptics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -159,23 +160,65 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val runtimePermissions = arrayOf(
+        Manifest.permission.POST_NOTIFICATIONS,
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO
+    )
+
+    /** Request every runtime permission the app actually uses, once. */
+    private fun requestMissingRuntimePermissions() {
+        val missing = runtimePermissions.filter {
+            checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isNotEmpty()) {
+            requestPermissions(missing.toTypedArray(), 4001)
+        }
+    }
+
+    /**
+     * When the user permanently denies a permission, the only way back is the
+     * system app settings page. Surface that instead of leaving a button that
+     * quietly does nothing.
+     */
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != 4001) return
+        val permanentlyDenied = permissions.indices.any { index ->
+            grantResults.getOrNull(index) != PackageManager.PERMISSION_GRANTED &&
+                !shouldShowRequestPermissionRationale(permissions[index])
+        }
+        if (permanentlyDenied) {
+            runCatching {
+                startActivity(
+                    Intent(
+                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        android.net.Uri.fromParts("package", packageName, null)
+                    )
+                )
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        TalosHaptics.init(this)
         client = TalosClient(this, lifecycleScope)
 
-        // Runtime notification permission (Android 13+): agents surface task
-        // completions and alarms through system notifications.
-        if (android.os.Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(
-                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                4001
-            )
-        }
+        // Runtime permissions.
+        //
+        // Android only shows a system dialog once: after a permanent denial the
+        // request resolves instantly with a denial and the user is left with a
+        // dead feature and no explanation. So we request the full functional set
+        // up front, and when anything is permanently denied we route the user to
+        // the app's own settings page instead of silently failing later.
+        requestMissingRuntimePermissions()
 
         // Agent-first pairing link: talos://pair?url=<core>&token=<token>
         handlePairingIntent(intent)

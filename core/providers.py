@@ -278,6 +278,36 @@ PROVIDER_CATALOG: Tuple[ProviderSpec, ...] = (
         context_length=131072,
         models_path="/v1/models",
     ),
+    ProviderSpec(
+        id="commandcode",
+        name="CommandCode",
+        vendor="Command Code",
+        base_url="http://127.0.0.1:4123/v1",
+        api_style="openai",
+        default_model="deepseek/deepseek-v4.1-flash",
+        docs_url="https://commandcode.ai/docs/provider",
+        credential_env_vars=("COMMANDCODE_API_KEY",),
+        context_length=1048576,
+        timeout=20.0,
+        notes=(
+            "Local CLI-protocol bridge (commandcode-api-proxy). The documented "
+            "/provider/v1 surface is plan-gated, so the proxy translates OpenAI "
+            "requests onto the CLI transport that the subscription does cover."
+        ),
+    ),
+    ProviderSpec(
+        id="opencode",
+        name="OpenCode Free Bridge",
+        vendor="OpenCode",
+        base_url="http://127.0.0.1:4059/v1",
+        api_style="openai",
+        default_model="pulse-alpha-free",
+        docs_url="https://opencode.ai",
+        credential_env_vars=("OPENCODE_API_KEY", "OPENCODE_ZEN_API_KEY"),
+        context_length=1048576,
+        timeout=20.0,
+        notes="Unauthenticated local bridge; upstream is IP rate-limited.",
+    ),
     _hermes_spec(),
 )
 
@@ -293,6 +323,8 @@ REQUIRED_PROVIDER_IDS: Tuple[str, ...] = (
     "mistral",
     "qwen",
     "hermes",
+    "commandcode",
+    "opencode",
 )
 
 

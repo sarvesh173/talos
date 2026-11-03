@@ -37,12 +37,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.R
+import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.network.TalosClient
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+/** Clock label for a core timestamp (epoch seconds). */
+private fun formatClock(epochSeconds: Double): String =
+    SimpleDateFormat("HH:mm", Locale.getDefault())
+        .format(Date((epochSeconds * 1000).toLong()))
 
 /**
  * TALOS Apple Liquid Glass Native Agent Chat Screen
@@ -79,7 +84,11 @@ fun AppleAgentChatScreen(
     val listState = rememberLazyListState()
 
     var inputText by remember { mutableStateOf("") }
-    var isThinking by remember { mutableStateOf(false) }
+
+    // Live room stream. The screen renders whatever the core actually sent;
+    // it never fabricates an agent reply.
+    val liveMessages by client.messages.collectAsState()
+    val isThinking by client.isAgentTyping.collectAsState()
 
     // Intercept back gesture to return to Hub
     BackHandler {
@@ -87,16 +96,23 @@ fun AppleAgentChatScreen(
         onBack()
     }
 
-    // Dynamic message history for the active session
-    val messages = remember {
-        mutableStateListOf(
+    val messages = remember(liveMessages) {
+        liveMessages.map { msg ->
             ChatMessage(
-                id = "msg_welcome",
-                sender = "agent",
-                text = "Connected to $agentName session. You are working directly in this worktree. What should we build or inspect next?",
-                timestamp = "Just now"
+                id = msg.id,
+                sender = if (msg.sender_role == Role.human) "user" else "agent",
+                text = msg.content,
+                timestamp = formatClock(msg.created_at),
+                codeBlock = null
             )
-        )
+        }
+    }
+
+    // Bind the composer to the room this session represents.
+    LaunchedEffect(sessionId) {
+        if (client.isPaired.value) {
+            client.switchRoom(sessionId)
+        }
     }
 
     // Auto-scroll on new messages
@@ -138,7 +154,7 @@ fun AppleAgentChatScreen(
                             modifier = Modifier
                                 .widthIn(max = 280.dp)
                                 .clip(RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp))
-                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = Color.White.copy(alpha = 0.5f))
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = Color.White.copy(alpha = 0.5f), shape = RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp))
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                 Text(
@@ -190,7 +206,7 @@ fun AppleAgentChatScreen(
                             modifier = Modifier
                                 .widthIn(max = 290.dp)
                                 .clip(RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp))
-                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor)
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp))
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                 Text(
@@ -482,36 +498,13 @@ fun AppleAgentChatScreen(
                     color = if (hasText) brandColor else (if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)),
                     modifier = Modifier
                         .size(36.dp)
-                        .applePressable(0.90f) {
+                        .applePressable(0.90f, pressHaptic = true) {
                             if (hasText && !isThinking) {
-                                TalosHaptics.sendHaptic(context)
                                 val textToSend = inputText.trim()
                                 inputText = ""
-                                val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-
-                                messages.add(
-                                    ChatMessage(
-                                        id = "msg_${System.currentTimeMillis()}",
-                                        sender = "user",
-                                        text = textToSend,
-                                        timestamp = now
-                                    )
-                                )
-
-                                isThinking = true
-                                scope.launch {
-                                    delay(1000)
-                                    isThinking = false
-                                    messages.add(
-                                        ChatMessage(
-                                            id = "msg_${System.currentTimeMillis() + 1}",
-                                            sender = "agent",
-                                            text = "Task received for $agentName. Executing in local worktree context.",
-                                            timestamp = now,
-                                            codeBlock = "// Executing: $textToSend\nStatus: Verified clean (Exit 0)"
-                                        )
-                                    )
-                                }
+                                // Real transport. The core echoes the message back
+                                // over the room socket and streams the agent reply.
+                                client.sendMessage(textToSend)
                             }
                         }
                 ) {

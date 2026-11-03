@@ -9,10 +9,46 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 object TalosHaptics {
-    var isHapticsEnabled: Boolean = true
+    private const val PREFS = "talos_haptics"
+    private const val KEY_ENABLED = "haptics_enabled"
+
+    @Volatile
+    private var appContext: Context? = null
+
+    @Volatile
+    private var enabled: Boolean = true
+
+    /**
+     * Haptics preference, backed by SharedPreferences so it survives restarts.
+     * Exposed as a Compose state so a settings toggle and the press feedback in
+     * this same file can never disagree about the current value.
+     */
+    var isHapticsEnabledState = mutableStateOf(true)
+        private set
+
+    var isHapticsEnabled: Boolean
+        get() = enabled
+        set(value) {
+            enabled = value
+            isHapticsEnabledState.value = value
+            appContext?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                ?.edit()?.putBoolean(KEY_ENABLED, value)?.apply()
+        }
+
+    /** Call once from Application/Activity so the preference is restored. */
+    fun init(context: Context) {
+        appContext = context.applicationContext
+        val stored = context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_ENABLED, true)
+        enabled = stored
+        isHapticsEnabledState.value = stored
+    }
+
     private val WAVEFORM = longArrayOf(0, 30, 50, 30)
 
     /**

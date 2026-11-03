@@ -3693,3 +3693,17 @@ Integrated dedicated physical shader modifier `appleLiquidGlassOptics` deliverin
   - Remote GitHub Actions CI build and release verification.
 - [x] Incremented Version Code and Name:
   - Bumped versionCode to 21132 and versionName to 2.11.32.
+
+## 161. Transport Auth, Real Chat Wire, Shape-Correct Glass & Permission Recovery (v2.11.33)
+
+- [x] Fixed a class of silent 401s: 24 of 26 core calls (git diff, providers, agents, image studio, browser) never sent `Authorization`. One OkHttp interceptor now attaches the paired bearer token to every request and skips only `/health`, `/api/brand`, `/api/auth/*`.
+- [x] Camera capture now uploads real pixels: the downscaled bitmap is compressed and POSTed to `/api/upload`; the returned media URL is attached to the message instead of a text description of a discarded photo.
+- [x] Replaced the scripted chat reply (`delay(1000)` + hardcoded string) with the live room stream: `client.sendMessage()` over the room socket, agent replies rendered from `message_new` / `token_delta`, typing state from `typing_event`.
+- [x] Liquid Glass optics are now shape-aware. Every refraction/sheen/rim layer is clipped through the host `Shape` outline, so asymmetric chat bubbles no longer leak opaque corner wedges.
+- [x] Interactive glass primitives: `appleInteractiveGlass` + `rememberGlassPressAlpha` (effects-family, alpha-only, reduced-motion safe).
+- [x] Button physics corrected: `MetalButton` / `MetalIconButton` drop the 0.90 pop spring for a 0.97 Apple compression with touch-down haptics, and respect reduced motion.
+- [x] Haptics became a real preference: SharedPreferences-backed, Compose-observable, toggled from Settings.
+- [x] Permissions hardened: camera + mic + notifications requested up front; permanent denial routes to the app's system settings page instead of leaving a dead button.
+- [x] Settings group surfaces and all feature screens (Security, Notifications, Caching, Chat Preferences) carry the Liquid Glass treatment.
+- [x] Backend: `commandcode` (local CLI-protocol bridge) and `opencode` providers added to the catalog; provider tests parametrised to the required-id set.
+- [x] Verified: `pytest tests/` 63 passed; `:app:compileDebugKotlin` BUILD SUCCESSFUL.

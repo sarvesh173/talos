@@ -26,7 +26,9 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -74,9 +76,35 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         encodeDefaults = true
     }
 
+    /**
+     * Auth interceptor: every core request carries the paired bearer token.
+     *
+     * Previously only two call sites added the header by hand; the other
+     * twenty-four (git diff, providers, agents, image studio, browser) hit
+     * `require_auth` on the core and silently 401'd. Installing the header in
+     * one interceptor makes that class of bug impossible to reintroduce when a
+     * new endpoint is added.
+     */
+    private fun authInterceptor(): Interceptor = Interceptor { chain ->
+        val original = chain.request()
+        val alreadyAuthed = original.header("Authorization") != null
+        val isPublic = original.url.encodedPath.let {
+            it == "/health" || it == "/api/brand" || it.startsWith("/api/auth/")
+        }
+        val request = if (alreadyAuthed || isPublic || apiToken.isBlank()) {
+            original
+        } else {
+            original.newBuilder()
+                .header("Authorization", "Bearer $apiToken")
+                .build()
+        }
+        chain.proceed(request)
+    }
+
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS)
+        .addInterceptor(authInterceptor())
         .build()
 
     /**
@@ -308,6 +336,29 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 Log.w(TAG, "Failed to fetch gallery images: ${e.message}")
             }
         }
+    }
+
+    /**
+     * Upload a media blob to the core and return its served URL, or null when
+     * the upload fails. Attachments are what the agent actually receives —
+     * describing a photo in the message text is not an attachment.
+     */
+    suspend fun uploadMedia(bytes: ByteArray, filename: String): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            val body = bytes.toRequestBody("application/octet-stream".toMediaTypeOrNull())
+            val part = MultipartBody.Part.createFormData("file", filename, body)
+            val req = Request.Builder()
+                .url("$baseUrl/api/upload")
+                .post(MultipartBody.Builder().setType(MultipartBody.FORM).addPart(part).build())
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val text = resp.body?.string() ?: return@use null
+                json.decodeFromString<UploadDto>(text).url?.let { url ->
+                    if (url.startsWith("http")) url else baseUrl.trimEnd('/') + url
+                }
+            }
+        }.getOrNull()
     }
 
     fun generateImage(
@@ -1553,6 +1604,13 @@ data class GeneratedImageDto(
     val aspect_ratio: String,
     val image_url: String,
     val created_at: Double
+)
+
+@kotlinx.serialization.Serializable
+data class UploadDto(
+    val url: String? = null,
+    val filename: String? = null,
+    val size: Long? = null
 )
 
 @kotlinx.serialization.Serializable

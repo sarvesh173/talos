@@ -91,6 +91,7 @@ fun LandingScreen(
     val currentAccentName by client.accentColor.collectAsState()
     val effectiveAccent = resolveAccentColor(currentAccentName, isDark)
 
+    val reducedMotion = rememberReducedMotion()
     var selectedToolId by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
@@ -267,16 +268,23 @@ fun LandingScreen(
                 val isAdvancing = targetState.first != null
                 val slideDir = if (isAdvancing) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End
 
-                (fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) +
-                slideIntoContainer(
-                    towards = slideDir,
-                    animationSpec = spring(stiffness = 420f, dampingRatio = 0.82f)
-                )).togetherWith(
-                fadeOut(animationSpec = tween(180)) +
-                slideOutOfContainer(
-                    towards = slideDir,
-                    animationSpec = spring(stiffness = 420f, dampingRatio = 0.82f)
-                ))
+                if (reducedMotion) {
+                    // Reduced motion: keep the change legible with a short cross-fade,
+                    // drop the spatial translation that causes vestibular discomfort.
+                    fadeIn(animationSpec = tween(fadeMillis(true), easing = LinearOutSlowInEasing))
+                        .togetherWith(fadeOut(animationSpec = tween(fadeMillis(true))))
+                } else {
+                    (fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) +
+                    slideIntoContainer(
+                        towards = slideDir,
+                        animationSpec = spatialSpring(false)
+                    )).togetherWith(
+                    fadeOut(animationSpec = tween(180)) +
+                    slideOutOfContainer(
+                        towards = slideDir,
+                        animationSpec = spatialSpring(false)
+                    ))
+                }
             },
             modifier = Modifier.fillMaxSize()
         ) { (toolId, tool) ->
@@ -346,15 +354,14 @@ fun LandingScreen(
                         // WWDC25 Liquid Glass Card with Refraction, Specular Rim, and Meniscus Reflection
                         Surface(
                             shape = RoundedCornerShape(20.dp),
-                            color = if (isDark) Color(0xFF141620).copy(alpha = 0.82f) else Color.White.copy(alpha = 0.90f),
+                            color = if (isDark) Color(0xFF141620).copy(alpha = 0.86f) else Color.White.copy(alpha = 0.92f),
                             shadowElevation = 4.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp)
                                 .clip(RoundedCornerShape(20.dp))
-                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = cliTool.brandColor)
-                                .applePressable(0.97f) {
-                                    TalosHaptics.sendHaptic(context)
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = cliTool.brandColor, cornerRadius = 20.dp)
+                                .applePressable(0.97f, pressHaptic = true) {
                                     selectedToolId = cliTool.id
                                 }
                         ) {
@@ -482,8 +489,7 @@ fun LandingScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 48.dp)
-                                .applePressable(0.96f) {
-                                    TalosHaptics.sendHaptic(context)
+                                .applePressable(0.96f, pressHaptic = true) {
                                     selectedToolId = null
                                 }
                                 .padding(vertical = 4.dp),
@@ -521,9 +527,8 @@ fun LandingScreen(
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 48.dp)
                                 .clip(RoundedCornerShape(20.dp))
-                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = Color(0xFF34C759))
-                                .applePressable(0.96f) {
-                                    TalosHaptics.sendHaptic(context)
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = Color(0xFF34C759), cornerRadius = 20.dp)
+                                .applePressable(0.96f, pressHaptic = true) {
                                     val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
                                     val newId = "sess_${System.currentTimeMillis()}"
                                     val newTitle = "New ${tool.name} session"
@@ -640,8 +645,7 @@ fun LandingScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
-                                    .applePressable(0.97f) {
-                                        TalosHaptics.sendHaptic(context)
+                                    .applePressable(0.97f, pressHaptic = true) {
                                         onOpenAgentChat?.invoke(session.id, session.title, tool.name, tool.iconRes, tool.brandColor)
                                     }
                             ) {
@@ -751,8 +755,7 @@ fun LandingScreen(
                                 .defaultMinSize(minWidth = 72.dp, minHeight = 34.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(if (isDark) Color(0xFF252733) else Color(0xFFE5E5EA))
-                                .applePressable(0.94f) {
-                                    TalosHaptics.sendHaptic(context)
+                                .applePressable(0.94f, pressHaptic = true) {
                                     selectedToolId = null
                                 }
                                 .padding(horizontal = 12.dp),
@@ -782,8 +785,7 @@ fun LandingScreen(
                             modifier = Modifier
                                 .size(width = 44.dp, height = 34.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .applePressable(0.94f) {
-                                    TalosHaptics.sendHaptic(context)
+                                .applePressable(0.94f, pressHaptic = true) {
                                     val defaultTool = cliTools.first()
                                     onOpenAgentChat?.invoke("sess_active", "Active conversation", defaultTool.name, defaultTool.iconRes, defaultTool.brandColor)
                                 },
@@ -803,8 +805,7 @@ fun LandingScreen(
                                 .size(width = 44.dp, height = 34.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(if (isDark) Color(0xFF252733) else Color(0xFF1D1D1F))
-                                .applePressable(0.94f) {
-                                    TalosHaptics.sendHaptic(context)
+                                .applePressable(0.94f, pressHaptic = true) {
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -841,8 +842,7 @@ fun LandingScreen(
                         modifier = Modifier
                             .size(width = 40.dp, height = 34.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .applePressable(0.94f) {
-                                TalosHaptics.sendHaptic(context)
+                            .applePressable(0.94f, pressHaptic = true) {
                                 onToggleTheme()
                             },
                         contentAlignment = Alignment.Center
@@ -859,8 +859,7 @@ fun LandingScreen(
                         modifier = Modifier
                             .size(width = 40.dp, height = 34.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .applePressable(0.94f) {
-                                TalosHaptics.sendHaptic(context)
+                            .applePressable(0.94f, pressHaptic = true) {
                                 onOpenSettings?.invoke() ?: onOpenWizard?.invoke()
                             },
                         contentAlignment = Alignment.Center
@@ -965,8 +964,7 @@ fun LandingScreen(
                 shadowElevation = 5.dp,
                 modifier = Modifier
                     .size(54.dp)
-                    .applePressable(0.92f) {
-                        TalosHaptics.sendHaptic(context)
+                    .applePressable(0.92f, pressHaptic = true) {
                         val tool = currentTool ?: cliTools.first()
                         val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
                         val newId = "sess_${System.currentTimeMillis()}"

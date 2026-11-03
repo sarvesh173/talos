@@ -59,6 +59,7 @@ fun SettingsScreen(
     val notificationsAllowed by client.notificationsAllowed.collectAsState()
     val cacheChatList by client.cacheChatList.collectAsState()
     val cacheMessages by client.cacheMessages.collectAsState()
+    val hapticsEnabled by TalosHaptics.isHapticsEnabledState
 
     var showTransportConfig by remember { mutableStateOf(false) }
     var showAccountDetails by remember { mutableStateOf(false) }
@@ -310,7 +311,7 @@ fun SettingsScreen(
             SettingsGroup {
                 SettingsMinimalRow(
                     title = "Documentation",
-                    subtitle = "TALOS v2.10.82",
+                    subtitle = "TALOS v${com.sarvesh173.talos.BuildConfig.VERSION_NAME}",
                     icon = TalosIcons.TalosDoc,
                     onClick = {
                         Toast.makeText(
@@ -318,6 +319,19 @@ fun SettingsScreen(
                             "TALOS core documentation",
                             Toast.LENGTH_SHORT
                         ).show()
+                    }
+                )
+
+                SettingsDivider()
+
+                SettingsToggleRow(
+                    title = "Haptic feedback",
+                    subtitle = if (hapticsEnabled) "Every action responds" else "Silent",
+                    icon = TalosIcons.TalosSparkle,
+                    checked = hapticsEnabled,
+                    onCheckedChange = {
+                        TalosHaptics.isHapticsEnabled = it
+                        if (it) TalosHaptics.sendHaptic(context)
                     }
                 )
             }
@@ -668,8 +682,12 @@ private fun SettingsGroup(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val shape = RoundedCornerShape(20.dp)
+    val isDark = LocalIsDark.current
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = MaterialTheme.colorScheme.primary, cornerRadius = 20.dp),
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant)

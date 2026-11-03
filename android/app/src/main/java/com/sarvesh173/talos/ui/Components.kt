@@ -1381,8 +1381,7 @@ fun AppleToggleSwitch(
                 ),
                 RoundedCornerShape(16.dp)
             )
-            .applePressable(0.95f) {
-                TalosHaptics.sendHaptic(context)
+            .applePressable(0.95f, pressHaptic = true) {
                 onCheckedChange(!checked)
             },
         contentAlignment = Alignment.CenterStart

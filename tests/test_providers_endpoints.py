@@ -41,7 +41,7 @@ class ProviderEndpointsTest(unittest.IsolatedAsyncioTestCase):
         resp = await self.client.get("/api/providers", headers=self.auth_header())
         self.assertEqual(resp.status_code, 200, resp.text)
         providers = resp.json()
-        self.assertEqual(len(providers), 7, providers)
+        self.assertEqual(len(providers), len(REQUIRED_IDS), providers)
         ids = {p["id"] for p in providers}
         self.assertEqual(ids, REQUIRED_IDS, ids)
 
@@ -64,7 +64,7 @@ class ProviderEndpointsTest(unittest.IsolatedAsyncioTestCase):
         resp = await self.client.get("/api/providers/summary", headers=self.auth_header())
         self.assertEqual(resp.status_code, 200, resp.text)
         body = resp.json()
-        self.assertEqual(body["total"], 7)
+        self.assertEqual(body["total"], len(REQUIRED_IDS))
         self.assertIsInstance(body["operational"], int)
         self.assertIsInstance(body["average_latency_ms"], (int, float, type(None)))
 
@@ -89,7 +89,7 @@ class ProviderEndpointsTest(unittest.IsolatedAsyncioTestCase):
         resp = await self.client.get("/api/providers/health", headers=self.auth_header())
         self.assertEqual(resp.status_code, 200, resp.text)
         providers = resp.json()
-        self.assertEqual(len(providers), 7, providers)
+        self.assertEqual(len(providers), len(REQUIRED_IDS), providers)
         ids = {p["id"] for p in providers}
         self.assertEqual(ids, REQUIRED_IDS, ids)
 

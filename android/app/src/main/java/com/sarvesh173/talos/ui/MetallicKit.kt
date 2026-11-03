@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -56,16 +57,25 @@ fun MetalButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val reducedMotion = rememberReducedMotion()
+    val interactive = enabled && !isLoading
 
+    // Apple press physics: a short, controlled compression (0.97) rather than a
+    // dramatic 0.90 pop. Large spatial deltas on a full-width button read as a
+    // layout jump on 60 Hz panels and fight the ripple-free surface.
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled && !isLoading) 0.90f else 1.0f,
-        animationSpec = androidx.compose.animation.core.spring(
-            dampingRatio = 0.52f,
-            stiffness = 900f
-        ),
-        label = "MetalButtonPoppingScale"
+        targetValue = if (isPressed && interactive) pressScale(reducedMotion, 0.97f) else 1f,
+        animationSpec = spatialSpring(reducedMotion),
+        label = "MetalButtonPressScale"
     )
+
+    // Tactile cue fires on touch-down, in the same frame the surface compresses.
+    LaunchedEffect(isPressed) {
+        if (isPressed && interactive) {
+            TalosHaptics.sendHaptic(context)
+        }
+    }
 
     val containerColor = when (variant) {
         MetalButtonVariant.Primary -> MaterialTheme.colorScheme.primary
@@ -86,10 +96,7 @@ fun MetalButton(
     }
 
     Surface(
-        onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            onClick()
-        },
+        onClick = onClick,
         enabled = enabled && !isLoading,
         shape = RoundedCornerShape(12.dp),
         color = if (enabled) containerColor else containerColor.copy(alpha = 0.38f),
@@ -97,7 +104,7 @@ fun MetalButton(
         border = borderStroke,
         interactionSource = interactionSource,
         modifier = modifier
-            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+            .heightIn(min = 48.dp)
             .scale(scale)
     ) {
         Row(
@@ -148,16 +155,20 @@ fun MetalIconButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val reducedMotion = rememberReducedMotion()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.88f else 1.0f,
-        animationSpec = androidx.compose.animation.core.spring(
-            dampingRatio = 0.52f,
-            stiffness = 900f
-        ),
-        label = "MetalIconButtonPoppingScale"
+        targetValue = if (isPressed && enabled) pressScale(reducedMotion, 0.94f) else 1f,
+        animationSpec = spatialSpring(reducedMotion),
+        label = "MetalIconButtonPressScale"
     )
+
+    LaunchedEffect(isPressed) {
+        if (isPressed && enabled) {
+            TalosHaptics.sendHaptic(context)
+        }
+    }
 
     Box(
         modifier = modifier
@@ -171,10 +182,7 @@ fun MetalIconButton(
                 interactionSource = interactionSource,
                 indication = null,
                 enabled = enabled,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClick()
-                }
+                onClick = onClick
             ),
         contentAlignment = Alignment.Center
     ) {

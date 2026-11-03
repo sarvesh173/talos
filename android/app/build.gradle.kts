@@ -13,8 +13,8 @@ android {
         applicationId = "com.sarvesh173.talos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21132
-        versionName = "2.11.32"
+        versionCode = 21133
+        versionName = "2.11.33"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,6 +54,8 @@ android {
 
     buildFeatures {
         compose = true
+        // BuildConfig carries the version name so settings never hardcodes a stale string.
+        buildConfig = true
     }
 }
 

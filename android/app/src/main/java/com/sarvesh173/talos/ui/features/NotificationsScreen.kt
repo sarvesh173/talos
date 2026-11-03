@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.AppleToggleSwitch
 import com.sarvesh173.talos.ui.LocalIsDark
+import com.sarvesh173.talos.ui.appleLiquidGlassOptics
 import com.sarvesh173.talos.ui.applePressable
 import com.sarvesh173.talos.ui.talosTextMuted
 
@@ -133,7 +134,14 @@ fun NotificationsScreen(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .appleLiquidGlassOptics(
+                        isDark = isDark,
+                        chromaticGlow = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 20.dp
+                    )
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     // Notifications Allowed Row
@@ -295,7 +303,14 @@ fun NotificationsScreen(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .appleLiquidGlassOptics(
+                        isDark = isDark,
+                        chromaticGlow = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 20.dp
+                    )
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     categories.forEachIndexed { index, item ->
@@ -360,7 +375,14 @@ fun NotificationsScreen(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .appleLiquidGlassOptics(
+                        isDark = isDark,
+                        chromaticGlow = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 20.dp
+                    )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(

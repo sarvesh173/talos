@@ -9,11 +9,13 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * TALOS M3 Expressive Motion Tokens.
@@ -125,18 +127,28 @@ fun Modifier.applePressScale(
 
 fun Modifier.applePressable(
     pressedScale: Float = 0.97f,
+    pressHaptic: Boolean = false,
     onClick: () -> Unit
 ): Modifier = composed {
+    val context = LocalContext.current
+    val reducedMotion = rememberReducedMotion()
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (pressed) pressedScale else 1f,
-        animationSpec = spring(
-            dampingRatio = 0.85f,
-            stiffness = 400f
-        ),
+        targetValue = if (pressed) pressScale(reducedMotion, pressedScale) else 1f,
+        animationSpec = spatialSpring(reducedMotion),
         label = "apple_pressable"
     )
+
+    // Haptic harmony: the tactile cue fires on touch-down, on the same frame the
+    // scale begins to compress. Firing on onClick instead would land after the
+    // visual response and break the causal link between finger and feedback.
+    LaunchedEffect(pressed) {
+        if (pressed && pressHaptic) {
+            TalosHaptics.sendHaptic(context)
+        }
+    }
+
     this
         .scale(scale)
         .clickable(

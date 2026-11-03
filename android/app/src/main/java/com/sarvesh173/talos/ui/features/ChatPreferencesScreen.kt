@@ -122,7 +122,14 @@ fun ChatPreferencesScreen(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .appleLiquidGlassOptics(
+                        isDark = isDark,
+                        chromaticGlow = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 20.dp
+                    )
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     // Thinking
@@ -210,7 +217,14 @@ fun ChatPreferencesScreen(
                     0.6.dp,
                     if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .appleLiquidGlassOptics(
+                        isDark = isDark,
+                        chromaticGlow = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 20.dp
+                    )
             ) {
                 ChatPreferenceToggleRow(
                     title = "Memory updates",

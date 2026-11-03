@@ -133,8 +133,12 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_opencode,
                         accentColor = Color(0xFF2563EB),
                         sessions = listOf(
-                            AgentSession("op_sess_1", "TALOS Apple design remake", "Just now", "Active", 14),
-                            AgentSession("op_sess_2", "AST cyclomatic complexity audit", "18m ago", "Completed", 6)
+                            AgentSession("ses_e5dcc117fffePxuWJE6NrZxZhE", "LandingScreen 3-tier navigation design", "Just now", "Active", 20),
+                            AgentSession("ses_e5e5c8d1fffe6DqRGlZ47M0eTV", "Top 3 longest Kotlin files line counts", "3h ago", "Completed", 11),
+                            AgentSession("ses_e5e861b56ffeUVpjWqUAcuVCFL", "TALOS Android: Liquid Glass, Compose performance", "3h ago", "Completed", 22),
+                            AgentSession("ses_e5e69286affe4FWfpjXuY7eMoz", "Liquid Glass HIG audit", "3h ago", "Completed", 62),
+                            AgentSession("ses_e5e83ee12ffeofZa3GLd50S5b4", "Touch target audit", "3h ago", "Completed", 182),
+                            AgentSession("ses_e5e8131deffend7h5wuRHaMEgq", "Liquid Glass, 48dp targets, state hoisting", "4h ago", "Completed", 23)
                         )
                     ),
                     DelegateAgent(

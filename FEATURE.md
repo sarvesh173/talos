@@ -3579,3 +3579,31 @@ Elevated TALOS mobile client across all official Apple Human Interface Guideline
   - Remote GitHub Actions CI build and release verification.
 - [x] Incremented Version Code and Name:
   - Bumped versionCode to 21128 and versionName to 2.11.28.
+
+---
+
+## 157. OpenCode Plugin for TALOS & Live Session Linking
+
+Integrated real-time OpenCode CLI bridge with dedicated GitHub plugin release:
+
+### 1. Published OpenCode Plugin for TALOS on GitHub
+- Created and released open-source repository `vhgrheh-sudo/hermes-plugin-opencode`.
+- Branded as `OpenCode Plugin for TALOS`.
+- Features read-only WAL database inspection of OpenCode SQLite database (`~/.local/share/opencode/opencode.db`).
+- Automated 30-second background live linking daemon emitting to `~/.hermes/opencode_live_state.json`.
+
+### 2. Live Session Linking in TALOS Hub
+- Populated OpenCode active agents with actual in-flight sessions from local worktrees:
+  - `LandingScreen 3-tier navigation design` (20 turns)
+  - `Top 3 longest Kotlin files line counts` (11 turns)
+  - `TALOS Android: Liquid Glass, Compose performance` (22 turns)
+  - `Liquid Glass HIG audit` (62 turns)
+  - `Touch target audit` (182 turns)
+- Enabled live `Create session` injection with haptics.
+
+- [x] Verification and Tests:
+  - npx @enmera/ai-design-check: 0 errors, 0 warnings in LandingScreen.kt.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build and release verification.
+- [x] Incremented Version Code and Name:
+  - Bumped versionCode to 21129 and versionName to 2.11.29.

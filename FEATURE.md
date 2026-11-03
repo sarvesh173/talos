@@ -3088,3 +3088,26 @@ Executed an unslop and Apple HIG polish pass on the primary landing hero and ver
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21111` and `versionName` to `"2.11.11"`.
+
+---
+
+## 140. Apple Safari-Grade Rounded Loaders, Tailscale Diagnostics & 48dp Visibility Target
+
+Implemented Apple HIG progress indicators, rounded stroke caps, and Tailscale connection diagnostics:
+
+### 1. Apple Safari-Style Rounded Progress Indicators
+- In `TalosBrowser`, upgraded `LinearProgressIndicator` to Apple Safari capsule standard (`.height(3.dp)`, `strokeCap = StrokeCap.Round`, `trackColor = Color.Transparent`).
+- In `AgentCanvasScreen`, normalized command-limit progress bars to 4dp with `StrokeCap.Round` and 4dp radius on the 4px grid.
+- In `ServiceGate`, aligned indeterminate loading capsule to standard 4dp height and 4dp corner radius.
+
+### 2. Service Gate Diagnostics & Secret Visibility Touch Targets
+- Upgraded the host API key visibility toggle `IconButton` to 48dp minimum finger touch target (`.size(48.dp)`).
+- Bound the Tailscale connection diagnostic card directly to `MaterialTheme.colorScheme.surfaceContainerHigh`.
+- Normalized retrying status pill text to quiet sentence case (`"Tailscale check recommended"` / `"Retrying connection"`).
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 findings across the full UI suite.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21112` and `versionName` to `"2.11.12"`.

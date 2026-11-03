@@ -38,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -180,15 +181,16 @@ fun TalosBrowserScreen(
                         Spacer(Modifier.width(4.dp))
                     }
 
-                    // Progress Bar
+                    // Progress Bar (Apple Safari Style Rounded Capsule)
                     if (isLoading) {
                         LinearProgressIndicator(
                             progress = { progress },
                             color = scheme.primary,
-                            trackColor = scheme.outlineVariant,
+                            trackColor = Color.Transparent,
+                            strokeCap = StrokeCap.Round,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(2.dp)
+                                .height(3.dp)
                         )
                     }
                 }

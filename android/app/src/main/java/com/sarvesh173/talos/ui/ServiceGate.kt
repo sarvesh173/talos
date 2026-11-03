@@ -251,7 +251,7 @@ fun ServiceGateScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Body
             Text(
@@ -270,13 +270,13 @@ fun ServiceGateScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Apple Progress Capsule (3dp height with gentle indeterminate sweep)
+            // Apple Progress Capsule (4dp height on 4px grid)
             if (checking) {
                 Box(
                     modifier = Modifier
                         .width(160.dp)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(2.dp))
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(4.dp))
                         .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f))
                 ) {
                     val infiniteTransition = rememberInfiniteTransition(label = "apple_progress")
@@ -311,7 +311,7 @@ fun ServiceGateScreen(
                 }
             } else {
                 MetalStatusPill(
-                    text = if (timeout) "Tailscale Check Recommended" else "Auto-Retrying Connection",
+                    text = if (timeout) "Tailscale check recommended" else "Retrying connection",
                     isActive = false,
                     activeColor = StatusGreen,
                     inactiveColor = if (timeout) Color(0xFFFF9F0A) else StatusAmber
@@ -324,7 +324,7 @@ fun ServiceGateScreen(
             if (timeout || blocked) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
                         Color(0xFFFF9F0A).copy(alpha = 0.40f)
@@ -402,7 +402,10 @@ fun ServiceGateScreen(
                     singleLine = true,
                     visualTransformation = if (isKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        IconButton(onClick = { isKeyVisible = !isKeyVisible }) {
+                        IconButton(
+                            onClick = { isKeyVisible = !isKeyVisible },
+                            modifier = Modifier.size(48.dp)
+                        ) {
                             Icon(
                                 imageVector = if (isKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = if (isKeyVisible) "Hide API key" else "Show API key",

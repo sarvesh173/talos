@@ -1025,10 +1025,11 @@ private fun CanvasNodeView(
                     progress = { (node.turnsUsed.toFloat() / node.commandLimit.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(4.dp)),
                     color = if (node.isPaused) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f) else MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    strokeCap = StrokeCap.Round
                 )
             }
         }

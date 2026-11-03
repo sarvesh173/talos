@@ -3519,3 +3519,35 @@ Refined `LandingScreen.kt` following strict user specifications (`img_85768f4cb2
   - Remote GitHub Actions CI build and release verification.
 - [x] Incremented Version Code and Name:
   - Bumped versionCode to 21126 and versionName to 2.11.26.
+
+---
+
+## 155. 3-Tier Apple Liquid Glass Architecture: CLI Tools, Active Agents, and Live Sessions
+
+Implemented complete 3-tier hierarchical navigation with aggressive Apple Liquid Glass architecture:
+
+### 1. Tier 1 (Pristine CLI Tools Hub)
+- Displays ONLY official developer CLI engines:
+  - `OpenCode`: Blue (`#2563EB`) with `ic_opencode`.
+  - `Hermes Agent`: Purple (`#7C4DFF`) with `ic_hermes`.
+  - `Claude Code`: Terracotta (`#D97757`) with `ic_claude`.
+  - `Codex CLI`: Emerald (`#10A37F`) with `ic_codex`.
+  - `OmniRush`: Violet (`#A855F7`) with `ic_omnirush`.
+- Clean card layout with specular rims, installed counts, and sub-agent badges.
+
+### 2. Tier 2 (Active Agents Drill-Down)
+- Tapping a CLI tool seamlessly slides into that tool active delegate agents.
+- Each agent row displays vector avatars, capability descriptions, and active status indicators.
+
+### 3. Tier 3 (Agent Sessions plus Create Session Action)
+- Tapping an agent transitions into that agent active sessions.
+- Prominent Apple Liquid Glass `Create session` pill button triggers new sessions with haptic feedback.
+- Lists active sessions with turn counters, status indicators, and timestamps.
+- Native Android `BackHandler` integration ensures fluid back-gesture transitions across all tiers.
+
+- [x] Verification and Tests:
+  - npx @enmera/ai-design-check: 0 errors, 0 warnings in LandingScreen.kt.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build and release verification.
+- [x] Incremented Version Code and Name:
+  - Bumped versionCode to 21127 and versionName to 2.11.27.

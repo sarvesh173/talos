@@ -47,14 +47,14 @@ import com.sarvesh173.talos.R
 import com.sarvesh173.talos.network.TalosClient
 
 /**
- * TALOS Exact 1:1 Agents Hub (Apple Liquid Glass Architecture)
+ * TALOS Agents Hub (Apple Liquid Glass Architecture)
  * 
- * Perfect match of img_0bf01a828d71.jpg:
- * 1. Expressive cute mascot creatures (Purple Squircle, Red Cloud, Pink Pill, etc.) with specular highlight and eyes.
- * 2. High-density tree branch: Shows latest active agent + clean curved connector (╰─ N more agents >).
- * 3. Expandable on tap to reveal all delegate agents without cluttering the screen.
- * 4. Perfectly aligned branch geometry originating from mascot center.
- * 5. Floating dual-capsule header + floating search pill + circular lavender compose FAB.
+ * Strict refinements based on direct user instructions:
+ * 1. CLI Tools (Hermes, Cloud Code, OpenCode) display their official SVG CLI logos.
+ * 2. Personal Agents (alya, mom) display their cute creature mascots with expressive eyes.
+ * 3. Default state is pristine and un-flooded: no sub-agents listed by default.
+ * 4. Single clean curved branch leaf beneath mascot: "╰─ N active agents >".
+ * 5. Tapping the CLI tool button or branch expands all agents on-demand with continuous tree stem.
  */
 
 data class DelegateAgent(
@@ -70,8 +70,10 @@ data class CliToolAgent(
     val id: String,
     val name: String,
     val description: String,
-    val mascotColor: Color,
-    val mascotShape: String, // "squircle", "cloud", "pill"
+    val isCliTool: Boolean, // true for Hermes, Cloud Code, OpenCode; false for alya, mom
+    val iconRes: Int,
+    val brandColor: Color,
+    val mascotShape: String = "squircle", // for non-CLI creature mascots
     val delegates: List<DelegateAgent>
 )
 
@@ -94,18 +96,19 @@ fun LandingScreen(
     var isAgentsSectionExpanded by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Map of expanded CLI tools (default false to keep clean 1:1 view matching screenshot)
+    // Map of expanded CLI tools (default false: pristine un-flooded hub)
     val expandedTools = remember { mutableStateMapOf<String, Boolean>() }
 
-    // CLI Tools and their active delegates matching img_0bf01a828d71.jpg
+    // Official CLI tools (with SVG logos) & personal companions (with creature eyes)
     val cliTools = remember {
         listOf(
             CliToolAgent(
                 id = "hermes",
                 name = "Hermes",
                 description = "No conversations yet — say hi",
-                mascotColor = Color(0xFF7C4DFF), // Purple squircle
-                mascotShape = "squircle",
+                isCliTool = true,
+                iconRes = R.drawable.ic_hermes,
+                brandColor = Color(0xFF7C4DFF),
                 delegates = listOf(
                     DelegateAgent(
                         id = "hermes_swe",
@@ -141,7 +144,9 @@ fun LandingScreen(
                 id = "alya",
                 name = "alya",
                 description = "Alya - helper agent linked to main system (same model, sepa\u2026",
-                mascotColor = Color(0xFFEF4444), // Red cloud
+                isCliTool = false,
+                iconRes = R.drawable.ic_hermes,
+                brandColor = Color(0xFFEF4444),
                 mascotShape = "cloud",
                 delegates = listOf(
                     DelegateAgent(
@@ -164,7 +169,9 @@ fun LandingScreen(
                 id = "mom",
                 name = "mom",
                 description = "No conversations yet — say hi",
-                mascotColor = Color(0xFFEC4899), // Pink pill
+                isCliTool = false,
+                iconRes = R.drawable.ic_openclaw,
+                brandColor = Color(0xFFEC4899),
                 mascotShape = "pill",
                 delegates = listOf(
                     DelegateAgent(
@@ -180,8 +187,9 @@ fun LandingScreen(
                 id = "claudecode",
                 name = "Cloud Code",
                 description = "Anthropic architecture & synthesis suite",
-                mascotColor = Color(0xFFD97757), // Terracotta squircle
-                mascotShape = "squircle",
+                isCliTool = true,
+                iconRes = R.drawable.ic_claude,
+                brandColor = Color(0xFFD97757),
                 delegates = listOf(
                     DelegateAgent(
                         id = "claude_planner",
@@ -210,8 +218,9 @@ fun LandingScreen(
                 id = "opencode",
                 name = "OpenCode",
                 description = "Pulse engine with max reasoning",
-                mascotColor = Color(0xFF2563EB), // Blue squircle
-                mascotShape = "squircle",
+                isCliTool = true,
+                iconRes = R.drawable.ic_opencode,
+                brandColor = Color(0xFF2563EB),
                 delegates = listOf(
                     DelegateAgent(
                         id = "opencode_pulse",
@@ -341,7 +350,7 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // MAIN SCROLLABLE CONTENT (1:1 Layout with img_0bf01a828d71.jpg)
+        // MAIN SCROLLABLE CONTENT (Pristine 1:1 Layout)
         // ==============================================================
         LazyColumn(
             modifier = Modifier
@@ -385,31 +394,50 @@ fun LandingScreen(
             if (isAgentsSectionExpanded) {
                 items(filteredTools, key = { it.id }) { tool ->
                     val isExpanded = expandedTools[tool.id] ?: false
-                    val latestDelegate = tool.delegates.firstOrNull()
-                    val otherDelegatesCount = (tool.delegates.size - 1).coerceAtLeast(0)
 
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                            .padding(vertical = 4.dp)
                     ) {
-                        // 1. Primary Tool Row with Expressive Mascot Creature
+                        // 1. Primary Tool Button / Row
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 48.dp)
                                 .applePressable(0.97f) {
                                     TalosHaptics.sendHaptic(context)
+                                    // Clicking the tool expands/collapses its agents
                                     expandedTools[tool.id] = !isExpanded
                                 }
                                 .padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Expressive Mascot Creature (Matching img_0bf01a828d71.jpg)
-                            CuteCreatureMascot(
-                                color = tool.mascotColor,
-                                shapeType = tool.mascotShape
-                            )
+                            // Official SVG CLI Icon for CLI Tools, or Expressive Creature Mascot for Companions
+                            if (tool.isCliTool) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(tool.brandColor.copy(alpha = if (isDark) 0.18f else 0.12f))
+                                        .border(
+                                            BorderStroke(1.dp, tool.brandColor.copy(alpha = 0.35f)),
+                                            RoundedCornerShape(12.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = tool.iconRes),
+                                        contentDescription = tool.name,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            } else {
+                                CuteCreatureMascot(
+                                    color = tool.brandColor,
+                                    shapeType = tool.mascotShape
+                                )
+                            }
 
                             Spacer(modifier = Modifier.width(16.dp))
 
@@ -446,16 +474,16 @@ fun LandingScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = TalosIcons.TalosChevronRight,
-                                    contentDescription = "Open ${tool.name}",
+                                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else TalosIcons.TalosChevronRight,
+                                    contentDescription = "Toggle ${tool.name}",
                                     tint = if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.30f),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
 
-                        // 2. Single Latest Active Agent (Clean & Compact under parent)
-                        if (latestDelegate != null && !isExpanded) {
+                        // 2. Single Curved Branch Leaf (when collapsed): "╰─ N active agents >"
+                        if (!isExpanded) {
                             CurvedBranchRow(
                                 isDark = isDark,
                                 onClick = {
@@ -465,146 +493,46 @@ fun LandingScreen(
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    // Compact 18dp SVG icon container
-                                    Box(
-                                        modifier = Modifier
-                                            .size(18.dp)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(latestDelegate.accentColor.copy(alpha = if (isDark) 0.16f else 0.10f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Image(
-                                            painter = painterResource(id = latestDelegate.iconRes),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                    }
-
                                     Text(
-                                        text = latestDelegate.name,
+                                        text = "${tool.delegates.size} more agents",
                                         fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
-                                        letterSpacing = (-0.1).sp
-                                    )
-
-                                    // Active green dot
-                                    Box(
-                                        modifier = Modifier
-                                            .size(4.dp)
-                                            .clip(CircleShape)
-                                            .background(StatusGreen)
-                                    )
-
-                                    Text(
-                                        text = "\u2014 ${latestDelegate.activity}",
-                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Normal,
-                                        color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
+                                    )
+                                    Icon(
+                                        imageVector = TalosIcons.TalosChevronRight,
+                                        contentDescription = null,
+                                        tint = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
                         }
 
-                        // 3. Clean Branch Leaf: "╰─ N more agents >" (Matching 225 more sessions > in img_0bf01a828d71.jpg)
-                        CurvedBranchRow(
-                            isDark = isDark,
-                            onClick = {
-                                TalosHaptics.sendHaptic(context)
-                                expandedTools[tool.id] = !isExpanded
-                            }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = if (isExpanded) {
-                                        "Hide delegates"
-                                    } else if (otherDelegatesCount > 0) {
-                                        "$otherDelegatesCount more agents"
-                                    } else {
-                                        "1 agent active"
-                                    },
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
-                                )
-                                Icon(
-                                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else TalosIcons.TalosChevronRight,
-                                    contentDescription = null,
-                                    tint = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                        }
-
-                        // 4. Expanded Delegate Agents List (If expanded by clicking N more agents)
+                        // 3. Expanded Delegate Agents List (Visible ONLY when user taps tool / more agents)
                         AnimatedVisibility(
                             visible = isExpanded && tool.delegates.isNotEmpty(),
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically()
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
-                                tool.delegates.forEach { delegate ->
-                                    CurvedBranchRow(
+                                tool.delegates.forEachIndexed { index, delegate ->
+                                    val isLast = index == tool.delegates.lastIndex
+                                    ConnectedTreeAgentRow(
+                                        delegate = delegate,
                                         isDark = isDark,
+                                        isLast = isLast,
                                         onClick = {
                                             TalosHaptics.sendHaptic(context)
                                         }
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(18.dp)
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(delegate.accentColor.copy(alpha = if (isDark) 0.16f else 0.10f)),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(id = delegate.iconRes),
-                                                    contentDescription = delegate.name,
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                            }
-
-                                            Text(
-                                                text = delegate.name,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F),
-                                                letterSpacing = (-0.1).sp
-                                            )
-
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(4.dp)
-                                                    .clip(CircleShape)
-                                                    .background(StatusGreen)
-                                            )
-
-                                            Text(
-                                                text = delegate.activity,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f),
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
+                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
@@ -824,10 +752,7 @@ fun LandingScreen(
 }
 
 /**
- * Expressive Mascot Creatures matching img_0bf01a828d71.jpg
- * - Purple Squircle (Hermes)
- * - Red Cloud (alya)
- * - Pink Capsule (mom)
+ * Expressive Mascot Creatures for Companions (alya, mom)
  */
 @Composable
 fun CuteCreatureMascot(
@@ -855,10 +780,7 @@ fun CuteCreatureMascot(
                 .align(Alignment.TopCenter)
                 .background(
                     Brush.verticalGradient(
-                        listOf(
-                            Color.White.copy(alpha = 0.30f),
-                            Color.Transparent
-                        )
+                        listOf(Color.White.copy(alpha = 0.30f), Color.Transparent)
                     )
                 )
         )
@@ -904,7 +826,7 @@ fun CuteCreatureMascot(
 /**
  * Curved branch row (╰─) precisely matching img_0bf01a828d71.jpg
  * - Originates beneath center of mascot.
- * - Smooth radius turn into horizontal lead.
+ * - Single smooth radius turn into horizontal lead.
  */
 @Composable
 fun CurvedBranchRow(
@@ -921,7 +843,6 @@ fun CurvedBranchRow(
             .padding(start = 20.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Delicate curved line
         Canvas(modifier = Modifier.size(width = 30.dp, height = 32.dp)) {
             val strokeColor = if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.15f)
             val path = Path().apply {
@@ -943,5 +864,107 @@ fun CurvedBranchRow(
         Spacer(modifier = Modifier.width(12.dp))
 
         content()
+    }
+}
+
+/**
+ * Ultra-compact connected tree row for delegate agents when expanded.
+ */
+@Composable
+fun ConnectedTreeAgentRow(
+    delegate: DelegateAgent,
+    isDark: Boolean,
+    isLast: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .applePressable(0.97f) { onClick() }
+            .padding(vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Canvas(modifier = Modifier.size(width = 36.dp, height = 36.dp)) {
+            val strokeColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.15f)
+            val stemX = 16.dp.toPx()
+            val branchY = size.height / 2f
+
+            drawLine(
+                color = strokeColor,
+                start = Offset(stemX, 0f),
+                end = Offset(stemX, if (isLast) branchY else size.height),
+                strokeWidth = 1.2.dp.toPx(),
+                cap = StrokeCap.Round
+            )
+
+            val path = Path().apply {
+                moveTo(stemX, branchY - 8.dp.toPx())
+                quadraticBezierTo(
+                    stemX, branchY,
+                    stemX + 8.dp.toPx(), branchY
+                )
+                lineTo(size.width, branchY)
+            }
+            drawPath(
+                path = path,
+                color = strokeColor,
+                style = Stroke(width = 1.2.dp.toPx(), cap = StrokeCap.Round)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(delegate.accentColor.copy(alpha = if (isDark) 0.16f else 0.10f))
+                .border(
+                    BorderStroke(0.6.dp, delegate.accentColor.copy(alpha = 0.30f)),
+                    RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = delegate.iconRes),
+                contentDescription = delegate.name,
+                modifier = Modifier.size(13.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = delegate.name,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F),
+                    letterSpacing = (-0.1).sp
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .clip(CircleShape)
+                        .background(StatusGreen)
+                )
+            }
+
+            Text(
+                text = delegate.activity,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+                color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }

@@ -13,8 +13,8 @@ android {
         applicationId = "com.sarvesh173.talos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21125
-        versionName = "2.11.25"
+        versionCode = 21126
+        versionName = "2.11.26"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

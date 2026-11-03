@@ -3490,3 +3490,32 @@ Delivered exact 1:1 layout matching the reference screenshot:
   - Remote GitHub Actions CI build and release verification.
 - [x] Incremented Version Code and Name:
   - Bumped versionCode to 21125 and versionName to 2.11.25.
+
+---
+
+## 154. Official CLI Vector Logos, Clean Single-Leaf Branching & On-Demand Agent Expansion
+
+Refined `LandingScreen.kt` following strict user specifications (`img_85768f4cb2ed.jpg`):
+
+### 1. Official CLI Vector Logos for Developer Engines
+- Assigned official SVG vector logos to CLI tools:
+  - `Hermes`: Official Hermes vector (`ic_hermes`) in a 38dp tinted squircle with glass border.
+  - `Cloud Code`: Official Claude Code vector (`ic_claude`) in a 38dp tinted squircle.
+  - `OpenCode`: Official OpenCode vector (`ic_opencode`) in a 38dp tinted squircle.
+- Preserved cute expressive character mascots (`..`) exclusively for personal companions (`alya`, `mom`).
+
+### 2. Elimination of Pre-Flooded Agent Rows
+- Resolved the double-elbow glitch from v2.11.25.
+- Default state displays zero sub-agents directly on the hub surface, preserving a pristine, airy aesthetic.
+- Displays a single clean curved branch line: `╰─ N more agents >`.
+
+### 3. Tap to Reveal Agents On-Demand
+- Clicking anywhere on the CLI tool row OR on the `╰─ N more agents >` branch smoothly expands all active delegate agents with an authentic continuous tree-stem hierarchy.
+- Clicking again collapses the list back cleanly.
+
+- [x] Verification and Tests:
+  - npx @enmera/ai-design-check: 0 errors, 0 warnings in LandingScreen.kt.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build and release verification.
+- [x] Incremented Version Code and Name:
+  - Bumped versionCode to 21126 and versionName to 2.11.26.

@@ -3305,3 +3305,29 @@ Synthesized official Apple HIG Liquid Glass (iOS 26+), Emil Kowalski fluid inter
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21119` and `versionName` to `"2.11.19"`.
+
+---
+
+## 148. Official Apple WWDC25 Liquid Glass System & Iridescent Bevel Refraction
+
+Directly scraped and synthesized official Apple Developer HIG (`developer.apple.com/design/human-interface-guidelines/materials.md` and `color.md`):
+
+### 1. Apple WWDC25 Liquid Glass Toggle Switch (`Components.kt`)
+- Directly reproduced the green glass toggle from Apple Developer hero illustration (`feature-s-new-design_2x.jpg`).
+- Translucent capsule track (`52x32dp`, `16dp` continuous curvature) with 1dp directional specular top rim.
+- Vibrant Apple Green liquid gradient (`Color(0xFF34C759)`) with convex optical lens thumb (`26dp`) and ambient colored glow shadow.
+- Damped spring animation (`dampingRatio = 0.82f, stiffness = 450f`) and tactile haptic tick.
+
+### 2. Apple Iridescent Specular Glass Rim (`TalosGlass.kt`)
+- Added `appleLiquidGlassIridescentBorder`: A multi-stop linear caustic gradient (White -> Apple Rose Pink -> Apple Violet -> Apple Azure -> Apple Green -> faint rim) catching ambient light along the corner curvature, matching the large glass panel on Apple Developer.
+- Applied to primary `Appearance` surface in `LookAndFeelScreen.kt`.
+
+### 3. Circular Liquid Glass Floating Lens Button (`TalosGlass.kt`)
+- Added `AppleLiquidGlassFloatingButton`: 48dp circular glass lens with directional specular rim (`1.2dp`) and ambient depth shadow, matching the centered `(+)` button from Apple Developer.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21120` and `versionName` to `"2.11.20"`.

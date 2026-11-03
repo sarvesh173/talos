@@ -1324,8 +1324,10 @@ fun ToolCallItem(tool: ToolCall) {
 }
 
 /**
- * Authentic Apple iOS 17/18 fluid toggle switch.
- * 51x31dp capsule with 27dp floating white thumb and spring animation.
+ * Authentic Apple WWDC25 Liquid Glass Toggle Switch.
+ * Directly grounded in Apple Developer Design (feature-s-new-design_2x.jpg).
+ * Features a translucent glass capsule enclosure with specular rim,
+ * vibrant Apple Green caustic liquid gradient, and a floating optical glass lens thumb.
  */
 @Composable
 fun AppleToggleSwitch(
@@ -1335,36 +1337,119 @@ fun AppleToggleSwitch(
     activeTrackColor: Color = Color(0xFF34C759)
 ) {
     val isDark = LocalIsDark.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     val thumbOffset by androidx.compose.animation.core.animateDpAsState(
-        targetValue = if (checked) 22.dp else 2.dp,
+        targetValue = if (checked) 22.dp else 3.dp,
         animationSpec = androidx.compose.animation.core.spring(
             dampingRatio = 0.82f,
-            stiffness = 500f
+            stiffness = 450f
         ),
         label = "apple_switch_thumb"
     )
-    val trackColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (checked) activeTrackColor else (if (isDark) Color(0xFF39393D) else Color(0xFFE9E9EA)),
-        animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 500f),
-        label = "apple_switch_track"
-    )
 
+    // Outer Liquid Glass Enclosure Capsule
     Box(
         modifier = modifier
-            .size(width = 51.dp, height = 31.dp)
-            .clip(CircleShape)
-            .background(trackColor)
-            .applePressable(0.96f) { onCheckedChange(!checked) }
-            .padding(vertical = 2.dp),
+            .size(width = 52.dp, height = 32.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                if (checked) {
+                    Brush.verticalGradient(
+                        listOf(
+                            activeTrackColor.copy(alpha = 0.95f),
+                            activeTrackColor.copy(alpha = 0.82f)
+                        )
+                    )
+                } else {
+                    Brush.verticalGradient(
+                        listOf(
+                            if (isDark) Color(0xFF2C2C30).copy(alpha = 0.85f) else Color(0xFFE5E5EA).copy(alpha = 0.90f),
+                            if (isDark) Color(0xFF1C1C20).copy(alpha = 0.85f) else Color(0xFFD1D1D6).copy(alpha = 0.90f)
+                        )
+                    )
+                }
+            )
+            .border(
+                BorderStroke(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = if (checked) 0.55f else (if (isDark) 0.28f else 0.65f)),
+                            Color.White.copy(alpha = if (checked) 0.12f else (if (isDark) 0.05f else 0.15f))
+                        )
+                    )
+                ),
+                RoundedCornerShape(16.dp)
+            )
+            .applePressable(0.95f) {
+                TalosHaptics.sendHaptic(context)
+                onCheckedChange(!checked)
+            },
         contentAlignment = Alignment.CenterStart
     ) {
+        // Specular ambient light sheen on glass top arc
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(14.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = if (isDark) 0.22f else 0.35f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        // Floating Liquid Glass Thumb Lens
         Box(
             modifier = Modifier
                 .offset(x = thumbOffset)
-                .size(27.dp)
-                .shadow(elevation = 2.5.dp, shape = CircleShape)
+                .size(26.dp)
+                .shadow(
+                    elevation = if (checked) 4.dp else 2.dp,
+                    shape = CircleShape,
+                    ambientColor = if (checked) activeTrackColor.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.20f)
+                )
                 .clip(CircleShape)
-                .background(Color.White)
-        )
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White,
+                            Color(0xFFF2F4F8)
+                        )
+                    )
+                )
+                .border(
+                    BorderStroke(
+                        0.8.dp,
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.White,
+                                Color.White.copy(alpha = 0.40f)
+                            )
+                        )
+                    ),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            // Internal 3D convex optical highlight
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.70f),
+                                Color.Transparent
+                            ),
+                            radius = 20f
+                        )
+                    )
+            )
+        }
     }
 }

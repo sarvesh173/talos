@@ -47,6 +47,48 @@ fun talosSpecularGlassBorder(
 }
 
 /**
+ * Creates Apple's signature iridescent chromatic glass rim border,
+ * directly matching the WWDC25 Liquid Glass hero visual from Apple Developer.
+ * Features a delicate caustic spectrum (White -> Rose Pink -> Violet -> Azure -> Green)
+ * across the top-left specular bevel.
+ */
+@Composable
+fun appleLiquidGlassIridescentBorder(
+    isDark: Boolean,
+    strokeWidth: Dp = 1.2.dp
+): BorderStroke {
+    val colors = if (isDark) {
+        listOf(
+            Color.White.copy(alpha = 0.48f),
+            Color(0xFFFF2D55).copy(alpha = 0.35f), // Apple Rose Pink
+            Color(0xFFAF52DE).copy(alpha = 0.40f), // Apple Violet
+            Color(0xFF007AFF).copy(alpha = 0.38f), // Apple Azure
+            Color(0xFF34C759).copy(alpha = 0.28f), // Apple Green
+            Color.White.copy(alpha = 0.12f),
+            Color.White.copy(alpha = 0.04f)
+        )
+    } else {
+        listOf(
+            Color.White.copy(alpha = 0.85f),
+            Color(0xFFFF2D55).copy(alpha = 0.45f),
+            Color(0xFFAF52DE).copy(alpha = 0.50f),
+            Color(0xFF007AFF).copy(alpha = 0.45f),
+            Color(0xFF34C759).copy(alpha = 0.35f),
+            Color.White.copy(alpha = 0.35f),
+            Color.Black.copy(alpha = 0.06f)
+        )
+    }
+    return BorderStroke(
+        width = strokeWidth,
+        brush = Brush.linearGradient(
+            colors = colors,
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+        )
+    )
+}
+
+/**
  * Creates an aggressive Apple Liquid Glass card border with specular top-edge refraction.
  */
 @Composable
@@ -99,3 +141,40 @@ fun Modifier.talosGlassSurface(
             blurRadius = blurRadius
         )
     )
+
+/**
+ * Floating Circular Liquid Glass Action Button,
+ * directly matching the centered (+) glass lens from Apple Developer Design.
+ */
+@Composable
+fun AppleLiquidGlassFloatingButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: @Composable () -> Unit
+) {
+    val isDark = LocalIsDark.current
+    Surface(
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = if (isDark) Color(0xFF242630).copy(alpha = 0.75f) else Color(0xFFFFFFFF).copy(alpha = 0.82f),
+        border = BorderStroke(
+            1.2.dp,
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = if (isDark) 0.60f else 0.90f),
+                    Color.White.copy(alpha = if (isDark) 0.12f else 0.25f)
+                )
+            )
+        ),
+        shadowElevation = 6.dp,
+        modifier = modifier
+            .androidx.compose.foundation.layout.size(48.dp)
+            .applePressable(0.92f) { onClick() }
+    ) {
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.androidx.compose.foundation.layout.fillMaxSize(),
+            contentAlignment = androidx.compose.ui.Alignment.Center
+        ) {
+            icon()
+        }
+    }
+}

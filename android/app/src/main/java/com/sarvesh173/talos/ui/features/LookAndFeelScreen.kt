@@ -206,7 +206,7 @@ fun LookAndFeelScreen(
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF161820).copy(alpha = 0.82f) else Color(0xFFFFFFFF).copy(alpha = 0.88f),
-                border = appleLiquidGlassCardBorder(isDark, 1.dp),
+                border = appleLiquidGlassIridescentBorder(isDark, 1.2.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(

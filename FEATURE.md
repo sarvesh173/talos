@@ -3427,3 +3427,35 @@ Directly addressed user feedback on CLI agents display and navigation stability:
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21123` and `versionName` to `"2.11.23"`.
+
+---
+
+## 152. Official SVG Tool Icons, Continuous Tree-Branch Alignment & Tightly Coupled Active Indicators
+
+Refined `LandingScreen.kt` based on real mobile screenshot feedback (`img_5f6f4871ed48.jpg`):
+
+### 1. Official Vector Logos for Primary CLI Tools
+- Replaced cartoon character mascots with official vector icons:
+  - `Hermes`: Official Hermes Agent vector (`R.drawable.ic_hermes`) in a 32dp tinted purple squircle with 0.8dp specular glass border.
+  - `Cloud Code`: Official Claude Code vector (`R.drawable.ic_claude`) in a 32dp tinted terracotta squircle.
+  - `OpenCode`: Official OpenCode vector (`R.drawable.ic_opencode`) in a 32dp tinted blue squircle.
+  - `alya`: Official vector emblem (`R.drawable.ic_hermes`) in a 32dp red squircle.
+  - `mom`: Official vector emblem (`R.drawable.ic_openclaw`) in a 32dp pink squircle.
+
+### 2. High-Density Continuous Tree-Branch Connector
+- Replaced detached, floating `╰─` lines with a continuous geometric tree stem:
+  - A vertical trunk line runs directly beneath the center of the 32dp parent icon (`x = 16dp`).
+  - Branch curves turn right with quadratic bezier curvature into each delegate agent icon.
+  - Connects smoothly whether intermediate or terminal leaf.
+
+### 3. Tightly Coupled Active Status Indicators
+- Replaced the detached green dot floating at the far right screen margin.
+- Coupled the active status indicator (`5dp` StatusGreen dot) directly adjacent to the delegate agent name (`Row(horizontalArrangement = Arrangement.spacedBy(8.dp))`).
+- Compacted row height to 32dp content with 48dp accessibility touch target.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings in `LandingScreen.kt`.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21124` and `versionName` to `"2.11.24"`.

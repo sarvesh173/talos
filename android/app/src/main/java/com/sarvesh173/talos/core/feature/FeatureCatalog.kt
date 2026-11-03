@@ -39,7 +39,7 @@ object FeatureCatalog {
         registerFeature(
             featureSlot(
                 id = "fleet",
-                title = "Agent Fleet",
+                title = "Agent fleet",
                 summary = "CLI agent fleet inspection & model routing",
                 icon = Icons.Default.Groups,
                 order = 10
@@ -51,7 +51,7 @@ object FeatureCatalog {
         registerFeature(
             featureSlot(
                 id = "vault",
-                title = "Provider Vault",
+                title = "Provider vault",
                 summary = "Encrypted 0600 provider & secret management",
                 icon = Icons.Default.Key,
                 order = 20

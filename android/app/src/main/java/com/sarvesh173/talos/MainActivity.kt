@@ -670,7 +670,7 @@ fun MainScreen(
             bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, bytes)
             val b64 = android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP)
             client.sendMessage("[Photo Captured: ${bitmap.width}x${bitmap.height}px]\ndata:image/jpeg;base64,$b64")
-            Toast.makeText(context, "Photo captured & attached to chamber!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Photo captured & attached to chamber", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -745,12 +745,12 @@ fun MainScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                        .padding(horizontal = 20.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "TALOS Chambers",
+                        text = "TALOS chambers",
                         color = talosTextPrimary,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
@@ -761,7 +761,7 @@ fun MainScreen(
 
                 HorizontalDivider(color = talosBorder, modifier = Modifier.padding(top = 8.dp))
 
-                LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
+                LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     items(
                         items = rooms,
                         key = { it.id },
@@ -774,7 +774,7 @@ fun MainScreen(
                                 modifier = Modifier
                                     .animateItem()
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 3.dp)
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(if (isSelected) Color(0xFF0071E3).copy(alpha = 0.16f) else Color.Transparent)
                                     .then(
@@ -786,7 +786,7 @@ fun MainScreen(
                                         client.switchRoom(room.id)
                                         scope.launch { drawerState.close() }
                                     }
-                                    .padding(horizontal = 10.dp, vertical = 8.dp)
+                                    .padding(horizontal = 8.dp, vertical = 8.dp)
                             ) {
                                 val roomEmblem = when {
                                     room.id == "core-dm" || room.mode == "dm" -> emblemByKey("hermes")
@@ -940,7 +940,7 @@ fun MainScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
                                     scope.launch { drawerState.close() }
@@ -957,7 +957,7 @@ fun MainScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "Return to Landing",
+                                    text = "Return to landing",
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
@@ -1054,28 +1054,28 @@ fun MainScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    .padding(horizontal = 8.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 // Left: 36dp Translucent Glass Squircle for Menu button
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(12.dp))
                                         .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                        .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
+                                        .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
                                         .applePressable(0.94f) { scope.launch { drawerState.open() } },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Menu,
-                                        contentDescription = "Chambers Menu",
+                                        contentDescription = "Chambers menu",
                                         tint = talosTextPrimary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
 
                                 // Center: Room title in SF Pro Semibold with a clean green presence dot and status text
                                 Column(
@@ -1132,15 +1132,15 @@ fun MainScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
+                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
                                             .applePressable(0.94f) { onToggleTheme() },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                            contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode",
+                                            contentDescription = if (isDark) "Switch to light mode" else "Switch to dark mode",
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier
                                                 .size(20.dp)
@@ -1155,16 +1155,16 @@ fun MainScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
+                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
                                             .applePressable(0.94f) { onOpenSettings() },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Settings,
                                             contentDescription = "Settings",
-                                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                            tint = MaterialTheme.colorScheme.onSurface,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -1172,15 +1172,15 @@ fun MainScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
-                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(10.dp))
+                                            .border(BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
                                             .applePressable(0.94f) { onExitToLanding() },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Home,
-                                            contentDescription = "Return to Landing",
+                                            contentDescription = "Return to landing",
                                             tint = talosTextMuted,
                                             modifier = Modifier.size(20.dp)
                                         )
@@ -1305,17 +1305,17 @@ fun MainScreen(
                                     )
                                 )
                             )
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                     if (isTyping) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .padding(bottom = 6.dp, start = 8.dp)
+                                .padding(bottom = 8.dp, start = 8.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
                                 .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             ThreeDotTypingIndicator(dotSize = 5.dp, dotSpacing = 3.dp)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1333,10 +1333,10 @@ fun MainScreen(
                     if (showQuickChips && !isTyping) {
                         val suggestions = remember { listOf("/consensus", "/mesh", "/clear", "/benchmark", "/status") }
                         LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 6.dp)
+                                .padding(bottom = 8.dp)
                         ) {
                             items(suggestions, key = { it }) { cmd ->
                                 Surface(
@@ -1355,7 +1355,7 @@ fun MainScreen(
                                         color = MaterialTheme.colorScheme.primary,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
                                 }
                             }
@@ -1481,7 +1481,7 @@ fun MainScreen(
                                         // Soundwave visualizer bars
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
                                             modifier = Modifier.padding(end = 8.dp)
                                         ) {
                                             val bar1Height by infiniteTransition.animateFloat(
@@ -1518,8 +1518,8 @@ fun MainScreen(
                             } else {
                                 // (A) Apple HIG Input Capsule with Left Attachment (+) Action
                                 Surface(
-                                    shape = RoundedCornerShape(22.dp),
-                                    color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                                     border = BorderStroke(
                                         0.6.dp,
                                         if (isInputFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
@@ -1527,7 +1527,7 @@ fun MainScreen(
                                     ),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(46.dp)
+                                        .height(48.dp)
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -1537,13 +1537,13 @@ fun MainScreen(
                                     ) {
                                         IconButton(
                                             onClick = { showAttachmentSheet = true },
-                                            modifier = Modifier.size(36.dp)
+                                            modifier = Modifier.size(48.dp)
                                         ) {
                                             Icon(
                                                 imageVector = TalosIcons.TalosPlus,
-                                                contentDescription = "Attach",
+                                                contentDescription = "Add attachment",
                                                 tint = talosTextMuted,
-                                                modifier = Modifier.size(18.dp)
+                                                modifier = Modifier.size(20.dp)
                                             )
                                         }
 
@@ -1564,8 +1564,8 @@ fun MainScreen(
                                                 unfocusedContainerColor = Color.Transparent,
                                                 focusedBorderColor = Color.Transparent,
                                                 unfocusedBorderColor = Color.Transparent,
-                                                focusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                                unfocusedTextColor = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                                             ),
                                             modifier = Modifier
                                                 .weight(1f)
@@ -1616,7 +1616,7 @@ fun MainScreen(
                                 modifier = Modifier.offset(y = (-58).dp)
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(22.dp),
+                                    shape = RoundedCornerShape(20.dp),
                                     color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
                                     border = BorderStroke(1.dp, metallicBorderBrush()),
                                     shadowElevation = 8.dp,
@@ -1701,7 +1701,7 @@ fun MainScreen(
                                                     if (b64 != null && duration >= 1) {
                                                         sendHaptic(context)
                                                         client.sendMessage("[Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
-                                                        Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, "Voice note sent", Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
                                             )
@@ -1789,7 +1789,7 @@ fun MainScreen(
                                                                 if (b64 != null && duration >= 1) {
                                                                     sendHaptic(context)
                                                                     client.sendMessage("[Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
-                                                                    Toast.makeText(context, "Voice note sent!", Toast.LENGTH_SHORT).show()
+                                                                    Toast.makeText(context, "Voice note sent", Toast.LENGTH_SHORT).show()
                                                                 }
                                                             }
                                                         }
@@ -1982,7 +1982,7 @@ fun SettingsDialog(
         title = {
             Column {
                 Text(
-                    text = "Tailscale Host & Connection Settings",
+                    text = "Tailscale host & connection settings",
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
@@ -1999,7 +1999,7 @@ fun SettingsDialog(
         text = {
             Column {
                 Text(
-                    text = "Core Tailscale Address:",
+                    text = "Core Tailscale address:",
                     color = TextMuted,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -2099,13 +2099,13 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = "Appearance & Tone",
+                    text = "Appearance & tone",
                     color = TextPrimary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = (-0.1).sp
                 )
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "OLED true black, dark space gray, and paper white finishes.",
                     color = TextMuted,
@@ -2118,7 +2118,7 @@ fun SettingsDialog(
                     pressedShape = RoundedCornerShape(8.dp),
                     color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
                     border = BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)),
-                    modifier = Modifier.fillMaxWidth().height(42.dp)
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
@@ -2126,10 +2126,10 @@ fun SettingsDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Customize Appearance",
+                            text = "Customize appearance",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Icon(
                             imageVector = TalosSparkle,
@@ -2223,7 +2223,7 @@ fun ChamberHero(
                 text = room?.name ?: "TALOS Chamber",
                 color = talosTextPrimary,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp
             )
         }
@@ -2239,23 +2239,23 @@ fun ChamberHero(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Participating Agent Roster Dock with Machined Obsidian Sockets
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainer,
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(20.dp),
             border = BorderStroke(1.2.dp, metallicBorderBrush()),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Participating Agent Fleet",
+                        text = "Participating agent fleet",
                         color = talosTextPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
@@ -2266,7 +2266,7 @@ fun ChamberHero(
                         border = BorderStroke(1.dp, StatusGreen.copy(alpha = 0.35f))
                     ) {
                         Text(
-                            text = "${AgentEmblems.size} Agents Online",
+                            text = "${AgentEmblems.size} agents online",
                             color = StatusGreen,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
@@ -2275,7 +2275,7 @@ fun ChamberHero(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -2285,9 +2285,9 @@ fun ChamberHero(
                         Box(
                             modifier = Modifier
                                 .size(38.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(EmblemSocket)
-                                .border(1.dp, emblem.accent.copy(alpha = 0.45f), RoundedCornerShape(10.dp)),
+                                .border(1.dp, emblem.accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             AgentEmblemIcon(emblem = emblem, size = 20.dp, tint = null)
@@ -2308,7 +2308,7 @@ fun ChamberHero(
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             for ((cmd, desc, icon) in commands) {
                 Surface(
@@ -2323,15 +2323,15 @@ fun ChamberHero(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(34.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(EmblemSocket)
-                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.50f), RoundedCornerShape(10.dp)),
+                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.50f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(

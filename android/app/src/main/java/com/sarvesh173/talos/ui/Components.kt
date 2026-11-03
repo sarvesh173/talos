@@ -434,9 +434,9 @@ fun MessageBubble(
                         },
                         tonalElevation = 0.dp,
                         shape = if (isHuman) {
-                            RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 4.dp, bottomStart = 16.dp)
+                            RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 4.dp, bottomStart = 20.dp)
                         } else {
-                            RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 4.dp)
+                            RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 4.dp)
                         }
                     ) {
                         Box(
@@ -447,7 +447,7 @@ fun MessageBubble(
                                 color = if (isHuman) {
                                     Color.White
                                 } else {
-                                    if (isDark) Color.White else Color(0xFF000000)
+                                    MaterialTheme.colorScheme.onSurface
                                 },
                                 fontSize = 15.5.sp,
                                 lineHeight = 21.sp,

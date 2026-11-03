@@ -3136,3 +3136,32 @@ Standardized mobile settings screens and navigation hitboxes according to `mobil
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21113` and `versionName` to `"2.11.13"`.
+
+---
+
+## 142. Apple iMessage Composer Dock, 20dp Bubbles & Full Repository Zero-Warning Clean Sweep
+
+Aligned the core chat view and main navigation shell with Apple iOS HIG standards:
+
+### 1. Apple iMessage Input Capsule & 48dp Attachment Target
+- Upgraded the chat input capsule in `MainActivity` to a 48dp minimum finger touch target (`.height(48.dp)` with `RoundedCornerShape(20.dp)` and `surfaceContainerHigh`).
+- Standardized the attachment `(+)` icon button to a full 48dp hit target with clean label `"Add attachment"`.
+- Bound input typography text colors directly to dynamic `MaterialTheme.colorScheme.onSurface`.
+
+### 2. Apple iMessage 20dp Solid Message Bubbles
+- In `Components.kt`, upgraded user and assistant message bubbles to authentic Apple iMessage 20dp squircle curvature (`topStart = 20.dp, topEnd = 20.dp, bottomEnd/bottomStart = 4.dp`).
+- Bound assistant message body text directly to `MaterialTheme.colorScheme.onSurface`.
+
+### 3. Repository-Wide Zero-Warning Design Check
+- Converted all remaining screaming Title Case labels in `MainActivity.kt` and `FeatureCatalog.kt` to quiet sentence case (`"TALOS chambers"`, `"Return to landing"`, `"Tailscale host & connection settings"`, `"Core Tailscale address:"`, `"Appearance & tone"`, `"Customize appearance"`, `"Participating agent fleet"`, `"Agent fleet"`, `"Provider vault"`).
+- Aligned drawer paddings, suggestion strip row spacing, and soundwave visualizer bars to strict 4px/8px spatial multiples (`4.dp`, `8.dp`, `16.dp`).
+- Standardized navigation action buttons to canonical 12dp corner radii.
+- Cleaned all exclamation marks in user-facing toasts (`"Voice note sent"`, `"Photo captured & attached to chamber"`).
+- Achieved **0 accessibility errors and 0 style warnings** across the full project (`MainActivity`, features, UI components).
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings across the entire repository.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21114` and `versionName` to `"2.11.14"`.

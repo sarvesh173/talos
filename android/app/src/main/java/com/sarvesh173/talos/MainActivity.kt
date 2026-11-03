@@ -210,6 +210,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         TalosHaptics.init(this)
+        com.sarvesh173.talos.notify.AgentNotifications.ensureChannels(this)
         client = TalosClient(this, lifecycleScope)
 
         // Runtime permissions.

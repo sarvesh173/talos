@@ -98,11 +98,16 @@ fun AppleAgentChatScreen(
     var pendingImage by remember { mutableStateOf<PendingImage?>(null) }
     var showTelemetry by remember { mutableStateOf(false) }
     var composerFocused by remember { mutableStateOf(false) }
+    var showHistory by remember { mutableStateOf(false) }
+    var approvalMode by remember { mutableStateOf(AgentApprovalMode.AskOnce) }
 
     // Live room stream. The screen renders whatever the core actually sent;
     // it never fabricates an agent reply.
     val liveMessages by client.messages.collectAsState()
     val isThinking by client.isAgentTyping.collectAsState()
+    val pendingApproval by client.pendingApproval.collectAsState()
+    val rooms by client.rooms.collectAsState()
+    val scope = rememberCoroutineScope()
 
     // The composer always wins over the picker.
     LaunchedEffect(composerFocused) {
@@ -149,6 +154,19 @@ fun AppleAgentChatScreen(
 
     LaunchedEffect(sessionId) {
         if (client.isPaired.value) client.switchRoom(sessionId)
+    }
+
+    // Past sessions: the core's rooms, with the local cache count so a room
+    // that exists but has no history says so instead of looking empty.
+    val sessionSummaries = remember(rooms) {
+        rooms.map { room ->
+            SessionSummary(
+                id = room.id,
+                title = room.name.ifBlank { room.id },
+                relativeTime = "Room",
+                messageCount = 0
+            )
+        }
     }
 
     LaunchedEffect(messages.size) {
@@ -316,6 +334,22 @@ fun AppleAgentChatScreen(
                     )
                 }
 
+                // Past sessions.
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .applePressable(0.92f, pressHaptic = true) { showHistory = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = TalosIcons.TalosStorage,
+                        contentDescription = "Past sessions",
+                        tint = if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
                 // Telemetry toggle: context, tools, and diff for this agent.
                 Box(
                     modifier = Modifier
@@ -331,6 +365,30 @@ fun AppleAgentChatScreen(
                         modifier = Modifier.size(20.dp)
                     )
                 }
+            }
+        }
+
+        // ---------------- approval gate ----------------
+        // Sits above everything except the dock: a blocked agent is the most
+        // important thing on the screen while it lasts.
+        pendingApproval?.let { request ->
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 140.dp)
+            ) {
+                ApprovalBanner(
+                    request = request,
+                    isDark = isDark,
+                    onApprove = { scope.launch { client.resolveApproval(request.id, true) } },
+                    onDeny = { scope.launch { client.resolveApproval(request.id, false) } },
+                    onAlwaysAllow = {
+                        approvalMode = AgentApprovalMode.Yolo
+                        scope.launch { client.resolveApproval(request.id, true) }
+                    }
+                )
             }
         }
 
@@ -476,6 +534,29 @@ fun AppleAgentChatScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    if (showHistory) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f)),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Box(modifier = Modifier.navigationBarsPadding().padding(12.dp)) {
+                SessionHistorySheet(
+                    sessions = sessionSummaries,
+                    isDark = isDark,
+                    brandColor = brandColor,
+                    currentId = sessionId,
+                    onOpen = { s ->
+                        showHistory = false
+                        if (client.isPaired.value) client.switchRoom(s.id)
+                    },
+                    onDismiss = { showHistory = false }
+                )
             }
         }
     }

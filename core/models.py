@@ -34,6 +34,8 @@ class EventType(str, Enum):
     turn_end = "turn_end"
     voice_chunk = "voice_chunk"
     binary_frame = "binary_frame"
+    approval_request = "approval_request"
+    approval_resolved = "approval_resolved"
 
 
 class ToolCall(BaseModel):

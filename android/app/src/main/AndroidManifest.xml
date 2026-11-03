@@ -54,6 +54,16 @@
                 <data android:scheme="http" android:pathPrefix="/pair" />
             </intent-filter>
         </activity>
+
+        <!-- Notification replies and approval decisions arrive here, including
+             when the process is cold-started by the action itself. -->
+        <receiver
+            android:name=".notify.ReplyReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.sarvesh173.talos.REPLY" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

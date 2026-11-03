@@ -10,6 +10,7 @@ import com.sarvesh173.talos.data.BusEvent
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.MeshInfo
 import com.sarvesh173.talos.data.Role
+import com.sarvesh173.talos.ui.AgentApprovalRequest
 import com.sarvesh173.talos.data.Room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +58,17 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         private const val KEY_HAS_LAUNCHED = "has_launched"
         private const val KEY_THINKING_ENABLED = "thinking_enabled"
         private const val KEY_DEVICE_ACTIONS_ENABLED = "device_actions_enabled"
+
+        /**
+         * The app keeps exactly one client per process. The notification reply
+         * receiver may run in a cold process, so it needs to reach the same
+         * instance (and therefore the same credentials) instead of building a
+         * second, divergent one.
+         */
+        @Volatile
+        private var sharedInstance: TalosClient? = null
+
+        fun shared(context: Context): TalosClient? = sharedInstance
         private const val KEY_LINK_PREVIEWS_ENABLED = "link_previews_enabled"
         private const val KEY_OPEN_LINKS_IN_APP = "open_links_in_app"
         private const val KEY_MEMORY_UPDATES_ENABLED = "memory_updates_enabled"
@@ -121,6 +133,10 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         .readTimeout(1500, TimeUnit.MILLISECONDS)
         .callTimeout(2000, TimeUnit.MILLISECONDS)
         .build()
+
+    init {
+        sharedInstance = this
+    }
 
     var baseUrl: String = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
         private set
@@ -508,6 +524,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private val _currentRoomId = MutableStateFlow("the-council")
     val currentRoomId: StateFlow<String> = _currentRoomId.asStateFlow()
+
+    private val _pendingApproval = MutableStateFlow<AgentApprovalRequest?>(null)
+    val pendingApproval: StateFlow<AgentApprovalRequest?> = _pendingApproval.asStateFlow()
 
     private val _providers = MutableStateFlow<List<ProviderSnapshotDto>>(emptyList())
     val providers: StateFlow<List<ProviderSnapshotDto>> = _providers.asStateFlow()
@@ -996,6 +1015,17 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 "message_new" -> {
                     val payload = event.payload ?: return
                     val msg = json.decodeFromJsonElement<Message>(payload)
+                    // Agent chatter becomes an activity notification. The app
+                    // suppresses these itself when the room is foregrounded.
+                    if (msg.sender_role != Role.human) {
+                        com.sarvesh173.talos.notify.AgentNotifications.notifyActivity(
+                            context = context,
+                            agentName = msg.sender_name.ifBlank { "Agent" },
+                            roomId = msg.room_id,
+                            title = msg.sender_name.ifBlank { "Agent" },
+                            body = msg.content.take(140)
+                        )
+                    }
                     val updated = _messages.value + msg
                     _messages.value = updated
                     saveCachedMessages(_currentRoomId.value, updated)
@@ -1010,6 +1040,32 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     val msgId = event.payload?.get("message_id")?.jsonPrimitive?.content ?: ""
                     val delta = event.payload?.get("delta")?.jsonPrimitive?.content ?: ""
                     appendThoughtDelta(msgId, delta)
+                }
+                "approval_request" -> {
+                    val payload = event.payload ?: return
+                    val request = AgentApprovalRequest(
+                        id = payload["id"]?.jsonPrimitive?.content ?: "",
+                        summary = payload["summary"]?.jsonPrimitive?.content ?: "The agent needs approval",
+                        command = payload["command"]?.jsonPrimitive?.content ?: "",
+                        toolName = payload["tool"]?.jsonPrimitive?.content ?: ""
+                    )
+                    val pending = request.takeIf { it.id.isNotBlank() }
+                    _pendingApproval.value = pending
+                    // A blocked agent is the one event that must reach the user
+                    // even when the app is not on screen.
+                    pending?.let { r ->
+                        com.sarvesh173.talos.notify.AgentNotifications.notifyApproval(
+                            context = context,
+                            agentName = r.toolName.ifBlank { "Agent" },
+                            roomId = _currentRoomId.value,
+                            approvalId = r.id,
+                            summary = r.summary,
+                            command = r.command
+                        )
+                    }
+                }
+                "approval_resolved" -> {
+                    _pendingApproval.value = null
                 }
                 "typing_indicator" -> {
                     val isTyping = event.payload?.get("is_typing")?.jsonPrimitive?.content?.toBoolean() ?: false
@@ -1489,6 +1545,48 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             }
         }
     }
+
+    /**
+     * Blocking send into a specific room, for callers with no composition scope
+     * (the notification reply receiver runs in a cold process).
+     *
+     * Uses the REST endpoint rather than the socket: a socket may not be
+     * connected yet, and a reply typed in the shade must not be dropped because
+     * the app happened to be backgrounded.
+     */
+    suspend fun sendMessageTo(roomId: String, text: String): Boolean = withContext(Dispatchers.IO) {
+        if (text.isBlank() || roomId.isBlank()) return@withContext false
+        runCatching {
+            val payload = buildJsonObject {
+                put("room_id", roomId)
+                put("sender_id", "sarvesh")
+                put("sender_name", "Sarvesh")
+                put("content", text)
+            }
+            val req = Request.Builder()
+                .url("$baseUrl/api/messages")
+                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            httpClient.newCall(req).execute().use { it.isSuccessful }
+        }.getOrDefault(false)
+    }
+
+    /**
+     * Answer a pending approval. Sent to the agent-control endpoint so the wait
+     * resolves on the core side rather than being inferred from a text message.
+     */
+    suspend fun resolveApproval(approvalId: String, approved: Boolean): Boolean =
+        withContext(Dispatchers.IO) {
+            if (approvalId.isBlank()) return@withContext false
+            runCatching {
+                val payload = buildJsonObject { put("approved", approved) }
+                val req = Request.Builder()
+                    .url("$baseUrl/api/approvals/$approvalId/resolve")
+                    .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            }.getOrDefault(false)
+        }
 
     fun sendMessage(text: String) {
         if (text.isBlank()) return

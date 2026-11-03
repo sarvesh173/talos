@@ -467,6 +467,8 @@ class AgentOrchestrator:
         self.bus = event_bus if event_bus is not None else default_bus
         roster = list(agents or default_agents())
         self.agents: Dict[str, AgentSpec] = {a.id: a for a in roster}
+        #: Tools the user has blanket-approved ("always allow").
+        self._remembered_allow: set = set()
         self.agent_order: List[str] = [a.id for a in roster if a.id in self.agents]
         self.turn_stagger = turn_stagger
         self.typing_lead = typing_lead
@@ -882,6 +884,91 @@ class AgentOrchestrator:
 # ---------------------------------------------------------------------------
 
 
+    # -- approvals ---------------------------------------------------------
+    #
+    # A paused tool call is real state, not a message: two clients (the app and
+    # a notification action) may resolve it, and the first answer must win. The
+    # registry is keyed by id and drained on resolve, so a stale notification
+    # tap cannot approve something the user already denied.
+
+    def _emit(self, room_id: str, event_type: str, payload: Dict[str, Any]) -> None:
+        """Broadcast a bus event without requiring an await point.
+
+        Approvals are resolved from a sync endpoint or a broadcast receiver, so
+        the caller cannot await. Schedule the broadcast on the running loop when
+        there is one and drop it otherwise — a missing websocket is not a reason
+        to fail the decision itself, which is already recorded.
+        """
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        loop.create_task(
+            self.bus.broadcast(
+                BusEvent(
+                    event_type=event_type,
+                    room_id=room_id,
+                    payload=payload,
+                )
+            )
+        )
+
+    def _approval_registry(self) -> Dict[str, Dict[str, Any]]:
+        registry = getattr(self, "_approvals", None)
+        if registry is None:
+            registry = {}
+            self._approvals = registry
+        return registry
+
+    def register_approval(
+        self,
+        approval_id: str,
+        summary: str,
+        command: str = "",
+        tool_name: str = "",
+        room_id: str = "",
+    ) -> Dict[str, Any]:
+        """Record a pending approval and broadcast it to the room."""
+        record = {
+            "id": approval_id,
+            "summary": summary,
+            "command": command,
+            "tool": tool_name,
+            "room_id": room_id,
+            "created_at": time.time(),
+        }
+        self._approval_registry()[approval_id] = record
+        if room_id:
+            self._emit(room_id, "approval_request", record)
+        return record
+
+    def pending_approvals(self) -> List[Dict[str, Any]]:
+        """Everything currently waiting on a human, newest first."""
+        return sorted(
+            self._approval_registry().values(),
+            key=lambda r: r.get("created_at", 0),
+            reverse=True,
+        )
+
+    async def resolve_approval(
+        self, approval_id: str, approved: bool, remember: bool = False
+    ) -> bool:
+        """Answer a pending approval. False when it is unknown or already gone."""
+        record = self._approval_registry().pop(approval_id, None)
+        if record is None:
+            return False
+        if remember and approved:
+            self._remembered_allow.add(record.get("tool") or "")
+        room_id = record.get("room_id") or ""
+        if room_id:
+            self._emit(room_id, "approval_resolved", {"id": approval_id, "approved": approved})
+        return True
+
+    def is_blanket_allowed(self, tool_name: str) -> bool:
+        """True when the user said 'always allow' for this kind of action."""
+        return tool_name in self._remembered_allow
+
+
 def default_agents() -> List[AgentSpec]:
     """Return the built-in simulated agent roster."""
     return [
@@ -976,7 +1063,5 @@ def default_agents() -> List[AgentSpec]:
             bridging_phrase="OmniRush provides the execution path,",
         ),
     ]
-
-
 #: Process-wide orchestrator instance used by the FastAPI server.
 orchestrator = AgentOrchestrator()

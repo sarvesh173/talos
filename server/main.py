@@ -481,6 +481,41 @@ async def get_provider(
     return info
 
 
+# ---------------------------------------------------------------------------
+# Agent approvals
+# ---------------------------------------------------------------------------
+#
+# The agent pauses on any tool call that the user's posture does not blanket
+# allow. The app surfaces that pause as a banner and as a notification with
+# inline Approve/Deny, so both paths land on the same endpoint and the core —
+# not the client — owns the decision.
+
+class ApprovalDecision(BaseModel):
+    approved: bool
+    remember: bool = False
+
+
+@app.get("/api/approvals")
+async def list_pending_approvals(token: str = Depends(require_auth)):
+    """Everything currently waiting on a human, newest first."""
+    return orchestrator.pending_approvals()
+
+
+@app.post("/api/approvals/{approval_id}/resolve")
+async def resolve_approval_endpoint(
+    approval_id: str,
+    decision: ApprovalDecision,
+    token: str = Depends(require_auth),
+):
+    """Answer a pending approval. 404 when the request already expired."""
+    resolved = await orchestrator.resolve_approval(
+        approval_id, decision.approved, remember=decision.remember
+    )
+    if not resolved:
+        raise HTTPException(status_code=404, detail="Approval not found or already resolved")
+    return {"resolved": True, "approved": decision.approved}
+
+
 @app.post("/api/upload")
 async def upload_media(file: UploadFile = File(...), token: str = Depends(require_auth)):
     ext = Path(file.filename or "").suffix.lower() or ".bin"

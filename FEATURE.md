@@ -3041,3 +3041,27 @@ Carried out a comprehensive design system audit and polish pass across 8 core se
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21109` and `versionName` to `"2.11.09"`.
+
+---
+
+## 138. Provider Vault Secret Masking, Credential Visibility Toggle & Feature Fleet Polish
+
+Polished secondary fleet and telemetry feature modules with secret masking and sentence case:
+
+### 1. Provider Vault Credential Security & Password Masking
+- In `ProviderVaultScreen`, masked stored API keys in the provider card list (`take(4) + "••••••••" + takeLast(4)`) rather than displaying raw plaintext tokens.
+- Added interactive password show/hide visibility toggle to the `API key` input (`PasswordVisualTransformation()` by default with Eye / EyeOff 48dp `IconButton`).
+
+### 2. Quiet Sentence Case & Button Target Sizing
+- Converted all remaining loud action titles to sentence case:
+  - `AgentFleetScreen`: `"Registered CLI Agents"` -> `"registered CLI agents"`, `"Refresh Fleet"` -> `"Refresh fleet"`, `"Configure Agent"` -> `"Configure agent"`, `"Switch Model for ..."` -> `"Switch model for ..."`.
+  - `ContextTelemetryScreen`: `"Refresh Telemetry"` -> `"Refresh telemetry"`, `"Total Tokens"` -> `"Total tokens"`.
+  - `ProviderVaultScreen`: `"Refresh Providers"` -> `"Refresh providers"`, `"Add Provider"` -> `"Add provider"`, `"Delete Provider"` -> `"Delete provider"`.
+- Guaranteed 48dp minimum finger touch target on modal dismiss actions across all 3 screens.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 findings across all 3 screens.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21110` and `versionName` to `"2.11.10"`.

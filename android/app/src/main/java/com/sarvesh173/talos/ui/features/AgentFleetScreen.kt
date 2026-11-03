@@ -64,7 +64,7 @@ fun AgentFleetScreen(client: TalosClient) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${agents.size} Registered CLI Agents",
+                    text = "${agents.size} registered CLI agents",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -72,7 +72,7 @@ fun AgentFleetScreen(client: TalosClient) {
             MetalIconButton(
                 icon = Icons.Default.Refresh,
                 onClick = { refresh() },
-                contentDescription = "Refresh Fleet"
+                contentDescription = "Refresh fleet"
             )
         }
 
@@ -139,7 +139,7 @@ fun AgentFleetScreen(client: TalosClient) {
                                     )
                                 }
                                 Text(
-                                    text = agent.currentModel ?: "Default Model",
+                                    text = agent.currentModel ?: "Default model",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium
@@ -149,7 +149,7 @@ fun AgentFleetScreen(client: TalosClient) {
                             MetalIconButton(
                                 icon = Icons.Default.Tune,
                                 onClick = { selectedAgentForModel = agent },
-                                contentDescription = "Configure Agent"
+                                contentDescription = "Configure agent"
                             )
                         }
                     }
@@ -162,7 +162,7 @@ fun AgentFleetScreen(client: TalosClient) {
         AlertDialog(
             onDismissRequest = { selectedAgentForModel = null },
             title = {
-                Text(text = "Switch Model for ${agent.name}", color = MaterialTheme.colorScheme.onSurface)
+                Text(text = "Switch model for ${agent.name}", color = MaterialTheme.colorScheme.onSurface)
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -189,7 +189,10 @@ fun AgentFleetScreen(client: TalosClient) {
             },
             confirmButton = {},
             dismissButton = {
-                TextButton(onClick = { selectedAgentForModel = null }) {
+                TextButton(
+                    onClick = { selectedAgentForModel = null },
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
                     Text("Close", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                 }
             },

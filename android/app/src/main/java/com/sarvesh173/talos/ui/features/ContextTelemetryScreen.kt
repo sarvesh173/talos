@@ -67,7 +67,7 @@ fun ContextTelemetryScreen(client: TalosClient) {
             MetalIconButton(
                 icon = Icons.Default.Refresh,
                 onClick = { refresh() },
-                contentDescription = "Refresh Telemetry"
+                contentDescription = "Refresh telemetry"
             )
         }
 
@@ -87,7 +87,7 @@ fun ContextTelemetryScreen(client: TalosClient) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Total Tokens: ${telemetry?.totalTokens ?: 0} / ${telemetry?.contextWindowLimit ?: 1_000_000}",
+                        text = "Total tokens: ${telemetry?.totalTokens ?: 0} / ${telemetry?.contextWindowLimit ?: 1_000_000}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

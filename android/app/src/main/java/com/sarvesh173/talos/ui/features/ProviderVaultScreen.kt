@@ -7,11 +7,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.sarvesh173.talos.data.CustomProvider
 import com.sarvesh173.talos.network.*
@@ -64,12 +68,12 @@ fun ProviderVaultScreen(client: TalosClient) {
                 MetalIconButton(
                     icon = Icons.Default.Refresh,
                     onClick = { refresh() },
-                    contentDescription = "Refresh Providers"
+                    contentDescription = "Refresh providers"
                 )
                 MetalIconButton(
                     icon = Icons.Default.Add,
                     onClick = { showAddDialog = true },
-                    contentDescription = "Add Provider"
+                    contentDescription = "Add provider"
                 )
             }
         }
@@ -114,8 +118,11 @@ fun ProviderVaultScreen(client: TalosClient) {
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                val maskedKey = if (provider.apiKey.length > 8) {
+                                    provider.apiKey.take(4) + "••••••••" + provider.apiKey.takeLast(4)
+                                } else "••••••••"
                                 Text(
-                                    text = "Key: ${provider.apiKey}",
+                                    text = "Key: $maskedKey",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -128,7 +135,7 @@ fun ProviderVaultScreen(client: TalosClient) {
                                         refresh()
                                     }
                                 },
-                                contentDescription = "Delete Provider",
+                                contentDescription = "Delete provider",
                                 tint = StatusRed
                             )
                         }
@@ -142,6 +149,7 @@ fun ProviderVaultScreen(client: TalosClient) {
         var name by remember { mutableStateOf("") }
         var baseUrl by remember { mutableStateOf("") }
         var apiKey by remember { mutableStateOf("") }
+        var isApiKeyVisible by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -166,6 +174,20 @@ fun ProviderVaultScreen(client: TalosClient) {
                         value = apiKey,
                         onValueChange = { apiKey = it },
                         label = { Text("API key") },
+                        singleLine = true,
+                        visualTransformation = if (isApiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { isApiKeyVisible = !isApiKeyVisible },
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isApiKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (isApiKeyVisible) "Hide key" else "Show key",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -185,7 +207,10 @@ fun ProviderVaultScreen(client: TalosClient) {
                 )
             },
             dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) {
+                TextButton(
+                    onClick = { showAddDialog = false },
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
                     Text("Cancel")
                 }
             },

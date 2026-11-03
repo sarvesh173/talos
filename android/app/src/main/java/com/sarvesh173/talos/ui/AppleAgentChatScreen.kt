@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.orb.OrbState
+import com.sarvesh173.talos.ui.orb.rememberAdaptiveOrbSpeed
 import com.sarvesh173.talos.ui.orb.ThinkingOrb
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -125,6 +126,27 @@ fun AppleAgentChatScreen(
         }
     }
 
+    // The agent's internal reasoning for the turn in flight. The core streams it
+    // as `thought_delta`; if the provider sends no reasoning the field is empty
+    // and the strip simply shows the orb and "working".
+    val liveThought = remember(liveMessages, isThinking) {
+        liveMessages.lastOrNull { it.thought?.isNotBlank() == true }?.thought.orEmpty()
+    }
+
+    // Orb speed tracks how much work is actually landing right now: a burst of
+    // tokens spins it up, silence settles it down. Characters are used because
+    // they change continuously during streaming.
+    val workUnits = liveMessages.sumOf { it.content.length } + liveThought.length
+    val orbSpeed = rememberAdaptiveOrbSpeed(chunkCount = workUnits)
+
+    // Which pattern to show follows what the agent is doing. Searching reads
+    // differently from writing, so the orb is not one animation for all work.
+    val orbState = when {
+        !isThinking -> OrbState.SOLVING
+        liveThought.contains("search", true) -> OrbState.SEARCHING
+        else -> OrbState.WORKING
+    }
+
     LaunchedEffect(sessionId) {
         if (client.isPaired.value) client.switchRoom(sessionId)
     }
@@ -155,21 +177,35 @@ fun AppleAgentChatScreen(
                 item(key = "thinking_orb") {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(start = 36.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.Top,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         ThinkingOrb(
-                            state = OrbState.WORKING,
+                            state = orbState,
                             size = 28.dp,
                             ink = brandColor,
+                            speed = orbSpeed,
                             label = "$agentName is working"
                         )
-                        Text(
-                            text = "$agentName is working",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (isDark) Color.White.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.60f)
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "$agentName is working",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color.White.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.60f)
+                            )
+                            if (liveThought.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = liveThought.takeLast(220),
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp,
+                                    color = if (isDark) Color.White.copy(alpha = 0.42f) else Color.Black.copy(alpha = 0.40f),
+                                    maxLines = 4,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
                 }
             }

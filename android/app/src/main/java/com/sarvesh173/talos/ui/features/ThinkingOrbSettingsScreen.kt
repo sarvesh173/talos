@@ -62,6 +62,7 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
     var sizeDp by remember { mutableFloatStateOf(28f) }
     var speed by remember { mutableFloatStateOf(1f) }
     var paused by remember { mutableStateOf(false) }
+    var adaptiveSpeed by remember { mutableStateOf(true) }
     var hue by remember { mutableFloatStateOf(210f) }
     var saturation by remember { mutableFloatStateOf(0.85f) }
     var lightness by remember { mutableFloatStateOf(0.55f) }
@@ -276,12 +277,44 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(20.dp))
 
         // ---- speed ----
-        SectionHeader("Speed  ·  ${"%.2f".format(speed)}×", strong)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (adaptiveSpeed) ink.copy(alpha = 0.10f) else Color.Transparent)
+                .border(BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant), RoundedCornerShape(14.dp))
+                .applePressable(0.97f, pressHaptic = true) { adaptiveSpeed = !adaptiveSpeed }
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Follow agent speed", fontSize = 14.sp, color = strong)
+                Text(
+                    text = "Spins up on fast output, settles when quiet",
+                    fontSize = 11.sp,
+                    color = muted
+                )
+            }
+            Text(
+                text = if (adaptiveSpeed) "On" else "Off",
+                fontSize = 12.sp,
+                color = if (adaptiveSpeed) ink else muted
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        SectionHeader("Base speed  ·  ${"%.2f".format(speed)}×", strong)
         Slider(
             value = speed,
             onValueChange = { speed = it },
             valueRange = 0.25f..2.5f,
-            colors = SliderDefaults.colors(thumbColor = ink, activeTrackColor = ink)
+            enabled = !adaptiveSpeed,
+            colors = SliderDefaults.colors(
+                thumbColor = if (adaptiveSpeed) ink.copy(alpha = 0.4f) else ink,
+                activeTrackColor = if (adaptiveSpeed) ink.copy(alpha = 0.25f) else ink
+            )
         )
 
         Row(

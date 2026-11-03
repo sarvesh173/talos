@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.orb.OrbState
 import com.sarvesh173.talos.ui.orb.ThinkingOrb
+import com.sarvesh173.talos.ui.orb.rememberAdaptiveOrbSpeed
 import com.sarvesh173.talos.network.GitDiffSummaryDto
 
 /**
@@ -47,6 +48,18 @@ fun AgentTelemetryStrip(
     val gitDiff by client.gitDiff.collectAsState()
     val delegation by client.delegationHierarchy.collectAsState()
     var showDiff by remember { mutableStateOf(false) }
+
+    // Same tachometer as the message stream: the strip's orb and the in-thread
+    // orb must never disagree about how fast the agent is currently working.
+    val messages by client.messages.collectAsState()
+    val workUnits = remember(messages) {
+        messages.sumOf { it.content.length + (it.thought?.length ?: 0) }
+    }
+    val orbSpeed = rememberAdaptiveOrbSpeed(chunkCount = workUnits)
+    val lastThought = remember(messages) {
+        messages.lastOrNull { it.thought?.isNotBlank() == true }?.thought.orEmpty()
+    }
+
 
     val surface = if (isDark) Color(0xFF141418).copy(alpha = 0.97f) else Color.White.copy(alpha = 0.98f)
     val shape = RoundedCornerShape(18.dp)
@@ -75,6 +88,7 @@ fun AgentTelemetryStrip(
                 state = if (isTyping) OrbState.WORKING else OrbState.SOLVING,
                 size = 22.dp,
                 ink = brandColor,
+                speed = orbSpeed,
                 label = if (isTyping) "$agentName is working" else "$agentName is idle",
                 announce = false
             )
@@ -93,6 +107,17 @@ fun AgentTelemetryStrip(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (lastThought.isNotBlank()) {
+                    Text(
+                        text = lastThought.takeLast(180),
+                        fontSize = 10.sp,
+                        lineHeight = 13.sp,
+                        color = muted.copy(alpha = 0.75f),
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
         }
 

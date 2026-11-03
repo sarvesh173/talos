@@ -132,51 +132,43 @@ fun LookAndFeelScreen(
 
     Scaffold(
         topBar = {
-            Box(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .statusBarsPadding(),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Floating clean circular back button with 48dp minimum touch target
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .applePressable(0.94f) { onBack() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                .border(
-                                    BorderStroke(
-                                        0.6.dp,
-                                        if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-                                    ),
-                                    CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = TalosIcons.TalosBackArrow,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Icon(
+                            imageVector = TalosIcons.TalosBackArrow,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
                     Text(
                         text = "Look & feel",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.3).sp,
-                        color = MaterialTheme.colorScheme.onBackground
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.25).sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -248,7 +240,14 @@ fun LookAndFeelScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFFF2F2F7))
+                            .background(if (isDark) Color(0xFF161618) else Color(0xFFE5E5EA))
+                            .border(
+                                BorderStroke(
+                                    0.6.dp,
+                                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                                ),
+                                RoundedCornerShape(12.dp)
+                            )
                             .padding(4.dp)
                     ) {
                         val segmentWidth = maxWidth / appearanceModes.size
@@ -259,26 +258,24 @@ fun LookAndFeelScreen(
                         )
 
                         // Elevated sliding pill
-                        Box(
+                        Surface(
                             modifier = Modifier
                                 .offset(x = pillOffset)
                                 .width(segmentWidth)
-                                .height(36.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isDark) Color(0xFF3A3A3C) else Color.White)
-                                .border(
-                                    BorderStroke(
-                                        0.6.dp,
-                                        if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
-                                    ),
-                                    RoundedCornerShape(12.dp)
-                                )
-                        )
+                                .height(40.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isDark) Color(0xFF3A3A3C) else Color.White,
+                            border = BorderStroke(
+                                0.6.dp,
+                                if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                            ),
+                            shadowElevation = 2.dp
+                        ) {}
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(36.dp)
+                                .height(40.dp)
                         ) {
                             appearanceModes.forEachIndexed { index, (modeKey, modeTitle) ->
                                 val isSelected = selectedAppearanceIndex == index
@@ -310,7 +307,9 @@ fun LookAndFeelScreen(
                                         letterSpacing = (-0.15).sp,
                                         color = if (isSelected) {
                                             if (isDark) Color.White else Color(0xFF1D1D1F)
-                                        } else talosTextMuted
+                                        } else {
+                                            if (isDark) Color.White.copy(alpha = 0.70f) else Color(0xFF1D1D1F).copy(alpha = 0.65f)
+                                        }
                                     )
                                 }
                             }

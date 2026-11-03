@@ -3255,3 +3255,25 @@ Integrated the complete settings refactor designed and audited by GPT Astra in t
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21117` and `versionName` to `"2.11.17"`.
+
+---
+
+## 146. Look & Feel Segmented Capsule Contrast, 48dp Touch Targets & TopBar Standardization
+
+Fixed screenshot findings in `LookAndFeelScreen.kt` and unified all settings sub-screens:
+
+### 1. Recessed Capsule Track & High-Contrast Typography (`LookAndFeelScreen.kt`)
+- Fixed invisible segmented control track on dark mode by replacing identical surface color with recessed dark capsule container (`Color(0xFF161618)` in dark, `Color(0xFFE5E5EA)` in light) with a crisp 0.6dp hairline border.
+- Upgraded segmented control height to 40dp inside a 48dp padded track to ensure a full 48dp touch target hitbox.
+- Replaced dim muted text with high-contrast readable unselected labels (`White.copy(alpha = 0.70f)` / `#1D1D1F.copy(alpha = 0.65f)`) and semi-bold selected labels.
+- Added subtle 2dp elevation to the sliding indicator pill (`RoundedCornerShape(8.dp)`).
+
+### 2. Unified Apple HIG Header Surface Across All Settings Sub-Screens
+- Replaced floating, inconsistent circular back button bubbles across `LookAndFeelScreen`, `ChatPreferencesScreen`, `SecurityScreen`, `NotificationsScreen`, and `CachingScreen` with the canonical Apple HIG `Surface` header with 22dp `TalosIcons.TalosBackArrow` and no artificial background boxes.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings across the entire repository.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21118` and `versionName` to `"2.11.18"`.

@@ -3667,3 +3667,29 @@ Elevated TALOS visual language to match official Apple Developer WWDC25 Liquid G
   - Remote GitHub Actions CI build and release verification.
 - [x] Incremented Version Code and Name:
   - Bumped versionCode to 21131 and versionName to 2.11.31.
+
+---
+
+## 160. The 3 Optical Pillars of Apple Liquid Glass: Refraction, Rim, Reflection
+
+Integrated dedicated physical shader modifier `appleLiquidGlassOptics` delivering authentic WWDC25 optical behavior:
+
+### 1. Refraction (Optical Light Bending & Ambient Depth)
+- Pre-content linear caustic refraction pass bending light across the pod interior (`chromaticGlow 0.14f -> 0.03f -> Transparent`).
+- Deep translucent optical mass without harsh radial halos.
+
+### 2. Rim (Directional Specular Hairline)
+- 1.2dp directional light catch simulating ambient overhead lighting:
+  - Top-left specular white apex (`Color.White.copy(0.75f - 0.95f)`).
+  - Tapers smoothly to chromatic secondary bounce (`chromaticGlow 0.35f`) and faint bottom rim (`0.10f - 0.18f`).
+
+### 3. Reflection (Glossy Meniscus Surface Sheen)
+- Post-content diagonal gloss sheen across the upper 45% of the convex glass face.
+- Simulates physical molded resin surface reflection with linear fade (`White 0.16f -> White 0.03f -> Transparent`).
+
+- [x] Verification and Tests:
+  - npx @enmera/ai-design-check: 0 errors, 0 warnings across all screens.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build and release verification.
+- [x] Incremented Version Code and Name:
+  - Bumped versionCode to 21132 and versionName to 2.11.32.

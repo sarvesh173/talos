@@ -343,25 +343,16 @@ fun LandingScreen(
                     items(filteredTools, key = { it.id }) { cliTool ->
                         val sessionsCount = dynamicSessions[cliTool.id]?.size ?: cliTool.sessions.size
 
-                        // WWDC25 Liquid Glass Card with Prismatic Specular Rim
+                        // WWDC25 Liquid Glass Card with Refraction, Specular Rim, and Meniscus Reflection
                         Surface(
                             shape = RoundedCornerShape(20.dp),
                             color = if (isDark) Color(0xFF141620).copy(alpha = 0.82f) else Color.White.copy(alpha = 0.90f),
-                            border = BorderStroke(
-                                1.2.dp,
-                                Brush.linearGradient(
-                                    listOf(
-                                        Color.White.copy(alpha = if (isDark) 0.40f else 0.95f),
-                                        cliTool.brandColor.copy(alpha = 0.30f),
-                                        Color(0xFFAF52DE).copy(alpha = 0.20f),
-                                        Color.White.copy(alpha = if (isDark) 0.08f else 0.30f)
-                                    )
-                                )
-                            ),
-                            shadowElevation = 3.dp,
+                            shadowElevation = 4.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = cliTool.brandColor)
                                 .applePressable(0.97f) {
                                     TalosHaptics.sendHaptic(context)
                                     selectedToolId = cliTool.id
@@ -521,25 +512,16 @@ fun LandingScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // WWDC25 Molded Liquid Glass "Create session" Pod
+                        // WWDC25 Molded Liquid Glass "Create session" Pod with Refraction, Rim, and Reflection
                         Surface(
                             shape = RoundedCornerShape(20.dp),
                             color = tool.brandColor,
-                            border = BorderStroke(
-                                1.2.dp,
-                                Brush.linearGradient(
-                                    listOf(
-                                        Color.White.copy(alpha = 0.60f),
-                                        Color(0xFF34C759).copy(alpha = 0.30f),
-                                        Color(0xFFAF52DE).copy(alpha = 0.25f),
-                                        Color.White.copy(alpha = 0.15f)
-                                    )
-                                )
-                            ),
                             shadowElevation = 6.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 48.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = Color(0xFF34C759))
                                 .applePressable(0.96f) {
                                     TalosHaptics.sendHaptic(context)
                                     val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())

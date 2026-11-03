@@ -134,8 +134,11 @@ fun AppleAgentChatScreen(
                         Surface(
                             shape = RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp),
                             color = brandColor,
-                            shadowElevation = 2.dp,
-                            modifier = Modifier.widthIn(max = 280.dp)
+                            shadowElevation = 3.dp,
+                            modifier = Modifier
+                                .widthIn(max = 280.dp)
+                                .clip(RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp))
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = Color.White.copy(alpha = 0.5f))
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                 Text(
@@ -182,18 +185,12 @@ fun AppleAgentChatScreen(
 
                         Surface(
                             shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp),
-                            color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.95f),
-                            border = BorderStroke(
-                                1.dp,
-                                Brush.verticalGradient(
-                                    listOf(
-                                        if (isDark) Color.White.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.85f),
-                                        if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f)
-                                    )
-                                )
-                            ),
-                            shadowElevation = 2.dp,
-                            modifier = Modifier.widthIn(max = 290.dp)
+                            color = if (isDark) Color(0xFF161822).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.92f),
+                            shadowElevation = 3.dp,
+                            modifier = Modifier
+                                .widthIn(max = 290.dp)
+                                .clip(RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp))
+                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor)
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                                 Text(

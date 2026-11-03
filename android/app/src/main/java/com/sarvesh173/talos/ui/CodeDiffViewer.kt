@@ -29,6 +29,9 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -223,10 +226,16 @@ fun CodeDiffViewer(
                                 ),
                                 modifier = Modifier
                                     .scale(scale)
-                                    .clickable {
-                                        selectedFileIndex = index
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    }
+                                    .defaultMinSize(minHeight = 48.dp)
+                                    .clickable(
+                                        role = Role.Tab,
+                                        onClickLabel = "Select ${file.filename}",
+                                        onClick = {
+                                            selectedFileIndex = index
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        }
+                                    )
+                                    .semantics { selected = isSelected }
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -329,7 +338,7 @@ fun CodeDiffViewer(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .background(bgColor)
-                                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     val numStr = when (line.line_type) {
                                         "added" -> "+${line.new_num ?: ""}".padEnd(5)

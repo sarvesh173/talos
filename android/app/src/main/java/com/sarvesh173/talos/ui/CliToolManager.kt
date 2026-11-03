@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -252,14 +253,19 @@ private fun CliEngineCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded }
+                    .defaultMinSize(minHeight = 48.dp)
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = if (isExpanded) "Collapse engine card" else "Expand engine card",
+                        onClick = { isExpanded = !isExpanded }
+                    )
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(if (engine.is_available) Color(0xFF10B981) else Color(0xFF64748B))
+                            .background(if (engine.is_available) StatusGreen else MaterialTheme.colorScheme.outline)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {

@@ -3186,3 +3186,36 @@ Refined the 2D modal color spectrum picker and verified repository design health
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21115` and `versionName` to `"2.11.15"`.
+
+---
+
+## 144. Full OmniRush Adversarial Audit Implementation (Touch Targets, Spacing & Quiet Casing)
+
+Incorporated all findings from the OmniRush CLI sandbox audit (`AUDIT_REPORT.md`):
+
+### 1. Attachment Bottom Sheet Hardening (`AttachmentBottomSheet.kt`)
+- Wrapped custom drag handle in a dedicated 48dp clickable container (`Role.Button`, dismiss on tap, centered 36x4dp pill).
+- Standardized recording button padding from 14dp to 16dp on the 4px grid.
+- Replaced artificial `TalosSparkle` icon with canonical `Icons.Default.Image`.
+- Converted style chips and metadata text to quiet sentence case (`"3D render"`, `"Pixel art"`, `"Live camera snapshot attached"`, `"Tailscale verified"`, `"AI studio artifact"`).
+- Adjusted dialog spacing from 28dp to 24dp and changed uppercase `"OK"` to `"Done"`.
+
+### 2. Whiteboard Sheet Ergonomics (`WhiteboardSheet.kt`)
+- Added explicit 48dp clickable drag handle with dismiss semantics.
+- Added accessible radio button semantics (`Role.RadioButton`, `contentDescription = "Color swatch"`, `selected = isSelected`) to color swatches.
+- Snapped ruled grid line spacing from 28dp to 24dp.
+
+### 3. Code Diff Viewer Touch Targets (`CodeDiffViewer.kt`)
+- Ensured file selector tabs enforce a minimum 48dp touch height (`defaultMinSize(minHeight = 48.dp)` with `Role.Tab`).
+- Aligned diff line vertical padding from 2dp to 4dp on the 4px spatial grid.
+
+### 4. CLI Governance Card Polish (`CliToolManager.kt`)
+- Upgraded expandable engine card header to a 48dp minimum click boundary (`defaultMinSize(minHeight = 48.dp)` with `Role.Button`).
+- Bound engine status indicator to semantic `StatusGreen` and `MaterialTheme.colorScheme.outline`.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings across the entire repository.
+  - Python AST syntax and bracket balance verified across all modified files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21116` and `versionName` to `"2.11.16"`.

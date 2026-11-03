@@ -29,6 +29,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -87,7 +91,28 @@ fun WhiteboardSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         tonalElevation = 0.dp,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "Dismiss",
+                        onClick = onDismiss
+                    )
+                    .semantics { contentDescription = "Dismiss whiteboard" },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
+                )
+            }
+        }
     ) {
         Column(
             modifier = Modifier
@@ -218,9 +243,17 @@ fun WhiteboardSheet(
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .clickable {
-                                currentColor = color
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            .clickable(
+                                role = Role.RadioButton,
+                                onClickLabel = "Select color",
+                                onClick = {
+                                    currentColor = color
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                }
+                            )
+                            .semantics {
+                                selected = isSelected
+                                contentDescription = "Color swatch"
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -230,7 +263,7 @@ fun WhiteboardSheet(
                                 .clip(CircleShape)
                                 .background(color)
                                 .border(
-                                    if (isSelected) 2.5.dp else 1.dp,
+                                    if (isSelected) 2.dp else 1.dp,
                                     if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
                                     CircleShape
                                 )
@@ -323,7 +356,7 @@ fun WhiteboardSheet(
                             }
                         }
                         "Ruled" -> {
-                            val spacing = 28.dp.toPx()
+                            val spacing = 24.dp.toPx()
                             var y = spacing
                             while (y < size.height) {
                                 drawLine(

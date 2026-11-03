@@ -37,6 +37,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -76,7 +79,7 @@ fun AttachmentBottomSheet(
             val stream = java.io.ByteArrayOutputStream()
             bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, stream)
             val sizeKb = stream.size() / 1024
-            onSendText("[Live Camera Snapshot Attached • ${bitmap.width}x${bitmap.height} • ${sizeKb}KB • Tailscale Verified]")
+            onSendText("[Live camera snapshot attached • ${bitmap.width}x${bitmap.height} • ${sizeKb}KB • Tailscale verified]")
             Toast.makeText(context, "Captured photo attached to context", Toast.LENGTH_SHORT).show()
             onDismiss()
         }
@@ -117,9 +120,9 @@ fun AttachmentBottomSheet(
             val latStr = String.format(Locale.US, "%.4f", location.latitude)
             val lonStr = String.format(Locale.US, "%.4f", location.longitude)
             val accuracy = location.accuracy.toInt()
-            onSendText("[Mesh Node Geolocation]\nLatitude: $latStr\nLongitude: $lonStr\nAccuracy: ±${accuracy}m\nNetwork: Tailscale Encrypted")
+            onSendText("[Mesh node geolocation]\nLatitude: $latStr\nLongitude: $lonStr\nAccuracy: ±${accuracy}m\nNetwork: Tailscale encrypted")
         } else {
-            onSendText("[Mesh Node Geolocation]\nLatitude: 28.6139\nLongitude: 77.2090\nAccuracy: ±15m\nNetwork: Tailscale Encrypted (Simulated Lock)")
+            onSendText("[Mesh node geolocation]\nLatitude: 28.6139\nLongitude: 77.2090\nAccuracy: ±15m\nNetwork: Tailscale encrypted (Simulated lock)")
         }
         onDismiss()
     }
@@ -144,12 +147,23 @@ fun AttachmentBottomSheet(
         dragHandle = {
             Box(
                 modifier = Modifier
-                    .padding(top = 12.dp, bottom = 8.dp)
-                    .width(36.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-            )
+                    .size(48.dp)
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "Dismiss",
+                        onClick = onDismiss
+                    )
+                    .semantics { contentDescription = "Dismiss sheet" },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
+                )
+            }
         }
     ) {
         Column(
@@ -213,12 +227,12 @@ fun AttachmentBottomSheet(
                             Button(
                                 onClick = {
                                     val sec = recordingSeconds.coerceAtLeast(1)
-                                    onSendText("[Voice Command Note Attached • ${sec}s duration • AAC 128kbps]")
+                                    onSendText("[Voice command note attached • ${sec}s duration • AAC 128kbps]")
                                     isRecordingAudio = false
                                     onDismiss()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                                 modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                             ) {
                                 Text(
@@ -273,7 +287,7 @@ fun AttachmentBottomSheet(
                 }
 
                 AttachmentTile(
-                    icon = TalosSparkle,
+                    icon = Icons.Default.Image,
                     title = "AI image",
                     color = MaterialTheme.colorScheme.tertiary
                 ) {
@@ -318,7 +332,7 @@ fun AttachmentBottomSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -341,7 +355,7 @@ fun AttachmentBottomSheet(
             },
             confirmButton = {
                 TextButton(onClick = { showPermissionRationale = null }) {
-                    Text("OK", color = MaterialTheme.colorScheme.primary)
+                    Text("Done", color = MaterialTheme.colorScheme.primary)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -352,12 +366,12 @@ fun AttachmentBottomSheet(
     if (showImageGenDialog) {
         var imagePrompt by remember { mutableStateOf("") }
         var selectedStyle by remember { mutableStateOf("Cinematic") }
-        val styles = listOf("Cinematic", "3D Render", "Pixel Art", "Anime")
+        val styles = listOf("Cinematic", "3D render", "Pixel art", "Anime")
 
         AlertDialog(
             onDismissRequest = { showImageGenDialog = false },
             icon = {
-                Icon(imageVector = TalosSparkle, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
             },
             title = {
                 Text(text = "Generate AI image", style = MaterialTheme.typography.titleMedium)
@@ -398,15 +412,15 @@ fun AttachmentBottomSheet(
                         if (imagePrompt.isNotBlank()) {
                             val promptToSend = imagePrompt
                             val styleToSend = selectedStyle
-                            onSendText("[Generating Image... Style: $styleToSend]\nPrompt: $promptToSend")
+                            onSendText("[Generating image... Style: $styleToSend]\nPrompt: $promptToSend")
                             showImageGenDialog = false
                             onDismiss()
 
                             client.generateImage(prompt = promptToSend, style = styleToSend.lowercase()) { generated ->
                                 if (generated != null) {
-                                    onSendText("[AI Studio Artifact: ${generated.id} • ${generated.style.uppercase()}]\n${generated.image_url}\nPrompt: ${generated.prompt}")
+                                    onSendText("[AI studio artifact: ${generated.id} • ${generated.style}]\n${generated.image_url}\nPrompt: ${generated.prompt}")
                                 } else {
-                                    onSendText("[AI Image Generation: Failed to reach Hermes Image Studio]")
+                                    onSendText("[AI image generation: failed to reach Hermes Image Studio]")
                                 }
                             }
                         }

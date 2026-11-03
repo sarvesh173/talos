@@ -16,9 +16,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
@@ -32,31 +32,30 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.R
 import com.sarvesh173.talos.network.TalosClient
 
 /**
- * TALOS Simplified Agents & Sessions Hub (Apple HIG Liquid Glass Architecture)
+ * TALOS Compact CLI Agents Hub (Apple Liquid Glass Architecture)
  * 
- * Pixel-perfect 1:1 match of img_eb6491dca02a.jpg:
- * 1. Prioritizes CLI agents (Hermes, alya, mom, Cloud Code) over direct agents.
- * 2. Displays agent descriptions and session branches ("225 more sessions >").
- * 3. Indented Apple tree-branch curved connectors (╰─).
- * 4. Ethereal monochrome figure holding glowing sphere in the background.
- * 5. Floating dual-mode capsule [Chat | Agents] and [Filter | More] header.
- * 6. Floating search bar ("Search agents and sessions") + Circular pencil FAB.
+ * Strict refinements:
+ * 1. Shows currently active MCP delegate agents under each CLI tool.
+ * 2. Zero memory session clutter (no "225 more sessions >" or memory noise).
+ * 3. Compact SVG iconography (small 16dp icons in 22dp containers, slim tree branches).
+ * 4. Chat interface disabled from auto-opening on minimize/resume.
+ * 5. Ethereal monochrome background artwork from reference image.
  */
 
 data class DelegateAgent(
@@ -74,8 +73,7 @@ data class CliToolAgent(
     val description: String,
     val mascotColor: Color,
     val mascotShape: String, // "squircle", "cloud", "pill"
-    val delegateCount: Int,
-    val sessionCountText: String,
+    val isInitiallyExpanded: Boolean = true,
     val delegates: List<DelegateAgent>
 )
 
@@ -85,79 +83,138 @@ fun LandingScreen(
     client: TalosClient,
     isDark: Boolean = true,
     onToggleTheme: () -> Unit = {},
-    onGetStarted: () -> Unit,
+    onGetStarted: () -> Unit = {},
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
     onOpenAgentChat: ((String) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val scheme = MaterialTheme.colorScheme
     val currentAccentName by client.accentColor.collectAsState()
     val effectiveAccent = resolveAccentColor(currentAccentName, isDark)
 
-    var selectedTopTab by remember { mutableIntStateOf(1) } // 0 = Chat, 1 = Agents
     var isAgentsSectionExpanded by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // State for expanded CLI tools
-    var expandedToolId by remember { mutableStateOf<String?>(null) }
+    // Set of expanded CLI tools (default expanded to show active agents)
+    val expandedTools = remember {
+        mutableStateMapOf(
+            "hermes" to true,
+            "claudecode" to true,
+            "opencode" to true,
+            "alya" to true,
+            "mom" to true
+        )
+    }
 
-    // Pre-populated CLI Tools and their Delegate Agents matching img_eb6491dca02a.jpg
+    // Active CLI tools and their compact active delegate agents
     val cliTools = remember {
         listOf(
             CliToolAgent(
                 id = "hermes",
                 name = "Hermes",
-                description = "No conversations yet — say hi",
+                description = "Nous Research autonomous gateway",
                 mascotColor = Color(0xFF7C4DFF), // Purple squircle
                 mascotShape = "squircle",
-                delegateCount = 4,
-                sessionCountText = "225 more sessions",
+                isInitiallyExpanded = true,
                 delegates = listOf(
                     DelegateAgent(
                         id = "hermes_swe",
                         name = "SWE Architect",
-                        activity = "Refactoring AST & 0-warning design check",
+                        activity = "Refactoring AST & design check",
                         iconRes = R.drawable.ic_codex,
                         accentColor = Color(0xFF007AFF)
                     ),
                     DelegateAgent(
                         id = "hermes_sec",
                         name = "Security Auditor",
-                        activity = "Static taint analysis & credential isolation",
+                        activity = "Taint analysis & credential guard",
                         iconRes = R.drawable.ic_deepseek,
                         accentColor = Color(0xFF4D6BFE)
                     ),
                     DelegateAgent(
                         id = "hermes_vis",
                         name = "Vision Inspector",
-                        activity = "Processing UI screenshots & liquid glass diffs",
+                        activity = "UI hierarchy & liquid glass diffs",
                         iconRes = R.drawable.ic_gemini,
                         accentColor = Color(0xFF3186FF)
                     ),
                     DelegateAgent(
                         id = "hermes_orch",
                         name = "Task Orchestrator",
-                        activity = "Synthesizing parallel subagent fan-out results",
+                        activity = "Subagent fan-out synthesis",
                         iconRes = R.drawable.ic_qwen,
                         accentColor = Color(0xFFA855F7)
                     )
                 )
             ),
             CliToolAgent(
+                id = "claudecode",
+                name = "Cloud Code",
+                description = "Anthropic architecture & synthesis suite",
+                mascotColor = Color(0xFFD97757), // Terracotta squircle
+                mascotShape = "squircle",
+                isInitiallyExpanded = true,
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "claude_planner",
+                        name = "Planning Maestro",
+                        activity = "PRD & task breakdown",
+                        iconRes = R.drawable.ic_claude,
+                        accentColor = Color(0xFFD97757)
+                    ),
+                    DelegateAgent(
+                        id = "claude_tester",
+                        name = "Test Engineer",
+                        activity = "Red-green-refactor suite",
+                        iconRes = R.drawable.ic_mistral,
+                        accentColor = Color(0xFFFF8205)
+                    ),
+                    DelegateAgent(
+                        id = "claude_simplifier",
+                        name = "Code Simplifier",
+                        activity = "Complexity & anti-slop audit",
+                        iconRes = R.drawable.ic_openai,
+                        accentColor = Color(0xFF10A37F)
+                    )
+                )
+            ),
+            CliToolAgent(
+                id = "opencode",
+                name = "OpenCode",
+                description = "Pulse engine with max reasoning",
+                mascotColor = Color(0xFF2563EB), // Blue squircle
+                mascotShape = "squircle",
+                isInitiallyExpanded = true,
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "opencode_pulse",
+                        name = "Pulse Alpha Engine",
+                        activity = "Autonomous coding with reasoning max",
+                        iconRes = R.drawable.ic_opencode,
+                        accentColor = Color(0xFF2563EB)
+                    ),
+                    DelegateAgent(
+                        id = "opencode_watchman",
+                        name = "Watchman Sentry",
+                        activity = "Process supervision & webhook alerts",
+                        iconRes = R.drawable.ic_core,
+                        accentColor = Color(0xFF10B981)
+                    )
+                )
+            ),
+            CliToolAgent(
                 id = "alya",
                 name = "alya",
-                description = "Alya - helper agent linked to main system (same model, sepa\u2026",
+                description = "Helper agent linked to main system",
                 mascotColor = Color(0xFFEF4444), // Red cloud
                 mascotShape = "cloud",
-                delegateCount = 2,
-                sessionCountText = "2 more sessions",
+                isInitiallyExpanded = true,
                 delegates = listOf(
                     DelegateAgent(
                         id = "alya_anchor",
                         name = "Emotional Anchor",
-                        activity = "Active listener & responsive empathy engine",
+                        activity = "Active listener & responsive empathy",
                         iconRes = R.drawable.ic_hermes,
                         accentColor = Color(0xFFFF2D55)
                     ),
@@ -173,11 +230,10 @@ fun LandingScreen(
             CliToolAgent(
                 id = "mom",
                 name = "mom",
-                description = "No conversations yet — say hi",
+                description = "Warm home care & family hearth",
                 mascotColor = Color(0xFFEC4899), // Pink pill
                 mascotShape = "pill",
-                delegateCount = 1,
-                sessionCountText = "9 more sessions",
+                isInitiallyExpanded = true,
                 delegates = listOf(
                     DelegateAgent(
                         id = "mom_care",
@@ -185,38 +241,6 @@ fun LandingScreen(
                         activity = "Warm guidance & blessing guardrails",
                         iconRes = R.drawable.ic_openclaw,
                         accentColor = Color(0xFFEC4899)
-                    )
-                )
-            ),
-            CliToolAgent(
-                id = "claudecode",
-                name = "Cloud Code",
-                description = "Anthropic architecture & synthesis suite",
-                mascotColor = Color(0xFFD97757), // Terracotta squircle
-                mascotShape = "squircle",
-                delegateCount = 3,
-                sessionCountText = "48 more sessions",
-                delegates = listOf(
-                    DelegateAgent(
-                        id = "claude_planner",
-                        name = "Planning Maestro",
-                        activity = "Authoring architectural PRD & task breakdown",
-                        iconRes = R.drawable.ic_claude,
-                        accentColor = Color(0xFFD97757)
-                    ),
-                    DelegateAgent(
-                        id = "claude_tester",
-                        name = "Test Engineer",
-                        activity = "Executing Red-Green-Refactor test suite",
-                        iconRes = R.drawable.ic_mistral,
-                        accentColor = Color(0xFFFF8205)
-                    ),
-                    DelegateAgent(
-                        id = "claude_simplifier",
-                        name = "Code Simplifier",
-                        activity = "Pruning cyclomatic complexity in modules",
-                        iconRes = R.drawable.ic_openai,
-                        accentColor = Color(0xFF10A37F)
                     )
                 )
             )
@@ -244,17 +268,17 @@ fun LandingScreen(
             .background(backgroundColor)
     ) {
         // ==============================================================
-        // ETHEREAL MONOCHROME ARTWORK (Matching img_eb6491dca02a.jpg)
+        // ETHEREAL MONOCHROME ARTWORK (Matching reference screenshot)
         // ==============================================================
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(360.dp)
+                .height(340.dp)
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 72.dp)
         ) {
-            val artColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-            val sphereColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.12f)
+            val artColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.07f)
+            val sphereColor = if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.11f)
             val cx = size.width / 2f
             val cy = size.height * 0.38f
 
@@ -263,14 +287,14 @@ fun LandingScreen(
                 brush = Brush.radialGradient(
                     colors = listOf(sphereColor, Color.Transparent),
                     center = Offset(cx, cy),
-                    radius = 52.dp.toPx()
+                    radius = 48.dp.toPx()
                 ),
-                radius = 52.dp.toPx(),
+                radius = 48.dp.toPx(),
                 center = Offset(cx, cy)
             )
             drawCircle(
                 color = artColor,
-                radius = 34.dp.toPx(),
+                radius = 32.dp.toPx(),
                 center = Offset(cx, cy),
                 style = Stroke(width = 1.2.dp.toPx())
             )
@@ -278,49 +302,49 @@ fun LandingScreen(
             // Head silhouette
             drawCircle(
                 color = artColor,
-                radius = 12.dp.toPx(),
-                center = Offset(cx, cy - 56.dp.toPx()),
+                radius = 11.dp.toPx(),
+                center = Offset(cx, cy - 54.dp.toPx()),
                 style = Stroke(width = 1.2.dp.toPx())
             )
 
-            // Torso and spine
+            // Torso line
             drawLine(
                 color = artColor,
-                start = Offset(cx, cy - 44.dp.toPx()),
-                end = Offset(cx, cy + 54.dp.toPx()),
+                start = Offset(cx, cy - 43.dp.toPx()),
+                end = Offset(cx, cy + 50.dp.toPx()),
                 strokeWidth = 1.2.dp.toPx()
             )
 
-            // Arms cradling the glowing sphere
+            // Arms cradling sphere
             drawArc(
                 color = artColor,
                 startAngle = 25f,
                 sweepAngle = 130f,
                 useCenter = false,
-                topLeft = Offset(cx - 40.dp.toPx(), cy - 22.dp.toPx()),
-                size = androidx.compose.ui.geometry.Size(80.dp.toPx(), 48.dp.toPx()),
+                topLeft = Offset(cx - 38.dp.toPx(), cy - 20.dp.toPx()),
+                size = androidx.compose.ui.geometry.Size(76.dp.toPx(), 44.dp.toPx()),
                 style = Stroke(width = 1.2.dp.toPx())
             )
 
-            // Legs standing on platform
+            // Pedestal legs
             drawLine(
                 color = artColor,
-                start = Offset(cx - 8.dp.toPx(), cy + 54.dp.toPx()),
-                end = Offset(cx - 18.dp.toPx(), size.height - 24.dp.toPx()),
+                start = Offset(cx - 8.dp.toPx(), cy + 50.dp.toPx()),
+                end = Offset(cx - 16.dp.toPx(), size.height - 20.dp.toPx()),
                 strokeWidth = 1.2.dp.toPx()
             )
             drawLine(
                 color = artColor,
-                start = Offset(cx + 8.dp.toPx(), cy + 54.dp.toPx()),
-                end = Offset(cx + 18.dp.toPx(), size.height - 24.dp.toPx()),
+                start = Offset(cx + 8.dp.toPx(), cy + 50.dp.toPx()),
+                end = Offset(cx + 18.dp.toPx(), size.height - 20.dp.toPx()),
                 strokeWidth = 1.2.dp.toPx()
             )
 
-            // Cables spreading to floor apparatus
-            val cables = listOf(-70.dp.toPx(), -40.dp.toPx(), 40.dp.toPx(), 70.dp.toPx())
+            // Delicate apparatus cables
+            val cables = listOf(-60.dp.toPx(), -35.dp.toPx(), 35.dp.toPx(), 60.dp.toPx())
             cables.forEach { ox ->
                 val p = Path().apply {
-                    moveTo(cx, cy + 44.dp.toPx())
+                    moveTo(cx, cy + 42.dp.toPx())
                     cubicTo(
                         cx + ox * 0.3f, size.height * 0.70f,
                         cx + ox * 0.7f, size.height * 0.90f,
@@ -336,24 +360,25 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // MAIN SCROLLABLE CONTENT (Agents List & Sessions)
+        // MAIN SCROLLABLE CONTENT (Agents List & Compact Active Delegates)
         // ==============================================================
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 96.dp, bottom = 120.dp)
+            contentPadding = PaddingValues(top = 92.dp, bottom = 110.dp)
         ) {
             // Header Section: "Agents v"
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp)
+                        .defaultMinSize(minHeight = 48.dp)
                         .applePressable(0.98f) {
                             TalosHaptics.sendHaptic(context)
                             isAgentsSectionExpanded = !isAgentsSectionExpanded
-                        },
+                        }
+                        .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -366,190 +391,197 @@ fun LandingScreen(
                     )
 
                     Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Toggle agents",
+                        imageVector = if (isAgentsSectionExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Toggle agents list",
                         tint = if (isDark) Color.White.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.50f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             if (isAgentsSectionExpanded) {
                 items(filteredTools, key = { it.id }) { tool ->
-                    val isExpanded = expandedToolId == tool.id
+                    val isExpanded = expandedTools[tool.id] ?: true
 
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                            .padding(vertical = 4.dp)
                     ) {
                         // 1. Primary CLI Tool Row
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .defaultMinSize(minHeight = 52.dp)
+                                .defaultMinSize(minHeight = 48.dp)
                                 .applePressable(0.97f) {
                                     TalosHaptics.sendHaptic(context)
-                                    if (tool.delegates.isNotEmpty()) {
-                                        expandedToolId = if (isExpanded) null else tool.id
-                                    } else {
-                                        onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
-                                    }
+                                    expandedTools[tool.id] = !isExpanded
                                 }
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Cute Mascot Avatar
-                            CuteMascot(
+                            // Compact Mascot Avatar (38dp)
+                            CompactMascot(
                                 color = tool.mascotColor,
                                 shapeType = tool.mascotShape
                             )
 
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
 
-                            // Name & Subtitle / Description
+                            // Name & Subtitle
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = tool.name,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                    letterSpacing = (-0.15).sp
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = tool.name,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                        letterSpacing = (-0.15).sp
+                                    )
+
+                                    // Active Count Pill
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = tool.mascotColor.copy(alpha = if (isDark) 0.20f else 0.12f),
+                                        modifier = Modifier.height(18.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(4.dp)
+                                                    .clip(CircleShape)
+                                                    .background(StatusGreen)
+                                            )
+                                            Text(
+                                                text = "${tool.delegates.size} active",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = tool.mascotColor
+                                            )
+                                        }
+                                    }
+                                }
 
                                 Spacer(modifier = Modifier.height(2.dp))
 
                                 Text(
                                     text = tool.description,
-                                    fontSize = 13.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Normal,
-                                    color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f),
+                                    color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
 
-                            // Trailing Chevron (Navigates directly to Chat)
+                            // Trailing Expand/Collapse Indicator
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .applePressable(0.92f) {
                                         TalosHaptics.sendHaptic(context)
-                                        onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
+                                        expandedTools[tool.id] = !isExpanded
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = TalosIcons.TalosChevronRight,
-                                    contentDescription = "Open ${tool.name}",
+                                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else TalosIcons.TalosChevronRight,
+                                    contentDescription = "Toggle ${tool.name}",
                                     tint = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
 
-                        // 2. Delegate Agents List (Under curved tree connector)
-                        if (isExpanded && tool.delegates.isNotEmpty()) {
-                            tool.delegates.forEach { delegate ->
-                                AgentBranchRow(
-                                    isDark = isDark,
-                                    onClick = {
-                                        TalosHaptics.sendHaptic(context)
-                                        onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
-                                    }
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
+                        // 2. Compact Active Delegate Agents (Tree Branch Connector)
+                        AnimatedVisibility(
+                            visible = isExpanded && tool.delegates.isNotEmpty(),
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically()
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                tool.delegates.forEachIndexed { index, delegate ->
+                                    val isLast = index == tool.delegates.lastIndex
+                                    CompactAgentBranchRow(
+                                        isDark = isDark,
+                                        isLast = isLast,
+                                        onClick = {
+                                            TalosHaptics.sendHaptic(context)
+                                        }
                                     ) {
-                                        // 28dp SVG Icon Container
-                                        Box(
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(delegate.accentColor.copy(alpha = if (isDark) 0.18f else 0.12f))
-                                                .border(
-                                                    BorderStroke(0.8.dp, delegate.accentColor.copy(alpha = 0.35f)),
-                                                    RoundedCornerShape(8.dp)
-                                                ),
-                                            contentAlignment = Alignment.Center
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Image(
-                                                painter = painterResource(id = delegate.iconRes),
-                                                contentDescription = delegate.name,
-                                                modifier = Modifier.size(16.dp)
+                                            // Small 22dp SVG Container with 14dp icon
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(22.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(delegate.accentColor.copy(alpha = if (isDark) 0.16f else 0.10f))
+                                                    .border(
+                                                        BorderStroke(0.6.dp, delegate.accentColor.copy(alpha = 0.30f)),
+                                                        RoundedCornerShape(8.dp)
+                                                    ),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = delegate.iconRes),
+                                                    contentDescription = delegate.name,
+                                                    modifier = Modifier.size(13.dp)
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.width(10.dp))
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = delegate.name,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F),
+                                                    letterSpacing = (-0.1).sp
+                                                )
+                                                Text(
+                                                    text = delegate.activity,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Normal,
+                                                    color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f),
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            // Small pulse green status dot
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(5.dp)
+                                                    .clip(CircleShape)
+                                                    .background(StatusGreen)
                                             )
                                         }
-
-                                        Spacer(modifier = Modifier.width(12.dp))
-
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = delegate.name,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                                letterSpacing = (-0.1).sp
-                                            )
-                                            Text(
-                                                text = delegate.activity,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f),
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-
-                                        // Online status indicator
-                                        Box(
-                                            modifier = Modifier
-                                                .size(6.dp)
-                                                .clip(CircleShape)
-                                                .background(StatusGreen)
-                                        )
                                     }
                                 }
                             }
                         }
 
-                        // 3. Tree Branch Leaf: "N more sessions >" (matching img_eb6491dca02a.jpg)
-                        AgentBranchRow(
-                            isDark = isDark,
-                            onClick = {
-                                TalosHaptics.sendHaptic(context)
-                                onOpenAgentChat?.invoke(tool.id) ?: onGetStarted()
-                            }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = tool.sessionCountText,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
-                                )
-                                Icon(
-                                    imageVector = TalosIcons.TalosChevronRight,
-                                    contentDescription = null,
-                                    tint = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
         }
 
         // ==============================================================
-        // TOP FLOATING LIQUID GLASS BAR (Matching img_eb6491dca02a.jpg)
+        // TOP FLOATING LIQUID GLASS BAR (Matching reference screenshot)
         // ==============================================================
         Row(
             modifier = Modifier
@@ -559,7 +591,7 @@ fun LandingScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left Pill: [Chat | Agents] Dual View Toggle
+            // Left Pill: [Chat | Agents] Capsule (Chat stays disabled/on-hub)
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
@@ -573,62 +605,58 @@ fun LandingScreen(
                     modifier = Modifier.padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Chat Button (Navigates to active chat)
+                    // Chat Button (Passive icon, stays on Hub)
                     Box(
                         modifier = Modifier
-                            .size(width = 44.dp, height = 34.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(
-                                if (selectedTopTab == 0) {
-                                    if (isDark) Color(0xFF2C2C2E) else Color(0xFF1D1D1F)
-                                } else Color.Transparent
-                            )
+                            .size(48.dp)
                             .applePressable(0.94f) {
                                 TalosHaptics.sendHaptic(context)
-                                selectedTopTab = 0
-                                onGetStarted()
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = TalosIcons.TalosChat,
-                            contentDescription = "Switch to chat",
-                            tint = if (selectedTopTab == 0) {
-                                Color.White
-                            } else {
-                                if (isDark) Color.White.copy(alpha = 0.50f) else Color(0xFF1D1D1F).copy(alpha = 0.45f)
-                            },
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(width = 44.dp, height = 34.dp)
+                                .clip(RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = TalosIcons.TalosChat,
+                                contentDescription = "Chat",
+                                tint = if (isDark) Color.White.copy(alpha = 0.45f) else Color(0xFF1D1D1F).copy(alpha = 0.40f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
 
-                    // Agents Button (Active in screenshot)
+                    // Agents Button (Active highlighted pill)
                     Box(
                         modifier = Modifier
-                            .size(width = 44.dp, height = 34.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(
-                                if (selectedTopTab == 1) {
-                                    if (isDark) Color(0xFF2C2C2E) else Color.Transparent
-                                } else Color.Transparent
-                            )
+                            .size(48.dp)
                             .applePressable(0.94f) {
                                 TalosHaptics.sendHaptic(context)
-                                selectedTopTab = 1
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = TalosIcons.TalosHub,
-                            contentDescription = "Switch to agents",
-                            tint = if (isDark) Color.White else Color(0xFF1D1D1F),
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(width = 44.dp, height = 34.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFF1D1D1F)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = TalosIcons.TalosHub,
+                                contentDescription = "Agents",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
 
-            // Right Pill: [Filter | More Options]
+            // Right Pill: [Filter | Settings]
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
@@ -644,45 +672,57 @@ fun LandingScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 40.dp, height = 34.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .size(48.dp)
                             .applePressable(0.94f) {
                                 TalosHaptics.sendHaptic(context)
                                 onToggleTheme()
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Filter",
-                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(width = 40.dp, height = 34.dp)
+                                .clip(RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = "Filter",
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
 
                     Box(
                         modifier = Modifier
-                            .size(width = 40.dp, height = 34.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .size(48.dp)
                             .applePressable(0.94f) {
                                 TalosHaptics.sendHaptic(context)
                                 onOpenSettings?.invoke() ?: onOpenWizard?.invoke()
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreHoriz,
-                            contentDescription = "More options",
-                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(width = 40.dp, height = 34.dp)
+                                .clip(RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreHoriz,
+                                contentDescription = "More options",
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
         }
 
         // ==============================================================
-        // FLOATING BOTTOM CONTROLS (Search Bar & Circular Compose FAB)
+        // FLOATING BOTTOM CONTROLS (Search Bar & Circular Refresh FAB)
         // ==============================================================
         Row(
             modifier = Modifier
@@ -734,7 +774,7 @@ fun LandingScreen(
                         decorationBox = { innerTextField ->
                             if (searchQuery.isEmpty()) {
                                 Text(
-                                    text = "Search agents and sessions",
+                                    text = "Search agents and delegates",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Normal,
                                     color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.35f),
@@ -748,7 +788,7 @@ fun LandingScreen(
                 }
             }
 
-            // Circular Compose / Create FAB (Lavender button in light mode matching screenshot)
+            // Circular Action FAB (Lavender in light mode, dark glass in dark mode)
             Surface(
                 shape = CircleShape,
                 color = if (isDark) Color(0xFF2C2C32).copy(alpha = 0.92f) else Color(0xFFD4D0E2),
@@ -761,7 +801,6 @@ fun LandingScreen(
                     .size(54.dp)
                     .applePressable(0.92f) {
                         TalosHaptics.sendHaptic(context)
-                        onGetStarted()
                     }
             ) {
                 Box(
@@ -770,7 +809,7 @@ fun LandingScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Compose session",
+                        contentDescription = "New agent session",
                         tint = if (isDark) Color.White else Color(0xFF1D1D1F),
                         modifier = Modifier.size(20.dp)
                     )
@@ -781,28 +820,22 @@ fun LandingScreen(
 }
 
 /**
- * Renders cute Apple-style mascot squircles with expressive eyes,
- * matching img_eb6491dca02a.jpg.
+ * Renders compact Apple-style mascot squircles (38dp) with expressive eyes.
  */
 @Composable
-fun CuteMascot(
+fun CompactMascot(
     color: Color,
     shapeType: String,
     modifier: Modifier = Modifier
 ) {
-    val mascotShape = when (shapeType) {
-        "cloud" -> RoundedCornerShape(16.dp)
-        "pill" -> RoundedCornerShape(16.dp)
-        else -> RoundedCornerShape(16.dp)
-    }
-
-    val widthDp = if (shapeType == "pill") 48.dp else 44.dp
-    val heightDp = if (shapeType == "pill") 34.dp else 44.dp
+    val mascotShape = RoundedCornerShape(12.dp)
+    val widthDp = if (shapeType == "pill") 42.dp else 38.dp
+    val heightDp = if (shapeType == "pill") 28.dp else 38.dp
 
     Box(
         modifier = modifier
             .size(width = widthDp, height = heightDp)
-            .shadow(3.dp, mascotShape, ambientColor = color.copy(alpha = 0.35f))
+            .shadow(2.dp, mascotShape, ambientColor = color.copy(alpha = 0.30f))
             .clip(mascotShape)
             .background(color),
         contentAlignment = Alignment.Center
@@ -811,12 +844,12 @@ fun CuteMascot(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(16.dp)
+                .height(14.dp)
                 .align(Alignment.TopCenter)
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            Color.White.copy(alpha = 0.30f),
+                            Color.White.copy(alpha = 0.32f),
                             Color.Transparent
                         )
                     )
@@ -828,33 +861,31 @@ fun CuteMascot(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left eye
             Box(
                 modifier = Modifier
-                    .size(5.dp)
+                    .size(4.dp)
                     .clip(CircleShape)
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .size(2.5.dp)
+                        .size(2.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF111113))
                 )
             }
 
-            // Right eye
             Box(
                 modifier = Modifier
-                    .size(5.dp)
+                    .size(4.dp)
                     .clip(CircleShape)
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .size(2.5.dp)
+                        .size(2.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF111113))
                 )
@@ -864,12 +895,13 @@ fun CuteMascot(
 }
 
 /**
- * Curved Apple tree-branch connector line (╰─),
- * bridging parent mascot to sub-agents and session links.
+ * Compact Curved Apple tree-branch connector line (╰─),
+ * bridging parent mascot smoothly to child delegate agent rows.
  */
 @Composable
-fun AgentBranchRow(
+fun CompactAgentBranchRow(
     isDark: Boolean,
+    isLast: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     content: @Composable () -> Unit
@@ -877,17 +909,17 @@ fun AgentBranchRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 44.dp)
+            .defaultMinSize(minHeight = 48.dp)
             .applePressable(0.97f) { onClick() }
-            .padding(start = 24.dp, top = 2.dp, bottom = 2.dp),
+            .padding(start = 20.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Curved L-Connector
-        Canvas(modifier = Modifier.size(width = 30.dp, height = 32.dp)) {
-            val strokeColor = if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.16f)
+        // Compact Curved L-Connector
+        Canvas(modifier = Modifier.size(width = 24.dp, height = 28.dp)) {
+            val strokeColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.14f)
             val path = Path().apply {
                 moveTo(0f, 0f)
-                lineTo(0f, size.height * 0.45f)
+                lineTo(0f, size.height * 0.40f)
                 cubicTo(
                     0f, size.height * 0.85f,
                     size.width * 0.25f, size.height,
@@ -898,11 +930,11 @@ fun AgentBranchRow(
             drawPath(
                 path = path,
                 color = strokeColor,
-                style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                style = Stroke(width = 1.2.dp.toPx(), cap = StrokeCap.Round)
             )
         }
 
-        Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         content()
     }

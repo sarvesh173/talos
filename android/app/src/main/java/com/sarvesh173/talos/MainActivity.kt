@@ -338,7 +338,7 @@ class MainActivity : ComponentActivity() {
                     "hub" -> "hub"
                     "gallery" -> "gallery"
                     "cli_manager" -> "cli_manager"
-                    "chat" -> "chat"
+                    "chat" -> "main"
                     else -> "main"
                 }
 
@@ -464,34 +464,24 @@ class MainActivity : ComponentActivity() {
                     label = "AppScreenTransition"
                 ) { screenKey ->
                     when (screenKey) {
-                        "main", "landing" -> {
+                        "main", "landing", "chat" -> {
                             LandingScreen(
                                 client = client,
                                 isDark = isCurrentlyDark,
                                 onToggleTheme = {
                                     client.toggleTheme(isCurrentlyDark)
                                 },
-                                onGetStarted = {
-                                    appScreen = "chat"
-                                },
+                                onGetStarted = {},
                                 onOpenWizard = {
                                     appScreen = "settings"
                                 },
                                 onOpenSettings = {
                                     appScreen = "settings"
                                 },
-                                onOpenAgentChat = { agentKey ->
-                                    when (agentKey) {
-                                        "hermes" -> client.switchRoom("hermes")
-                                        "claudecode" -> client.switchRoom("claude")
-                                        "alya" -> client.switchRoom("the-council")
-                                        else -> client.switchRoom("the-council")
-                                    }
-                                    appScreen = "chat"
-                                }
+                                onOpenAgentChat = { _ -> }
                             )
                         }
-                        "chat" -> {
+                        "disabled_chat" -> {
                             MainScreen(
                                 client = client,
                                 isDark = isCurrentlyDark,

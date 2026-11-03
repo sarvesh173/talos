@@ -3400,3 +3400,30 @@ Resolved root navigation so the app opens immediately into the Agents & Sessions
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21122` and `versionName` to `"2.11.22"`.
+
+---
+
+## 151. Compact SVG Active Agents, Zero Memory Sessions Clutter & Chat Auto-Open Disabled
+
+Directly addressed user feedback on CLI agents display and navigation stability:
+
+### 1. Active MCP Delegate Agents with Compact SVG Icons (`LandingScreen.kt`)
+- Completely eliminated memory sessions clutter (`225 more sessions >`, `48 more sessions >`, etc.).
+- Positioned currently active delegate agents directly under their parent CLI tools (`Hermes`, `Cloud Code`, `OpenCode`, `alya`, `mom`).
+- Scaled down iconography to clean, compact proportions:
+  - 13-14dp vector drawables in 22dp squircle containers.
+  - Slim 48dp minimum touch targets with compact vertical spacing (4pt/8pt grid).
+  - Compact curved tree-branch connector (`╰─`) with 1.2dp stroke.
+  - Active pulse green status indicator (5dp).
+
+### 2. Chat Interface Auto-Open Completely Disabled (`MainActivity.kt`)
+- Disabled automatic switching or restoring to `MainScreen` (the room chat interface).
+- Mapped `"chat"` and fallback screens to `LandingScreen` (Agents Hub), ensuring the app stays on the Hub UI when minimized and resumed.
+- Top navigation and item taps stay on the Agents Hub without triggering unexpected room navigations.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings in `LandingScreen.kt`.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21123` and `versionName` to `"2.11.23"`.

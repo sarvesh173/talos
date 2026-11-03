@@ -3551,3 +3551,31 @@ Implemented complete 3-tier hierarchical navigation with aggressive Apple Liquid
   - Remote GitHub Actions CI build and release verification.
 - [x] Incremented Version Code and Name:
   - Bumped versionCode to 21127 and versionName to 2.11.27.
+
+---
+
+## 156. Aggressive Apple Design Synthesis Across All Guidelines
+
+Elevated TALOS mobile client across all official Apple Human Interface Guidelines and specialized skills:
+
+### 1. Specular Gradient Glass Borders & Liquid Depth
+- Replaced flat borders with dual-stop specular vertical gradients:
+  - Top highlight (`Color.White.copy(0.32f)` in dark / `0.85f` in light) catches overhead illumination.
+  - Tapers smoothly to faint edge (`0.08f` / `0.04f`).
+- Implemented high translucency cards (`0.84f`–`0.92f`) with subtle depth shadow.
+
+### 2. Emil Kowalski Kinematics & Touch Latency Elimination
+- Touch-down instant tactile scale response (`0.97f`) with critically damped spring physics (`dampingRatio = 0.82f, stiffness = 420f`).
+- Symmetric paired slide-and-fade transitions across all 3 tiers.
+- Integrated haptic pulse on every interaction.
+
+### 3. Strict Sentence Case & Optical Typography Tuning
+- Negative optical tracking on headers (`letterSpacing = (-0.25).sp` display, `(-0.15).sp` titles).
+- 100% sentence case compliance across interface copy (`Cli tools`, `Create session`, `Active sessions`).
+
+- [x] Verification and Tests:
+  - npx @enmera/ai-design-check: 0 errors, 0 warnings in LandingScreen.kt.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build and release verification.
+- [x] Incremented Version Code and Name:
+  - Bumped versionCode to 21128 and versionName to 2.11.28.

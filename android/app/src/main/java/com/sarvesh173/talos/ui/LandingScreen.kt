@@ -53,14 +53,14 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * TALOS 3-Tier CLI Agent Hub (Apple Liquid Glass Architecture)
+ * TALOS 3-Tier Aggressive Apple Liquid Glass Hub
  * 
- * Strict specifications:
- * 1. Tier 1 (Root Hub): ONLY official CLI tools (OpenCode, Hermes, Claude Code, Codex, OmniRush).
- * 2. Tier 2 (Tool Drill-Down): Active agents of the selected CLI tool.
- * 3. Tier 3 (Agent Drill-Down): Active sessions of the selected agent + prominent "+ Create Session" action.
- * 4. Aggressive Apple Design: Fluid transitions, specular glass borders, spring kinematics, haptics on all touches.
- * 5. Full BackHandler integration for seamless back gesture navigation across all 3 tiers.
+ * Synthesized across all loaded Apple Design skills:
+ * 1. apple-agent-drilldown-architecture: 3-tier progressive disclosure (CLI Tools -> Agents -> Sessions + Create).
+ * 2. apple-liquid-glass-architecture: Optical specular rim highlights, continuous tree geometry, and tactile depth.
+ * 3. emil-apple-design: Instant touch-down feedback, interruptible spring kinematics, optical sizing & negative tracking.
+ * 4. apple-hig-reviewer: Strict sentence case, accessibility minimum 48dp targets, 4px/8px spatial grid.
+ * 5. compose-apple-design-standards: Full BackHandler integration & haptic feedback on all interactions.
  */
 
 data class AgentSession(
@@ -111,12 +111,12 @@ fun LandingScreen(
     var selectedAgentId by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Dynamic sessions state so "+ Create Session" can add real sessions live
+    // Dynamic sessions map for live session creation
     val dynamicSessions = remember {
         mutableStateMapOf<String, MutableList<AgentSession>>()
     }
 
-    // CLI Tools definitions (Tier 1: Only developer CLI engines)
+    // Tier 1: Pure Developer CLI Engines
     val cliTools = remember {
         listOf(
             CliToolAgent(
@@ -133,8 +133,8 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_opencode,
                         accentColor = Color(0xFF2563EB),
                         sessions = listOf(
-                            AgentSession("op_sess_1", "TALOS Apple Design Remake", "Just now", "Active", 12),
-                            AgentSession("op_sess_2", "AST Cyclomatic Complexity Audit", "18m ago", "Completed", 6)
+                            AgentSession("op_sess_1", "TALOS Apple design remake", "Just now", "Active", 14),
+                            AgentSession("op_sess_2", "AST cyclomatic complexity audit", "18m ago", "Completed", 6)
                         )
                     ),
                     DelegateAgent(
@@ -144,7 +144,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_core,
                         accentColor = Color(0xFF10B981),
                         sessions = listOf(
-                            AgentSession("op_sess_3", "Background Agent Lifecycle Monitor", "5m ago", "Active", 4)
+                            AgentSession("op_sess_3", "Background agent lifecycle monitor", "5m ago", "Active", 4)
                         )
                     ),
                     DelegateAgent(
@@ -154,7 +154,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_deepseek,
                         accentColor = Color(0xFF4D6BFE),
                         sessions = listOf(
-                            AgentSession("op_sess_4", "Design Tokens Consistency Check", "45m ago", "Completed", 3)
+                            AgentSession("op_sess_4", "Design tokens consistency check", "45m ago", "Completed", 3)
                         )
                     ),
                     DelegateAgent(
@@ -164,7 +164,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_gemini,
                         accentColor = Color(0xFF007AFF),
                         sessions = listOf(
-                            AgentSession("op_sess_5", "Liquid Glass Touch Target Audit", "2h ago", "Completed", 8)
+                            AgentSession("op_sess_5", "Liquid glass touch target audit", "2h ago", "Completed", 8)
                         )
                     )
                 )
@@ -183,7 +183,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_codex,
                         accentColor = Color(0xFF007AFF),
                         sessions = listOf(
-                            AgentSession("h_sess_1", "Kotlin Compose Hierarchy Cleanup", "12m ago", "Active", 9)
+                            AgentSession("h_sess_1", "Kotlin Compose hierarchy cleanup", "12m ago", "Active", 9)
                         )
                     ),
                     DelegateAgent(
@@ -193,7 +193,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_deepseek,
                         accentColor = Color(0xFF4D6BFE),
                         sessions = listOf(
-                            AgentSession("h_sess_2", "Secret Scope & Memory Quarantine", "1h ago", "Completed", 5)
+                            AgentSession("h_sess_2", "Secret scope & memory quarantine", "1h ago", "Completed", 5)
                         )
                     ),
                     DelegateAgent(
@@ -203,7 +203,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_gemini,
                         accentColor = Color(0xFF3186FF),
                         sessions = listOf(
-                            AgentSession("h_sess_3", "Screenshot Coordinate Comparison", "3h ago", "Completed", 14)
+                            AgentSession("h_sess_3", "Screenshot coordinate comparison", "3h ago", "Completed", 14)
                         )
                     ),
                     DelegateAgent(
@@ -213,7 +213,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_qwen,
                         accentColor = Color(0xFFA855F7),
                         sessions = listOf(
-                            AgentSession("h_sess_4", "Multi-Unit Workstream Pipeline", "6h ago", "Completed", 22)
+                            AgentSession("h_sess_4", "Multi-unit workstream pipeline", "6h ago", "Completed", 22)
                         )
                     )
                 )
@@ -232,7 +232,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_claude,
                         accentColor = Color(0xFFD97757),
                         sessions = listOf(
-                            AgentSession("c_sess_1", "Apple Design Spec Decomposition", "30m ago", "Active", 4)
+                            AgentSession("c_sess_1", "Apple design spec decomposition", "30m ago", "Active", 4)
                         )
                     ),
                     DelegateAgent(
@@ -242,7 +242,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_mistral,
                         accentColor = Color(0xFFFF8205),
                         sessions = listOf(
-                            AgentSession("c_sess_2", "UI Touch Target Red-Green Matrix", "2h ago", "Completed", 7)
+                            AgentSession("c_sess_2", "UI touch target red-green matrix", "2h ago", "Completed", 7)
                         )
                     ),
                     DelegateAgent(
@@ -252,7 +252,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_openai,
                         accentColor = Color(0xFF10A37F),
                         sessions = listOf(
-                            AgentSession("c_sess_3", "State Hoisting Refactor", "4h ago", "Completed", 3)
+                            AgentSession("c_sess_3", "State hoisting refactor pass", "4h ago", "Completed", 3)
                         )
                     )
                 )
@@ -271,7 +271,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_codex,
                         accentColor = Color(0xFF10A37F),
                         sessions = listOf(
-                            AgentSession("cx_sess_1", "Compose Vector Drawable Exporter", "1h ago", "Active", 2)
+                            AgentSession("cx_sess_1", "Compose vector drawable exporter", "1h ago", "Active", 2)
                         )
                     ),
                     DelegateAgent(
@@ -281,7 +281,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_core,
                         accentColor = Color(0xFF007AFF),
                         sessions = listOf(
-                            AgentSession("cx_sess_2", "Inference Latency Profiling", "5h ago", "Completed", 11)
+                            AgentSession("cx_sess_2", "Inference latency profiling", "5h ago", "Completed", 11)
                         )
                     )
                 )
@@ -300,7 +300,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_omnirush,
                         accentColor = Color(0xFFA855F7),
                         sessions = listOf(
-                            AgentSession("om_sess_1", "Rootfs Sandbox Isolation Pass", "40m ago", "Active", 5)
+                            AgentSession("om_sess_1", "Rootfs sandbox isolation pass", "40m ago", "Active", 5)
                         )
                     ),
                     DelegateAgent(
@@ -310,7 +310,7 @@ fun LandingScreen(
                         iconRes = R.drawable.ic_openclaw,
                         accentColor = Color(0xFFEC4899),
                         sessions = listOf(
-                            AgentSession("om_sess_2", "Parallel Fan-Out Dispatch", "3h ago", "Completed", 16)
+                            AgentSession("om_sess_2", "Parallel fan-out dispatch", "3h ago", "Completed", 16)
                         )
                     )
                 )
@@ -318,7 +318,7 @@ fun LandingScreen(
         )
     }
 
-    // Initialize dynamic sessions map on first load
+    // Populate initial dynamic sessions
     LaunchedEffect(cliTools) {
         cliTools.forEach { tool ->
             tool.delegates.forEach { delegate ->
@@ -329,7 +329,6 @@ fun LandingScreen(
         }
     }
 
-    // Resolve active tool & active agent
     val currentTool = remember(selectedToolId, cliTools) {
         cliTools.firstOrNull { it.id == selectedToolId }
     }
@@ -337,7 +336,7 @@ fun LandingScreen(
         currentTool?.delegates?.firstOrNull { it.id == selectedAgentId }
     }
 
-    // BackHandler: Gracefully navigates up the 3-tier hierarchy
+    // Intercept back gesture across the 3-tier hierarchy
     BackHandler(enabled = selectedToolId != null) {
         TalosHaptics.sendHaptic(context)
         if (selectedAgentId != null) {
@@ -347,7 +346,6 @@ fun LandingScreen(
         }
     }
 
-    // Filter tools/agents based on search query
     val filteredTools = remember(searchQuery, cliTools) {
         if (searchQuery.isBlank()) cliTools
         else cliTools.filter {
@@ -364,7 +362,7 @@ fun LandingScreen(
             .background(backgroundColor)
     ) {
         // ==============================================================
-        // ETHEREAL MONOCHROME ARTWORK (Preserved in background)
+        // ETHEREAL MONOCHROME ARTWORK
         // ==============================================================
         Canvas(
             modifier = Modifier
@@ -425,27 +423,30 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // MAIN CONTENT AREA: 3-TIER ANIMATED HANDOVER
+        // MAIN 3-TIER PROGRESSIVE DISCLOSURE SURFACE
         // ==============================================================
         AnimatedContent(
             targetState = Triple(selectedToolId, selectedAgentId, currentTool),
             transitionSpec = {
-                fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) +
+                val isAdvancing = targetState.second != null || (targetState.first != null && initialState.first == null)
+                val slideDir = if (isAdvancing) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End
+
+                (fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) +
                 slideIntoContainer(
-                    towards = if (targetState.second != null || targetState.first != null) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End,
-                    animationSpec = spring(stiffness = 450f, dampingRatio = 0.82f)
-                ) togetherWith
+                    towards = slideDir,
+                    animationSpec = spring(stiffness = 420f, dampingRatio = 0.82f)
+                )).togetherWith(
                 fadeOut(animationSpec = tween(180)) +
                 slideOutOfContainer(
-                    towards = if (targetState.second != null || targetState.first != null) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End,
-                    animationSpec = spring(stiffness = 450f, dampingRatio = 0.82f)
-                )
+                    towards = slideDir,
+                    animationSpec = spring(stiffness = 420f, dampingRatio = 0.82f)
+                ))
             },
             modifier = Modifier.fillMaxSize()
         ) { (toolId, agentId, tool) ->
             if (toolId == null || tool == null) {
                 // ======================================================
-                // TIER 1: PURE CLI TOOLS HUB (OpenCode, Hermes, Claude, Codex, OmniRush)
+                // TIER 1: PURE DEVELOPER CLI ENGINES HUB
                 // ======================================================
                 LazyColumn(
                     modifier = Modifier
@@ -467,7 +468,7 @@ fun LandingScreen(
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                letterSpacing = (-0.2).sp
+                                letterSpacing = (-0.25).sp
                             )
 
                             Surface(
@@ -495,10 +496,15 @@ fun LandingScreen(
                     items(filteredTools, key = { it.id }) { cliTool ->
                         Surface(
                             shape = RoundedCornerShape(16.dp),
-                            color = if (isDark) Color(0xFF161820).copy(alpha = 0.82f) else Color.White.copy(alpha = 0.90f),
+                            color = if (isDark) Color(0xFF161820).copy(alpha = 0.84f) else Color.White.copy(alpha = 0.92f),
                             border = BorderStroke(
-                                0.8.dp,
-                                if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
+                                1.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        if (isDark) Color.White.copy(alpha = 0.32f) else Color.White.copy(alpha = 0.85f),
+                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.04f)
+                                    )
+                                )
                             ),
                             shadowElevation = 2.dp,
                             modifier = Modifier
@@ -516,7 +522,7 @@ fun LandingScreen(
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Official SVG Vector Logo in Glass Squircle
+                                // Official SVG Vector Logo inside Specular Squircle
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
@@ -550,7 +556,6 @@ fun LandingScreen(
                                             letterSpacing = (-0.15).sp
                                         )
 
-                                        // Badge showing active sub-agents
                                         Surface(
                                             shape = RoundedCornerShape(8.dp),
                                             color = cliTool.brandColor.copy(alpha = if (isDark) 0.18f else 0.10f),
@@ -601,7 +606,7 @@ fun LandingScreen(
                 }
             } else if (agentId == null) {
                 // ======================================================
-                // TIER 2: SELECTED CLI TOOL AGENTS (e.g. OpenCode -> Pulse, Watchman)
+                // TIER 2: SELECTED CLI TOOL ACTIVE AGENTS
                 // ======================================================
                 LazyColumn(
                     modifier = Modifier
@@ -610,7 +615,7 @@ fun LandingScreen(
                     contentPadding = PaddingValues(top = 96.dp, bottom = 110.dp)
                 ) {
                     item {
-                        // Back navigation breadcrumb
+                        // Back Navigation Breadcrumb
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -624,7 +629,7 @@ fun LandingScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back to CLI Tools",
+                                contentDescription = "Back to cli tools",
                                 tint = effectiveAccent,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -645,7 +650,7 @@ fun LandingScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Selected Tool Header Card
+                        // Selected Tool Hero Card
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = tool.brandColor.copy(alpha = if (isDark) 0.16f else 0.10f),
@@ -676,10 +681,11 @@ fun LandingScreen(
 
                                 Column {
                                     Text(
-                                        text = "${tool.name} Agents",
+                                        text = "${tool.name} agents",
                                         fontSize = 17.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                        letterSpacing = (-0.15).sp
                                     )
                                     Text(
                                         text = "Select an agent to view and create active sessions",
@@ -693,7 +699,7 @@ fun LandingScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
-                    // List of Active Agents under the CLI tool
+                    // Active Agents List
                     items(tool.delegates, key = { it.id }) { agent ->
                         val sessionsCount = dynamicSessions[agent.id]?.size ?: agent.sessions.size
 
@@ -701,8 +707,13 @@ fun LandingScreen(
                             shape = RoundedCornerShape(16.dp),
                             color = if (isDark) Color(0xFF161820).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.92f),
                             border = BorderStroke(
-                                0.8.dp,
-                                if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
+                                1.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.80f),
+                                        if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.03f)
+                                    )
+                                )
                             ),
                             shadowElevation = 2.dp,
                             modifier = Modifier
@@ -738,7 +749,7 @@ fun LandingScreen(
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.width(14.dp))
+                                Spacer(modifier = Modifier.width(16.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(
@@ -762,7 +773,7 @@ fun LandingScreen(
                                         Surface(
                                             shape = RoundedCornerShape(8.dp),
                                             color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
-                                            modifier = Modifier.height(16.dp)
+                                            modifier = Modifier.height(18.dp)
                                         ) {
                                             Box(
                                                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -801,7 +812,7 @@ fun LandingScreen(
                 }
             } else {
                 // ======================================================
-                // TIER 3: AGENT SESSIONS + PROMINENT "+ CREATE SESSION" ACTION
+                // TIER 3: AGENT SESSIONS + PROMINENT "CREATE SESSION"
                 // ======================================================
                 val agent = currentAgent
                 val sessions = dynamicSessions[agentId] ?: emptyList()
@@ -813,7 +824,7 @@ fun LandingScreen(
                     contentPadding = PaddingValues(top = 96.dp, bottom = 110.dp)
                 ) {
                     item {
-                        // Back navigation breadcrumb
+                        // Back Navigation Breadcrumb
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -827,13 +838,13 @@ fun LandingScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back to Agents",
+                                contentDescription = "Back to agents",
                                 tint = effectiveAccent,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "${tool.name} Agents",
+                                text = "${tool.name} agents",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = effectiveAccent
@@ -848,10 +859,19 @@ fun LandingScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Prominent Apple Liquid Glass Action: "+ Create Session"
+                        // Prominent Apple Liquid Glass "Create session" Pill Action
                         Surface(
                             shape = RoundedCornerShape(20.dp),
                             color = tool.brandColor,
+                            border = BorderStroke(
+                                1.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = 0.40f),
+                                        Color.White.copy(alpha = 0.10f)
+                                    )
+                                )
+                            ),
                             shadowElevation = 6.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -862,7 +882,7 @@ fun LandingScreen(
                                     val newId = "sess_${System.currentTimeMillis()}"
                                     val newSess = AgentSession(
                                         id = newId,
-                                        title = "New ${agent?.name ?: "Agent"} Session",
+                                        title = "New interactive session",
                                         timestamp = "$now (Just created)",
                                         status = "Active",
                                         turnsCount = 1
@@ -906,7 +926,8 @@ fun LandingScreen(
                                 text = "Active sessions",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F)
+                                color = if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F),
+                                letterSpacing = (-0.1).sp
                             )
 
                             Text(
@@ -935,7 +956,7 @@ fun LandingScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "No sessions running yet. Tap \"Create Session\" above.",
+                                        text = "No sessions running yet. Tap \"Create session\" above.",
                                         fontSize = 13.sp,
                                         color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.40f)
                                     )
@@ -948,8 +969,13 @@ fun LandingScreen(
                                 shape = RoundedCornerShape(16.dp),
                                 color = if (isDark) Color(0xFF161820).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.92f),
                                 border = BorderStroke(
-                                    0.8.dp,
-                                    if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
+                                    1.dp,
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.80f),
+                                            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
+                                        )
+                                    )
                                 ),
                                 shadowElevation = 2.dp,
                                 modifier = Modifier
@@ -964,10 +990,9 @@ fun LandingScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .defaultMinSize(minHeight = 56.dp)
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Session Status Capsule Indicator
                                     Box(
                                         modifier = Modifier
                                             .size(8.dp)
@@ -977,7 +1002,7 @@ fun LandingScreen(
                                             )
                                     )
 
-                                    Spacer(modifier = Modifier.width(14.dp))
+                                    Spacer(modifier = Modifier.width(16.dp))
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
@@ -1028,7 +1053,7 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // TOP FLOATING LIQUID GLASS BAR (Dynamic Header)
+        // TOP FLOATING LIQUID GLASS BAR (Dynamic Breadcrumb Navigation)
         // ==============================================================
         Row(
             modifier = Modifier
@@ -1038,7 +1063,6 @@ fun LandingScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left Pill: [Chat | Agents] Capsule (or Back button when deep in tiers)
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
@@ -1053,7 +1077,6 @@ fun LandingScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (selectedToolId != null) {
-                        // Quick back button inside glass capsule
                         Box(
                             modifier = Modifier
                                 .defaultMinSize(minWidth = 72.dp, minHeight = 34.dp)
@@ -1086,7 +1109,6 @@ fun LandingScreen(
                             }
                         }
                     } else {
-                        // Root Hub State: [ Chat | Agents ]
                         Box(
                             modifier = Modifier
                                 .size(width = 44.dp, height = 34.dp)
@@ -1125,7 +1147,6 @@ fun LandingScreen(
                 }
             }
 
-            // Right Pill: [Filter | Settings]
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
@@ -1179,7 +1200,7 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // FLOATING BOTTOM CONTROLS (Search Bar & Circular Action FAB)
+        // FLOATING BOTTOM CONTROLS
         // ==============================================================
         Row(
             modifier = Modifier
@@ -1190,7 +1211,6 @@ fun LandingScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Floating Search Pill
             Surface(
                 shape = RoundedCornerShape(28.dp),
                 color = if (isDark) Color(0xFF161820).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.95f),
@@ -1234,7 +1254,7 @@ fun LandingScreen(
                                     text = when {
                                         selectedAgentId != null -> "Search active sessions"
                                         selectedToolId != null -> "Search ${currentTool?.name ?: ""} agents"
-                                        else -> "Search CLI tools and engines"
+                                        else -> "Search cli tools and engines"
                                     },
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Normal,
@@ -1249,7 +1269,6 @@ fun LandingScreen(
                 }
             }
 
-            // Circular Action FAB (Triggers Create Session if inside agent, or New Session prompt)
             Surface(
                 shape = CircleShape,
                 color = if (isDark) Color(0xFF2C2C32).copy(alpha = 0.92f) else Color(0xFFD4D0E2),
@@ -1276,7 +1295,6 @@ fun LandingScreen(
                             dynamicSessions.getOrPut(targetAgent) { mutableListOf() }.add(0, newSess)
                             onOpenAgentChat?.invoke(newId)
                         } else {
-                            // If on root, pick OpenCode or Hermes as default
                             selectedToolId = "opencode"
                         }
                     }

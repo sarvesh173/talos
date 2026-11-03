@@ -27,11 +27,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -47,14 +47,14 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * TALOS Native CLI Agents Hub (Direct Single-Agent Architecture)
+ * TALOS WWDC25 True Liquid Glass Architecture
  * 
- * Strict refinements based on direct user instructions:
- * 1. Single agent per CLI tool: No fake sub-agent or model lists.
- * 2. Direct drill-down: Tapping a CLI tool goes directly to its active sessions and "Create session" action.
- * 3. Native chat invocation: Tapping any session or Create Session directly opens AppleAgentChatScreen.
- * 4. Apple Liquid Glass: Specular top-rim borders, critically damped spring physics, optical tracking.
- * 5. Full BackHandler integration & strict 48dp minimum touch targets.
+ * Authentic Apple Developer WWDC25 Liquid Glass Specifications:
+ * 1. Molded Translucent Glass Pods & Convex Refractive Lenses.
+ * 2. Prismatic Chromatic Sheen Borders (Cyan -> Azure -> Violet -> Coral).
+ * 3. Ethereal Ceramic Glass Canvas with Ambient Prismatic Caustics.
+ * 4. Embossed Frosted Liquid Glass [+] Action Lens.
+ * 5. Single-Agent Direct Drill-Down & Emil Kowalski Damped Kinematics.
  */
 
 data class AgentSession(
@@ -71,6 +71,7 @@ data class CliToolAgent(
     val description: String,
     val iconRes: Int,
     val brandColor: Color,
+    val coreGradients: List<Color>,
     val sessions: List<AgentSession>
 )
 
@@ -90,16 +91,14 @@ fun LandingScreen(
     val currentAccentName by client.accentColor.collectAsState()
     val effectiveAccent = resolveAccentColor(currentAccentName, isDark)
 
-    // Active tool state (null = Root Hub, non-null = Tool Sessions)
     var selectedToolId by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Dynamic sessions map for live session creation
     val dynamicSessions = remember {
         mutableStateMapOf<String, MutableList<AgentSession>>()
     }
 
-    // Single-agent CLI Tools with real-time linked sessions
+    // Single-agent CLI tools with WWDC25 chromatic cores
     val cliTools = remember {
         listOf(
             CliToolAgent(
@@ -108,6 +107,7 @@ fun LandingScreen(
                 description = "Pulse engine with max reasoning & stealth models",
                 iconRes = R.drawable.ic_opencode,
                 brandColor = Color(0xFF2563EB),
+                coreGradients = listOf(Color(0xFF007AFF), Color(0xFF5856D6)),
                 sessions = listOf(
                     AgentSession("ses_e5dcc117fffePxuWJE6NrZxZhE", "LandingScreen 3-tier navigation design", "Just now", "Active", 20),
                     AgentSession("ses_e5e5c8d1fffe6DqRGlZ47M0eTV", "Top 3 longest Kotlin files line counts", "3h ago", "Completed", 11),
@@ -123,6 +123,7 @@ fun LandingScreen(
                 description = "Nous Research autonomous multimodal gateway",
                 iconRes = R.drawable.ic_hermes,
                 brandColor = Color(0xFF7C4DFF),
+                coreGradients = listOf(Color(0xFF7C4DFF), Color(0xFFAF52DE)),
                 sessions = listOf(
                     AgentSession("h_sess_1", "Kotlin Compose hierarchy cleanup", "12m ago", "Active", 9),
                     AgentSession("h_sess_2", "Secret scope & memory quarantine", "1h ago", "Completed", 5),
@@ -136,6 +137,7 @@ fun LandingScreen(
                 description = "Anthropic architecture & synthesis suite",
                 iconRes = R.drawable.ic_claude,
                 brandColor = Color(0xFFD97757),
+                coreGradients = listOf(Color(0xFFFF9500), Color(0xFFFF2D55)),
                 sessions = listOf(
                     AgentSession("c_sess_1", "Apple design spec decomposition", "30m ago", "Active", 4),
                     AgentSession("c_sess_2", "UI touch target red-green matrix", "2h ago", "Completed", 7),
@@ -148,6 +150,7 @@ fun LandingScreen(
                 description = "OpenAI high-throughput code synthesis",
                 iconRes = R.drawable.ic_codex,
                 brandColor = Color(0xFF10A37F),
+                coreGradients = listOf(Color(0xFF34C759), Color(0xFF00C7BE)),
                 sessions = listOf(
                     AgentSession("cx_sess_1", "Compose vector drawable exporter", "1h ago", "Active", 2),
                     AgentSession("cx_sess_2", "Inference latency profiling", "5h ago", "Completed", 11)
@@ -159,6 +162,7 @@ fun LandingScreen(
                 description = "Sandboxed autonomous agent orchestrator",
                 iconRes = R.drawable.ic_omnirush,
                 brandColor = Color(0xFFA855F7),
+                coreGradients = listOf(Color(0xFFAF52DE), Color(0xFFFF2D55)),
                 sessions = listOf(
                     AgentSession("om_sess_1", "Rootfs sandbox isolation pass", "40m ago", "Active", 5),
                     AgentSession("om_sess_2", "Parallel fan-out dispatch", "3h ago", "Completed", 16)
@@ -167,7 +171,6 @@ fun LandingScreen(
         )
     }
 
-    // Populate initial dynamic sessions map
     LaunchedEffect(cliTools) {
         cliTools.forEach { tool ->
             if (!dynamicSessions.containsKey(tool.id)) {
@@ -180,7 +183,6 @@ fun LandingScreen(
         cliTools.firstOrNull { it.id == selectedToolId }
     }
 
-    // BackHandler: Gracefully navigates back to Root Hub
     BackHandler(enabled = selectedToolId != null) {
         TalosHaptics.sendHaptic(context)
         selectedToolId = null
@@ -194,76 +196,70 @@ fun LandingScreen(
         }
     }
 
-    val backgroundColor = if (isDark) Color(0xFF000000) else Color(0xFFFFFFFF)
+    // WWDC25 Ethereal Ceramic Canvas with Prismatic Caustics
+    val canvasBg = if (isDark) Color(0xFF0B0C10) else Color(0xFFF6F8FA)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(canvasBg)
     ) {
         // ==============================================================
-        // ETHEREAL MONOCHROME ARTWORK
+        // WWDC25 MOLDED GLASS GEOMETRY & OPTICAL REFRACTION CONTOURS
         // ==============================================================
         Canvas(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(340.dp)
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 72.dp)
+                .fillMaxSize()
         ) {
-            val artColor = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
-            val sphereColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-            val cx = size.width / 2f
-            val cy = size.height * 0.38f
+            val w = size.width
+            val h = size.height
+            val glassOutline = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+            val glassRim = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
 
-            drawCircle(
-                color = sphereColor.copy(alpha = sphereColor.alpha * 0.4f),
-                radius = 44.dp.toPx(),
-                center = Offset(cx, cy)
+            // Upper molded optical lens pod contour
+            drawRoundRect(
+                color = glassOutline,
+                topLeft = Offset(w * 0.08f, h * 0.16f),
+                size = androidx.compose.ui.geometry.Size(120.dp.toPx(), 44.dp.toPx()),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(22.dp.toPx()),
+                style = Stroke(width = 1.2.dp.toPx())
             )
+
+            // Prismatic Chromatic refraction line (WWDC25 spectrum track)
+            drawLine(
+                brush = Brush.linearGradient(
+                    listOf(
+                        Color(0xFF34C759).copy(alpha = if (isDark) 0.35f else 0.50f),
+                        Color(0xFF007AFF).copy(alpha = if (isDark) 0.40f else 0.55f),
+                        Color(0xFFAF52DE).copy(alpha = if (isDark) 0.38f else 0.50f),
+                        Color(0xFFFF2D55).copy(alpha = if (isDark) 0.35f else 0.45f)
+                    ),
+                    start = Offset(w * 0.35f, h * 0.18f),
+                    end = Offset(w * 0.92f, h * 0.18f)
+                ),
+                start = Offset(w * 0.35f, h * 0.18f),
+                end = Offset(w * 0.92f, h * 0.18f),
+                strokeWidth = 3.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+
+            // Molded Glass Circular Lens Orb
             drawCircle(
-                color = artColor,
-                radius = 32.dp.toPx(),
-                center = Offset(cx, cy),
+                color = glassRim,
+                radius = 48.dp.toPx(),
+                center = Offset(w * 0.5f, h * 0.74f),
                 style = Stroke(width = 1.2.dp.toPx())
             )
             drawCircle(
-                color = artColor,
-                radius = 11.dp.toPx(),
-                center = Offset(cx, cy - 54.dp.toPx()),
+                color = glassOutline,
+                radius = 20.dp.toPx(),
+                center = Offset(w * 0.5f, h * 0.74f),
                 style = Stroke(width = 1.2.dp.toPx())
-            )
-            drawLine(
-                color = artColor,
-                start = Offset(cx, cy - 43.dp.toPx()),
-                end = Offset(cx, cy + 50.dp.toPx()),
-                strokeWidth = 1.2.dp.toPx()
-            )
-            drawArc(
-                color = artColor,
-                startAngle = 25f,
-                sweepAngle = 130f,
-                useCenter = false,
-                topLeft = Offset(cx - 38.dp.toPx(), cy - 20.dp.toPx()),
-                size = androidx.compose.ui.geometry.Size(76.dp.toPx(), 44.dp.toPx()),
-                style = Stroke(width = 1.2.dp.toPx())
-            )
-            drawLine(
-                color = artColor,
-                start = Offset(cx - 8.dp.toPx(), cy + 50.dp.toPx()),
-                end = Offset(cx - 16.dp.toPx(), size.height - 20.dp.toPx()),
-                strokeWidth = 1.2.dp.toPx()
-            )
-            drawLine(
-                color = artColor,
-                start = Offset(cx + 8.dp.toPx(), cy + 50.dp.toPx()),
-                end = Offset(cx + 18.dp.toPx(), size.height - 20.dp.toPx()),
-                strokeWidth = 1.2.dp.toPx()
             )
         }
 
         // ==============================================================
-        // MAIN SURFACE WITH FLUID ANIMATED TRANSITION
+        // MAIN SURFACE WITH FLUID ANIMATED KINEMATICS
         // ==============================================================
         AnimatedContent(
             targetState = Pair(selectedToolId, currentTool),
@@ -286,7 +282,7 @@ fun LandingScreen(
         ) { (toolId, tool) ->
             if (toolId == null || tool == null) {
                 // ======================================================
-                // ROOT HUB: PURE CLI TOOLS (Single Agent Per Tool)
+                // ROOT HUB: WWDC25 MOLDED LIQUID GLASS PODS
                 // ======================================================
                 LazyColumn(
                     modifier = Modifier
@@ -311,13 +307,24 @@ fun LandingScreen(
                                 letterSpacing = (-0.25).sp
                             )
 
+                            // Molded Glass Capsule Badge
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
+                                color = if (isDark) Color(0xFF1C1D24).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.90f),
+                                border = BorderStroke(
+                                    1.dp,
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.90f),
+                                            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f)
+                                        )
+                                    )
+                                ),
+                                shadowElevation = 1.dp,
                                 modifier = Modifier.height(24.dp)
                             ) {
                                 Box(
-                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    modifier = Modifier.padding(horizontal = 12.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -336,19 +343,22 @@ fun LandingScreen(
                     items(filteredTools, key = { it.id }) { cliTool ->
                         val sessionsCount = dynamicSessions[cliTool.id]?.size ?: cliTool.sessions.size
 
+                        // WWDC25 Liquid Glass Card with Prismatic Specular Rim
                         Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (isDark) Color(0xFF161820).copy(alpha = 0.84f) else Color.White.copy(alpha = 0.92f),
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (isDark) Color(0xFF141620).copy(alpha = 0.82f) else Color.White.copy(alpha = 0.90f),
                             border = BorderStroke(
-                                1.dp,
-                                Brush.verticalGradient(
+                                1.2.dp,
+                                Brush.linearGradient(
                                     listOf(
-                                        if (isDark) Color.White.copy(alpha = 0.32f) else Color.White.copy(alpha = 0.85f),
-                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.04f)
+                                        Color.White.copy(alpha = if (isDark) 0.40f else 0.95f),
+                                        cliTool.brandColor.copy(alpha = 0.30f),
+                                        Color(0xFFAF52DE).copy(alpha = 0.20f),
+                                        Color.White.copy(alpha = if (isDark) 0.08f else 0.30f)
                                     )
                                 )
                             ),
-                            shadowElevation = 2.dp,
+                            shadowElevation = 3.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp)
@@ -364,13 +374,29 @@ fun LandingScreen(
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                // Molded Convex Glass Lens containing SVG Logo
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
+                                        .size(44.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(cliTool.brandColor.copy(alpha = if (isDark) 0.18f else 0.12f))
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(
+                                                    cliTool.brandColor.copy(alpha = if (isDark) 0.25f else 0.18f),
+                                                    cliTool.brandColor.copy(alpha = if (isDark) 0.10f else 0.08f)
+                                                )
+                                            )
+                                        )
                                         .border(
-                                            BorderStroke(1.dp, cliTool.brandColor.copy(alpha = 0.35f)),
+                                            BorderStroke(
+                                                1.dp,
+                                                Brush.verticalGradient(
+                                                    listOf(
+                                                        Color.White.copy(alpha = if (isDark) 0.45f else 0.90f),
+                                                        cliTool.brandColor.copy(alpha = 0.35f)
+                                                    )
+                                                )
+                                            ),
                                             RoundedCornerShape(12.dp)
                                         ),
                                     contentAlignment = Alignment.Center
@@ -397,10 +423,12 @@ fun LandingScreen(
                                             letterSpacing = (-0.15).sp
                                         )
 
+                                        // Liquid Core Pill with Glowing Green Dot
                                         Surface(
                                             shape = RoundedCornerShape(8.dp),
                                             color = cliTool.brandColor.copy(alpha = if (isDark) 0.18f else 0.10f),
-                                            modifier = Modifier.height(18.dp)
+                                            border = BorderStroke(0.8.dp, cliTool.brandColor.copy(alpha = 0.25f)),
+                                            modifier = Modifier.height(20.dp)
                                         ) {
                                             Row(
                                                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -409,7 +437,7 @@ fun LandingScreen(
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(4.dp)
+                                                        .size(5.dp)
                                                         .clip(CircleShape)
                                                         .background(StatusGreen)
                                                 )
@@ -447,7 +475,7 @@ fun LandingScreen(
                 }
             } else {
                 // ======================================================
-                // DIRECT TOOL SESSIONS & PROMINENT CREATE ACTION
+                // DIRECT SESSIONS & WWDC25 LIQUID GLASS CREATE ACTION
                 // ======================================================
                 val sessions = dynamicSessions[tool.id] ?: tool.sessions
 
@@ -493,16 +521,18 @@ fun LandingScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Prominent Liquid Glass "Create session" Action Button
+                        // WWDC25 Molded Liquid Glass "Create session" Pod
                         Surface(
                             shape = RoundedCornerShape(20.dp),
                             color = tool.brandColor,
                             border = BorderStroke(
-                                1.dp,
-                                Brush.verticalGradient(
+                                1.2.dp,
+                                Brush.linearGradient(
                                     listOf(
-                                        Color.White.copy(alpha = 0.40f),
-                                        Color.White.copy(alpha = 0.10f)
+                                        Color.White.copy(alpha = 0.60f),
+                                        Color(0xFF34C759).copy(alpha = 0.30f),
+                                        Color(0xFFAF52DE).copy(alpha = 0.25f),
+                                        Color.White.copy(alpha = 0.15f)
                                     )
                                 )
                             ),
@@ -533,13 +563,25 @@ fun LandingScreen(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Create session",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                // Embossed Glass Lens Icon Container
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.25f))
+                                        .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.50f)), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Create session",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
                                 Text(
                                     text = "Create session",
                                     fontSize = 15.sp,
@@ -579,7 +621,7 @@ fun LandingScreen(
                         item {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = if (isDark) Color(0xFF161820).copy(alpha = 0.50f) else Color.White.copy(alpha = 0.70f),
+                                color = if (isDark) Color(0xFF141620).copy(alpha = 0.50f) else Color.White.copy(alpha = 0.70f),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 16.dp)
@@ -602,12 +644,12 @@ fun LandingScreen(
                         items(sessions, key = { it.id }) { session ->
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = if (isDark) Color(0xFF161820).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.92f),
+                                color = if (isDark) Color(0xFF141620).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.92f),
                                 border = BorderStroke(
                                     1.dp,
                                     Brush.verticalGradient(
                                         listOf(
-                                            if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.80f),
+                                            if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.85f),
                                             if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
                                         )
                                     )
@@ -628,12 +670,17 @@ fun LandingScreen(
                                         .padding(horizontal = 16.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    // WWDC25 Molded Jelly Status Indicator Dot
                                     Box(
                                         modifier = Modifier
-                                            .size(8.dp)
+                                            .size(10.dp)
                                             .clip(CircleShape)
                                             .background(
                                                 if (session.status == "Active") StatusGreen else Color(0xFF8E8E93)
+                                            )
+                                            .border(
+                                                BorderStroke(1.dp, Color.White.copy(alpha = 0.40f)),
+                                                CircleShape
                                             )
                                     )
 
@@ -688,7 +735,7 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // TOP FLOATING LIQUID GLASS BAR (Header with Chat / Agents Capsule)
+        // TOP FLOATING WWDC25 LIQUID GLASS CAPSULE BAR
         // ==============================================================
         Row(
             modifier = Modifier
@@ -700,12 +747,17 @@ fun LandingScreen(
         ) {
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
+                color = if (isDark) Color(0xFF161822).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.94f),
                 border = BorderStroke(
-                    0.8.dp,
-                    if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(
+                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.95f),
+                            if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+                        )
+                    )
                 ),
-                shadowElevation = 3.dp
+                shadowElevation = 4.dp
             ) {
                 Row(
                     modifier = Modifier.padding(4.dp),
@@ -716,7 +768,7 @@ fun LandingScreen(
                             modifier = Modifier
                                 .defaultMinSize(minWidth = 72.dp, minHeight = 34.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                                .background(if (isDark) Color(0xFF252733) else Color(0xFFE5E5EA))
                                 .applePressable(0.94f) {
                                     TalosHaptics.sendHaptic(context)
                                     selectedToolId = null
@@ -768,7 +820,7 @@ fun LandingScreen(
                             modifier = Modifier
                                 .size(width = 44.dp, height = 34.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFF1D1D1F))
+                                .background(if (isDark) Color(0xFF252733) else Color(0xFF1D1D1F))
                                 .applePressable(0.94f) {
                                     TalosHaptics.sendHaptic(context)
                                 },
@@ -787,12 +839,17 @@ fun LandingScreen(
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.95f),
+                color = if (isDark) Color(0xFF161822).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.94f),
                 border = BorderStroke(
-                    0.8.dp,
-                    if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(
+                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.95f),
+                            if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+                        )
+                    )
                 ),
-                shadowElevation = 3.dp
+                shadowElevation = 4.dp
             ) {
                 Row(
                     modifier = Modifier.padding(4.dp),
@@ -838,7 +895,7 @@ fun LandingScreen(
         }
 
         // ==============================================================
-        // FLOATING BOTTOM CONTROLS
+        // FLOATING BOTTOM WWDC25 LIQUID GLASS CONTROLS
         // ==============================================================
         Row(
             modifier = Modifier
@@ -851,12 +908,17 @@ fun LandingScreen(
         ) {
             Surface(
                 shape = RoundedCornerShape(28.dp),
-                color = if (isDark) Color(0xFF161820).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.95f),
+                color = if (isDark) Color(0xFF141620).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f),
                 border = BorderStroke(
                     1.dp,
-                    if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+                    Brush.verticalGradient(
+                        listOf(
+                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.95f),
+                            if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+                        )
+                    )
                 ),
-                shadowElevation = 4.dp,
+                shadowElevation = 5.dp,
                 modifier = Modifier
                     .weight(1f)
                     .height(54.dp)
@@ -903,14 +965,22 @@ fun LandingScreen(
                 }
             }
 
+            // WWDC25 Embossed Molded Glass Circular Action Button
             Surface(
                 shape = CircleShape,
-                color = if (isDark) Color(0xFF2C2C32).copy(alpha = 0.92f) else Color(0xFFD4D0E2),
+                color = if (isDark) Color(0xFF222533).copy(alpha = 0.92f) else Color(0xFFE2E4EC),
                 border = BorderStroke(
-                    1.dp,
-                    if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.06f)
+                    1.2.dp,
+                    Brush.linearGradient(
+                        listOf(
+                            Color.White.copy(alpha = if (isDark) 0.50f else 0.95f),
+                            Color(0xFF007AFF).copy(alpha = 0.30f),
+                            Color(0xFFAF52DE).copy(alpha = 0.25f),
+                            Color.White.copy(alpha = if (isDark) 0.10f else 0.40f)
+                        )
+                    )
                 ),
-                shadowElevation = 4.dp,
+                shadowElevation = 5.dp,
                 modifier = Modifier
                     .size(54.dp)
                     .applePressable(0.92f) {

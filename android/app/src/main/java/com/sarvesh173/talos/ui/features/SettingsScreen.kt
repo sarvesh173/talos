@@ -48,6 +48,7 @@ fun SettingsScreen(
     onNavigateToSecurity: () -> Unit = {},
     onNavigateToCaching: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToThinkingOrb: () -> Unit = {},
     nodeEncryptionFingerprint: String? = null
 ) {
     val context = LocalContext.current
@@ -275,6 +276,15 @@ fun SettingsScreen(
                     subtitle = "Bubbles",
                     icon = TalosIcons.TalosChat,
                     onClick = onNavigateToChatPreferences
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Thinking Orb",
+                    subtitle = "Animation, colour, shape",
+                    icon = TalosIcons.TalosSparkle,
+                    onClick = onNavigateToThinkingOrb
                 )
             }
 

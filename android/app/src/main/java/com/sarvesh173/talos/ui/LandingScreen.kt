@@ -76,6 +76,20 @@ data class CliToolAgent(
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
+
+/**
+ * Map a CLI tool to the core room that actually hosts it.
+ *
+ * The core seeds "the-council" for multi-agent work; per-tool rooms are created
+ * on demand by the orchestrator. Until a tool has a dedicated room, the council
+ * is the honest destination — sending to a made-up id silently drops messages.
+ */
+private fun sessionRoomId(toolId: String): String = when (toolId) {
+    "hermes", "alya" -> "the-council"
+    "opencode", "claudecode", "codex", "omnirush" -> "war-room"
+    else -> "the-council"
+}
+
 @Composable
 fun LandingScreen(
     client: TalosClient,
@@ -540,7 +554,7 @@ fun LandingScreen(
                                         turnsCount = 1
                                     )
                                     dynamicSessions.getOrPut(tool.id) { mutableListOf() }.add(0, newSess)
-                                    onOpenAgentChat?.invoke(newId, newTitle, tool.name, tool.iconRes, tool.brandColor)
+                                    onOpenAgentChat?.invoke(sessionRoomId(tool.id), newTitle, tool.name, tool.iconRes, tool.brandColor)
                                 }
                         ) {
                             Row(
@@ -646,7 +660,7 @@ fun LandingScreen(
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
                                     .applePressable(0.97f, pressHaptic = true) {
-                                        onOpenAgentChat?.invoke(session.id, session.title, tool.name, tool.iconRes, tool.brandColor)
+                                        onOpenAgentChat?.invoke(sessionRoomId(tool.id), session.title, tool.name, tool.iconRes, tool.brandColor)
                                     }
                             ) {
                                 Row(
@@ -786,8 +800,11 @@ fun LandingScreen(
                                 .size(width = 44.dp, height = 34.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .applePressable(0.94f, pressHaptic = true) {
-                                    val defaultTool = cliTools.first()
-                                    onOpenAgentChat?.invoke("sess_active", "Active conversation", defaultTool.name, defaultTool.iconRes, defaultTool.brandColor)
+                                    // Open the room this hub is actually bound to,
+                                    // with the tool the user is looking at.
+                                    val tool = currentTool ?: cliTools.first()
+                                    val room = sessionRoomId(currentTool?.id ?: tool.id)
+                                    onOpenAgentChat?.invoke(room, "Active conversation", tool.name, tool.iconRes, tool.brandColor)
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -977,7 +994,7 @@ fun LandingScreen(
                             turnsCount = 1
                         )
                         dynamicSessions.getOrPut(tool.id) { mutableListOf() }.add(0, newSess)
-                        onOpenAgentChat?.invoke(newId, newTitle, tool.name, tool.iconRes, tool.brandColor)
+                        onOpenAgentChat?.invoke(sessionRoomId(tool.id), newTitle, tool.name, tool.iconRes, tool.brandColor)
                     }
             ) {
                 Box(

@@ -22,6 +22,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -339,6 +343,43 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     }
 
     /**
+     * Upload an image and post it to the room as an attachment.
+     *
+     * The core stores the blob under `/uploads` and the message carries the
+     * URL, so the agent receives real pixels plus the user's caption rather
+     * than a text description of a photo that was never sent.
+     */
+    fun sendMediaMessage(bytes: ByteArray, caption: String) {
+        scope.launch(Dispatchers.IO) {
+            val url = uploadMedia(bytes, "img_${System.currentTimeMillis()}.jpg")
+            if (url == null) {
+                Log.w(TAG, "Media upload failed; nothing was sent")
+                return@launch
+            }
+            val room = _currentRoomId.value
+            val payload = buildJsonObject {
+                put("room_id", room)
+                put("sender_name", "Sarvesh")
+                put("content", caption.ifBlank { "" })
+                put("attachments", buildJsonArray { add(url) })
+            }
+            val req = Request.Builder()
+                .url("$baseUrl/api/messages")
+                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            runCatching {
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) {
+                        Log.w(TAG, "Posting media message failed: HTTP ${resp.code}")
+                    }
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Posting media message failed: ${e.message}")
+            }
+        }
+    }
+
+    /**
      * Upload a media blob to the core and return its served URL, or null when
      * the upload fails. Attachments are what the agent actually receives —
      * describing a photo in the message text is not an attachment.
@@ -467,6 +508,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private val _currentRoomId = MutableStateFlow("the-council")
     val currentRoomId: StateFlow<String> = _currentRoomId.asStateFlow()
+
+    private val _providers = MutableStateFlow<List<ProviderSnapshotDto>>(emptyList())
+    val providers: StateFlow<List<ProviderSnapshotDto>> = _providers.asStateFlow()
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
@@ -1418,6 +1462,30 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             } catch (e: Exception) {
                 Log.e(TAG, "resumeAllAgents error: ${e.message}")
                 false
+            }
+        }
+    }
+
+    /**
+     * Load the live provider + model catalog from the core.
+     *
+     * The core probes each provider and returns its real model list, so the
+     * picker shows what can answer now instead of a static table. Failures are
+     * logged and leave the previous snapshot intact.
+     */
+    fun fetchProviders(force: Boolean = false) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val url = "$baseUrl/api/providers" + if (force) "?force=true" else ""
+                val req = Request.Builder().url(url).get().build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@use
+                    val body = resp.body?.string() ?: return@use
+                    val parsed = json.decodeFromString<List<ProviderSnapshotDto>>(body)
+                    _providers.value = parsed
+                }
+            }.onFailure { e ->
+                Log.w(TAG, "Failed to fetch providers: ${e.message}")
             }
         }
     }

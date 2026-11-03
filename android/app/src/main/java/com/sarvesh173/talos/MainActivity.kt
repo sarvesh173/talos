@@ -106,6 +106,7 @@ import com.sarvesh173.talos.ui.features.ChatPreferencesScreen
 import com.sarvesh173.talos.ui.features.SecurityScreen
 import com.sarvesh173.talos.ui.features.CachingScreen
 import com.sarvesh173.talos.ui.features.NotificationsScreen
+import com.sarvesh173.talos.ui.features.ThinkingOrbSettingsScreen
 import com.sarvesh173.talos.ui.*
 import com.sarvesh173.talos.ui.TalosHaptics
 import kotlinx.coroutines.Dispatchers
@@ -386,7 +387,8 @@ class MainActivity : ComponentActivity() {
                     "hub" -> "hub"
                     "gallery" -> "gallery"
                     "cli_manager" -> "cli_manager"
-                    "chat" -> "main"
+                    "agent_chat", "chat" -> "agent_chat"
+                    "thinking_orb" -> "thinking_orb"
                     else -> "main"
                 }
 
@@ -397,6 +399,9 @@ class MainActivity : ComponentActivity() {
                             appScreen = "settings"
                         }
                         "settings", "canvas", "diff", "hub", "gallery", "cli_manager", "chat" -> {
+                            appScreen = "main"
+                        }
+                        "agent_chat", "thinking_orb" -> {
                             appScreen = "main"
                         }
                         "main", "landing" -> {
@@ -583,6 +588,9 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        "thinking_orb" -> {
+                            ThinkingOrbSettingsScreen(onBack = { appScreen = "settings" })
+                        }
                         "settings" -> {
                             SettingsScreen(
                                 client = client,
@@ -591,7 +599,8 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToChatPreferences = { appScreen = "chat_preferences" },
                                 onNavigateToSecurity = { appScreen = "security" },
                                 onNavigateToCaching = { appScreen = "caching" },
-                                onNavigateToNotifications = { appScreen = "notifications" }
+                                onNavigateToNotifications = { appScreen = "notifications" },
+                                onNavigateToThinkingOrb = { appScreen = "thinking_orb" }
                             )
                         }
                         "look_and_feel" -> {

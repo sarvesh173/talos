@@ -94,6 +94,9 @@ dependencies {
     // Serialization & Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    // Local JVM tests for pure-logic modules (orb geometry, providers).
+    testImplementation("junit:junit:4.13.2")
+
 }
 
 // Bypass AAR metadata compileSdk checks for modern Compose Multiplatform libraries (e.g. Haze 2.0.1)

@@ -3065,3 +3065,26 @@ Polished secondary fleet and telemetry feature modules with secret masking and s
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21110` and `versionName` to `"2.11.10"`.
+
+---
+
+## 139. Landing Screen De-Slop Pass & Full Codebase Zero-Warning Design Gate
+
+Executed an unslop and Apple HIG polish pass on the primary landing hero and verified zero design warnings across the full UI suite:
+
+### 1. Landing Hero Typography & Surface Decoupling
+- Replaced hardcoded black/white colors on `LandingScreen` with dynamic tokens (`MaterialTheme.colorScheme.onSurface`, `surfaceContainerHigh`).
+- Bound the brand title to `MaterialTheme.typography.headlineSmall` and the primary entry button to `titleMedium`.
+- Upgraded the top theme toggle and setup wizard actions to mandatory 48dp minimum finger touch targets (`.size(48.dp)` and `.height(48.dp)`).
+- Converted loud `"5 AGENTS ACTIVE"` to quiet sentence-case `"5 agents active"` with an 8dp aligned status indicator.
+
+### 2. Full Codebase 4px Spatial Grid & Zero-Warning Gate
+- Corrected node tier tag padding in `AgentCanvasScreen` to standard 8dp on the 4px grid.
+- Achieved **0 accessibility errors and 0 style warnings** across all 25+ Kotlin UI screens via `npx @enmera/ai-design-check`.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` pass across all UI files: 0 findings.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21111` and `versionName` to `"2.11.11"`.

@@ -115,7 +115,10 @@ fun CliToolManagerScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -124,7 +127,10 @@ fun CliToolManagerScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { client.fetchDelegationHierarchy() }) {
+                    IconButton(
+                        onClick = { client.fetchDelegationHierarchy() },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh",
@@ -255,7 +261,7 @@ private fun CliEngineCard(
                             .clip(CircleShape)
                             .background(if (engine.is_available) Color(0xFF10B981) else Color(0xFF64748B))
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             text = engine.name,
@@ -370,12 +376,12 @@ private fun DelegateLeadCard(
                             reasoning = newEffort
                             onUpdateQuota(commandLimit.toInt(), newEffort)
                         },
-                        label = { Text(reasoning, fontSize = 10.sp) }
+                        label = { Text(reasoning, style = MaterialTheme.typography.labelSmall) }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Command limit progress and control
             Row(
@@ -422,7 +428,7 @@ private fun DelegateLeadCard(
             if (delegate.children.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -430,8 +436,8 @@ private fun DelegateLeadCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "DELEGATED SUBAGENTS (${delegate.children.size})",
-                        fontSize = 10.sp,
+                        text = "Delegated subagents (${delegate.children.size})",
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -443,7 +449,7 @@ private fun DelegateLeadCard(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Spawn", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                        Text("Spawn", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
                 }
 
@@ -466,7 +472,7 @@ private fun DelegateLeadCard(
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
                                     text = child.name,
@@ -488,8 +494,8 @@ private fun DelegateLeadCard(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = child.state.uppercase(),
-                                fontSize = 9.sp,
+                                text = child.state.replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (child.state.equals("running", ignoreCase = true)) Color(0xFF10B981) else Color(0xFF94A3B8)
                             )
@@ -535,7 +541,7 @@ private fun DelegateLeadCard(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Spawn subagent", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                    Text("Spawn subagent", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 }
             }
         }

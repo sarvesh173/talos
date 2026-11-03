@@ -66,7 +66,10 @@ fun ImageGalleryScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -75,17 +78,23 @@ fun ImageGalleryScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { client.fetchImageGallery() }) {
+                    IconButton(
+                        onClick = { client.fetchImageGallery() },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    IconButton(onClick = { showGenerateDialog = true }) {
+                    IconButton(
+                        onClick = { showGenerateDialog = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.AddPhotoAlternate,
-                            contentDescription = "Generate New",
+                            contentDescription = "Generate new",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -132,8 +141,8 @@ fun ImageGalleryScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Create AI Art")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Create AI art")
                     }
                 }
             }
@@ -175,8 +184,8 @@ fun ImageGalleryScreen(
                                         .padding(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
                                     Text(
-                                        text = image.style.uppercase(),
-                                        fontSize = 9.sp,
+                                        text = image.style.replaceFirstChar { it.uppercase() },
+                                        style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -184,7 +193,7 @@ fun ImageGalleryScreen(
 
                                 Text(
                                     text = image.aspect_ratio,
-                                    fontSize = 10.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -224,7 +233,7 @@ fun ImageGalleryScreen(
                 Icon(TalosSparkle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             title = {
-                Text("Image Artifact (${image.style})", style = MaterialTheme.typography.titleMedium)
+                Text("Image artifact (${image.style})", style = MaterialTheme.typography.titleMedium)
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -239,8 +248,8 @@ fun ImageGalleryScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Aspect Ratio: ${image.aspect_ratio}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("ID: ${image.id}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Aspect ratio: ${image.aspect_ratio}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("ID: ${image.id}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             },
@@ -249,7 +258,7 @@ fun ImageGalleryScreen(
                     Button(
                         onClick = {
                             client.sendMessage("[Hermes Generated Image: ${image.style}]\nPrompt: ${image.prompt}")
-                            Toast.makeText(context, "Forwarded to Council Room", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Forwarded to council room", Toast.LENGTH_SHORT).show()
                             selectedImage = null
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -296,7 +305,7 @@ fun ImageGalleryScreen(
                 Icon(Icons.Default.AddPhotoAlternate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             title = {
-                Text("Generate AI Image", style = MaterialTheme.typography.titleMedium)
+                Text("Generate AI image", style = MaterialTheme.typography.titleMedium)
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -318,7 +327,7 @@ fun ImageGalleryScreen(
                             FilterChip(
                                 selected = selectedStyle == style,
                                 onClick = { selectedStyle = style },
-                                label = { Text(style.replaceFirstChar { it.uppercase() }, fontSize = 10.sp) },
+                                label = { Text(style.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) },
                                 enabled = !isGenerating
                             )
                         }
@@ -333,7 +342,7 @@ fun ImageGalleryScreen(
                             FilterChip(
                                 selected = selectedRatio == ratio,
                                 onClick = { selectedRatio = ratio },
-                                label = { Text(ratio, fontSize = 10.sp) },
+                                label = { Text(ratio, style = MaterialTheme.typography.labelSmall) },
                                 enabled = !isGenerating
                             )
                         }

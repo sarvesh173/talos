@@ -81,7 +81,10 @@ fun CodeDiffViewer(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -90,23 +93,29 @@ fun CodeDiffViewer(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { client.fetchGitDiff() }) {
+                    IconButton(
+                        onClick = { client.fetchGitDiff() },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh Diff",
+                            contentDescription = "Refresh diff",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (currentFile != null) {
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            val fullDiff = currentFile.lines.joinToString("\n") { it.content }
-                            clipboardManager.setText(AnnotatedString(fullDiff))
-                            Toast.makeText(context, "File diff copied to clipboard", Toast.LENGTH_SHORT).show()
-                        }) {
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val fullDiff = currentFile.lines.joinToString("\n") { it.content }
+                                clipboardManager.setText(AnnotatedString(fullDiff))
+                                Toast.makeText(context, "File diff copied to clipboard", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.size(48.dp)
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy Diff",
+                                contentDescription = "Copy diff",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -133,7 +142,7 @@ fun CodeDiffViewer(
                             strokeWidth = 3.5.dp,
                             accentColor = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Parsing git working tree diff...",
                             style = MaterialTheme.typography.bodySmall,
@@ -229,14 +238,14 @@ fun CodeDiffViewer(
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "+${file.additions}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = StatusGreen
                                     )
                                     if (file.deletions > 0) {
-                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = "-${file.deletions}",
                                             style = MaterialTheme.typography.labelSmall,
@@ -262,7 +271,7 @@ fun CodeDiffViewer(
                                 showOnlyChanges = false
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             },
-                            label = { Text("All Lines (${currentFile.lines.size})", fontSize = 11.sp) }
+                            label = { Text("All lines (${currentFile.lines.size})", style = MaterialTheme.typography.labelSmall) }
                         )
                         val changeCount = currentFile.lines.count { it.line_type == "added" || it.line_type == "deleted" }
                         FilterChip(
@@ -271,7 +280,7 @@ fun CodeDiffViewer(
                                 showOnlyChanges = true
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             },
-                            label = { Text("Changes Only ($changeCount)", fontSize = 11.sp) }
+                            label = { Text("Changes only ($changeCount)", style = MaterialTheme.typography.labelSmall) }
                         )
                     }
 

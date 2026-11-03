@@ -100,8 +100,8 @@ fun ObscuraBrowserScreen(
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = if (isStealthActive) "STEALTH ACTIVE" else "STANDARD",
-                                    fontSize = 9.sp,
+                                    text = if (isStealthActive) "Stealth active" else "Standard",
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.tertiary
                                 )
@@ -116,7 +116,10 @@ fun ObscuraBrowserScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -125,12 +128,15 @@ fun ObscuraBrowserScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        client.checkBrowserStatus { status ->
-                            browserStatus = status
-                            Toast.makeText(context, "Obscura status refreshed", Toast.LENGTH_SHORT).show()
-                        }
-                    }) {
+                    IconButton(
+                        onClick = {
+                            client.checkBrowserStatus { status ->
+                                browserStatus = status
+                                Toast.makeText(context, "Obscura status refreshed", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Security,
                             contentDescription = "Status",
@@ -177,7 +183,7 @@ fun ObscuraBrowserScreen(
                     OutlinedTextField(
                         value = urlInput,
                         onValueChange = { urlInput = it },
-                        placeholder = { Text("Enter URL or domain...", fontSize = 13.sp) },
+                        placeholder = { Text("Enter URL or domain...", style = MaterialTheme.typography.bodyMedium) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Uri,
@@ -255,7 +261,7 @@ fun ObscuraBrowserScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("text" to "Text Reader", "links" to "Links", "assets" to "Assets").forEach { (mode, label) ->
+                    listOf("text" to "Text reader", "links" to "Links", "assets" to "Assets").forEach { (mode, label) ->
                         val isSelected = selectedDumpMode == mode
                         FilterChip(
                             selected = isSelected,
@@ -263,7 +269,7 @@ fun ObscuraBrowserScreen(
                                 selectedDumpMode = mode
                                 if (currentResult != null) executeFetch()
                             },
-                            label = { Text(label, fontSize = 11.sp) }
+                            label = { Text(label, style = MaterialTheme.typography.labelSmall) }
                         )
                     }
                 }
@@ -271,7 +277,7 @@ fun ObscuraBrowserScreen(
                 FilterChip(
                     selected = isStealthActive,
                     onClick = { isStealthActive = !isStealthActive },
-                    label = { Text("Stealth", fontSize = 11.sp) },
+                    label = { Text("Stealth", style = MaterialTheme.typography.labelSmall) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Shield,
@@ -306,7 +312,7 @@ fun ObscuraBrowserScreen(
                                     strokeWidth = 3.5.dp,
                                     accentColor = MaterialTheme.colorScheme.primary
                                 )
-                                Spacer(modifier = Modifier.height(14.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
                                     text = "Obscura rendering DOM over V8...",
                                     style = MaterialTheme.typography.bodySmall,
@@ -353,7 +359,7 @@ fun ObscuraBrowserScreen(
                                         onClick = {
                                             val excerpt = result.content.take(600).trim()
                                             client.sendMessage("[Obscura Web Excerpt: ${result.url}]\n$excerpt...")
-                                            Toast.makeText(context, "Forwarded to Council Room", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Forwarded to council room", Toast.LENGTH_SHORT).show()
                                         },
                                         modifier = Modifier.size(48.dp)
                                     ) {

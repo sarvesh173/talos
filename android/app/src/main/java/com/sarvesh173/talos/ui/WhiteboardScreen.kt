@@ -245,7 +245,7 @@ fun WhiteboardScreen(
                                     activeTool = OpenBoardTool.PEN
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 },
-                                label = { Text("Pen", fontSize = 10.sp) }
+                                label = { Text("Pen", style = MaterialTheme.typography.labelSmall) }
                             )
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.HIGHLIGHTER,
@@ -253,7 +253,7 @@ fun WhiteboardScreen(
                                     activeTool = OpenBoardTool.HIGHLIGHTER
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 },
-                                label = { Text("High", fontSize = 10.sp) }
+                                label = { Text("High", style = MaterialTheme.typography.labelSmall) }
                             )
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.LINE,
@@ -261,7 +261,7 @@ fun WhiteboardScreen(
                                     activeTool = OpenBoardTool.LINE
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 },
-                                label = { Text("Line", fontSize = 10.sp) }
+                                label = { Text("Line", style = MaterialTheme.typography.labelSmall) }
                             )
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.RECTANGLE,
@@ -269,7 +269,7 @@ fun WhiteboardScreen(
                                     activeTool = OpenBoardTool.RECTANGLE
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 },
-                                label = { Text("Rect", fontSize = 10.sp) }
+                                label = { Text("Rect", style = MaterialTheme.typography.labelSmall) }
                             )
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.CIRCLE,
@@ -277,7 +277,7 @@ fun WhiteboardScreen(
                                     activeTool = OpenBoardTool.CIRCLE
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 },
-                                label = { Text("Oval", fontSize = 10.sp) }
+                                label = { Text("Oval", style = MaterialTheme.typography.labelSmall) }
                             )
                             FilterChip(
                                 selected = activeTool == OpenBoardTool.ERASER,
@@ -285,7 +285,7 @@ fun WhiteboardScreen(
                                     activeTool = OpenBoardTool.ERASER
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 },
-                                label = { Text("Eraser", fontSize = 10.sp) }
+                                label = { Text("Eraser", style = MaterialTheme.typography.labelSmall) }
                             )
                         }
 
@@ -293,12 +293,12 @@ fun WhiteboardScreen(
                             FilterChip(
                                 selected = strokeWidth == 4f,
                                 onClick = { strokeWidth = 4f },
-                                label = { Text("Thin", fontSize = 10.sp) }
+                                label = { Text("Thin", style = MaterialTheme.typography.labelSmall) }
                             )
                             FilterChip(
                                 selected = strokeWidth == 8f,
                                 onClick = { strokeWidth = 8f },
-                                label = { Text("Bold", fontSize = 10.sp) }
+                                label = { Text("Bold", style = MaterialTheme.typography.labelSmall) }
                             )
                             val backgrounds = listOf("DotGrid", "GraphGrid", "Ruled", "Obsidian")
                             val nextBg = backgrounds[(backgrounds.indexOf(canvasBackground) + 1).coerceAtLeast(0) % backgrounds.size]
@@ -308,7 +308,7 @@ fun WhiteboardScreen(
                                     canvasBackground = nextBg
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 },
-                                label = { Text(canvasBackground, fontSize = 10.sp) }
+                                label = { Text(canvasBackground, style = MaterialTheme.typography.labelSmall) }
                             )
                         }
                     }

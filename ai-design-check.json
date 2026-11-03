@@ -1,0 +1,10 @@
+{
+  "include": [
+    "android/app/src/main/java"
+  ],
+  "ignore": [],
+  "rules": {
+    "type-scale": "off"
+  },
+  "allow": {}
+}

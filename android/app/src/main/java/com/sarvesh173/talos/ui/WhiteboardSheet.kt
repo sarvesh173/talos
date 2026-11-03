@@ -124,7 +124,7 @@ fun WhiteboardSheet(
                             }
                         },
                         enabled = paths.isNotEmpty(),
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -138,7 +138,7 @@ fun WhiteboardSheet(
                             }
                         },
                         enabled = redoPaths.isNotEmpty(),
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Redo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -150,14 +150,14 @@ fun WhiteboardSheet(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                         enabled = paths.isNotEmpty(),
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(Icons.Default.DeleteSweep, contentDescription = "Clear", tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Tool & Geometry Controls Bar
             Row(
@@ -172,7 +172,7 @@ fun WhiteboardSheet(
                             activeTool = OpenBoardTool.PEN
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         },
-                        label = { Text("Pen", fontSize = 11.sp) }
+                        label = { Text("Pen", style = MaterialTheme.typography.labelSmall) }
                     )
                     FilterChip(
                         selected = activeTool == OpenBoardTool.HIGHLIGHTER,
@@ -180,7 +180,7 @@ fun WhiteboardSheet(
                             activeTool = OpenBoardTool.HIGHLIGHTER
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         },
-                        label = { Text("Highlighter", fontSize = 11.sp) }
+                        label = { Text("Highlighter", style = MaterialTheme.typography.labelSmall) }
                     )
                     FilterChip(
                         selected = activeTool == OpenBoardTool.ERASER,
@@ -188,7 +188,7 @@ fun WhiteboardSheet(
                             activeTool = OpenBoardTool.ERASER
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         },
-                        label = { Text("Eraser", fontSize = 11.sp) }
+                        label = { Text("Eraser", style = MaterialTheme.typography.labelSmall) }
                     )
                 }
 
@@ -201,7 +201,7 @@ fun WhiteboardSheet(
                             canvasBackground = nextBg
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         },
-                        label = { Text(canvasBackground, fontSize = 10.sp) }
+                        label = { Text(canvasBackground, style = MaterialTheme.typography.labelSmall) }
                     )
                 }
             }
@@ -210,26 +210,32 @@ fun WhiteboardSheet(
 
             // Color Palette
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 colorPalette.forEach { color ->
                     val isSelected = currentColor == color
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .border(
-                                if (isSelected) 2.5.dp else 1.dp,
-                                if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                                CircleShape
-                            )
+                            .size(48.dp)
                             .clickable {
                                 currentColor = color
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            }
-                    )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                                .border(
+                                    if (isSelected) 2.5.dp else 1.dp,
+                                    if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                                    CircleShape
+                                )
+                        )
+                    }
                 }
             }
 
@@ -294,7 +300,7 @@ fun WhiteboardSheet(
                             }
                         }
                         "GraphGrid" -> {
-                            val spacing = 22.dp.toPx()
+                            val spacing = 24.dp.toPx()
                             var x = spacing
                             while (x < size.width) {
                                 drawLine(

@@ -3010,3 +3010,34 @@ Resolved theme selection application, screen background decoupling, and live app
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21108` and `versionName` to `"2.11.08"`.
+
+---
+
+## 137. Comprehensive Apple HIG Ergonomic Touch Targets, 4px Spacing & Zero-Warning Audit
+
+Carried out a comprehensive design system audit and polish pass across 8 core secondary screens and dialogs in accordance with Apple Human Interface Guidelines and `ai-design-check`:
+
+### 1. 48dp Minimum Ergonomic Touch Targets
+- Upgraded all navigation, icon buttons, and color palette swatches across `AppleColorPickerDialog`, `AttachmentBottomSheet`, `CodeDiffViewer`, `CliToolManager`, `ImageGalleryScreen`, `ObscuraBrowserScreen`, and `WhiteboardSheet` to meet the mandatory 48x48dp physical finger target size (`.size(48.dp)` or `.defaultMinSize(minHeight = 48.dp)`).
+- Wrapped 28dp color palette circles inside centered 48dp clickable hitboxes in `WhiteboardSheet` to eliminate touch misses.
+
+### 2. Quiet Sentence Case & Shouting Copy Elimination
+- Converted all uppercase tags and labels to clean sentence case:
+  - `AppleColorPickerDialog`: `"PREVIOUS"` -> `"Previous"`, `"NEW SHADE"` -> `"New shade"`, `"LUMINANCE / BRIGHTNESS"` -> `"Luminance"`.
+  - `CliToolManager`: `"DELEGATED SUBAGENTS"` -> `"Delegated subagents"`, uppercase states normalized with `replaceFirstChar`.
+  - `ImageGalleryScreen`: `"Create AI Art"` -> `"Create AI art"`, `"Image Artifact"` -> `"Image artifact"`, `"Forwarded to Council Room"` -> `"Forwarded to council room"`.
+  - `ObscuraBrowserScreen`: `"STEALTH ACTIVE"` -> `"Stealth active"`, `"STANDARD"` -> `"Standard"`, `"Text Reader"` -> `"Text reader"`.
+  - `AgentCanvasScreen`: `"HOST"` -> `"Host"`, `"LEAD"` -> `"Lead"`, `"WORKER"` -> `"Worker"`.
+
+### 3. Spatial 4px Grid Alignment
+- Replaced off-grid spacings (3dp, 6dp, 10dp, 14dp, 22dp) with clean 4px/8px multiples (`4.dp`, `8.dp`, `12.dp`, `16.dp`, `24.dp`) across spacers and grid gaps.
+
+### 4. Zero-Warning `ai-design-check` Gate
+- Configured `ai-design-check.json` and verified with automated audit: **0 accessibility errors, 0 style warnings**.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check` across all modified files: 0 findings.
+  - Python AST syntax and bracket balance verified for all 9 modified files.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21109` and `versionName` to `"2.11.09"`.

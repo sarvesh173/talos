@@ -105,7 +105,7 @@ fun AppleColorPickerDialog(
                 .wrapContentHeight()
                 .padding(vertical = 24.dp),
             shape = RoundedCornerShape(24.dp),
-            color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF),
+            color = MaterialTheme.colorScheme.surfaceContainer,
             border = BorderStroke(
                 0.8.dp,
                 if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
@@ -127,10 +127,10 @@ fun AppleColorPickerDialog(
                 ) {
                     Text(
                         text = "Color spectrum",
-                        fontSize = 17.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.25).sp,
-                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     IconButton(
@@ -157,8 +157,8 @@ fun AppleColorPickerDialog(
                     // Current Color
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "PREVIOUS",
-                            fontSize = 10.sp,
+                            text = "Previous",
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = talosTextMuted,
                             letterSpacing = 0.5.sp
@@ -206,7 +206,7 @@ fun AppleColorPickerDialog(
                             },
                             textStyle = TextStyle(
                                 fontFamily = FontFamily.Monospace,
-                                fontSize = 15.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
                                 color = if (isDark) Color.White else Color(0xFF1D1D1F)
@@ -225,8 +225,8 @@ fun AppleColorPickerDialog(
                     // New Color
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "NEW SHADE",
-                            fontSize = 10.sp,
+                            text = "New shade",
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = talosTextMuted,
                             letterSpacing = 0.5.sp
@@ -356,14 +356,14 @@ fun AppleColorPickerDialog(
                 // Brightness / Value Slider
                 // -------------------------------------------------------------
                 Text(
-                    text = "LUMINANCE / BRIGHTNESS",
+                    text = "Luminance",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = talosTextMuted,
-                    letterSpacing = 0.6.sp,
+                    letterSpacing = 0.5.sp,
                     modifier = Modifier.align(Alignment.Start)
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val fullBrightnessColor = remember(hue, saturation) {
                     val hsv = floatArrayOf(hue, saturation, 1f)
@@ -468,7 +468,7 @@ fun AppleColorPickerDialog(
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(46.dp),
+                                .height(48.dp),
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(
                                 0.8.dp,
@@ -480,7 +480,7 @@ fun AppleColorPickerDialog(
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Save",
                                 fontSize = 14.sp,
@@ -497,7 +497,7 @@ fun AppleColorPickerDialog(
                         },
                         modifier = Modifier
                             .weight(1.2f)
-                            .height(46.dp),
+                            .height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = currentColor,
@@ -509,7 +509,7 @@ fun AppleColorPickerDialog(
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Apply shade",
                             fontSize = 14.sp,

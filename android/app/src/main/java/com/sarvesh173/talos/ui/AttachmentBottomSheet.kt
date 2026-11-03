@@ -200,8 +200,15 @@ fun AttachmentBottomSheet(
                             )
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = { isRecordingAudio = false }) {
-                                Text("Cancel", fontSize = 11.sp, color = MaterialTheme.colorScheme.error)
+                            TextButton(
+                                onClick = { isRecordingAudio = false },
+                                modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                            ) {
+                                Text(
+                                    text = "Cancel",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
                             Button(
                                 onClick = {
@@ -211,9 +218,13 @@ fun AttachmentBottomSheet(
                                     onDismiss()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                             ) {
-                                Text("Attach", fontSize = 11.sp)
+                                Text(
+                                    text = "Attach",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
                             }
                         }
                     }
@@ -239,7 +250,7 @@ fun AttachmentBottomSheet(
 
                 AttachmentTile(
                     icon = TalosIcons.TalosMic,
-                    title = if (isRecordingAudio) "Recording" else "Voice Note",
+                    title = if (isRecordingAudio) "Recording" else "Voice note",
                     color = if (isRecordingAudio) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
                 ) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
@@ -349,7 +360,7 @@ fun AttachmentBottomSheet(
                 Icon(imageVector = TalosSparkle, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
             },
             title = {
-                Text(text = "Generate AI Image", style = MaterialTheme.typography.titleMedium)
+                Text(text = "Generate AI image", style = MaterialTheme.typography.titleMedium)
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -375,7 +386,7 @@ fun AttachmentBottomSheet(
                             FilterChip(
                                 selected = isSelected,
                                 onClick = { selectedStyle = style },
-                                label = { Text(style, fontSize = 11.sp) }
+                                label = { Text(style, style = MaterialTheme.typography.labelSmall) }
                             )
                         }
                     }

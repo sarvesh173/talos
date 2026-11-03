@@ -983,21 +983,21 @@ private fun CanvasNodeView(
                 ) {
                     Text(
                         text = when {
-                            node.tier.startsWith("Tier 1") -> "HOST"
-                            node.tier.startsWith("Tier 2") -> "LEAD"
-                            else -> "WORKER"
+                            node.tier.startsWith("Tier 1") -> "Host"
+                            node.tier.startsWith("Tier 2") -> "Lead"
+                            else -> "Worker"
                         },
-                        fontSize = 8.sp,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
             }
 
             Text(
                 text = node.model,
-                fontSize = 10.sp,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.primary,
                 maxLines = 1
@@ -1010,17 +1010,17 @@ private fun CanvasNodeView(
                 ) {
                     Text(
                         text = "${node.turnsUsed}/${node.commandLimit} turns",
-                        fontSize = 9.sp,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = node.cliEngine.uppercase(),
-                        fontSize = 9.sp,
+                        text = node.cliEngine.replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 LinearProgressIndicator(
                     progress = { (node.turnsUsed.toFloat() / node.commandLimit.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f) },
                     modifier = Modifier

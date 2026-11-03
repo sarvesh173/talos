@@ -572,7 +572,7 @@ private fun RgbChannelRow(
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = FontFamily.Monospace,
                 textAlign = TextAlign.Center,
-                color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
         }

@@ -3165,3 +3165,24 @@ Aligned the core chat view and main navigation shell with Apple iOS HIG standard
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21114` and `versionName` to `"2.11.14"`.
+
+---
+
+## 143. 360° Chromatic Color Picker Token Decoupling & Whole-Project Zero-Finding Verification
+
+Refined the 2D modal color spectrum picker and verified repository design health:
+
+### 1. Dynamic Surface & Text Token Decoupling in Color Picker
+- In `AppleColorPickerDialog.kt`, replaced hardcoded light/dark text colors in the numeric RGB channel display box with dynamic `MaterialTheme.colorScheme.onSurface`.
+- Retained crisp monospace layout and 48dp header dismissal targets.
+
+### 2. Comprehensive Repository-Wide Zero-Warning Gate
+- Validated all 30+ Kotlin source files with `npx @enmera/ai-design-check`.
+- Achieved **0 accessibility errors and 0 style warnings** across the full project.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors, 0 warnings across the entire repository.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21115` and `versionName` to `"2.11.15"`.

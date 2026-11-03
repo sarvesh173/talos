@@ -444,7 +444,7 @@ private fun WizardTopBar(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
+                            contentDescription = "Navigate to previous step",
                             tint = WizardText
                         )
                     }
@@ -486,7 +486,7 @@ private fun WizardTopBar(
                     ) {
                         Icon(
                             imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                            contentDescription = null,
+                            contentDescription = if (isDark) "Switch to Light Mode" else "Switch to Dark Mode",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.graphicsLayer {
                                 rotationZ = themeRot

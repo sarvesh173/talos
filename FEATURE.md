@@ -3331,3 +3331,42 @@ Directly scraped and synthesized official Apple Developer HIG (`developer.apple.
   - Remote GitHub Actions CI build & release verification.
 - [x] **Incremented Version Code & Name**:
   - Bumped `versionCode` to `21120` and `versionName` to `"2.11.20"`.
+
+---
+
+## 149. Simplified CLI-Prioritized Agents Hub with Apple Liquid Glass & SVG Tree Connector
+
+Directly implemented the new simplified interface matching `img_036cefc1179d.jpg`:
+
+### 1. CLI Agent Prioritization & Hierarchy (`LandingScreen.kt`)
+- Prioritized primary CLI tools (`Hermes`, `Cloud Code`, `alya`, `mom`) over flat direct agent nodes.
+- Displayed live agent counts (e.g. `4 agents`, `3 agents`) and summary activity descriptions.
+- Implemented Apple tree-branch curved connector lines (`╰─` via Compose `Path` with cubic bezier curvature) bridging each parent CLI tool to its delegate sub-agents.
+
+### 2. Pre-Populated Delegate Agents with 100% SVG Iconography
+- **Hermes**:
+  - `SWE Architect`: AST refactor & 0-warning AI design check (`ic_codex` SVG).
+  - `Security Auditor`: Static taint analysis & credential isolation (`ic_deepseek` SVG).
+  - `Vision Inspector`: Processing UI screenshots & liquid glass diffs (`ic_gemini` SVG).
+  - `Task Orchestrator`: Synthesizing parallel subagent fan-out results (`ic_qwen` SVG).
+  - Leaf link: `225 more sessions >`.
+- **Cloud Code**:
+  - `Planning Maestro`: Authoring architectural PRD & task breakdown (`ic_claude` SVG).
+  - `Test Engineer`: Executing Red-Green-Refactor test suite (`ic_mistral` SVG).
+  - `Code Simplifier`: Pruning cyclomatic complexity in modules (`ic_openai` SVG).
+  - Leaf link: `48 more sessions >`.
+- **Alya & Mom**:
+  - `alya`: Helper agent with red cloud mascot and `2 more sessions >`.
+  - `mom`: Warm family hearth with pink pill mascot and `9 more sessions >`.
+
+### 3. Apple Liquid Glass Floating Chrome
+- Top navigation bar: Floating dual capsule (`[Chat | Agents]` toggle with sliding pill and `[Filter | More]` actions).
+- Bottom navigation: Floating translucent Liquid Glass search bar (`Search agents and sessions`) with interactive query filtering and 54dp circular compose FAB.
+- Expressive mascot squircles with 3D specular highlight and character eyes.
+
+- [x] **Verification & Tests**:
+  - `npx @enmera/ai-design-check`: 0 errors.
+  - Python AST syntax and bracket balance verified.
+  - Remote GitHub Actions CI build & release verification.
+- [x] **Incremented Version Code & Name**:
+  - Bumped `versionCode` to `21121` and `versionName` to `"2.11.21"`.

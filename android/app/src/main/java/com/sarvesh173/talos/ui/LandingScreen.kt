@@ -1,112 +1,81 @@
 package com.sarvesh173.talos.ui
 
-import androidx.compose.ui.zIndex
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
-
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Hub
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.RocketLaunch
-import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.SettingsEthernet
-import androidx.compose.material.icons.filled.Speed
-import android.widget.Toast
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import dev.chrisbanes.haze.HazeDefaults
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sarvesh173.talos.R
 import com.sarvesh173.talos.network.TalosClient
-import kotlinx.coroutines.delay
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
- * Material Design 3 Expressive (M3) Constellation Dashboard
- *
- * Strict Anti-Slop & Craft Standards:
- * 1. Zero Unicode Emojis / Glyphs: Replaced entirely with official Material Icons.
- * 2. M3 Expressive Motion Curves: Emphasized Decelerate (CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
- *    for fluid packet flight and natural spring damping.
- * 3. Fluid Optical Conduits: Soft layered Bezier streams with luminous core paths and ambient diffusion halos.
- * 4. Canonical M3 Controls: CenterAlignedTopAppBar, AssistChips, SingleChoiceSegmentedButtonRow,
- *    and ElevatedCards with tonal elevation hierarchy.
- * 5. Machined Obsidian Sockets (#0F172A): Multi-color emblems sit in dark contrast wells to preserve
- *    crisp vector geometry in both light and dark themes.
+ * TALOS Simplified Agents Hub (Apple HIG Liquid Glass Architecture)
+ * 
+ * Directly matching img_036cefc1179d.jpg:
+ * 1. Prioritizes CLI agents (Hermes, Cloud Code, Alya, Mom) over direct direct agents.
+ * 2. Displays current agent count and activity.
+ * 3. Supports multiple delegate agents via Apple tree-branch curved connectors (╰─).
+ * 4. Aggressive Apple Liquid Glass styling, specular borders, and 100% SVG iconography.
  */
-data class AgentNode(
-    val key: String,
+
+data class DelegateAgent(
+    val id: String,
     val name: String,
-    val role: String,
-    val specTag: String,
-    val emblem: AgentEmblem,
-    val accent: Color
+    val activity: String,
+    val iconRes: Int,
+    val accentColor: Color,
+    val isOnline: Boolean = true
 )
 
-data class DelegationEvent(
-    val fromKey: String,
-    val toKey: String,
-    val taskText: String,
-    val replyText: String,
-    val actionType: DelegationAction = DelegationAction.NORMAL
+data class CliToolAgent(
+    val id: String,
+    val name: String,
+    val description: String,
+    val mascotColor: Color,
+    val mascotShape: String, // "squircle", "cloud", "pill"
+    val delegateCount: Int,
+    val sessionCountText: String,
+    val delegates: List<DelegateAgent>
 )
-
-enum class DelegationAction {
-    NORMAL,
-    SUMMON_OPENCODE,
-    TERMINATE_OPENCODE
-}
-
-// Material 3 Expressive Easing Curve
-private val M3EmphasizedEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
-private val M3EmphasizedAccelerate = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,1350 +87,609 @@ fun LandingScreen(
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null
 ) {
-    val scheme = MaterialTheme.colorScheme
-    val dissolvePaletteLocal = dissolvePalette()
-    val isCurrentDark = LocalIsDark.current
-    // Haze state: lets the landing header blur the constellation canvas behind it.
-    val hazeState = remember { HazeState() }
-
-
-    var selectedViewMode by remember { mutableStateOf(0) } // 0 = Constellation, 1 = Council Telemetry
-
-    // ==== FULL-SCREEN ADAPTIVE MICRO-PARTICLE DISSOLVE (Material 3 Motion) ====
     val context = LocalContext.current
-    val rootView = LocalView.current
-    var isDissolving by remember { mutableStateOf(false) }
-    var particleField by remember { mutableStateOf<DotField?>(null) }
-    val dissolveProgress = remember { mutableFloatStateOf(0f) }
-    val scaffoldAlpha = remember { mutableFloatStateOf(1f) }
+    val scheme = MaterialTheme.colorScheme
+    val effectiveAccent = client.effectiveAccentColor.value
 
-    // Ambient idle micro-motion: keeps the hero alive while the user rests on the page.
-    val idleBreath by rememberInfiniteTransition(label = "idle_micro_motion").animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2800, easing = CubicBezierEasing(0.37f, 0f, 0.63f, 1f)),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "idle_breath_phase"
-    )
+    var selectedTopTab by remember { mutableIntStateOf(1) } // 0 = Chat, 1 = Agents
+    var isAgentsSectionExpanded by remember { mutableStateOf(true) }
+    var searchQuery by remember { mutableStateOf("") }
 
-    LaunchedEffect(isDissolving) {
-        if (!isDissolving) return@LaunchedEffect
+    // State for expanded CLI tools
+    var expandedToolId by remember { mutableStateOf<String?>("hermes") }
 
-        val frozenFrame = captureRenderedFrame(rootView)
-        val palette = dissolvePaletteLocal
-        particleField = buildDotField(frozenFrame, palette)
-
-        val startNanos = withFrameNanos { it }
-        var navigated = false
-        while (true) {
-            val nowNanos = withFrameNanos { it }
-            val elapsedMs = (nowNanos - startNanos) / 1_000_000f
-            val normalized = (elapsedMs / DISSOLVE_TOTAL_MS).coerceIn(0f, 1f)
-            dissolveProgress.floatValue = normalized
-            scaffoldAlpha.floatValue = (1f - (elapsedMs / 950f)).coerceIn(0f, 1f)
-
-            if (!navigated && elapsedMs >= DISSOLVE_NAVIGATE_MS) {
-                navigated = true
-                onGetStarted()
-            }
-            if (elapsedMs >= DISSOLVE_TOTAL_MS) {
-                break
-            }
-        }
+    // Pre-populated CLI Tools and their Delegate Agents with SVG icons
+    val cliTools = remember {
+        listOf(
+            CliToolAgent(
+                id = "hermes",
+                name = "Hermes",
+                description = "No conversations yet — say hi",
+                mascotColor = Color(0xFF7C4DFF), // Purple mascot
+                mascotShape = "squircle",
+                delegateCount = 4,
+                sessionCountText = "225 more sessions",
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "hermes_swe",
+                        name = "SWE Architect",
+                        activity = "Refactoring AST & 0-warning design check",
+                        iconRes = R.drawable.ic_codex,
+                        accentColor = Color(0xFF007AFF)
+                    ),
+                    DelegateAgent(
+                        id = "hermes_sec",
+                        name = "Security Auditor",
+                        activity = "Static taint analysis & credential isolation",
+                        iconRes = R.drawable.ic_deepseek,
+                        accentColor = Color(0xFF4D6BFE)
+                    ),
+                    DelegateAgent(
+                        id = "hermes_vis",
+                        name = "Vision Inspector",
+                        activity = "Processing UI screenshots & liquid glass diffs",
+                        iconRes = R.drawable.ic_gemini,
+                        accentColor = Color(0xFF3186FF)
+                    ),
+                    DelegateAgent(
+                        id = "hermes_orch",
+                        name = "Task Orchestrator",
+                        activity = "Synthesizing parallel subagent fan-out results",
+                        iconRes = R.drawable.ic_qwen,
+                        accentColor = Color(0xFFA855F7)
+                    )
+                )
+            ),
+            CliToolAgent(
+                id = "claudecode",
+                name = "Cloud Code",
+                description = "Anthropic architecture & synthesis suite",
+                mascotColor = Color(0xFFD97757), // Terracotta mascot
+                mascotShape = "squircle",
+                delegateCount = 3,
+                sessionCountText = "48 more sessions",
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "claude_planner",
+                        name = "Planning Maestro",
+                        activity = "Authoring architectural PRD & task breakdown",
+                        iconRes = R.drawable.ic_claude,
+                        accentColor = Color(0xFFD97757)
+                    ),
+                    DelegateAgent(
+                        id = "claude_tester",
+                        name = "Test Engineer",
+                        activity = "Executing Red-Green-Refactor test suite",
+                        iconRes = R.drawable.ic_mistral,
+                        accentColor = Color(0xFFFF8205)
+                    ),
+                    DelegateAgent(
+                        id = "claude_simplifier",
+                        name = "Code Simplifier",
+                        activity = "Pruning cyclomatic complexity in modules",
+                        iconRes = R.drawable.ic_openai,
+                        accentColor = Color(0xFF10A37F)
+                    )
+                )
+            ),
+            CliToolAgent(
+                id = "alya",
+                name = "alya",
+                description = "Alya - helper agent linked to main system (same model, sepa\u2026",
+                mascotColor = Color(0xFFEF4444), // Red cloud mascot
+                mascotShape = "cloud",
+                delegateCount = 2,
+                sessionCountText = "2 more sessions",
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "alya_anchor",
+                        name = "Emotional Anchor",
+                        activity = "Active listener & responsive empathy engine",
+                        iconRes = R.drawable.ic_hermes,
+                        accentColor = Color(0xFFFF2D55)
+                    ),
+                    DelegateAgent(
+                        id = "alya_wish",
+                        name = "Wish Synthesizer",
+                        activity = "Preserving 7 core memory wishes",
+                        iconRes = R.drawable.ic_omnirush,
+                        accentColor = Color(0xFFAF52DE)
+                    )
+                )
+            ),
+            CliToolAgent(
+                id = "mom",
+                name = "mom",
+                description = "No conversations yet — say hi",
+                mascotColor = Color(0xFFEC4899), // Pink pill mascot
+                mascotShape = "pill",
+                delegateCount = 1,
+                sessionCountText = "9 more sessions",
+                delegates = listOf(
+                    DelegateAgent(
+                        id = "mom_care",
+                        name = "Family Hearth",
+                        activity = "Warm guidance & blessing guardrails",
+                        iconRes = R.drawable.ic_openclaw,
+                        accentColor = Color(0xFFEC4899)
+                    )
+                )
+            )
+        )
     }
 
-    // Breaking particle dot animation: strictly ONE-TIME ONLY.
-    // Once launched, the state is persisted and the animation never re-arms or replays.
-    val handlePrimaryAction = {
-        TalosHaptics.sendHaptic(context)
-        if (!client.hasLaunched && !isDissolving) {
-            client.markLaunched()
-            isDissolving = true
+    // Filter tools based on search query
+    val filteredTools = remember(searchQuery, cliTools) {
+        if (searchQuery.isBlank()) {
+            cliTools
         } else {
-            client.markLaunched()
-            onGetStarted()
-        }
-    }
-
-    val baseNodes = remember {
-        listOf(
-            AgentNode("openclaw", "OpenClaw", "Tools & Automation", "Tools · Auto", emblemByKey("openclaw"), emblemByKey("openclaw").accent),
-            AgentNode("claude", "Claude Code", "Anthropic · Architecture", "Arch · Plan", emblemByKey("claude"), emblemByKey("claude").accent),
-            AgentNode("hermes", "Hermes Agent", "Nous · Autonomy", "Nous · Exec", emblemByKey("hermes"), emblemByKey("hermes").accent),
-            AgentNode("codex", "Codex", "OpenAI · Synthesis", "Code · Synth", emblemByKey("codex"), emblemByKey("codex").accent),
-            AgentNode("opencode", "OpenCode", "Open-Source Terminal", "CLI · Exec", emblemByKey("opencode"), emblemByKey("opencode").accent)
-        )
-    }
-
-    var isOpenCodeSpawned by remember { mutableStateOf(false) }
-
-    // Dynamic Multi-Agent Banter & Summon/Dismiss Lifecycle
-    val scenarios = remember {
-        listOf(
-            DelegationEvent("hermes", "codex", "Hi @codex, synthesize unit test suite", "Tests generated: 63/63 passing"),
-            DelegationEvent("codex", "claude", "Hi @claude, review AST parser refactor", "System design verified: clean"),
-            DelegationEvent(
-                fromKey = "claude",
-                toKey = "opencode",
-                taskText = "Deep terminal AST analysis required. Summoning @opencode CLI agent...",
-                replyText = "OpenCode online: AST & terminal tools ready.",
-                actionType = DelegationAction.SUMMON_OPENCODE
-            ),
-            DelegationEvent(
-                fromKey = "opencode",
-                toKey = "claude",
-                taskText = "Executing deep AST pass: 0 syntax defects.",
-                replyText = "AST verified clean. Terminating @opencode session.",
-                actionType = DelegationAction.TERMINATE_OPENCODE
-            ),
-            DelegationEvent("openclaw", "hermes", "Consensus proposal across mesh cluster.", "Quorum verified (4/4 approved)")
-        )
-    }
-
-    var currentScenarioIndex by remember { mutableStateOf(0) }
-    var activeSender by remember { mutableStateOf("hermes") }
-    var activeReceiver by remember { mutableStateOf("codex") }
-    var senderTask by remember { mutableStateOf("Hi @codex, synthesize test suite") }
-    var receiverReply by remember { mutableStateOf<String?>(null) }
-    var isReceiverSpeaking by remember { mutableStateOf(false) }
-
-    // Banter simulation loop with dynamic summon and termination
-    LaunchedEffect(Unit) {
-        while (true) {
-            val scenario = scenarios[currentScenarioIndex]
-            activeSender = scenario.fromKey
-            activeReceiver = scenario.toKey
-            senderTask = scenario.taskText
-            receiverReply = null
-            isReceiverSpeaking = false
-
-            if (scenario.actionType == DelegationAction.SUMMON_OPENCODE) {
-                delay(800)
-                isOpenCodeSpawned = true
+            cliTools.filter { tool ->
+                tool.name.contains(searchQuery, ignoreCase = true) ||
+                tool.description.contains(searchQuery, ignoreCase = true) ||
+                tool.delegates.any { it.name.contains(searchQuery, ignoreCase = true) || it.activity.contains(searchQuery, ignoreCase = true) }
             }
-
-            delay(2100)
-            isReceiverSpeaking = true
-            receiverReply = scenario.replyText
-
-            if (scenario.actionType == DelegationAction.TERMINATE_OPENCODE) {
-                delay(2000)
-                isOpenCodeSpawned = false
-            }
-
-            delay(2600)
-            currentScenarioIndex = (currentScenarioIndex + 1) % scenarios.size
         }
-    }
-
-    // Material 3 Continuous Expressive Animation Drivers
-    val infiniteTransition = rememberInfiniteTransition(label = "mesh_pulse")
-
-    val rawProgress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "packet_pulse"
-    )
-
-    // Fluid eased motion packet progress
-    val packetProgress = remember(rawProgress) {
-        M3EmphasizedEasing.transform(rawProgress)
-    }
-
-    val compassRotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(40000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "compass_rotation"
-    )
-
-    val ambientGlowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ambient_glow"
-    )
-
-    // Live exact coordinate anchors measured from layout
-    var centerAnchor by remember { mutableStateOf(Offset.Zero) }
-    var tlAnchor by remember { mutableStateOf(Offset.Zero) }
-    var trAnchor by remember { mutableStateOf(Offset.Zero) }
-    var blAnchor by remember { mutableStateOf(Offset.Zero) }
-    var brAnchor by remember { mutableStateOf(Offset.Zero) }
-    var opencodeAnchor by remember { mutableStateOf(Offset.Zero) }
-
-    val anchorMap = mutableMapOf(
-        "openclaw" to tlAnchor,
-        "claude" to trAnchor,
-        "hermes" to blAnchor,
-        "codex" to brAnchor
-    )
-    if (isOpenCodeSpawned && opencodeAnchor != Offset.Zero) {
-        anchorMap["opencode"] = opencodeAnchor
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(scheme.background)
+            .background(if (isDark) Color(0xFF000000) else Color(0xFFFBFBFC))
     ) {
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                // Smooth initial cross-dissolve to particles
-                alpha = scaffoldAlpha.floatValue
-            },
-        containerColor = scheme.background,
-                topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .hazeChild(
-                        state = hazeState,
-                        style = HazeDefaults.style(
-                            backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f),
-                            blurRadius = 24.dp
-                        )
-                    )
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.62f))
-                    .padding(horizontal = MdSpacing.sm, vertical = 8.dp)
-            ) {
+        // Main Scrollable Content
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(top = 96.dp, bottom = 120.dp)
+        ) {
+            // Header Section: "Agents v"
+            item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
+                        .applePressable(0.98f) {
+                            TalosHaptics.sendHaptic(context)
+                            isAgentsSectionExpanded = !isAgentsSectionExpanded
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = "TALOS",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.5).sp
-                        )
-
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shape = CircleShape
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF34C759))
-                                )
-                                Text(
-                                    text = if (isOpenCodeSpawned) "5 agents active" else "4 agents active",
-                                    color = talosTextMuted,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = 0.4.sp
-                                )
-                            }
-                        }
-                    }
-
-                    val themeTransition = updateTransition(targetState = isCurrentDark, label = "landing_theme_transition")
-                    val themeRot by themeTransition.animateFloat(
-                        transitionSpec = { spring(dampingRatio = 0.55f, stiffness = 500f) },
-                        label = "landing_theme_rot"
-                    ) { dark -> if (dark) 0f else 180f }
-                    val themeScale by themeTransition.animateFloat(
-                        transitionSpec = { spring(dampingRatio = 0.55f, stiffness = 500f) },
-                        label = "landing_theme_scale"
-                    ) { dark -> if (dark) 1.0f else 1.15f }
-                    PressableSurface(
-                        onClick = onToggleTheme,
-                        shape = CircleShape,
-                        pressedShape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(
-                            0.6.dp,
-                            if (isCurrentDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-                        ),
-                        modifier = Modifier
-                            .size(48.dp)
-                            .semantics {
-                                contentDescription = if (isCurrentDark) "Switch to light mode" else "Switch to dark mode"
-                            }
-                    ) {
-                        Icon(
-                            imageVector = TalosIcons.TalosPalette,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(20.dp)
-                                .graphicsLayer {
-                                    rotationZ = themeRot
-                                    scaleX = themeScale
-                                    scaleY = themeScale
-                                }
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-            }
-        },
-
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .background(scheme.background)
-                    .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xxs),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Docked Live Activity Pill
-                val activeNode = baseNodes.firstOrNull { it.key == activeSender }
-                val targetNode = baseNodes.firstOrNull { it.key == activeReceiver }
-                val activeColor = activeNode?.accent ?: MaterialTheme.colorScheme.primary
-
-                // Apple Secondary Card Live Activity Pill
-                Surface(
-                    color = Color(0xFF1C1C1E),
-                    shape = ShapeFull,
-                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.12f)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = MdSpacing.xxs)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(activeColor)
-                        )
-                        Spacer(modifier = Modifier.width(MdSpacing.xs))
-                        Text(
-                            text = "${activeNode?.name ?: "Agent"} → ${targetNode?.name ?: "Agent"}:",
-                            color = activeColor,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.1).sp
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = senderTask,
-                            color = Color.White.copy(alpha = 0.90f),
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-
-                // Primary Apple Action Capsule with tactile spring bounce back
-                PressableSurface(
-                    onClick = handlePrimaryAction,
-                    shape = CircleShape,
-                    pressedShape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.primary, // Apple Active System Accent
-                    contentColor = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .graphicsLayer {
-                            // Idle micro-motion: never a dead frame while the page rests.
-                            val breath = idleBreath
-                            val breathScale = 1f + 0.010f * breath
-                            scaleX = breathScale
-                            scaleY = breathScale
-                            translationY = -1.6f * breath
-                        }
-                        .semantics {
-                            contentDescription = "Enter Chamber and begin multi-agent session"
-                        }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Enter chamber",
-                            style = MaterialTheme.typography.titleMedium,
-                            letterSpacing = (-0.2).sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    }
-                }
-
-                // Frictionless Onboarding & Setup Actions (Apple Secondary)
-                if (onOpenWizard != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    PressableSurface(
-                        onClick = onOpenWizard,
-                        shape = RoundedCornerShape(16.dp),
-                        pressedShape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        border = BorderStroke(
-                            0.8.dp,
-                            if (isCurrentDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = TalosSparkle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Setup wizard · configure providers",
-                                style = MaterialTheme.typography.labelMedium,
-                                letterSpacing = (-0.1).sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // The dissolve overlay now lives at the window root (see ParticleDissolveOverlay)
-            // so the micro-particles cover the entire application, edge to edge.
-            // Fluid Material 3 Expressive Canvas
-            // (scheme colors are captured BEFORE the draw scope - DrawScope is not composable)
-            val canvasPrimary = MaterialTheme.colorScheme.primary
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .haze(hazeState)
-            ) {
-                if (centerAnchor == Offset.Zero) return@Canvas
-
-                // 1. Ambient Breathing Halo behind Central Hub
-                val glowRadius = 88.dp.toPx() * ambientGlowPulse
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            scheme.onSurfaceVariant.copy(alpha = 0.16f),
-                            Color.Transparent
-                        ),
-                        center = centerAnchor,
-                        radius = glowRadius
-                    ),
-                    radius = glowRadius,
-                    center = centerAnchor
-                )
-
-                // 2. Subtle Orbital Compass Track
-                val radCompass = Math.toRadians(compassRotation.toDouble())
-                val orbitRadius = 68.dp.toPx()
-
-                drawCircle(
-                    color = scheme.onSurfaceVariant.copy(alpha = 0.20f),
-                    radius = orbitRadius,
-                    center = centerAnchor,
-                    style = Stroke(
-                        width = 1.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 10f), compassRotation * 0.8f)
-                    )
-                )
-
-                val satX = centerAnchor.x + (orbitRadius * cos(radCompass)).toFloat()
-                val satY = centerAnchor.y + (orbitRadius * sin(radCompass)).toFloat()
-                drawCircle(
-                    color = scheme.onSurfaceVariant,
-                    radius = 2.dp.toPx(),
-                    center = Offset(satX, satY)
-                )
-
-                // 3. Direct Peer Conduit: Claude Code -> OpenCode (When OpenCode is Summoned)
-                if (isOpenCodeSpawned && trAnchor != Offset.Zero && opencodeAnchor != Offset.Zero) {
-                    val isDirectBeamActive = (activeSender == "claude" && activeReceiver == "opencode") ||
-                            (activeSender == "opencode" && activeReceiver == "claude")
-
-                    val dxClaude = opencodeAnchor.x - trAnchor.x
-                    val dyClaude = opencodeAnchor.y - trAnchor.y
-
-                    val ctrlClaude1 = Offset(trAnchor.x + dxClaude * 0.20f, trAnchor.y + dyClaude * 0.80f)
-                    val ctrlClaude2 = Offset(trAnchor.x + dxClaude * 0.80f, trAnchor.y + dyClaude * 0.20f)
-
-                    val directClaudePath = Path().apply {
-                        moveTo(trAnchor.x, trAnchor.y)
-                        cubicTo(ctrlClaude1.x, ctrlClaude1.y, ctrlClaude2.x, ctrlClaude2.y, opencodeAnchor.x, opencodeAnchor.y)
-                    }
-
-                    val claudeBeamColor = emblemByKey("claude").accent
-                    val opencodeBeamColor = emblemByKey("opencode").accent
-
-                    // Soft ambient diffusion glow
-                    drawPath(
-                        path = directClaudePath,
-                        brush = Brush.linearGradient(
-                            colors = if (isDirectBeamActive) {
-                                listOf(claudeBeamColor.copy(alpha = 0.25f), opencodeBeamColor.copy(alpha = 0.25f))
-                            } else {
-                                listOf(claudeBeamColor.copy(alpha = 0.10f), opencodeBeamColor.copy(alpha = 0.10f))
-                            },
-                            start = trAnchor,
-                            end = opencodeAnchor
-                        ),
-                        style = Stroke(width = 5.dp.toPx())
+                    Text(
+                        text = "Agents",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                        letterSpacing = (-0.2).sp
                     )
 
-                    // Crisp core beam
-                    drawPath(
-                        path = directClaudePath,
-                        brush = Brush.linearGradient(
-                            colors = if (isDirectBeamActive) {
-                                listOf(claudeBeamColor.copy(alpha = 0.90f), opencodeBeamColor.copy(alpha = 0.90f))
-                            } else {
-                                listOf(claudeBeamColor.copy(alpha = 0.35f), opencodeBeamColor.copy(alpha = 0.35f))
-                            },
-                            start = trAnchor,
-                            end = opencodeAnchor
-                        ),
-                        style = Stroke(
-                            width = if (isDirectBeamActive) 1.8.dp.toPx() else 1.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), packetProgress * 24f)
-                        )
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Toggle agents",
+                        tint = if (isDark) Color.White.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.50f),
+                        modifier = Modifier.size(20.dp)
                     )
-
-                    // Eased traveling photon packet
-                    if (isDirectBeamActive) {
-                        val t = packetProgress
-                        val u = 1.0f - t
-                        val px = u * u * u * trAnchor.x + 3 * u * u * t * ctrlClaude1.x + 3 * u * t * t * ctrlClaude2.x + t * t * t * opencodeAnchor.x
-                        val py = u * u * u * trAnchor.y + 3 * u * u * t * ctrlClaude1.y + 3 * u * t * t * ctrlClaude2.y + t * t * t * opencodeAnchor.y
-
-                        // Outer luminous halo
-                        drawCircle(
-                            color = opencodeBeamColor.copy(alpha = 0.35f),
-                            radius = 7.dp.toPx(),
-                            center = Offset(px, py)
-                        )
-                        // Specular core
-                        drawCircle(
-                            color = scheme.onSurface,
-                            radius = 2.5.dp.toPx(),
-                            center = Offset(px, py)
-                        )
-                    }
                 }
 
-                // 4. Primary Curvilinear Conduits to Central TALOS Core
-                for ((key, cardPos) in anchorMap) {
-                    if (cardPos == Offset.Zero) continue
-
-                    val isBeamActive = (key == activeSender || key == activeReceiver)
-                    val nodeAccent = baseNodes.firstOrNull { it.key == key }?.accent ?: canvasPrimary
-
-                    val dx = centerAnchor.x - cardPos.x
-                    val dy = centerAnchor.y - cardPos.y
-
-                    val ctrl1 = Offset(cardPos.x + dx * 0.70f, cardPos.y + dy * 0.10f)
-                    val ctrl2 = Offset(cardPos.x + dx * 0.30f, cardPos.y + dy * 0.90f)
-
-                    val pathPrimary = Path().apply {
-                        moveTo(cardPos.x, cardPos.y)
-                        cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, centerAnchor.x, centerAnchor.y)
-                    }
-
-                    // Ambient glow stroke
-                    if (isBeamActive) {
-                        drawPath(
-                            path = pathPrimary,
-                            brush = Brush.linearGradient(
-                                colors = listOf(nodeAccent.copy(alpha = 0.20f), Color.Transparent),
-                                start = cardPos,
-                                end = centerAnchor
-                            ),
-                            style = Stroke(width = 6.dp.toPx())
-                        )
-                    }
-
-                    // Main crisp conduit line
-                    drawPath(
-                        path = pathPrimary,
-                        brush = Brush.linearGradient(
-                            colors = if (isBeamActive) {
-                                listOf(nodeAccent.copy(alpha = 0.90f), scheme.onSurfaceVariant.copy(alpha = 0.70f))
-                            } else {
-                                listOf(scheme.onSurfaceVariant.copy(alpha = 0.30f), scheme.outline.copy(alpha = 0.15f))
-                            },
-                            start = cardPos,
-                            end = centerAnchor
-                        ),
-                        style = Stroke(width = if (isBeamActive) 1.8.dp.toPx() else 1.dp.toPx())
-                    )
-
-                    // Luminous Eased Data Packet
-                    if (key == activeSender) {
-                        val t = packetProgress
-                        val u = 1.0f - t
-
-                        val px = u * u * u * cardPos.x + 3 * u * u * t * ctrl1.x + 3 * u * t * t * ctrl2.x + t * t * t * centerAnchor.x
-                        val py = u * u * u * cardPos.y + 3 * u * u * t * ctrl1.y + 3 * u * t * t * ctrl2.y + t * t * t * centerAnchor.y
-
-                        drawCircle(
-                            color = nodeAccent.copy(alpha = 0.35f),
-                            radius = 7.dp.toPx(),
-                            center = Offset(px, py)
-                        )
-                        drawCircle(
-                            color = scheme.onSurface,
-                            radius = 2.6.dp.toPx(),
-                            center = Offset(px, py)
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // ==============================================================
-            // 1. CENTER TALOS HARDWARE INSTRUMENT (M3 ElevatedCard)
-            // ==============================================================
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(y = (-36).dp)
-                    .onGloballyPositioned { coords ->
-                        val p = coords.positionInParent()
-                        val s = coords.size
-                        centerAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                ElevatedCard(
-                    shape = ShapeLargeIncreased,
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-                    modifier = Modifier
-                        .size(width = 114.dp, height = 98.dp)
-                        .border(1.2.dp, metallicBorderBrush(), ShapeLargeIncreased)
-                ) {
+            if (isAgentsSectionExpanded) {
+                items(filteredTools, key = { it.id }) { tool ->
+                    val isExpanded = expandedToolId == tool.id
+
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = MdSpacing.xs, vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
                     ) {
-                        Text(
-                            text = "TALOS",
-                            color = scheme.onSurface,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 2.sp
-                        )
-
+                        // 1. Primary CLI Tool Row
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MdSpacing.xxs)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(minHeight = 52.dp)
+                                .applePressable(0.97f) {
+                                    TalosHaptics.sendHaptic(context)
+                                    expandedToolId = if (isExpanded) null else tool.id
+                                }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Cute Mascot Avatar
+                            CuteMascot(
+                                color = tool.mascotColor,
+                                shapeType = tool.mascotShape
+                            )
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            // Name & Subtitle / Activity
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = tool.name,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                        letterSpacing = (-0.15).sp
+                                    )
+
+                                    if (tool.delegateCount > 0) {
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f),
+                                            modifier = Modifier.padding(start = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "${tool.delegateCount} agents",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = tool.mascotColor,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Text(
+                                    text = tool.description,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            // Trailing Chevron
                             Box(
                                 modifier = Modifier
-                                    .size(5.dp)
-                                    .clip(CircleShape)
-                                    .background(StatusGreen)
-                            )
-                            Text(
-                                text = "MESH CORE",
-                                color = scheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.8.sp
-                            )
+                                    .size(48.dp)
+                                    .applePressable(0.92f) {
+                                        TalosHaptics.sendHaptic(context)
+                                        onGetStarted()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = TalosIcons.TalosChevronRight,
+                                    contentDescription = "Open ${tool.name}",
+                                    tint = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
 
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                            shape = RoundedCornerShape(16.dp),
-                            border = BorderStroke(0.6.dp, scheme.outlineVariant),
-                            modifier = Modifier.padding(horizontal = 4.dp)
+                        // 2. Delegate Agents List (Under curved tree connector)
+                        if (isExpanded && tool.delegates.isNotEmpty()) {
+                            tool.delegates.forEach { delegate ->
+                                AgentBranchRow(
+                                    isDark = isDark,
+                                    onClick = {
+                                        TalosHaptics.sendHaptic(context)
+                                        onGetStarted()
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // 24dp SVG Icon Container
+                                        Box(
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(delegate.accentColor.copy(alpha = if (isDark) 0.18f else 0.12f))
+                                                .border(
+                                                    BorderStroke(0.6.dp, delegate.accentColor.copy(alpha = 0.35f)),
+                                                    RoundedCornerShape(8.dp)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = delegate.iconRes),
+                                                contentDescription = delegate.name,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(10.dp))
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = delegate.name,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                                letterSpacing = (-0.1).sp
+                                            )
+                                            Text(
+                                                text = delegate.activity,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+
+                                        // Online status indicator
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(StatusGreen)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. Tree Branch Leaf: "N more sessions >" (matching screenshot)
+                        AgentBranchRow(
+                            isDark = isDark,
+                            onClick = {
+                                TalosHaptics.sendHaptic(context)
+                                onGetStarted()
+                            }
                         ) {
-                            Text(
-                                text = if (isOpenCodeSpawned) "5 PEERS · 0.8ms" else "4 PEERS · 0.8ms",
-                                color = scheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = tool.sessionCountText,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
+                                )
+                                Icon(
+                                    imageVector = TalosIcons.TalosChevronRight,
+                                    contentDescription = null,
+                                    tint = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
             }
+        }
 
-            // ==============================================================
-            // 2. CORNER & DYNAMIC AGENT CARDS (M3 ElevatedCards)
-            // ==============================================================
-
-            // TOP-LEFT: OpenClaw
-            AgentNodeWithBubble(
-                node = baseNodes[0],
-                isActive = activeSender == "openclaw" || activeReceiver == "openclaw",
-                bubbleText = if (activeSender == "openclaw") senderTask else (if (activeReceiver == "openclaw" && isReceiverSpeaking) receiverReply else null),
-                bubbleBelow = true,
-                isDark = isCurrentDark,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = MdSpacing.sm, top = MdSpacing.xs)
-                    .onGloballyPositioned { coords ->
-                        val p = coords.positionInParent()
-                        val s = coords.size
-                        tlAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
-                    },
-                onTap = {
-                    activeSender = "openclaw"
-                    activeReceiver = "hermes"
-                    senderTask = "Hi @hermes, delegate automated task"
-                    receiverReply = null
-                    isReceiverSpeaking = false
-                }
-            )
-
-            // TOP-RIGHT: Claude Code
-            AgentNodeWithBubble(
-                node = baseNodes[1],
-                isActive = activeSender == "claude" || activeReceiver == "claude",
-                bubbleText = if (activeSender == "claude") senderTask else (if (activeReceiver == "claude" && isReceiverSpeaking) receiverReply else null),
-                bubbleBelow = true,
-                alignRight = true,
-                isDark = isCurrentDark,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(end = MdSpacing.sm, top = MdSpacing.xs)
-                    .onGloballyPositioned { coords ->
-                        val p = coords.positionInParent()
-                        val s = coords.size
-                        trAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
-                    },
-                onTap = {
-                    activeSender = "claude"
-                    activeReceiver = "opencode"
-                    senderTask = "Deep terminal AST analysis required. Summoning @opencode CLI agent..."
-                    receiverReply = null
-                    isReceiverSpeaking = false
-                    isOpenCodeSpawned = true
-                }
-            )
-
-            // DYNAMIC 5TH AGENT: OpenCode
-            AnimatedVisibility(
-                visible = isOpenCodeSpawned,
-                enter = fadeIn(spring(dampingRatio = 0.75f, stiffness = 400f)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 400f)),
-                exit = fadeOut(spring(dampingRatio = 0.75f, stiffness = 400f)) + scaleOut(spring(dampingRatio = 0.75f, stiffness = 400f)),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(y = 96.dp)
+        // ==============================================================
+        // TOP FLOATING LIQUID GLASS BAR (Matching img_036cefc1179d.jpg)
+        // ==============================================================
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left Pill: [Chat | Agents] Dual View Toggle
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color(0xFFE5E5EA).copy(alpha = 0.90f),
+                border = appleLiquidGlassCardBorder(isDark, 0.8.dp),
+                shadowElevation = 4.dp
             ) {
-                AgentNodeWithBubble(
-                    node = baseNodes[4],
-                    isActive = activeSender == "opencode" || activeReceiver == "opencode",
-                    bubbleText = if (activeSender == "opencode") senderTask else (if (activeReceiver == "opencode" && isReceiverSpeaking) receiverReply else null),
-                    bubbleBelow = true,
-                    isDark = isCurrentDark,
-                    modifier = Modifier
-                        .onGloballyPositioned { coords ->
-                            val p = coords.positionInParent()
-                            val s = coords.size
-                            opencodeAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
-                        },
-                    onTap = {
-                        activeSender = "opencode"
-                        activeReceiver = "claude"
-                        senderTask = "Executing deep AST pass: 0 syntax defects."
-                        receiverReply = null
-                        isReceiverSpeaking = false
-                    }
-                )
-            }
-
-            // BOTTOM-LEFT: Hermes Agent
-            AgentNodeWithBubble(
-                node = baseNodes[2],
-                isActive = activeSender == "hermes" || activeReceiver == "hermes",
-                bubbleText = if (activeSender == "hermes") senderTask else (if (activeReceiver == "hermes" && isReceiverSpeaking) receiverReply else null),
-                bubbleBelow = false,
-                isDark = isCurrentDark,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = MdSpacing.sm, bottom = MdSpacing.sm)
-                    .onGloballyPositioned { coords ->
-                        val p = coords.positionInParent()
-                        val s = coords.size
-                        blAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
-                    },
-                onTap = {
-                    activeSender = "hermes"
-                    activeReceiver = "claude"
-                    senderTask = "Hi @claude, start architecture pass"
-                    receiverReply = null
-                    isReceiverSpeaking = false
-                }
-            )
-
-            // BOTTOM-RIGHT: Codex
-            AgentNodeWithBubble(
-                node = baseNodes[3],
-                isActive = activeSender == "codex" || activeReceiver == "codex",
-                bubbleText = if (activeSender == "codex") senderTask else (if (activeReceiver == "codex" && isReceiverSpeaking) receiverReply else null),
-                bubbleBelow = false,
-                alignRight = true,
-                isDark = isCurrentDark,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = MdSpacing.sm, bottom = MdSpacing.sm)
-                    .onGloballyPositioned { coords ->
-                        val p = coords.positionInParent()
-                        val s = coords.size
-                        brAnchor = Offset(p.x + s.width / 2f, p.y + s.height / 2f)
-                    },
-                onTap = {
-                    activeSender = "codex"
-                    activeReceiver = "openclaw"
-                    senderTask = "Hi @openclaw, verify automation tests"
-                    receiverReply = null
-                    isReceiverSpeaking = false
-                }
-            )
-        }
-    }
-
-    // Full-screen adaptive micro-particle dissolve overlay: covers the complete window,
-    // top bar and bottom gesture area included, on top of every other surface.
-    ParticleDissolveOverlay(
-        field = particleField,
-        progress = { dissolveProgress.floatValue },
-        modifier = Modifier.fillMaxSize()
-    )
-    }
-}
-
-// ============================================================================
-//  Adaptive Micro-Particle Dissolve Engine
-// ============================================================================
-
-/** Total dissolve length: exactly 4.8 seconds for sustained visual satisfaction. */
-private const val DISSOLVE_TOTAL_MS = 4800f
-
-/** Seamless handover: next screen materializes under the floating starry embers at 3.2s. */
-private const val DISSOLVE_NAVIGATE_MS = 2900f
-
-/** Coarse-to-fine density of the micro-particle lattice. */
-private const val DISSOLVE_COLS = 96
-private const val MAX_DISSOLVE_DOTS = 26000
-
-/** Material 3 emphasised motion ramp for the whole dissolve. */
-private val DISSOLVE_RAMP_EASING = CubicBezierEasing(0.20f, 0.66f, 0.14f, 1.0f)
-
-/**
- * Dissolve gradient palette - derived from the active scheme so the same
- * gradient reads correctly in light and dark (one code path, no per-mode
- * duplicate palette to maintain).
- */
-@Composable
-private fun dissolvePalette(): IntArray {
-    val s = MaterialTheme.colorScheme
-    return intArrayOf(
-        s.surfaceContainerLowest.toArgb(), s.surfaceContainerLowest.toArgb(),
-        s.surfaceContainerLow.toArgb(), s.surfaceContainer.toArgb(),
-        s.surfaceContainerHigh.toArgb(), s.onSurface.toArgb(),
-        s.onSurfaceVariant.toArgb(),
-        s.primary.toArgb(), s.tertiary.toArgb(), s.secondary.toArgb(),
-        s.primaryContainer.toArgb(), s.tertiaryContainer.toArgb()
-    )
-}
-
-/**
- * Immutable micro-particle lattice. Every dot carries its own sampled colour, its own
- * entropy delay, life span, radial drift and tangential swirl, so no two taps, and no
- * two dots, ever resolve into the same trajectory.
- *
- * Dots are pre-grouped into colour buckets and drawn with batched native point runs,
- * which keeps tens of thousands of particles inside the frame budget.
- */
-private class DotField(
-    val count: Int,
-    val cols: Int,
-    val rows: Int,
-    val xs: FloatArray,
-    val ys: FloatArray,
-    val delay: FloatArray,
-    val life: FloatArray,
-    val dirX: FloatArray,
-    val dirY: FloatArray,
-    val swirl: FloatArray,
-    val order: IntArray,
-    val bucketColor: IntArray,
-    val bucketStart: IntArray,
-    val bucketEnd: IntArray
-)
-
-private fun hash01(x: Float): Float {
-    val s = sin(x) * 43758.5453f
-    return s - kotlin.math.floor(s)
-}
-
-/** Lifts captured pixels slightly so dark particles stay readable against dark surfaces. */
-private fun liftLuma(argb: Int): Int {
-    val a = (argb ushr 24) and 0xFF
-    if (a < 24) return 0xFF131C2B.toInt()
-    val r = ((argb ushr 16) and 0xFF) + 30
-    val g = ((argb ushr 8) and 0xFF) + 30
-    val b = (argb and 0xFF) + 30
-    return (0xFF shl 24) or
-            (r.coerceAtMost(255) shl 16) or
-            (g.coerceAtMost(255) shl 8) or
-            b.coerceAtMost(255)
-}
-
-/** Synchronous freeze-frame of what is on screen right now, in device pixels. */
-private fun captureRenderedFrame(view: android.view.View): android.graphics.Bitmap? {
-    return try {
-        val w = view.width
-        val h = view.height
-        if (w <= 0 || h <= 0) {
-            null
-        } else {
-            val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
-            val canvas = android.graphics.Canvas(bitmap)
-            view.draw(canvas)
-            bitmap
-        }
-    } catch (t: Throwable) {
-        null
-    }
-}
-
-private fun buildDotField(
-    shot: android.graphics.Bitmap?,
-    fallbackPalette: IntArray
-): DotField {
-    val bmpW = shot?.width ?: 1080
-    val bmpH = shot?.height ?: 2340
-    val cols = DISSOLVE_COLS
-    val rows = ((cols.toFloat() * bmpH.toFloat()) / bmpW.toFloat()).toInt().coerceIn(60, 240)
-    val count = cols * rows
-
-    val xs = FloatArray(count)
-    val ys = FloatArray(count)
-    val delay = FloatArray(count)
-    val life = FloatArray(count)
-    val dirX = FloatArray(count)
-    val dirY = FloatArray(count)
-    val swirl = FloatArray(count)
-    val colors = IntArray(count)
-
-    val rowBuf = IntArray(bmpW)
-    val histogram = HashMap<Int, Int>()
-    val captured = shot != null
-
-    for (r in 0 until rows) {
-        if (captured) {
-            val srcRow = (((r + 0.5f) * bmpH.toFloat()) / rows.toFloat()).toInt().coerceIn(0, bmpH - 1)
-            shot!!.getPixels(rowBuf, 0, bmpW, 0, srcRow, bmpW, 1)
-        }
-        for (c in 0 until cols) {
-            val i = r * cols + c
-            val u = (c + 0.5f) / cols.toFloat()
-            val v = (r + 0.5f) / rows.toFloat()
-            xs[i] = u
-            ys[i] = v
-
-            // Distance from button blast epicenter (bottom center: 0.5, 0.88)
-            val dx = u - 0.5f
-            val dy = v - 0.88f
-            val dist = kotlin.math.sqrt(dx * dx + dy * dy)
-
-            val e1 = hash01(c * 17.123f + r * 89.431f)
-            val e2 = hash01(c * 43.192f + r * 23.774f)
-            val e3 = hash01(c * 7.891f + r * 53.219f)
-
-            // Radial shockwave cascade: dots near button detonate first, spreading upward
-            delay[i] = (dist * 0.35f + e1 * 0.10f).coerceIn(0f, 0.42f)
-            // Sustained life: dots stay visible and float gracefully across the full 4.8s
-            life[i] = 0.52f + e2 * 0.16f
-            swirl[i] = (e3 - 0.5f) * 2f
-
-            val nx = if (dist > 0.001f) dx / dist else (e1 - 0.5f) * 2f
-
-            // Upward Ascension (↑): particles ascend vertically with subtle organic flutter (no wide sideways drift)
-            dirX[i] = (nx * 0.18f) + (e3 - 0.5f) * 0.22f
-            dirY[i] = -0.92f - (e2 * 0.48f)
-
-            if (captured) {
-                val px = ((c + 0.5f) * bmpW.toFloat() / cols.toFloat()).toInt().coerceIn(0, bmpW - 1)
-                val sampled = liftLuma(rowBuf[px])
-                colors[i] = sampled
-                val key = sampled and 0xFFE0E0E0.toInt()
-                histogram[key] = (histogram[key] ?: 0) + 1
-            } else {
-                colors[i] = fallbackPalette[(e1 * fallbackPalette.size).toInt().coerceIn(0, fallbackPalette.size - 1)]
-            }
-        }
-    }
-
-    if (captured && histogram.size < 6) {
-        for (i in 0 until count) {
-            val e = hash01(xs[i] * 917.13f + ys[i] * 41.77f)
-            colors[i] = fallbackPalette[(e * fallbackPalette.size).toInt().coerceIn(0, fallbackPalette.size - 1)]
-        }
-    }
-
-    val bucketIndex = IntArray(count)
-    val bucketOrderColors = ArrayList<Int>()
-    val lookup = HashMap<Int, Int>()
-    for (i in 0 until count) {
-        val key = colors[i] and 0xFFE0E0E0.toInt()
-        val existing = lookup[key]
-        if (existing != null) {
-            bucketIndex[i] = existing
-        } else {
-            val id = bucketOrderColors.size
-            bucketOrderColors.add(colors[i])
-            lookup[key] = id
-            bucketIndex[i] = id
-        }
-    }
-
-    val nb = bucketOrderColors.size
-    val bucketStart = IntArray(nb)
-    val bucketEnd = IntArray(nb)
-    val counts = IntArray(nb)
-    for (i in 0 until count) counts[bucketIndex[i]]++
-    var acc = 0
-    for (b in 0 until nb) {
-        bucketStart[b] = acc
-        acc += counts[b]
-        bucketEnd[b] = acc
-    }
-    val cursor = bucketStart.copyOf()
-    val order = IntArray(count)
-    for (i in 0 until count) {
-        val b = bucketIndex[i]
-        order[cursor[b]] = i
-        cursor[b]++
-    }
-
-    return DotField(
-        count = count,
-        cols = cols,
-        rows = rows,
-        xs = xs,
-        ys = ys,
-        delay = delay,
-        life = life,
-        dirX = dirX,
-        dirY = dirY,
-        swirl = swirl,
-        order = order,
-        bucketColor = bucketColorsOf(bucketOrderColors),
-        bucketStart = bucketStart,
-        bucketEnd = bucketEnd
-    )
-}
-
-private fun bucketColorsOf(list: ArrayList<Int>): IntArray {
-    val arr = IntArray(list.size)
-    for (i in list.indices) arr[i] = list[i]
-    return arr
-}
-
-/**
- * Draws the dissolving window: tens of thousands of microscopic glowing quantum dots,
- * with outer colored halos and glowing specular white cores, sweeping upward and floating.
- */
-@Composable
-private fun ParticleDissolveOverlay(
-    field: DotField?,
-    progress: () -> Float,
-    modifier: Modifier = Modifier
-) {
-    val scratchHalo = remember { FloatArray(MAX_DISSOLVE_DOTS * 2) }
-    val scratchCore = remember { FloatArray(MAX_DISSOLVE_DOTS * 2) }
-    val haloPaint = remember {
-        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            style = android.graphics.Paint.Style.STROKE
-            strokeCap = android.graphics.Paint.Cap.ROUND
-        }
-    }
-    val corePaint = remember {
-        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            style = android.graphics.Paint.Style.STROKE
-            strokeCap = android.graphics.Paint.Cap.ROUND
-            color = android.graphics.Color.WHITE
-        }
-    }
-
-    Canvas(modifier = modifier) {
-        val f = field ?: return@Canvas
-        val p = progress()
-        if (p <= 0.001f || p >= 1.0f) return@Canvas
-
-        val w = size.width
-        val h = size.height
-        val baseDot = (w / f.cols.toFloat()) * 0.76f
-
-        // Smooth quadratic evaporation envelope: particles softly fade to absolute zero
-        val globalFade = if (p < 0.58f) 1.0f else ((1.0f - p) / 0.42f).coerceIn(0f, 1f)
-        val fadeAlpha = globalFade * globalFade
-
-        var b = 0
-        while (b < f.bucketColor.size) {
-            val start = f.bucketStart[b]
-            val end = f.bucketEnd[b]
-            if (start < end) {
-                var haloCount = 0
-                var coreCount = 0
-                var k = start
-                while (k < end) {
-                    val i = f.order[k]
-                    val d = f.delay[i]
-                    val l = f.life[i]
-                    if (p > d && p < d + l) {
-                        val localP = (p - d) / l
-                        val alpha = kotlin.math.sin(localP * 3.14159f)
-                        val drag = (1f - kotlin.math.exp(-2.6f * localP))
-                        val spread = (0.04f + 0.09f * kotlin.math.abs(f.swirl[i])) * drag
-
-                        val px = f.xs[i] * w + f.dirX[i] * spread * w
-                        // Continuous upward lift (↑): particles ascend steadily towards the top of the screen
-                        val py = f.ys[i] * h - (localP * 0.18f * h) + f.dirY[i] * spread * h
-
-                        scratchHalo[haloCount] = px
-                        scratchHalo[haloCount + 1] = py
-                        haloCount += 2
-
-                        if (alpha > 0.40f) {
-                            scratchCore[coreCount] = px
-                            scratchCore[coreCount + 1] = py
-                            coreCount += 2
-                        }
-                    }
-                    k++
-                }
-
-                if (haloCount > 0) {
-                    haloPaint.color = f.bucketColor[b]
-                    haloPaint.alpha = (255f * fadeAlpha).toInt().coerceIn(0, 255)
-                    haloPaint.strokeWidth = baseDot * 1.35f
-                    drawIntoCanvas { canvas ->
-                        canvas.nativeCanvas.drawPoints(scratchHalo, 0, haloCount, haloPaint)
-                    }
-                }
-                if (coreCount > 0) {
-                    corePaint.alpha = (220f * fadeAlpha).toInt().coerceIn(0, 255)
-                    corePaint.strokeWidth = baseDot * 0.60f
-                    drawIntoCanvas { canvas ->
-                        canvas.nativeCanvas.drawPoints(scratchCore, 0, coreCount, corePaint)
-                    }
-                }
-            }
-            b++
-        }
-    }
-}
-
-/**
- * Material 3 ElevatedCard with Machined Dark Obsidian Sockets
- */
-@Composable
-private fun AgentNodeWithBubble(
-    node: AgentNode,
-    isActive: Boolean,
-    bubbleText: String?,
-    bubbleBelow: Boolean,
-    isDark: Boolean,
-    modifier: Modifier = Modifier,
-    alignRight: Boolean = false,
-    onTap: () -> Unit
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = if (alignRight) Alignment.End else Alignment.Start
-    ) {
-        // Speech Bubble Placed Above Card
-        if (!bubbleBelow) {
-            AnimatedVisibility(
-                visible = !bubbleText.isNullOrBlank() && isActive,
-                enter = fadeIn(spring(dampingRatio = 0.8f, stiffness = 380f)) + slideInVertically(spring(dampingRatio = 0.8f, stiffness = 380f)) { 15 },
-                exit = fadeOut(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) + slideOutVertically(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) { -10 }
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
-                    modifier = Modifier
-                        .padding(bottom = 8.dp)
-                        .widthIn(max = 168.dp)
-                        .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color.Black.copy(alpha = 0.25f))
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    // Chat Button
+                    Box(
+                        modifier = Modifier
+                            .size(width = 44.dp, height = 34.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (selectedTopTab == 0) {
+                                    if (isDark) Color(0xFF2C2C2E) else Color.White
+                                } else Color.Transparent
+                            )
+                            .applePressable(0.94f) {
+                                TalosHaptics.sendHaptic(context)
+                                selectedTopTab = 0
+                                onGetStarted()
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(node.accent)
+                        Icon(
+                            imageVector = TalosIcons.TalosChat,
+                            contentDescription = "Switch to chat",
+                            tint = if (selectedTopTab == 0) {
+                                if (isDark) Color.White else Color(0xFF1D1D1F)
+                            } else {
+                                if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f)
+                            },
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = bubbleText ?: "",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                    }
+
+                    // Agents Button
+                    Box(
+                        modifier = Modifier
+                            .size(width = 44.dp, height = 34.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (selectedTopTab == 1) {
+                                    if (isDark) Color(0xFF2C2C2E) else Color.White
+                                } else Color.Transparent
+                            )
+                            .applePressable(0.94f) {
+                                TalosHaptics.sendHaptic(context)
+                                selectedTopTab = 1
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = TalosIcons.TalosHub,
+                            contentDescription = "Switch to agents",
+                            tint = if (selectedTopTab == 1) {
+                                if (isDark) Color.White else Color(0xFF1D1D1F)
+                            } else {
+                                if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f)
+                            },
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            // Right Pill: [Filter | More Options]
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.85f) else Color(0xFFE5E5EA).copy(alpha = 0.90f),
+                border = appleLiquidGlassCardBorder(isDark, 0.8.dp),
+                shadowElevation = 4.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 40.dp, height = 34.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .applePressable(0.94f) {
+                                TalosHaptics.sendHaptic(context)
+                                onToggleTheme()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Filter",
+                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(width = 40.dp, height = 34.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .applePressable(0.94f) {
+                                TalosHaptics.sendHaptic(context)
+                                onOpenWizard?.invoke()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreHoriz,
+                            contentDescription = "More options",
+                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
             }
         }
 
-        // Tactile Material 3 PressableSurface Card with Spring Bounce
-        PressableSurface(
-            onClick = onTap,
-            shape = ShapeLargeIncreased,
-            pressedShape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            border = BorderStroke(
-                width = if (isActive) 1.5.dp else 1.dp,
-                brush = if (isActive) {
-                    Brush.linearGradient(
-                        colors = listOf(
-                            node.accent.copy(alpha = 0.95f),
-                            node.accent.copy(alpha = 0.40f)
+        // ==============================================================
+        // FLOATING BOTTOM CONTROLS (Search Bar & Circular Compose FAB)
+        // ==============================================================
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Floating Search Pill
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = if (isDark) Color(0xFF161820).copy(alpha = 0.88f) else Color(0xFFFFFFFF).copy(alpha = 0.92f),
+                border = appleLiquidGlassCardBorder(isDark, 1.dp),
+                shadowElevation = 6.dp,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(54.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.40f),
+                        modifier = Modifier.size(20.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                        ),
+                        cursorBrush = SolidColor(effectiveAccent),
+                        decorationBox = { innerTextField ->
+                            if (searchQuery.isEmpty()) {
+                                Text(
+                                    text = "Search agents and sessions",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.35f),
+                                    letterSpacing = (-0.1).sp
+                                )
+                            }
+                            innerTextField()
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // Circular Compose / Create FAB
+            Surface(
+                shape = CircleShape,
+                color = if (isDark) Color(0xFF2C2C32).copy(alpha = 0.92f) else Color(0xFFE5E5EA).copy(alpha = 0.95f),
+                border = BorderStroke(
+                    1.2.dp,
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = if (isDark) 0.50f else 0.85f),
+                            Color.White.copy(alpha = if (isDark) 0.10f else 0.20f)
                         )
                     )
-                } else {
-                    metallicBorderBrush()
-                }
-            ),
-            shadowElevation = if (isActive) 6.dp else 2.dp,
-            modifier = Modifier
-                .size(width = 114.dp, height = 100.dp)
-                .graphicsLayer {
-                    if (isActive) {
-                        scaleX = 1.03f
-                        scaleY = 1.03f
-                    }
-                }
-        ) {
-            Column(
+                ),
+                shadowElevation = 6.dp,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .size(54.dp)
+                    .applePressable(0.92f) {
+                        TalosHaptics.sendHaptic(context)
+                        onGetStarted()
+                    }
             ) {
-                // Machined Dark Obsidian Socket (ensures 100% emblem contrast in all themes)
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(EmblemSocket)
-                        .border(1.dp, node.accent.copy(alpha = 0.45f), RoundedCornerShape(16.dp)),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    AgentEmblemIcon(emblem = node.emblem, size = 28.dp, tint = null)
-                }
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = node.name,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Compose session",
+                        tint = if (isDark) Color.White else Color(0xFF1D1D1F),
+                        modifier = Modifier.size(20.dp)
                     )
-                    Text(
-                        text = if (isActive) "Active" else node.specTag,
-                        color = if (isActive) node.accent else MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-
-        // Speech Bubble Placed Below Card
-        if (bubbleBelow) {
-            AnimatedVisibility(
-                visible = !bubbleText.isNullOrBlank() && isActive,
-                enter = fadeIn(spring(dampingRatio = 0.8f, stiffness = 380f)) + slideInVertically(spring(dampingRatio = 0.8f, stiffness = 380f)) { -15 },
-                exit = fadeOut(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) + slideOutVertically(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)) { 10 }
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, node.accent.copy(alpha = if (isDark) 0.60f else 0.85f)),
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .widthIn(max = 168.dp)
-                        .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color.Black.copy(alpha = 0.25f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(node.accent)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = bubbleText ?: "",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
             }
         }
@@ -1469,99 +697,126 @@ private fun AgentNodeWithBubble(
 }
 
 /**
- * Mic & Camera Action Tile Gesture Handler
- * Replaces double-tap blocking logic with:
- * - Single tap to switch between Camera and Mic modes (no double-tap required)
- * - Camera: press-hold (>400ms) opens camera
- * - Mic: press-hold starts recording UI state, onRelease auto-sends, verticalDrag offset > 80dp switches to locked recording with cancel button
+ * Renders cute Apple-style mascot squircles with expressive eyes,
+ * matching img_036cefc1179d.jpg.
  */
 @Composable
-fun MicCameraActionTile(
-    isRecordingMode: Boolean,
-    isRecordingActive: Boolean,
-    isRecordingLocked: Boolean,
-    onToggleMode: () -> Unit,
-    onStartRecording: () -> Unit,
-    onStopAndSendRecording: () -> Unit,
-    onCancelRecording: () -> Unit,
-    onLockRecording: () -> Unit,
-    onOpenCamera: () -> Unit,
+fun CuteMascot(
+    color: Color,
+    shapeType: String,
     modifier: Modifier = Modifier
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "MicCameraActionTileScale"
-    )
+    val mascotShape = when (shapeType) {
+        "cloud" -> RoundedCornerShape(16.dp)
+        "pill" -> RoundedCornerShape(16.dp)
+        else -> RoundedCornerShape(16.dp)
+    }
 
     Box(
         modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(RoundedCornerShape(16.dp))
-            .pointerInput(isRecordingMode, isRecordingLocked) {
-                detectTapGestures(
-                    onPress = {
-                        isPressed = true
-                        val downTime = System.currentTimeMillis()
-                        if (isRecordingMode) {
-                            // onPress on mic starts a recording UI state
-                            onStartRecording()
-                            val released = tryAwaitRelease()
-                            isPressed = false
-                            if (released) {
-                                val duration = System.currentTimeMillis() - downTime
-                                if (duration < 300) {
-                                    // Single tap switches to camera mode
-                                    onCancelRecording()
-                                    onToggleMode()
-                                } else {
-                                    // onRelease sends or shows send/delete bar
-                                    onStopAndSendRecording()
-                                }
-                            }
-                        } else {
-                            val released = tryAwaitRelease()
-                            isPressed = false
-                            val duration = System.currentTimeMillis() - downTime
-                            if (duration >= 400) {
-                                // Camera tile open camera on press-hold (>400ms)
-                                onOpenCamera()
-                            } else if (released) {
-                                // Single tap switches to mic mode
-                                onToggleMode()
-                            }
-                        }
-                    },
-                    onTap = {
-                        // mic tile needs double tap to switch (should be single tap)
-                        onToggleMode()
-                    }
+            .size(44.dp)
+            .shadow(4.dp, mascotShape, ambientColor = color.copy(alpha = 0.40f))
+            .clip(mascotShape)
+            .background(color),
+        contentAlignment = Alignment.Center
+    ) {
+        // Specular 3D glass gloss on top half
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(18.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.35f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        // Two expressive mascot eyes
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left eye
+            Box(
+                modifier = Modifier
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(2.5.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF111113))
                 )
             }
-            .pointerInput(isRecordingMode, isRecordingLocked) {
-                awaitPointerEventScope {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    val lockThresholdPx = 80.dp.toPx()
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (!change.pressed) break
-                        val dragY = change.position.y - down.position.y
-                        // verticalDrag offset > 80dp switches to locked recording with cancel
-                        if (dragY <= -lockThresholdPx && isRecordingMode) {
-                            onLockRecording()
-                            break
-                        }
-                    }
-                }
+
+            // Right eye
+            Box(
+                modifier = Modifier
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(2.5.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF111113))
+                )
             }
-    )
+        }
+    }
+}
+
+/**
+ * Curved Apple tree-branch connector line (╰─),
+ * bridging parent mascot to sub-agents and session links.
+ */
+@Composable
+fun AgentBranchRow(
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 44.dp)
+            .applePressable(0.97f) { onClick() }
+            .padding(start = 24.dp, top = 2.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Curved L-Connector
+        Canvas(modifier = Modifier.size(width = 30.dp, height = 32.dp)) {
+            val strokeColor = if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.16f)
+            val path = Path().apply {
+                moveTo(0f, 0f)
+                lineTo(0f, size.height * 0.45f)
+                cubicTo(
+                    0f, size.height * 0.85f,
+                    size.width * 0.25f, size.height,
+                    size.width * 0.65f, size.height
+                )
+                lineTo(size.width, size.height)
+            }
+            drawPath(
+                path = path,
+                color = strokeColor,
+                style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        content()
+    }
 }

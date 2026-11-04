@@ -10,7 +10,7 @@ import kotlin.math.pow
  */
 const val HEAD_C = 114.2705f
 const val EYE_HALF = 21f
-private const FIXED_STEP = 1f / 120f
+private const val FIXED_STEP = 1f / 120f
 
 fun clampF(v: Float, min: Float, max: Float): Float = v.coerceIn(min, max)
 fun randF(min: Float, max: Float): Float = min + kotlin.random.Random.nextFloat() * (max - min)

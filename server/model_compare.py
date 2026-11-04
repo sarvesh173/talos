@@ -489,6 +489,11 @@ def _claim_terminal(model_id: str, queue: "asyncio.Queue[CompareEvent]") -> bool
     return True
 
 
+def _has_terminal(model_id: str, queue: "asyncio.Queue[CompareEvent]") -> bool:
+    """True when a terminal event was already claimed for *model_id*."""
+    return (id(queue), model_id) in _TERMINAL_CLAIMS
+
+
 def _reset_terminal_claims(queue: "asyncio.Queue[CompareEvent]") -> None:
     for key in list(_TERMINAL_CLAIMS):
         if key[0] == id(queue):
@@ -502,8 +507,16 @@ async def _consume_one(
     max_tokens: int,
     timeout_s: float,
     client_factory: Any,
+    cancel_reason: Optional[List[str]] = None,
 ) -> None:
-    """Stream one model, pushing events onto ``queue`` (never raises)."""
+    """Stream one model, pushing events onto ``queue`` (never raises).
+
+    ``cancel_reason`` is a one-element box owned by :func:`_run_one`. The
+    runner writes ``"timeout"`` into it *before* cancelling this coroutine,
+    so the cancellation handler can report the real cause. Without it a
+    deadline looked identical to a user cancellation and the model was
+    reported as ``"cancelled"``.
+    """
     model_id = ref.model
     await queue.put(Started(model=model_id, ref=ref))
     started_at = time.perf_counter()
@@ -538,8 +551,9 @@ async def _consume_one(
                 done_event = event
                 break
     except asyncio.CancelledError:
+        reason = (cancel_reason[0] if cancel_reason else "cancelled") or "cancelled"
         if _claim_terminal(model_id, queue):
-            await queue.put(Failed(model=model_id, reason="cancelled", ref=ref))
+            await queue.put(Failed(model=model_id, reason=reason, ref=ref))
         raise
     except Exception as exc:  # isolated: only this model fails
         error_detail = _scrub(f"{type(exc).__name__}: {exc}")
@@ -621,28 +635,49 @@ async def _run_one(
     timeout_s: float,
     client_factory: Any,
 ) -> None:
-    """Run one model under the per-model hard timeout (never raises)."""
+    """Run one model under the per-model hard timeout (never raises).
+
+    ``asyncio.wait_for`` is deliberately not used: it cancels the inner
+    coroutine *before* raising ``TimeoutError``, so the inner cancellation
+    handler ran first and reported the model as ``"cancelled"``. A deadline
+    would then arrive at the caller labelled as a user cancellation, which
+    is a lie about what happened. Waiting on a task and writing the reason
+    into a shared box before cancelling keeps the label honest.
+    """
+    reason_box: List[str] = ["cancelled"]
+    task = asyncio.create_task(
+        _consume_one(ref, prompt, queue, max_tokens, timeout_s, client_factory, reason_box)
+    )
     try:
-        await asyncio.wait_for(
-            _consume_one(ref, prompt, queue, max_tokens, timeout_s, client_factory),
-            timeout=timeout_s if timeout_s and timeout_s > 0 else None,
+        done, pending = await asyncio.wait(
+            {task}, timeout=timeout_s if timeout_s and timeout_s > 0 else None
         )
-    except asyncio.TimeoutError:
-        # Claim the terminal slot before reporting: _consume_one may
-        # legitimately have already emitted a terminal event for this model
-        # (e.g. a stream that finishes inside the same tick the wait_for
-        # deadline fires). Without the claim, both would be reported and
-        # the caller would see two terminal events for one model.
-        if _claim_terminal(ref.model, queue):
-            await queue.put(Failed(model=ref.model, reason="timeout", ref=ref))
+        if pending:
+            # Announce the cause, then cancel: the handler reads the box.
+            reason_box[0] = "timeout"
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        else:
+            # Surface anything the coroutine itself raised (it should not).
+            exc = task.exception()
+            if exc is not None:
+                raise exc
     except asyncio.CancelledError:
-        # _consume_one already reported 'cancelled' when it saw the
-        # cancellation; if wait_for cancelled before it started, report here.
+        # The comparison was cancelled from outside (cancel_all). The inner
+        # handler has already reported it; re-raise so the task ends.
+        task.cancel()
         raise
     except Exception as exc:  # pragma: no cover - defensive
-        await queue.put(
-            Failed(model=ref.model, reason=_scrub(f"{type(exc).__name__}: {exc}"), ref=ref)
-        )
+        if _claim_terminal(ref.model, queue):
+            await queue.put(
+                Failed(model=ref.model, reason=_scrub(f"{type(exc).__name__}: {exc}"), ref=ref)
+            )
+    finally:
+        # Guarantee exactly one terminal event per model, whatever path the
+        # coroutine took (including being cancelled before its first await).
+        if not _has_terminal(ref.model, queue):
+            if _claim_terminal(ref.model, queue):
+                await queue.put(Failed(model=ref.model, reason=reason_box[0], ref=ref))
 
 
 # ---------------------------------------------------------------------------

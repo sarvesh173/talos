@@ -492,7 +492,7 @@ class AgentOrchestrator:
         max_turns_per_round: int = MAX_TURNS_PER_ROUND,
         use_live_models: bool = False,
         llm_base_url: str = "",
-        default_model: str = "stealth/crouton-alpha",
+        default_model: str = "deepseek/deepseek-v4-pro",
         reasoning_effort: str = "high",
         llm_timeout: float = 180.0,
     ) -> None:
@@ -1454,6 +1454,6 @@ def default_agents() -> List[AgentSpec]:
 #: suite stays offline while the running core actually talks to the proxy.
 orchestrator = AgentOrchestrator(
     use_live_models=os.environ.get("TALOS_LIVE_MODELS", "0") not in ("0", "false", "False", ""),
-    default_model=os.environ.get("TALOS_DEFAULT_MODEL", "stealth/crouton-alpha"),
+    default_model=os.environ.get("TALOS_DEFAULT_MODEL", "deepseek/deepseek-v4-pro"),
     reasoning_effort=os.environ.get("TALOS_REASONING_EFFORT", "high"),
 )

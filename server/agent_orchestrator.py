@@ -1116,6 +1116,81 @@ class AgentOrchestrator:
             })
         return True
 
+    def _delegate_registry(self) -> Dict[str, Dict[str, Any]]:
+        if not hasattr(self, "_delegates"):
+            self._delegates: Dict[str, Dict[str, Any]] = {}
+        return self._delegates
+
+    def register_delegate(
+        self,
+        delegate_id: str,
+        name: str,
+        task: str,
+        parent_id: str = "main",
+        model: str = "stealth/crouton-alpha",
+        reasoning_effort: str = "high",
+        ttl_seconds: int = 3600,
+        room_id: str = "",
+    ) -> Dict[str, Any]:
+        """Spawn/summon a delegate child agent tracked by watchdog."""
+        record = {
+            "id": delegate_id,
+            "name": name,
+            "task": task,
+            "parent_id": parent_id,
+            "model": model,
+            "reasoning_effort": reasoning_effort,
+            "ttl_seconds": ttl_seconds,
+            "room_id": room_id,
+            "started_at": time.time(),
+            "status": "running",
+            "progress": 0.0,
+            "tokens_generated": 0,
+        }
+        self._delegate_registry()[delegate_id] = record
+        if room_id:
+            self._emit(room_id, "delegate_summoned", record)
+        return record
+
+    def list_delegates(self) -> List[Dict[str, Any]]:
+        """List all active delegates with live ticking duration & watchdog check."""
+        now = time.time()
+        registry = self._delegate_registry()
+        result = []
+        for did, rec in list(registry.items()):
+            elapsed = now - rec.get("started_at", now)
+            ttl = rec.get("ttl_seconds", 3600)
+            if elapsed > ttl and rec.get("status") == "running":
+                rec["status"] = "expired"
+                if rec.get("room_id"):
+                    self._emit(rec.get("room_id") or "", "delegate_expired", {"id": did})
+            copy_rec = dict(rec)
+            copy_rec["elapsed_seconds"] = int(elapsed)
+            copy_rec["remaining_seconds"] = max(0, int(ttl - elapsed))
+            result.append(copy_rec)
+        return sorted(result, key=lambda r: r.get("started_at", 0), reverse=True)
+
+    def cancel_delegate(self, delegate_id: str) -> bool:
+        registry = self._delegate_registry()
+        rec = registry.get(delegate_id)
+        if not rec:
+            return False
+        rec["status"] = "cancelled"
+        if rec.get("room_id"):
+            self._emit(rec.get("room_id") or "", "delegate_cancelled", {"id": delegate_id})
+        return True
+
+    def pause_delegate(self, delegate_id: str) -> bool:
+        registry = self._delegate_registry()
+        rec = registry.get(delegate_id)
+        if not rec:
+            return False
+        rec["status"] = "paused" if rec["status"] == "running" else "running"
+        if rec.get("room_id"):
+            self._emit(rec.get("room_id") or "", "delegate_paused", {"id": delegate_id, "status": rec["status"]})
+        return True
+
+
 
 def default_agents() -> List[AgentSpec]:
     """Return the built-in simulated agent roster."""

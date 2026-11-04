@@ -56,3 +56,32 @@ data class PoolStatus(
     val running: Int = 0,
     val max_capacity: Int = 0
 )
+
+@Serializable
+data class DelegateInfo(
+    val id: String,
+    val name: String,
+    val task: String = "",
+    @SerialName("parent_id") val parentId: String = "main",
+    val model: String = "stealth/crouton-alpha",
+    @SerialName("reasoning_effort") val reasoningEffort: String = "high",
+    @SerialName("ttl_seconds") val ttlSeconds: Int = 3600,
+    @SerialName("room_id") val roomId: String = "",
+    @SerialName("started_at") val startedAt: Double = 0.0,
+    val status: String = "running",
+    val progress: Float = 0f,
+    @SerialName("tokens_generated") val tokensGenerated: Int = 0,
+    @SerialName("elapsed_seconds") val elapsedSeconds: Int = 0,
+    @SerialName("remaining_seconds") val remainingSeconds: Int = 0
+)
+
+@Serializable
+data class SummonAgentPayload(
+    val name: String,
+    @SerialName("role_description") val roleDescription: String? = null,
+    val model: String = "stealth/crouton-alpha",
+    val color: String = "#007AFF",
+    @SerialName("system_prompt") val systemPrompt: String? = null,
+    val avatar: String? = null,
+    @SerialName("is_active") val isActive: Boolean = true
+)

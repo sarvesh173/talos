@@ -41,6 +41,10 @@ class EventType(str, Enum):
     question_answered = "question_answered"
     question_resolved = "question_resolved"
     question_expired = "question_expired"
+    delegate_summoned = "delegate_summoned"
+    delegate_expired = "delegate_expired"
+    delegate_cancelled = "delegate_cancelled"
+    delegate_paused = "delegate_paused"
 
 
 class GrantScope(str, Enum):

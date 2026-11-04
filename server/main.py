@@ -59,6 +59,7 @@ from server.db import (
     save_message,
     set_room_agents,
     update_room,
+    upsert_agent,
 )
 from server.provider_service import provider_service
 
@@ -413,9 +414,101 @@ async def get_room_consensus_history(
     return list_room_proposals(room_id)
 
 
+class SummonAgentRequest(BaseModel):
+    name: str
+    role_description: Optional[str] = "Autonomous Assistant"
+    model: Optional[str] = "stealth/crouton-alpha"
+    color: Optional[str] = "#007AFF"
+    system_prompt: Optional[str] = None
+    avatar: Optional[str] = None
+    is_active: bool = True
+
+
+class DelegateChildRequest(BaseModel):
+    name: str
+    task: str
+    description: Optional[str] = None
+    command_limit: Optional[int] = 25
+    model: Optional[str] = "stealth/crouton-alpha"
+    reasoning_effort: Optional[str] = "high"
+    ttl_minutes: Optional[int] = 60
+    room_id: Optional[str] = None
+
+
 @app.get("/api/agents")
 async def get_agents(token: str = Depends(require_auth)):
     return list_agents()
+
+
+@app.post("/api/agents")
+async def summon_agent(
+    payload: SummonAgentRequest,
+    token: str = Depends(require_auth),
+):
+    """Summon a new agent into the council roster."""
+    agent_id = f"agent_{uuid.uuid4().hex[:8]}"
+    profile = AgentProfile(
+        id=agent_id,
+        name=payload.name,
+        avatar=payload.avatar or "🤖",
+        color=payload.color or "#007AFF",
+        model=payload.model or "stealth/crouton-alpha",
+        role_description=payload.role_description,
+        system_prompt=payload.system_prompt,
+        is_active=payload.is_active,
+    )
+    upsert_agent(profile)
+    return profile
+
+
+@app.post("/api/agents/{parent_id}/delegate")
+async def delegate_child_agent(
+    parent_id: str,
+    payload: DelegateChildRequest,
+    token: str = Depends(require_auth),
+):
+    """Summon and spawn a delegate child agent with lifecycle tracking."""
+    delegate_id = f"del_{uuid.uuid4().hex[:8]}"
+    ttl_sec = (payload.ttl_minutes or 60) * 60
+    record = orchestrator.register_delegate(
+        delegate_id=delegate_id,
+        name=payload.name,
+        task=payload.task,
+        parent_id=parent_id,
+        model=payload.model or "stealth/crouton-alpha",
+        reasoning_effort=payload.reasoning_effort or "high",
+        ttl_seconds=ttl_sec,
+        room_id=payload.room_id or "",
+    )
+    return record
+
+
+@app.get("/api/agents/delegates")
+async def list_delegates(token: str = Depends(require_auth)):
+    """List running and active delegate child agents with live countdowns."""
+    return orchestrator.list_delegates()
+
+
+@app.post("/api/agents/delegates/{delegate_id}/cancel")
+async def cancel_delegate(
+    delegate_id: str,
+    token: str = Depends(require_auth),
+):
+    """Cancel a running delegate child agent."""
+    if not orchestrator.cancel_delegate(delegate_id):
+        raise HTTPException(status_code=404, detail="Delegate agent not found")
+    return {"status": "cancelled", "id": delegate_id}
+
+
+@app.post("/api/agents/delegates/{delegate_id}/pause")
+async def pause_delegate(
+    delegate_id: str,
+    token: str = Depends(require_auth),
+):
+    """Pause or resume a running delegate child agent."""
+    if not orchestrator.pause_delegate(delegate_id):
+        raise HTTPException(status_code=404, detail="Delegate agent not found")
+    return {"status": "ok", "id": delegate_id}
 
 
 @app.get("/api/orchestrator/status")

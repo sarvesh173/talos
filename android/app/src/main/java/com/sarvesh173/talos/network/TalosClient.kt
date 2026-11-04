@@ -1496,13 +1496,24 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
-    suspend fun delegateChildAgent(parentId: String, name: String, task: String, limit: Int = 25): Boolean {
+    suspend fun delegateChildAgent(
+        parentId: String,
+        name: String,
+        task: String,
+        limit: Int = 25,
+        model: String = "stealth/crouton-alpha",
+        reasoningEffort: String = "high",
+        ttlMinutes: Int = 60
+    ): Boolean {
         return withContext(Dispatchers.IO) {
             try {
                 val payload = org.json.JSONObject().apply {
                     put("name", name)
                     put("task", task)
                     put("command_limit", limit)
+                    put("model", model)
+                    put("reasoning_effort", reasoningEffort)
+                    put("ttl_minutes", ttlMinutes)
                 }.toString()
                 val req = Request.Builder()
                     .url("$baseUrl/api/agents/$parentId/delegate")
@@ -1511,6 +1522,83 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 httpClient.newCall(req).execute().use { it.isSuccessful }
             } catch (e: Exception) {
                 Log.e(TAG, "delegateChildAgent error: ${e.message}")
+                false
+            }
+        }
+    }
+
+    suspend fun fetchDelegates(): List<com.sarvesh173.talos.data.DelegateInfo> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/delegates")
+                    .get()
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@withContext emptyList()
+                    val body = resp.body?.string() ?: return@withContext emptyList()
+                    json.decodeFromString<List<com.sarvesh173.talos.data.DelegateInfo>>(body)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "fetchDelegates error: ${e.message}")
+                emptyList()
+            }
+        }
+    }
+
+    suspend fun summonAgent(
+        name: String,
+        role: String? = null,
+        model: String = "stealth/crouton-alpha",
+        color: String = "#007AFF",
+        prompt: String? = null
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val payload = org.json.JSONObject().apply {
+                    put("name", name)
+                    if (role != null) put("role_description", role)
+                    put("model", model)
+                    put("color", color)
+                    if (prompt != null) put("system_prompt", prompt)
+                }.toString()
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents")
+                    .post(payload.toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            } catch (e: Exception) {
+                Log.e(TAG, "summonAgent error: ${e.message}")
+                false
+            }
+        }
+    }
+
+    suspend fun cancelDelegate(id: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/delegates/$id/cancel")
+                    .post("{}".toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            } catch (e: Exception) {
+                Log.e(TAG, "cancelDelegate error: ${e.message}")
+                false
+            }
+        }
+    }
+
+    suspend fun pauseDelegate(id: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val req = Request.Builder()
+                    .url("$baseUrl/api/agents/delegates/$id/pause")
+                    .post("{}".toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            } catch (e: Exception) {
+                Log.e(TAG, "pauseDelegate error: ${e.message}")
                 false
             }
         }

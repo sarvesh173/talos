@@ -204,7 +204,12 @@ object TalosDirectiveParser {
         val raw = root.optJSONArray("scopes")
         val scopes = if (raw == null) listOf("once", "session") else (0 until raw.length()).map { raw.optString(it, "") }
         if (scopes.isEmpty() || scopes.any { it !in setOf("once", "session", "full") }) return null
-        return PermissionDirective(tool, root.optString("command", ""), root.optString("reason", ""), scopes)
+        return PermissionDirective(
+            tool = tool,
+            command = root.optString("command", ""),
+            reason = root.optString("reason", ""),
+            scopes = scopes
+        )
     }
 
     private fun validateGame(root: JSONObject): GameDirective? {
@@ -224,7 +229,12 @@ object TalosDirectiveParser {
                 }
             }
         }
-        return GameDirective(game, root.optString("title", ""), root.optString("prompt", ""), state)
+        return GameDirective(
+            game = game,
+            title = root.optString("title", ""),
+            prompt = root.optString("prompt", ""),
+            state = state
+        )
     }
 
     private fun validateEmoji(root: JSONObject): EmojiDirective? {
@@ -232,7 +242,7 @@ object TalosDirectiveParser {
         if (raw.length() !in 4..8) return null
         val options = (0 until raw.length()).map { raw.optString(it, "") }
         if (options.any { it.isBlank() }) return null
-        return EmojiDirective(root.optString("title", ""), options)
+        return EmojiDirective(title = root.optString("title", ""), options = options)
     }
 
     private fun validateCards(root: JSONObject): CardsDirective? {
@@ -248,6 +258,6 @@ object TalosDirectiveParser {
             if (accent !in setOf("blue", "green", "orange", "red", "purple", "gray")) return null
             CardItem(title, entry.optString("subtitle", ""), badge, accent)
         }
-        return CardsDirective(root.optString("title", ""), items)
+        return CardsDirective(title = root.optString("title", ""), items = items)
     }
 }

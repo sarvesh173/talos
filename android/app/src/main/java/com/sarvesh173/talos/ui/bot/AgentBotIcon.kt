@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -124,14 +125,19 @@ private fun DrawScope.drawBot(eng: BotEngine, ink: Color, eyeInk: Color, particl
     if (particles) drawParticleBelt(eng, s, scale, runtimeSec)
     if (eng.humming.x > 0.01f) drawHumming(eng, s, scale, ink)
 
-    // head
+    // head. Compose has no `transform` parameter on drawPath — withTransform
+    // is the supported way to apply scale/rotate/translate around a pivot.
     val headPath = ringToPath(ring)
-    val cx = s + tx * scale; val cy = s + ty * scale
-    drawPath(headPath, ink, alpha = 1f, style = null, transform = {
-        scale(sx * scale, sy * scale, pivot = Offset(HEAD_C * scale, HEAD_C * scale))
-        rotate(rotDeg, pivot = Offset(HEAD_C * scale, HEAD_C * scale))
-        translate(Offset(cx - HEAD_C * scale, cy - HEAD_C * scale))
-    })
+    val cx = s + tx * scale
+    val cy = s + ty * scale
+    val pivot = Offset(HEAD_C * scale, HEAD_C * scale)
+    withTransform({
+        scale(sx * scale, sy * scale, pivot = pivot)
+        rotate(rotDeg, pivot = pivot)
+        translate(cx - HEAD_C * scale, cy - HEAD_C * scale)
+    }) {
+        drawPath(headPath, ink)
+    }
     // eyes (svg-renderer.js renderEyes: lerp + blink scale + aim)
     if (morphAmt < 0.5f) drawEyes(eng, face, s, scale, eyeInk, tx, ty)
     // morph overlay

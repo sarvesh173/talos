@@ -32,6 +32,7 @@ import com.sarvesh173.talos.ui.rememberReducedMotion
 import com.sarvesh173.talos.ui.spatialSpring
 import kotlinx.coroutines.delay
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**

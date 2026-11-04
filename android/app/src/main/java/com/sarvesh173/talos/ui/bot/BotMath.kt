@@ -8,8 +8,8 @@ import kotlin.math.pow
  * Ported from component/runtime/math.js + geometry.js.
  * Single source of truth for the bot's spring constants and easing.
  */
-const HEAD_C = 114.2705f
-const EYE_HALF = 21f
+const val HEAD_C = 114.2705f
+const val EYE_HALF = 21f
 private const FIXED_STEP = 1f / 120f
 
 fun clampF(v: Float, min: Float, max: Float): Float = v.coerceIn(min, max)

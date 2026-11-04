@@ -53,6 +53,9 @@ fun SettingsScreen(
     onNavigateToCaching: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToThinkingOrb: () -> Unit = {},
+    onNavigateToDashboardControl: () -> Unit = {},
+    onNavigateToAgentLifecycle: () -> Unit = {},
+    onNavigateToKanban: () -> Unit = {},
     nodeEncryptionFingerprint: String? = null,
     borderTint: Color = Color.White.copy(alpha = 0.08f)
 ) {
@@ -291,6 +294,37 @@ fun SettingsScreen(
                     subtitle = "Animation, colour, shape",
                     icon = TalosIcons.TalosStrokeOrb,
                     onClick = onNavigateToThinkingOrb
+                )
+
+                SettingsDivider()
+
+                // These three lived only in the CLI until now: a stopped
+                // dashboard looked like a broken app, and the agent roster
+                // could not be inspected from the phone at all. Each is a plain
+                // row with a hand-built glyph — no coloured icon box.
+                SettingsMinimalRow(
+                    title = "Services",
+                    subtitle = "Dashboard, CLI tools, on or off",
+                    icon = TalosIcons.TalosStrokePulse,
+                    onClick = onNavigateToDashboardControl
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Agent lifecycle",
+                    subtitle = "Which agents stay running",
+                    icon = TalosIcons.TalosStrokeAgent,
+                    onClick = onNavigateToAgentLifecycle
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Tool activity",
+                    subtitle = "What each agent is calling",
+                    icon = TalosIcons.TalosStrokeTransport,
+                    onClick = onNavigateToKanban
                 )
             }
 

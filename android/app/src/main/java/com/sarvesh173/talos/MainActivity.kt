@@ -101,6 +101,10 @@ import com.sarvesh173.talos.core.feature.FeatureCatalog
 import com.sarvesh173.talos.core.feature.FeatureScope
 import com.sarvesh173.talos.core.motion.MotionTokens
 import com.sarvesh173.talos.ui.features.SettingsScreen
+import com.sarvesh173.talos.ui.settings.DashboardControlScreen
+import com.sarvesh173.talos.ui.agents.AgentLifecycleScreen
+import com.sarvesh173.talos.ui.kanban.KanbanScreen
+import com.sarvesh173.talos.ui.bot.AgentLogoCustomizeScreen
 import com.sarvesh173.talos.ui.features.LookAndFeelScreen
 import com.sarvesh173.talos.ui.features.ChatPreferencesScreen
 import com.sarvesh173.talos.ui.features.SecurityScreen
@@ -400,7 +404,8 @@ class MainActivity : ComponentActivity() {
                 val currentActivity = LocalContext.current as? Activity
                 BackHandler(enabled = true) {
                     when (appScreen) {
-                        "look_and_feel", "chat_preferences", "security", "caching", "notifications" -> {
+                        "look_and_feel", "chat_preferences", "security", "caching", "notifications",
+                        "dashboard_control", "agent_lifecycle", "kanban", "logo_customize" -> {
                             appScreen = "settings"
                         }
                         "settings", "canvas", "diff", "hub", "gallery", "cli_manager", "chat" -> {
@@ -605,7 +610,32 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToSecurity = { appScreen = "security" },
                                 onNavigateToCaching = { appScreen = "caching" },
                                 onNavigateToNotifications = { appScreen = "notifications" },
-                                onNavigateToThinkingOrb = { appScreen = "thinking_orb" }
+                                onNavigateToThinkingOrb = { appScreen = "thinking_orb" },
+                                onNavigateToDashboardControl = { appScreen = "dashboard_control" },
+                                onNavigateToAgentLifecycle = { appScreen = "agent_lifecycle" },
+                                onNavigateToKanban = { appScreen = "kanban" }
+                            )
+                        }
+                        // Service control was previously reachable only from a
+                        // CLI on the host, so a stopped dashboard looked like a
+                        // broken app. It is a setting now, and the screen itself
+                        // says "Tailscale is off" instead of "connection failed".
+                        "dashboard_control" -> {
+                            DashboardControlScreen(onBack = { appScreen = "settings" })
+                        }
+                        "agent_lifecycle" -> {
+                            AgentLifecycleScreen(onBack = { appScreen = "settings" })
+                        }
+                        "kanban" -> {
+                            KanbanScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
+                        }
+                        "logo_customize" -> {
+                            AgentLogoCustomizeScreen(
+                                agentId = activeAgentName.lowercase().replace(" ", ""),
+                                onBack = { appScreen = "settings" }
                             )
                         }
                         "look_and_feel" -> {

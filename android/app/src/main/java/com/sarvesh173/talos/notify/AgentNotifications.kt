@@ -106,7 +106,10 @@ object AgentNotifications {
             summary = summary,
             command = command
         )
-        post(context, approvalTag(roomId), notification)
+        // One id per approval, not per room: several agents can be blocked at
+        // once, and a room-scoped id would make each new request silently
+        // overwrite the previous one.
+        post(context, approvalTag(approvalId), stableId(approvalId), notification)
     }
 
     /**
@@ -124,13 +127,66 @@ object AgentNotifications {
         if (suppressIfActive) return
         ensureChannels(context)
         val notification = buildActivity(context, agentName, roomId, title, body)
-        post(context, activityTag(roomId), notification)
+        // Activity is per room on purpose: a burst of replies from one agent is
+        // one thread, and the newest line is the useful one.
+        post(context, activityTag(roomId), stableId(roomId), notification)
     }
 
     fun cancelForRoom(context: Context, roomId: String) {
         val manager = NotificationManagerCompat.from(context)
-        manager.cancel(approvalTag(roomId), 0)
-        manager.cancel(activityTag(roomId), 0)
+        manager.cancel(activityTag(roomId), stableId(roomId))
+    }
+
+    /** Dismiss one approval once it has been answered, wherever it was answered. */
+    fun cancelApproval(context: Context, approvalId: String) {
+        NotificationManagerCompat.from(context).cancel(approvalTag(approvalId), stableId(approvalId))
+        // Neutralise the bubble too, or it keeps floating with a dead request.
+        NotificationManagerCompat.from(context)
+            .cancel(activityTag("bubble:" + approvalId), stableId("bubble:" + approvalId))
+    }
+
+    /**
+     * A long-running job, reported on the doubling ladder.
+     *
+     * One notification, updated in place — not one per rung. The user wants to
+     * know a job is still alive, not to be handed eleven separate alerts for the
+     * same job. The body carries the exact elapsed time so the shade answers
+     * "how long so far" without opening the app.
+     */
+    fun notifyProgress(
+        context: Context,
+        agentName: String,
+        roomId: String,
+        elapsedSeconds: Long,
+        detail: String = ""
+    ) {
+        ensureChannels(context)
+        val body = buildString {
+            append(elapsedLabel(elapsedSeconds))
+            if (detail.isNotBlank()) {
+                append(" · ")
+                append(detail)
+            }
+        }
+        val notification = NotificationCompat.Builder(context, CHANNEL_ACTIVITY)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("$agentName still working")
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setGroup(GROUP_AGENT)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setContentIntent(openRoomIntent(context, roomId, agentName))
+            .build()
+        post(context, progressTag(agentName), stableId(progressTag(agentName)), notification)
+    }
+
+    /** Clear a progress notification when the job ends. */
+    fun cancelProgress(context: Context, agentName: String) {
+        val manager = NotificationManagerCompat.from(context)
+        manager.cancel(progressTag(agentName), stableId(progressTag(agentName)))
     }
 
     // -- builders ----------------------------------------------------------
@@ -285,7 +341,23 @@ object AgentNotifications {
         )
     }
 
-    private fun post(context: Context, tag: String, notification: Notification) {
+    /**
+     * A stable, non-negative int for a tag.
+     *
+     * [String.hashCode] is used because it is stable per process for the same
+     * input and collisions only matter within one tag namespace, which the tags
+     * already separate.
+     */
+    private fun stableId(tag: String): Int = tag.hashCode() and 0x7FFFFFFF
+
+    private fun elapsedLabel(seconds: Long): String = when {
+        seconds < 60L -> "${seconds}s"
+        seconds < 3_600L -> "${seconds / 60}m ${seconds % 60}s"
+        seconds < 86_400L -> "${seconds / 3_600}h ${(seconds % 3_600) / 60}m"
+        else -> "${seconds / 86_400}d ${(seconds % 86_400) / 3_600}h"
+    }
+
+    private fun post(context: Context, tag: String, id: Int, notification: Notification) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
@@ -294,10 +366,11 @@ object AgentNotifications {
             // still the source of truth; asking again here would be nagging.
             return
         }
-        NotificationManagerCompat.from(context).notify(tag, 0, notification)
+        NotificationManagerCompat.from(context).notify(tag, id, notification)
     }
 
     private fun shortcutId(roomId: String) = SHORTCUT_PREFIX + roomId
-    private fun approvalTag(roomId: String) = "approval:$roomId"
+    private fun approvalTag(approvalId: String) = "approval:$approvalId"
     private fun activityTag(roomId: String) = "activity:$roomId"
+    private fun progressTag(agentName: String) = "progress:$agentName"
 }

@@ -9,6 +9,7 @@ import java.net.NetworkInterface
 import com.sarvesh173.talos.data.BusEvent
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.MeshInfo
+import com.sarvesh173.talos.data.ProviderSnapshotDto
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.ui.AgentApprovalRequest
 import com.sarvesh173.talos.data.Room
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -527,6 +530,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private val _pendingApproval = MutableStateFlow<AgentApprovalRequest?>(null)
     val pendingApproval: StateFlow<AgentApprovalRequest?> = _pendingApproval.asStateFlow()
+
+    private val _pendingQuestion = MutableStateFlow<AgentQuestionUi?>(null)
+    val pendingQuestion: StateFlow<AgentQuestionUi?> = _pendingQuestion.asStateFlow()
 
     private val _providers = MutableStateFlow<List<ProviderSnapshotDto>>(emptyList())
     val providers: StateFlow<List<ProviderSnapshotDto>> = _providers.asStateFlow()
@@ -1065,7 +1071,63 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     }
                 }
                 "approval_resolved" -> {
-                    _pendingApproval.value = null
+                    val resolvedId = event.payload?.get("id")?.jsonPrimitive?.content ?: ""
+                    if (resolvedId.isBlank() || _pendingApproval.value?.id == resolvedId) {
+                        _pendingApproval.value = null
+                    }
+                    if (resolvedId.isBlank() || _pendingQuestion.value?.id == resolvedId) {
+                        _pendingQuestion.value = null
+                    }
+                }
+                "question_request" -> {
+                    val payload = event.payload ?: return
+                    val question = runCatching {
+                        json.decodeFromJsonElement<AgentQuestionUi>(payload)
+                    }.getOrElse {
+                        val parsedOptions = payload["options"]?.jsonArray?.mapNotNull { optElem ->
+                            runCatching { json.decodeFromJsonElement<QuestionOptionDto>(optElem) }.getOrNull()
+                        } ?: emptyList()
+                        AgentQuestionUi(
+                            id = payload["id"]?.jsonPrimitive?.content ?: "",
+                            prompt = payload["prompt"]?.jsonPrimitive?.content ?: "",
+                            detail = payload["detail"]?.jsonPrimitive?.content ?: "",
+                            command = payload["command"]?.jsonPrimitive?.content ?: "",
+                            agent_name = payload["agent_name"]?.jsonPrimitive?.content
+                                ?: payload["agentName"]?.jsonPrimitive?.content ?: "",
+                            kind = payload["kind"]?.jsonPrimitive?.content ?: "question",
+                            options = parsedOptions,
+                            allow_custom = payload["allow_custom"]?.jsonPrimitive?.content?.toBoolean() ?: true,
+                            timeout_seconds = payload["timeout_seconds"]?.jsonPrimitive?.content?.toIntOrNull(),
+                            on_timeout = payload["on_timeout"]?.jsonPrimitive?.content,
+                            room_id = payload["room_id"]?.jsonPrimitive?.content ?: ""
+                        )
+                    }.let { q ->
+                        if (q.room_id.isBlank()) {
+                            q.copy(room_id = event.room_id.ifBlank { _currentRoomId.value })
+                        } else {
+                            q
+                        }
+                    }
+                    val pending = question.takeIf { it.id.isNotBlank() }
+                    _pendingQuestion.value = pending
+                    // A question with a deadline must reach the user via the
+                    // approval channel so a backgrounded app does not time out silent.
+                    if (pending?.timeout_seconds != null) {
+                        com.sarvesh173.talos.notify.AgentNotifications.notifyApproval(
+                            context = context,
+                            agentName = pending.agent_name.ifBlank { "Agent" },
+                            roomId = pending.room_id.ifBlank { _currentRoomId.value },
+                            approvalId = pending.id,
+                            summary = pending.prompt.ifBlank { "The agent needs input" },
+                            command = pending.command
+                        )
+                    }
+                }
+                "question_answered" -> {
+                    val answeredId = event.payload?.get("id")?.jsonPrimitive?.content ?: ""
+                    if (answeredId.isBlank() || _pendingQuestion.value?.id == answeredId) {
+                        _pendingQuestion.value = null
+                    }
                 }
                 "typing_indicator" -> {
                     val isTyping = event.payload?.get("is_typing")?.jsonPrimitive?.content?.toBoolean() ?: false
@@ -1572,16 +1634,47 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     }
 
     /**
-     * Answer a pending approval. Sent to the agent-control endpoint so the wait
-     * resolves on the core side rather than being inferred from a text message.
+     * Answer a pending approval with explicit grant scope. Sent to the
+     * agent-control endpoint so lifetime policy resolves on the core rather
+     * than being inferred from conversational replies.
      */
-    suspend fun resolveApproval(approvalId: String, approved: Boolean): Boolean =
+    suspend fun resolveApproval(id: String, approved: Boolean, scope: String): Boolean =
         withContext(Dispatchers.IO) {
-            if (approvalId.isBlank()) return@withContext false
+            if (id.isBlank()) return@withContext false
             runCatching {
-                val payload = buildJsonObject { put("approved", approved) }
+                val payload = buildJsonObject {
+                    put("approved", approved)
+                    put("scope", scope)
+                }
                 val req = Request.Builder()
-                    .url("$baseUrl/api/approvals/$approvalId/resolve")
+                    .url("$baseUrl/api/approvals/$id/resolve")
+                    .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                    .build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            }.getOrDefault(false)
+        }
+
+    /**
+     * Answer a pending approval with default single-use scope for callers that
+     * do not distinguish session or permanent grants.
+     */
+    suspend fun resolveApproval(id: String, approved: Boolean): Boolean =
+        resolveApproval(id, approved, "once")
+
+    /**
+     * Answer an agent's question or option prompt directly. Sent to the dedicated
+     * question endpoint to unblock the waiting agent without chat loop round-trips.
+     */
+    suspend fun answerQuestion(id: String, answer: String, optionValue: String? = null): Boolean =
+        withContext(Dispatchers.IO) {
+            if (id.isBlank()) return@withContext false
+            runCatching {
+                val payload = buildJsonObject {
+                    put("answer", answer)
+                    put("option_value", optionValue)
+                }
+                val req = Request.Builder()
+                    .url("$baseUrl/api/questions/$id/answer")
                     .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
                     .build()
                 httpClient.newCall(req).execute().use { it.isSuccessful }
@@ -1810,3 +1903,41 @@ data class GitDiffSummaryDto(
     val total_deletions: Int,
     val files: List<GitFileDiffDto> = emptyList()
 )
+
+@kotlinx.serialization.Serializable
+data class QuestionOptionDto(
+    @kotlinx.serialization.SerialName("label") val label: String = "",
+    @kotlinx.serialization.SerialName("value") val value: String = "",
+    @kotlinx.serialization.SerialName("kind") val kind: String = "neutral",
+    @kotlinx.serialization.SerialName("description") val description: String? = null
+) {
+    val effectiveValue: String get() = value.ifBlank { label }
+    val effectiveLabel: String get() = label.ifBlank { value }
+}
+
+/**
+ * Question or permission prompt payload sent by the orchestrator.
+ *
+ * Preserves [kind] as an unparsed String so future server-side prompt types
+ * do not crash deserialization on running mobile clients.
+ */
+@kotlinx.serialization.Serializable
+data class AgentQuestionUi(
+    @kotlinx.serialization.SerialName("id") val id: String = "",
+    @kotlinx.serialization.SerialName("prompt") val prompt: String = "",
+    @kotlinx.serialization.SerialName("detail") val detail: String = "",
+    @kotlinx.serialization.SerialName("command") val command: String = "",
+    @kotlinx.serialization.SerialName("agent_name") val agent_name: String = "",
+    @kotlinx.serialization.SerialName("kind") val kind: String = "question",
+    @kotlinx.serialization.SerialName("options") val options: List<QuestionOptionDto> = emptyList(),
+    @kotlinx.serialization.SerialName("allow_custom") val allow_custom: Boolean = true,
+    @kotlinx.serialization.SerialName("timeout_seconds") val timeout_seconds: Int? = null,
+    @kotlinx.serialization.SerialName("on_timeout") val on_timeout: String? = null,
+    @kotlinx.serialization.SerialName("room_id") val room_id: String = ""
+) {
+    val agentName: String get() = agent_name
+    val allowCustom: Boolean get() = allow_custom
+    val timeoutSeconds: Int? get() = timeout_seconds
+    val onTimeout: String? get() = on_timeout
+    val roomId: String get() = room_id
+}

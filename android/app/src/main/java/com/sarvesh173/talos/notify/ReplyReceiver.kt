@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Receives notification replies and approval decisions.
+ * Receives notification replies, approval decisions and question answers.
  *
  * A notification action must not do network I/O on the main thread, and the
  * process may be started cold just to handle this, so the work runs on an
@@ -27,6 +27,11 @@ class ReplyReceiver : BroadcastReceiver() {
         val roomId = intent.getStringExtra(AgentNotifications.EXTRA_ROOM_ID).orEmpty()
         if (roomId.isBlank()) return
         val approvalId = intent.getStringExtra(AgentNotifications.EXTRA_APPROVAL_ID).orEmpty()
+        val questionId = intent.getStringExtra(AgentNotifications.EXTRA_QUESTION_ID).orEmpty()
+        // Always-allow from the shade grants the narrowest useful scope. The
+        // shade cannot show the three-way choice the in-app overlay offers, so
+        // it must not silently grant permanent control either.
+        val scope = intent.getStringExtra(AgentNotifications.EXTRA_SCOPE).orEmpty()
 
         val decision = if (intent.hasExtra(AgentNotifications.EXTRA_APPROVE)) {
             intent.getBooleanExtra(AgentNotifications.EXTRA_APPROVE, false)
@@ -51,8 +56,18 @@ class ReplyReceiver : BroadcastReceiver() {
                 }
 
                 when {
+                    questionId.isNotBlank() && typed.isNotBlank() -> {
+                        // A typed answer to an agent's question is the answer —
+                        // sending it as a chat message would make the agent
+                        // re-ask instead of continuing.
+                        client.answerQuestion(questionId, typed)
+                    }
                     decision != null && approvalId.isNotBlank() -> {
-                        client.resolveApproval(approvalId, decision)
+                        client.resolveApproval(
+                            approvalId,
+                            decision,
+                            scope.ifBlank { "once" }
+                        )
                         // A decision often comes with a clarifying sentence.
                         if (typed.isNotBlank()) {
                             client.sendMessageTo(roomId, typed)
@@ -64,7 +79,13 @@ class ReplyReceiver : BroadcastReceiver() {
                 // The decision is consumed; the approval notification must not
                 // linger and invite a second, contradictory tap.
                 if (decision != null && approvalId.isNotBlank()) {
-                    AgentNotifications.cancelForRoom(context, roomId)
+                    // Cancel the one approval, not the whole room's activity:
+                    // answering this request must not erase an unrelated
+                    // progress or chat notification.
+                    AgentNotifications.cancelApproval(context, approvalId)
+                }
+                if (questionId.isNotBlank()) {
+                    AgentNotifications.cancelApproval(context, questionId)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to handle notification reply: ${e.message}")

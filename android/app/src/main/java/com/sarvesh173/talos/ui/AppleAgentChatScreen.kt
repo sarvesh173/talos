@@ -38,6 +38,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.data.Role
+import com.sarvesh173.talos.ui.agent.*
+import com.sarvesh173.talos.ui.avatar.AgentAvatar
+import com.sarvesh173.talos.ui.avatar.AgentAvatarEngine
+import com.sarvesh173.talos.ui.avatar.AvatarIdentity
+import com.sarvesh173.talos.ui.chat.FileTouchSummary
+import com.sarvesh173.talos.ui.chat.MessageFooterView
+import com.sarvesh173.talos.ui.chat.MessageStats
+import com.sarvesh173.talos.ui.chat.ToolCallSummary
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.orb.OrbState
 import com.sarvesh173.talos.ui.orb.rememberAdaptiveOrbSpeed
@@ -69,7 +77,9 @@ data class ChatMessage(
     val sender: String, // "user" or "agent"
     val text: String,
     val timestamp: String,
-    val codeBlock: String? = null
+    val codeBlock: String? = null,
+    val stats: MessageStats? = null,
+    val agentId: String = ""
 )
 
 /** Clock label for a core timestamp (epoch seconds). */
@@ -106,6 +116,56 @@ fun AppleAgentChatScreen(
     val liveMessages by client.messages.collectAsState()
     val isThinking by client.isAgentTyping.collectAsState()
     val pendingApproval by client.pendingApproval.collectAsState()
+    val pendingQuestion by client.pendingQuestion.collectAsState()
+
+    val activeQuestion: AgentQuestion? = remember(pendingQuestion, pendingApproval, brandColor) {
+        val q = pendingQuestion
+        if (q != null) {
+            AgentQuestion(
+                id = q.id,
+                prompt = q.prompt,
+                detail = q.detail,
+                command = q.command,
+                agentName = q.agentName,
+                kind = if (q.kind.equals("permission", ignoreCase = true)) QuestionKind.Permission else QuestionKind.Question,
+                options = q.options.map { opt ->
+                    QuestionOption(
+                        label = opt.effectiveLabel,
+                        value = opt.effectiveValue,
+                        kind = when (opt.kind.lowercase()) {
+                            "affirmative" -> OptionKind.Affirmative
+                            "negative" -> OptionKind.Negative
+                            else -> OptionKind.Neutral
+                        }
+                    )
+                },
+                allowCustom = q.allowCustom,
+                timeoutSeconds = q.timeoutSeconds,
+                onTimeout = when (q.onTimeout?.lowercase()) {
+                    "skip" -> TimeoutBehaviour.Skip
+                    "ask_again" -> TimeoutBehaviour.AskAgain
+                    else -> TimeoutBehaviour.Deny
+                },
+                brandColor = brandColor
+            )
+        } else {
+            pendingApproval?.let { r ->
+                AgentQuestion(
+                    id = r.id,
+                    prompt = r.summary.ifBlank { "Permission requested" },
+                    detail = "",
+                    command = r.command,
+                    agentName = r.toolName.ifBlank { "Agent" },
+                    kind = QuestionKind.Permission,
+                    options = emptyList(),
+                    allowCustom = true,
+                    timeoutSeconds = null,
+                    onTimeout = TimeoutBehaviour.Deny,
+                    brandColor = brandColor
+                )
+            }
+        }
+    }
     val rooms by client.rooms.collectAsState()
     val scope = rememberCoroutineScope()
 
@@ -121,12 +181,44 @@ fun AppleAgentChatScreen(
 
     val messages = remember(liveMessages) {
         liveMessages.map { msg ->
+            val stats = msg.metrics?.let { met ->
+                MessageStats(
+                    latencyMs = met.latency_ms,
+                    ttftMs = met.ttft_ms,
+                    promptTokens = met.prompt_tokens,
+                    completionTokens = met.completion_tokens,
+                    tokensPerSecond = met.tokens_per_second,
+                    model = met.model,
+                    reasoningTokens = met.reasoning_tokens,
+                    costUsd = met.cost_usd,
+                    toolCalls = msg.tool_records.map { tr ->
+                        ToolCallSummary(
+                            name = tr.name,
+                            summary = tr.summary,
+                            status = tr.status ?: "success",
+                            durationMs = tr.ended_at?.let { end -> ((end - tr.started_at) * 1000).toInt() }
+                        )
+                    },
+                    filesTouched = msg.files_touched.map { ft ->
+                        FileTouchSummary(
+                            path = ft.path,
+                            kind = ft.kind,
+                            additions = ft.additions,
+                            deletions = ft.deletions,
+                            diff = ft.diff,
+                            mediaUrl = ft.media_url
+                        )
+                    }
+                )
+            }
             ChatMessage(
                 id = msg.id,
                 sender = if (msg.sender_role == Role.human) "user" else "agent",
                 text = msg.content,
                 timestamp = formatClock(msg.created_at),
-                codeBlock = null
+                codeBlock = null,
+                stats = stats,
+                agentId = msg.sender_id
             )
         }
     }
@@ -368,28 +460,54 @@ fun AppleAgentChatScreen(
             }
         }
 
-        // ---------------- approval gate ----------------
+        // ---------------- approval & question overlay ----------------
         // Sits above everything except the dock: a blocked agent is the most
         // important thing on the screen while it lasts.
-        pendingApproval?.let { request ->
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 12.dp, vertical = 140.dp)
-            ) {
-                ApprovalBanner(
-                    request = request,
-                    isDark = isDark,
-                    onApprove = { scope.launch { client.resolveApproval(request.id, true) } },
-                    onDeny = { scope.launch { client.resolveApproval(request.id, false) } },
-                    onAlwaysAllow = {
-                        approvalMode = AgentApprovalMode.Yolo
-                        scope.launch { client.resolveApproval(request.id, true) }
+        activeQuestion?.let { q ->
+            AgentQuestionOverlay(
+                question = q,
+                isDark = isDark,
+                onAnswer = { answer ->
+                    when (answer) {
+                        is Answer.Granted -> scope.launch {
+                            client.resolveApproval(answer.id, true, answer.scope.name.lowercase())
+                        }
+                        is Answer.Denied -> scope.launch {
+                            client.resolveApproval(answer.id, false, if (answer.remember) "session" else "once")
+                        }
+                        is Answer.Choice -> scope.launch {
+                            client.answerQuestion(answer.id, answer.label, answer.value)
+                        }
+                        is Answer.Custom -> scope.launch {
+                            if (q.kind == QuestionKind.Permission) {
+                                client.resolveApproval(answer.id, true, answer.scope?.name?.lowercase() ?: "once")
+                            } else {
+                                client.answerQuestion(answer.id, answer.text)
+                            }
+                        }
+                        is Answer.Skipped -> scope.launch {
+                            client.answerQuestion(answer.id, "skip")
+                        }
+                        is Answer.Expired -> scope.launch {
+                            if (q.kind == QuestionKind.Permission) {
+                                client.resolveApproval(answer.id, false, "once")
+                            } else {
+                                client.answerQuestion(answer.id, "expired")
+                            }
+                        }
+                        is Answer.NeedsAttention -> { /* re-prompt or maintain state */ }
                     }
-                )
-            }
+                },
+                onDismiss = {
+                    scope.launch {
+                        if (q.kind == QuestionKind.Permission) {
+                            client.resolveApproval(q.id, false, "once")
+                        } else {
+                            client.answerQuestion(q.id, "dismissed")
+                        }
+                    }
+                }
+            )
         }
 
         // ---------------- bottom dock ----------------
@@ -637,20 +755,14 @@ private fun AgentBubble(
     agentName: String
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(brandColor.copy(alpha = if (isDark) 0.20f else 0.12f))
-                .border(BorderStroke(0.8.dp, brandColor.copy(alpha = 0.35f)), RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = agentIconRes),
-                contentDescription = agentName,
-                modifier = Modifier.size(16.dp)
-            )
+        val avatarEngine = remember(msg.agentId) {
+            AgentAvatarEngine(AvatarIdentity.of(msg.agentId.ifBlank { "agent" }, agentName))
         }
+        AgentAvatar(
+            engine = avatarEngine,
+            size = 32.dp,
+            isDark = isDark
+        )
 
         Spacer(modifier = Modifier.width(8.dp))
 
@@ -660,7 +772,7 @@ private fun AgentBubble(
             color = if (isDark) Color(0xFF161822).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f),
             shadowElevation = 3.dp,
             modifier = Modifier
-                .widthIn(max = 290.dp)
+                .widthIn(max = 300.dp)
                 .clip(shape)
                 .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = shape)
         ) {
@@ -671,6 +783,14 @@ private fun AgentBubble(
                     color = if (isDark) Color.White else Color(0xFF1D1D1F),
                     letterSpacing = (-0.1).sp
                 )
+                msg.stats?.let { stats ->
+                    Spacer(modifier = Modifier.height(6.dp))
+                    MessageFooterView(
+                        stats = stats,
+                        isDark = isDark,
+                        accent = brandColor
+                    )
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = msg.timestamp,

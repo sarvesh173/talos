@@ -3707,3 +3707,47 @@ Integrated dedicated physical shader modifier `appleLiquidGlassOptics` deliverin
 - [x] Settings group surfaces and all feature screens (Security, Notifications, Caching, Chat Preferences) carry the Liquid Glass treatment.
 - [x] Backend: `commandcode` (local CLI-protocol bridge) and `opencode` providers added to the catalog; provider tests parametrised to the required-id set.
 - [x] Verified: `pytest tests/` 63 passed; `:app:compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
+## 162. Approval Scopes, Agent Questions, Notification Subsystem, Delegate Pool & Elapsed Tracking (v2.11.34)
+
+Delivered runtime governance subsystem, human-in-the-loop interaction protocol, native Android notification actions, delegate execution pool, and non-destructive watchdog:
+
+### 1. Three-Tier Agent Approval Scopes
+- Replaced binary 'always allow' switches with three explicit permission tiers:
+  - `once`: Grants a single execution clearance for the pending tool invocation or action.
+  - `this session`: Ephemeral in-memory grant active until app/process restart; discarded cleanly on exit.
+  - `full control`: Persistent authorization serialized to disk (`.json`), fully revocable per agent and tool from settings.
+
+### 2. Interactive Agent Questions & Timeout Discipline
+- Agent can halt execution to request operator decisions, supplying structured choice options alongside free-text responses.
+- Optional countdown timer with deterministic timeout behavior:
+  - Permissions that time out fail closed (`deny`).
+  - Questions that time out abort cleanly and never synthesize or hallucinate an answer.
+
+### 3. Notification Subsystem & Cold-Process REST Dispatch
+- Two dedicated Android notification channels:
+  - `Approvals`: High importance (heads-up alerts) for blocking permission prompts and questions.
+  - `Activity`: Default importance for non-blocking agent progress and background updates.
+- Shade interaction:
+  - Inline action buttons for instant `Approve` and `Deny` decisions.
+  - Inline text responses via Android `RemoteInput` and system-level conversation bubbles.
+- Cold-process resilience: action callbacks route directly over REST to core backend endpoints so a backgrounded or killed app process cannot drop replies.
+
+### 4. Ephemeral Delegate Agent Architecture & Model Cascade
+- Delegate agents execute isolated sub-tasks with independent model selection and reasoning effort settings.
+- Default model: `stealth/crouton-alpha` (1M context window, multimodal, tool calling, structured output, free tier).
+- Automated resilience fallback chain: cascades to `nemotron-3.5-super-vl-free`, then `deepseek-v4.1-flash-free` upon provider failure.
+- Enforced per-delegate Time-To-Live (TTL) with deterministic expiration handling.
+
+### 5. Live Elapsed Readout & Doubling Notification Ladder
+- In-app precision elapsed timer scales dynamically across magnitudes (`seconds` -> `h:m:s` -> `days` -> `months` -> `years` -> `centuries`) without integer or display overflow.
+- Doubling notification interval ladder for long-running jobs:
+  - Alerts trigger at 3m, 6m, 12m, 24m, 48m, 1h36m, 3h12m, and subsequent doubling intervals.
+  - Computed programmatically at runtime rather than hardcoded in static arrays.
+
+### 6. DelegateWatchdog Lifecycle Supervisor
+- Centralized tracking across all active delegates: monitors `done`, `failed`, `stalled`, and `expired` states.
+- Exactly-once delivery: completion payloads are delivered to the orchestrator room bus strictly once.
+- Non-destructive stall handling: flags stalled agents for operator visibility but never auto-terminates processes, preventing false-positive kills during long-running tool calls.

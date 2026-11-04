@@ -30,7 +30,9 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import logging
+from pathlib import Path
 import re
 import time
 from dataclasses import dataclass, field
@@ -467,8 +469,13 @@ class AgentOrchestrator:
         self.bus = event_bus if event_bus is not None else default_bus
         roster = list(agents or default_agents())
         self.agents: Dict[str, AgentSpec] = {a.id: a for a in roster}
-        #: Tools the user has blanket-approved ("always allow").
-        self._remembered_allow: set = set()
+        #: Scoped tool grants.
+        self._session_allow: set = set()
+        self._always_allow: set = set()
+        self._grants_path: Path = getattr(self, "_grants_path", Path("/home/kira/talos/data/agent_grants.json"))
+        self._load_grants()
+        #: Backwards-compatible alias for legacy calls.
+        self._remembered_allow = self._session_allow
         self.agent_order: List[str] = [a.id for a in roster if a.id in self.agents]
         self.turn_stagger = turn_stagger
         self.typing_lead = typing_lead
@@ -913,11 +920,40 @@ class AgentOrchestrator:
             )
         )
 
+    def _load_grants(self) -> None:
+        try:
+            if self._grants_path.exists():
+                data = json.loads(self._grants_path.read_text())
+                if isinstance(data, list):
+                    self._always_allow = set(data)
+                elif isinstance(data, dict):
+                    self._always_allow = set(data.get("tools", []))
+        except Exception:
+            pass
+
+    def _save_grants(self) -> None:
+        try:
+            self._grants_path.parent.mkdir(parents=True, exist_ok=True)
+            self._grants_path.write_text(json.dumps(sorted(list(self._always_allow)), indent=2))
+        except Exception:
+            pass
+
+    def set_grants_path(self, path: Path) -> None:
+        self._grants_path = path
+        self._load_grants()
+
     def _approval_registry(self) -> Dict[str, Dict[str, Any]]:
         registry = getattr(self, "_approvals", None)
         if registry is None:
             registry = {}
             self._approvals = registry
+        return registry
+
+    def _question_registry(self) -> Dict[str, Dict[str, Any]]:
+        registry = getattr(self, "_questions", None)
+        if registry is None:
+            registry = {}
+            self._questions = registry
         return registry
 
     def register_approval(
@@ -927,6 +963,8 @@ class AgentOrchestrator:
         command: str = "",
         tool_name: str = "",
         room_id: str = "",
+        timeout_seconds: Optional[int] = None,
+        on_timeout: str = "deny",
     ) -> Dict[str, Any]:
         """Record a pending approval and broadcast it to the room."""
         record = {
@@ -935,6 +973,8 @@ class AgentOrchestrator:
             "command": command,
             "tool": tool_name,
             "room_id": room_id,
+            "timeout_seconds": timeout_seconds,
+            "on_timeout": on_timeout,
             "created_at": time.time(),
         }
         self._approval_registry()[approval_id] = record
@@ -943,30 +983,138 @@ class AgentOrchestrator:
         return record
 
     def pending_approvals(self) -> List[Dict[str, Any]]:
-        """Everything currently waiting on a human, newest first."""
+        """Everything currently waiting on a human, newest first (lazy timeout check)."""
+        now = time.time()
+        registry = self._approval_registry()
+        expired_ids = []
+        for aid, rec in list(registry.items()):
+            ttl = rec.get("timeout_seconds")
+            if ttl is not None and (now - rec.get("created_at", 0)) > ttl:
+                expired_ids.append(aid)
+        for aid in expired_ids:
+            rec = registry.pop(aid, None)
+            if rec:
+                self._emit(rec.get("room_id") or "", "approval_expired", {"id": aid, "on_timeout": rec.get("on_timeout")})
         return sorted(
-            self._approval_registry().values(),
+            registry.values(),
             key=lambda r: r.get("created_at", 0),
             reverse=True,
         )
 
     async def resolve_approval(
-        self, approval_id: str, approved: bool, remember: bool = False
+        self, approval_id: str, approved: bool, scope: str = "once", remember: bool = False
     ) -> bool:
-        """Answer a pending approval. False when it is unknown or already gone."""
+        """Answer a pending approval with scope support. False when unknown or gone."""
         record = self._approval_registry().pop(approval_id, None)
         if record is None:
             return False
-        if remember and approved:
-            self._remembered_allow.add(record.get("tool") or "")
+        tool = record.get("tool") or ""
+        scope_clean = (scope or "once").lower()
+        if remember and scope_clean == "once":
+            scope_clean = "session"
+
+        if approved and tool:
+            if scope_clean in ("session",):
+                self._session_allow.add(tool)
+            elif scope_clean in ("always", "full_control", "full control"):
+                self._always_allow.add(tool)
+                self._save_grants()
+
         room_id = record.get("room_id") or ""
         if room_id:
-            self._emit(room_id, "approval_resolved", {"id": approval_id, "approved": approved})
+            self._emit(room_id, "approval_resolved", {"id": approval_id, "approved": approved, "scope": scope_clean})
         return True
 
-    def is_blanket_allowed(self, tool_name: str) -> bool:
-        """True when the user said 'always allow' for this kind of action."""
-        return tool_name in self._remembered_allow
+    def is_blanket_allowed(self, tool_name: str, scope: Optional[str] = None) -> bool:
+        """Check if tool is granted for session or permanent scope."""
+        if scope == "session":
+            return tool_name in self._session_allow
+        if scope == "always":
+            return tool_name in self._always_allow
+        return tool_name in self._session_allow or tool_name in self._always_allow
+
+    def register_question(
+        self,
+        question_id: str,
+        prompt: str,
+        detail: str = "",
+        command: str = "",
+        agent_name: str = "",
+        kind: str = "question",
+        options: Optional[List[Dict[str, Any]]] = None,
+        allow_custom: bool = True,
+        timeout_seconds: Optional[int] = None,
+        on_timeout: str = "deny",
+        room_id: str = "",
+    ) -> Dict[str, Any]:
+        """Record an agent decision question and broadcast to room."""
+        record = {
+            "id": question_id,
+            "prompt": prompt,
+            "detail": detail,
+            "command": command,
+            "agent_name": agent_name,
+            "kind": kind,
+            "options": options or [],
+            "allow_custom": allow_custom,
+            "timeout_seconds": timeout_seconds,
+            "on_timeout": on_timeout,
+            "room_id": room_id,
+            "created_at": time.time(),
+        }
+        self._question_registry()[question_id] = record
+        if room_id:
+            self._emit(room_id, "question_request", record)
+        return record
+
+    def pending_questions(self) -> List[Dict[str, Any]]:
+        """Everything waiting on user answer/decision, newest first (lazy timeout check)."""
+        now = time.time()
+        registry = self._question_registry()
+        expired_ids = []
+        for qid, rec in list(registry.items()):
+            ttl = rec.get("timeout_seconds")
+            if ttl is not None and (now - rec.get("created_at", 0)) > ttl:
+                expired_ids.append(qid)
+        for qid in expired_ids:
+            rec = registry.pop(qid, None)
+            if rec:
+                self._emit(rec.get("room_id") or "", "question_expired", {"id": qid, "on_timeout": rec.get("on_timeout")})
+        return sorted(
+            registry.values(),
+            key=lambda r: r.get("created_at", 0),
+            reverse=True,
+        )
+
+    async def answer_question(
+        self,
+        question_id: str,
+        answer: str,
+        option_value: Optional[str] = None,
+        scope: Optional[str] = None,
+    ) -> bool:
+        """Answer a pending agent question. False if unknown or already answered."""
+        record = self._question_registry().pop(question_id, None)
+        if record is None:
+            return False
+        # If answering a permission query that also came through questions registry
+        tool = record.get("command") or record.get("prompt") or ""
+        scope_clean = (scope or "once").lower()
+        if scope_clean in ("session",) and tool:
+            self._session_allow.add(tool)
+        elif scope_clean in ("always", "full_control") and tool:
+            self._always_allow.add(tool)
+            self._save_grants()
+
+        room_id = record.get("room_id") or ""
+        if room_id:
+            self._emit(room_id, "question_answered", {
+                "id": question_id,
+                "answer": answer,
+                "option_value": option_value,
+                "scope": scope_clean,
+            })
+        return True
 
 
 def default_agents() -> List[AgentSpec]:

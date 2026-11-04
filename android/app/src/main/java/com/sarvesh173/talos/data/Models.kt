@@ -35,6 +35,40 @@ data class AgentProfile(
 )
 
 @Serializable
+data class MessageMetricsDto(
+    val latency_ms: Int? = null,
+    val ttft_ms: Int? = null,
+    val prompt_tokens: Int? = null,
+    val completion_tokens: Int? = null,
+    val tokens_per_second: Float? = null,
+    val model: String? = null,
+    val reasoning_tokens: Int? = null,
+    val cost_usd: Double? = null
+)
+
+@Serializable
+data class ToolCallRecordDto(
+    val id: String = "",
+    val name: String = "",
+    val summary: String = "",
+    val arguments: String = "",
+    val status: String? = null,
+    val started_at: Double = 0.0,
+    val ended_at: Double? = null,
+    val output_preview: String = ""
+)
+
+@Serializable
+data class FileTouchDto(
+    val path: String = "",
+    val kind: String = "read",
+    val additions: Int = 0,
+    val deletions: Int = 0,
+    val diff: String? = null,
+    val media_url: String? = null
+)
+
+@Serializable
 data class Message(
     val id: String,
     val room_id: String,
@@ -46,7 +80,12 @@ data class Message(
     val tool_calls: List<ToolCall> = emptyList(),
     val attachments: List<String> = emptyList(),
     val reply_to_id: String? = null,
-    val created_at: Double = 0.0
+    val created_at: Double = 0.0,
+    val metrics: MessageMetricsDto? = null,
+    val tool_records: List<ToolCallRecordDto> = emptyList(),
+    val files_touched: List<FileTouchDto> = emptyList(),
+    val agent_id: String? = null,
+    val parent_agent_id: String? = null
 )
 
 @Serializable

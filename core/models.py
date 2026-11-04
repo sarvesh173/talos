@@ -36,6 +36,39 @@ class EventType(str, Enum):
     binary_frame = "binary_frame"
     approval_request = "approval_request"
     approval_resolved = "approval_resolved"
+    approval_expired = "approval_expired"
+    question_request = "question_request"
+    question_answered = "question_answered"
+    question_resolved = "question_resolved"
+    question_expired = "question_expired"
+
+
+class GrantScope(str, Enum):
+    """Lifecycle scope for granted permissions.
+
+    Once: valid for the current invocation only.
+    Session: kept in memory and revoked when the process terminates.
+    Always: persisted to disk and restored across restarts.
+    """
+
+    once = "once"
+    session = "session"
+    always = "always"
+
+
+class QuestionKind(str, Enum):
+    """Distinction between permission requests and agent decision queries."""
+
+    permission = "permission"
+    question = "question"
+
+
+class TimeoutBehaviour(str, Enum):
+    """Action taken when an approval or question passes its deadline."""
+
+    deny = "deny"
+    ask_again = "ask_again"
+    skip = "skip"
 
 
 class ToolCall(BaseModel):
@@ -59,6 +92,77 @@ class AgentProfile(BaseModel):
     is_active: bool = True
 
 
+class MessageMetrics(BaseModel):
+    """What it cost to produce one message.
+
+    Attached to the message rather than stored separately because a metric with
+    no message is unusable and a message without metrics is the thing users
+    complain about. Every field is optional: a human message has none, and a
+    provider that omits usage must not block the reply.
+    """
+
+    #: Wall-clock time from send to final token, in milliseconds.
+    latency_ms: Optional[int] = None
+    #: Time to first token. The number that actually predicts "does this feel
+    #: fast"; total latency hides a long think.
+    ttft_ms: Optional[int] = None
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    #: Tokens/second over the generation window, not over total latency — a
+    #: slow start should not make the model look slow at writing.
+    tokens_per_second: Optional[float] = None
+    #: Provider-declared model id, so a message can be audited later.
+    model: Optional[str] = None
+    #: Reasoning tokens when the provider reports them separately.
+    reasoning_tokens: Optional[int] = None
+    #: USD if the provider reports cost.
+    cost_usd: Optional[float] = None
+
+
+class ToolCallRecord(BaseModel):
+    """One tool the agent actually ran, with enough detail to audit it.
+
+    Deliberately not a log line: the app renders these, so they carry display
+    fields (name, summary) alongside machine fields (args, result, timings).
+    """
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
+    name: str
+    #: Short human summary, e.g. "read File.kt".
+    summary: str = ""
+    #: JSON-encoded arguments as sent.
+    arguments: str = ""
+    #: Exit status. None while running.
+    status: Optional[str] = None
+    started_at: float = Field(default_factory=time.time)
+    ended_at: Optional[float] = None
+    #: First N chars of output; the full output stays on the core.
+    output_preview: str = ""
+
+    @property
+    def duration_ms(self) -> Optional[int]:
+        if self.ended_at is None:
+            return None
+        return int((self.ended_at - self.started_at) * 1000)
+
+
+class FileTouch(BaseModel):
+    """A file the agent looked at or changed.
+
+    `kind` distinguishes read from write because the diff viewer must only
+    offer a diff for something that actually changed.
+    """
+
+    path: str
+    kind: str = "read"  # read | write | create | delete
+    additions: int = 0
+    deletions: int = 0
+    #: Unified diff, omitted for pure reads.
+    diff: Optional[str] = None
+    #: For images and PDFs the app shows a thumbnail instead of a diff.
+    media_url: Optional[str] = None
+
+
 class Message(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     room_id: str
@@ -71,6 +175,18 @@ class Message(BaseModel):
     attachments: List[str] = Field(default_factory=list)
     reply_to_id: Optional[str] = None
     created_at: float = Field(default_factory=time.time)
+
+    # -- provenance -------------------------------------------------------
+    #
+    # Everything below is what the app shows under a reply. It lives on the
+    # Message so a single payload renders the whole bubble; a second round-trip
+    # to fetch metrics would make the footer pop in late, which reads as a bug.
+    metrics: Optional[MessageMetrics] = None
+    tool_records: List[ToolCallRecord] = Field(default_factory=list)
+    files_touched: List[FileTouch] = Field(default_factory=list)
+    #: The agent that produced this, and the delegate that ran it if any.
+    agent_id: Optional[str] = None
+    parent_agent_id: Optional[str] = None
 
 
 class Room(BaseModel):

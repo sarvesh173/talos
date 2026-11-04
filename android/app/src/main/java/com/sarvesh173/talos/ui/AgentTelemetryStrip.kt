@@ -2,6 +2,7 @@ package com.sarvesh173.talos.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -127,7 +128,7 @@ fun AgentTelemetryStrip(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TelemetryCell(
                 label = "Agents",
-                value = delegation?.nodes?.size?.toString() ?: "—",
+                value = delegation?.total_active_children?.toString() ?: "—",
                 isDark = isDark,
                 modifier = Modifier.weight(1f)
             )

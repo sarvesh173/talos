@@ -75,7 +75,7 @@ fun AgentRuntimeCard(
     val shape = RoundedCornerShape(20.dp)
     val surface = if (isDark) Color(0xFF16161A) else Color.White
     val strong = if (isDark) Color.White else Color(0xFF1D1D1F)
-    val muted = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f)
+    val muted = if (isDark) Color.White.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.68f)
 
     Column(
         modifier = modifier
@@ -135,7 +135,7 @@ fun AgentRuntimeCard(
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .applePressable(0.94f, pressHaptic = true) { expanded = !expanded },
                 contentAlignment = Alignment.Center
@@ -253,7 +253,7 @@ fun AgentRuntimeCard(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 44.dp)
+                            .heightIn(min = 48.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(accent.copy(alpha = 0.16f))
                             .border(BorderStroke(0.8.dp, accent.copy(alpha = 0.40f)), RoundedCornerShape(12.dp))
@@ -264,7 +264,7 @@ fun AgentRuntimeCard(
                     }
                     Box(
                         modifier = Modifier
-                            .heightIn(min = 44.dp)
+                            .heightIn(min = 48.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.05f))
                             .applePressable(0.96f, pressHaptic = true) { onStop() }
@@ -329,7 +329,7 @@ private fun Chip(
     val shape = RoundedCornerShape(9.dp)
     Box(
         modifier = Modifier
-            .heightIn(min = 34.dp)
+            .heightIn(min = 44.dp)
             .clip(shape)
             .background(
                 if (selected) accent.copy(alpha = 0.18f)

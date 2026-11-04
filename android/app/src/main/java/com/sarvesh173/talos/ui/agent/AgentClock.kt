@@ -144,13 +144,25 @@ data class AgentRuntime(
     val id: String,
     val name: String,
     val kind: AgentKind = AgentKind.Main,
-    val model: String = "",
+    /**
+     * Delegate default is OpenRouter's `stealth/crouton-alpha`: 1,048,576-token
+     * context, text/image/audio/video/file input, tool calling, structured
+     * output, and reasoning_effort — free for a short window. Main agents keep
+     * whatever the user paired; a free frontier model is a strict upgrade for
+     * subtasks, and a bad default for the orchestrator.
+     *
+     * Fallbacks when it disappears: nemotron-3.5-super-vl-free (vision, 1M),
+     * then deepseek-v4.1-flash-free.
+     */
+    val model: String = DELEGATE_DEFAULT_MODEL,
     val reasoning: ReasoningEffort = ReasoningEffort.Medium,
     val task: String = "",
     val startedAtMillis: Long = System.currentTimeMillis(),
     /** Delegate lifetime. Null for a main agent, which runs until stopped. */
     val ttlSeconds: Long? = null,
-    val parentId: String? = null
+    val parentId: String? = null,
+    /** Set when the agent stops. Null while it is still running. */
+    val endedAtMillis: Long? = null
 ) {
     fun elapsedSeconds(nowMillis: Long = System.currentTimeMillis()): Long =
         ((nowMillis - startedAtMillis) / 1000L).coerceAtLeast(0L)
@@ -167,6 +179,15 @@ data class AgentRuntime(
 }
 
 enum class AgentKind { Main, Delegate }
+
+/** Preferred delegate model: highest reasoning, multimodal, free tier. */
+const val DELEGATE_DEFAULT_MODEL = "stealth/crouton-alpha"
+
+/** Ordered fallbacks if the preferred delegate model stops answering. */
+val DELEGATE_FALLBACK_MODELS = listOf(
+    "nemotron-3.5-super-vl-free",
+    "deepseek-v4.1-flash-free"
+)
 
 /**
  * Reasoning effort a delegate runs at. Mirrors what the providers actually

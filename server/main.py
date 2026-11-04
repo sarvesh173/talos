@@ -493,6 +493,13 @@ async def get_provider(
 class ApprovalDecision(BaseModel):
     approved: bool
     remember: bool = False
+    scope: str = "once"
+
+
+class QuestionAnswerDecision(BaseModel):
+    answer: str
+    option_value: Optional[str] = None
+    scope: Optional[str] = None
 
 
 @app.get("/api/approvals")
@@ -507,13 +514,37 @@ async def resolve_approval_endpoint(
     decision: ApprovalDecision,
     token: str = Depends(require_auth),
 ):
-    """Answer a pending approval. 404 when the request already expired."""
+    """Answer a pending approval with scope. 404 when already expired."""
     resolved = await orchestrator.resolve_approval(
-        approval_id, decision.approved, remember=decision.remember
+        approval_id, decision.approved, scope=decision.scope, remember=decision.remember
     )
     if not resolved:
         raise HTTPException(status_code=404, detail="Approval not found or already resolved")
-    return {"resolved": True, "approved": decision.approved}
+    return {"resolved": True, "approved": decision.approved, "scope": decision.scope}
+
+
+@app.get("/api/questions")
+async def list_pending_questions(token: str = Depends(require_auth)):
+    """Everything currently waiting on human decision/input, newest first."""
+    return orchestrator.pending_questions()
+
+
+@app.post("/api/questions/{question_id}/answer")
+async def answer_question_endpoint(
+    question_id: str,
+    decision: QuestionAnswerDecision,
+    token: str = Depends(require_auth),
+):
+    """Answer an agent question or permission query."""
+    resolved = await orchestrator.answer_question(
+        question_id,
+        decision.answer,
+        option_value=decision.option_value,
+        scope=decision.scope,
+    )
+    if not resolved:
+        raise HTTPException(status_code=404, detail="Question not found or already answered")
+    return {"resolved": True, "answer": decision.answer}
 
 
 @app.post("/api/upload")

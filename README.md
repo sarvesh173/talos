@@ -19,6 +19,16 @@ TALOS provides a shared communication bus for human and multi-agent collaboratio
 
 ---
 
+## Agent Governance & Delegate Execution
+
+- **Three-tier approval scopes**: Granular permission grants (`once`, `this session`, `full control`) with disk-backed revocable authorizations replacing blanket approvals.
+- **Interactive agent questions**: Human-in-the-loop decision halts supporting structured choices and free-text replies with fail-closed timeout discipline.
+- **Android notification routing**: Dedicated high-importance and activity channels, inline `RemoteInput` and action buttons, conversation bubbles, and cold-process REST delivery.
+- **Ephemeral delegate agents**: Isolated subagents executing on independent models (`stealth/crouton-alpha` default with automated fallback cascade), explicit TTL expiration, and non-destructive watchdog supervision.
+- **Elapsed execution tracking**: Live duration counters without unit overflow and dynamic doubling notification ladders for extended operations.
+
+---
+
 ## Releases & APK Downloads
 
 | Version | Highlights | Direct Download |

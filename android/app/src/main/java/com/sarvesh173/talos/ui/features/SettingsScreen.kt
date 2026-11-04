@@ -19,7 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +39,10 @@ import kotlinx.coroutines.launch
  * remain available through the trailing detail affordances, while the primary
  * switch targets are useful without an extra navigation step.
  */
+private val SettingsRowHeight = 56.dp
+private val SettingsIconColumnWidth = 32.dp
+private val SettingsIconSize = 20.dp
+private val SettingsDividerIndent = 60.dp
 @Composable
 fun SettingsScreen(
     client: TalosClient,
@@ -49,7 +53,8 @@ fun SettingsScreen(
     onNavigateToCaching: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToThinkingOrb: () -> Unit = {},
-    nodeEncryptionFingerprint: String? = null
+    nodeEncryptionFingerprint: String? = null,
+    borderTint: Color = Color.White.copy(alpha = 0.08f)
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -124,7 +129,7 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .statusBarsPadding(),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outlineVariant)
+                border = BorderStroke(0.6.dp, borderTint)
             ) {
                 Row(
                     modifier = Modifier
@@ -139,7 +144,7 @@ fun SettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = TalosIcons.TalosBackArrow,
+                            imageVector = TalosIcons.TalosStrokeBackArrow,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(22.dp)
@@ -167,11 +172,11 @@ fun SettingsScreen(
                 .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            AccountCard(onClick = { showAccountDetails = true })
+            AccountCard(onClick = { showAccountDetails = true }, borderTint = borderTint)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SettingsGroup {
+            SettingsGroup(borderTint = borderTint) {
                 SettingsToggleRow(
                     title = "Transport protocol",
                     subtitle = if (transportEnabled) {
@@ -179,7 +184,7 @@ fun SettingsScreen(
                     } else {
                         "Paused"
                     },
-                    icon = TalosIcons.TalosHub,
+                    icon = TalosIcons.TalosStrokeTransport,
                     checked = transportEnabled,
                     onCheckedChange = ::updateTransport,
                     onDetailsClick = { showTransportConfig = !showTransportConfig }
@@ -190,7 +195,7 @@ fun SettingsScreen(
                 SettingsToggleRow(
                     title = "Security & authentication",
                     subtitle = if (biometricsState) "Biometrics on" else "Biometrics off",
-                    icon = TalosIcons.TalosVault,
+                    icon = TalosIcons.TalosStrokeShield,
                     checked = biometricsState,
                     onCheckedChange = { client.setRequireBiometrics(it) },
                     onDetailsClick = onNavigateToSecurity
@@ -201,7 +206,7 @@ fun SettingsScreen(
                 SettingsToggleRow(
                     title = "Caching",
                     subtitle = cacheSummary,
-                    icon = TalosIcons.TalosStorage,
+                    icon = TalosIcons.TalosStrokeStorage,
                     checked = cacheEnabled,
                     onCheckedChange = {
                         client.setCacheChatList(it)
@@ -217,6 +222,7 @@ fun SettingsScreen(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 TransportConfigCard(
+                    borderTint = borderTint,
                     urlText = urlText,
                     onUrlChange = {
                         urlText = it
@@ -261,11 +267,11 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SettingsGroup {
+            SettingsGroup(borderTint = borderTint) {
                 SettingsMinimalRow(
                     title = "Look & feel",
                     subtitle = displayMode,
-                    icon = TalosIcons.TalosPalette,
+                    icon = TalosIcons.TalosStrokePalette,
                     onClick = onNavigateToLookAndFeel
                 )
 
@@ -274,7 +280,7 @@ fun SettingsScreen(
                 SettingsMinimalRow(
                     title = "Chat",
                     subtitle = "Bubbles",
-                    icon = TalosIcons.TalosChat,
+                    icon = TalosIcons.TalosStrokeChat,
                     onClick = onNavigateToChatPreferences
                 )
 
@@ -283,18 +289,18 @@ fun SettingsScreen(
                 SettingsMinimalRow(
                     title = "Thinking Orb",
                     subtitle = "Animation, colour, shape",
-                    icon = TalosIcons.TalosSparkle,
+                    icon = TalosIcons.TalosStrokeOrb,
                     onClick = onNavigateToThinkingOrb
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SettingsGroup {
+            SettingsGroup(borderTint = borderTint) {
                 SettingsToggleRow(
                     title = "Notifications",
                     subtitle = if (notificationsAllowed) "Allowed" else "Off",
-                    icon = TalosIcons.TalosBell,
+                    icon = TalosIcons.TalosStrokeBell,
                     checked = notificationsAllowed,
                     onCheckedChange = { client.setNotificationsAllowed(it) },
                     onDetailsClick = onNavigateToNotifications
@@ -305,7 +311,7 @@ fun SettingsScreen(
                 SettingsMinimalRow(
                     title = "Contact",
                     subtitle = "7 active council agents",
-                    icon = TalosIcons.TalosMail,
+                    icon = TalosIcons.TalosStrokeAgent,
                     onClick = {
                         Toast.makeText(
                             context,
@@ -318,11 +324,11 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SettingsGroup {
+            SettingsGroup(borderTint = borderTint) {
                 SettingsMinimalRow(
                     title = "Documentation",
                     subtitle = "TALOS v${com.sarvesh173.talos.BuildConfig.VERSION_NAME}",
-                    icon = TalosIcons.TalosDoc,
+                    icon = TalosIcons.TalosStrokeDoc,
                     onClick = {
                         Toast.makeText(
                             context,
@@ -337,7 +343,7 @@ fun SettingsScreen(
                 SettingsToggleRow(
                     title = "Haptic feedback",
                     subtitle = if (hapticsEnabled) "Every action responds" else "Silent",
-                    icon = TalosIcons.TalosSparkle,
+                    icon = TalosIcons.TalosStrokePulse,
                     checked = hapticsEnabled,
                     onCheckedChange = {
                         TalosHaptics.isHapticsEnabled = it
@@ -352,6 +358,7 @@ fun SettingsScreen(
 
     if (showAccountDetails) {
         AccountDetailBottomSheet(
+            borderTint = borderTint,
             nodeEncryptionFingerprint = nodeEncryptionFingerprint,
             activeSessionStatus = if (transportEnabled) {
                 "Active on this device"
@@ -372,7 +379,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun AccountCard(onClick: () -> Unit) {
+private fun AccountCard(onClick: () -> Unit, borderTint: Color) {
     val shape = RoundedCornerShape(20.dp)
     val scheme = MaterialTheme.colorScheme
 
@@ -382,16 +389,7 @@ private fun AccountCard(onClick: () -> Unit) {
             .applePressable(0.94f) { onClick() },
         shape = shape,
         color = scheme.surfaceContainerHigh,
-        border = BorderStroke(
-            0.8.dp,
-            Brush.linearGradient(
-                listOf(
-                    scheme.primary.copy(alpha = 0.48f),
-                    scheme.tertiary.copy(alpha = 0.30f),
-                    scheme.secondary.copy(alpha = 0.24f)
-                )
-            )
-        )
+        border = BorderStroke(0.8.dp, borderTint)
     ) {
         Column(
             modifier = Modifier
@@ -416,7 +414,7 @@ private fun AccountCard(onClick: () -> Unit) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = scheme.surfaceContainer,
-                    border = BorderStroke(0.6.dp, scheme.outlineVariant)
+                    border = BorderStroke(0.6.dp, borderTint)
                 ) {
                     Text(
                         text = "Autonomous core",
@@ -435,7 +433,7 @@ private fun AccountCard(onClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                MonogramAvatar()
+                MonogramAvatar(borderTint = borderTint)
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
@@ -466,7 +464,7 @@ private fun AccountCard(onClick: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = TalosIcons.TalosChevronRight,
+                        imageVector = TalosIcons.TalosStrokeChevronRight,
                         contentDescription = null,
                         tint = scheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
@@ -482,15 +480,15 @@ private fun AccountCard(onClick: () -> Unit) {
                     .fillMaxWidth()
                     .clip(tagShape)
                     .background(scheme.surfaceContainer)
-                    .border(BorderStroke(0.6.dp, scheme.outlineVariant), tagShape)
+                    .border(BorderStroke(0.6.dp, borderTint), tagShape)
                     .padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = TalosIcons.TalosHub,
+                    imageVector = TalosIcons.TalosStrokeTransport,
                     contentDescription = null,
                     tint = scheme.onSurface,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(SettingsIconSize)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
@@ -510,21 +508,13 @@ private fun AccountCard(onClick: () -> Unit) {
 }
 
 @Composable
-private fun MonogramAvatar() {
+private fun MonogramAvatar(borderTint: Color) {
     val scheme = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
             .size(68.dp)
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        scheme.primary.copy(alpha = 0.86f),
-                        scheme.tertiary.copy(alpha = 0.72f),
-                        scheme.secondary.copy(alpha = 0.66f)
-                    )
-                ),
-                CircleShape
-            )
+            .background(scheme.surfaceContainerHigh, CircleShape)
+            .border(BorderStroke(0.8.dp, borderTint), CircleShape)
             .padding(4.dp)
             .background(scheme.surfaceContainer, CircleShape),
         contentAlignment = Alignment.Center
@@ -542,6 +532,7 @@ private fun MonogramAvatar() {
 
 @Composable
 private fun TransportConfigCard(
+    borderTint: Color,
     urlText: String,
     onUrlChange: (String) -> Unit,
     tokenText: String,
@@ -554,7 +545,7 @@ private fun TransportConfigCard(
     onSave: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    SettingsGroup(modifier = Modifier.padding(top = 16.dp)) {
+    SettingsGroup(borderTint = borderTint, modifier = Modifier.padding(top = 16.dp)) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -616,7 +607,7 @@ private fun TransportConfigCard(
                             style = MaterialTheme.typography.labelMedium.copy(
                                 letterSpacing = (-0.1).sp
                             ),
-                            color = scheme.primary
+                            color = scheme.onSurfaceVariant
                         )
                     }
                 },
@@ -635,9 +626,9 @@ private fun TransportConfigCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = TalosIcons.TalosHub,
+                        imageVector = TalosIcons.TalosStrokeTransport,
                         contentDescription = null,
-                        tint = if (isSuccess) scheme.tertiary else scheme.error,
+                        tint = scheme.onSurfaceVariant,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -660,14 +651,14 @@ private fun TransportConfigCard(
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
                     .clip(buttonShape)
-                    .background(scheme.primary)
+                    .background(scheme.onSurface)
                     .applePressable(0.94f) { if (!isUpdating) onSave() }
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (isUpdating) {
                     CircularProgressIndicator(
-                        color = scheme.onPrimary,
+                        color = scheme.surface,
                         modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp
                     )
@@ -678,7 +669,7 @@ private fun TransportConfigCard(
                             fontSize = 14.sp,
                             letterSpacing = (-0.15).sp
                         ),
-                        color = scheme.onPrimary
+                        color = scheme.surface
                     )
                 }
             }
@@ -688,19 +679,18 @@ private fun TransportConfigCard(
 
 @Composable
 private fun SettingsGroup(
+    borderTint: Color,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val shape = RoundedCornerShape(20.dp)
-    val isDark = LocalIsDark.current
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = MaterialTheme.colorScheme.primary, cornerRadius = 20.dp),
+            .clip(shape),
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(0.8.dp, borderTint)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -722,7 +712,7 @@ private fun SettingsToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 64.dp)
+            .defaultMinSize(minHeight = SettingsRowHeight)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -733,13 +723,18 @@ private fun SettingsToggleRow(
                 .applePressable(0.97f) { onCheckedChange(!checked) },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = scheme.onSurface,
-                modifier = Modifier.size(22.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
+            Box(
+                modifier = Modifier.size(SettingsIconColumnWidth),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = scheme.onSurface,
+                    modifier = Modifier.size(SettingsIconSize)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -787,7 +782,7 @@ private fun SettingsToggleRow(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = TalosIcons.TalosChevronRight,
+                    imageVector = TalosIcons.TalosStrokeChevronRight,
                     contentDescription = "Open $title details",
                     tint = scheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
@@ -808,18 +803,23 @@ private fun SettingsMinimalRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)
+            .defaultMinSize(minHeight = SettingsRowHeight)
             .applePressable(0.97f) { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = scheme.onSurface,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
+        Box(
+            modifier = Modifier.size(SettingsIconColumnWidth),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = scheme.onSurface,
+                modifier = Modifier.size(SettingsIconSize)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -848,7 +848,7 @@ private fun SettingsMinimalRow(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = TalosIcons.TalosChevronRight,
+                imageVector = TalosIcons.TalosStrokeChevronRight,
                 contentDescription = null,
                 tint = scheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
@@ -862,13 +862,14 @@ private fun SettingsDivider() {
     HorizontalDivider(
         color = MaterialTheme.colorScheme.outlineVariant,
         thickness = 0.5.dp,
-        modifier = Modifier.padding(start = 56.dp)
+        modifier = Modifier.padding(start = SettingsDividerIndent)
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AccountDetailBottomSheet(
+    borderTint: Color,
     nodeEncryptionFingerprint: String?,
     activeSessionStatus: String,
     onManageTransport: () -> Unit,
@@ -917,12 +918,14 @@ private fun AccountDetailBottomSheet(
 
             AccountDetailValue(
                 label = "Node encryption fingerprint",
-                value = fingerprint
+                value = fingerprint,
+                borderTint = borderTint
             )
             Spacer(modifier = Modifier.height(8.dp))
             AccountDetailValue(
                 label = "Active session",
-                value = activeSessionStatus
+                value = activeSessionStatus,
+                borderTint = borderTint
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -939,14 +942,16 @@ private fun AccountDetailBottomSheet(
             AccountActionRow(
                 title = "Manage transport",
                 subtitle = "Review the encrypted endpoint and handshake",
-                icon = TalosIcons.TalosHub,
+                icon = TalosIcons.TalosStrokeTransport,
+                borderTint = borderTint,
                 onClick = onManageTransport
             )
             Spacer(modifier = Modifier.height(8.dp))
             AccountActionRow(
                 title = "Review security",
                 subtitle = "Manage biometrics and credential coverage",
-                icon = TalosIcons.TalosVault,
+                icon = TalosIcons.TalosStrokeShield,
+                borderTint = borderTint,
                 onClick = onOpenSecurity
             )
 
@@ -958,7 +963,7 @@ private fun AccountDetailBottomSheet(
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
                     .clip(buttonShape)
-                    .background(scheme.primary)
+                    .background(scheme.onSurface)
                     .applePressable(0.94f) { onDismiss() },
                 contentAlignment = Alignment.Center
             ) {
@@ -968,7 +973,7 @@ private fun AccountDetailBottomSheet(
                         fontSize = 14.sp,
                         letterSpacing = (-0.15).sp
                     ),
-                    color = scheme.onPrimary
+                    color = scheme.surface
                 )
             }
 
@@ -980,7 +985,8 @@ private fun AccountDetailBottomSheet(
 @Composable
 private fun AccountDetailValue(
     label: String,
-    value: String
+    value: String,
+    borderTint: Color
 ) {
     val scheme = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(12.dp)
@@ -989,7 +995,7 @@ private fun AccountDetailValue(
             .fillMaxWidth()
             .clip(shape)
             .background(scheme.surfaceContainerHigh)
-            .border(BorderStroke(0.6.dp, scheme.outlineVariant), shape)
+            .border(BorderStroke(0.6.dp, borderTint), shape)
             .padding(12.dp)
     ) {
         Text(
@@ -1016,6 +1022,7 @@ private fun AccountActionRow(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    borderTint: Color,
     onClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -1023,20 +1030,25 @@ private fun AccountActionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
+            .heightIn(min = SettingsRowHeight)
             .clip(shape)
             .background(scheme.surfaceContainerHigh)
-            .border(BorderStroke(0.6.dp, scheme.outlineVariant), shape)
+            .border(BorderStroke(0.6.dp, borderTint), shape)
             .applePressable(0.97f) { onClick() }
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = scheme.onSurface,
-            modifier = Modifier.size(22.dp)
-        )
+        Box(
+            modifier = Modifier.size(SettingsIconColumnWidth),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = scheme.onSurface,
+                modifier = Modifier.size(SettingsIconSize)
+            )
+        }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -1064,7 +1076,7 @@ private fun AccountActionRow(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = TalosIcons.TalosChevronRight,
+                imageVector = TalosIcons.TalosStrokeChevronRight,
                 contentDescription = "Open $title",
                 tint = scheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)

@@ -575,22 +575,159 @@ object AgentLogoBaker {
     }
 }
 
-/** Per-agent-id bake cache: re-entering a screen never re-bakes. */
+/**
+ * Per-agent-id bake cache: re-entering a screen never re-bakes.
+ *
+ * LRU-capped at [DEFAULT_MAX_CLOUDS] clouds (default 12) so user-supplied
+ * SVGs cannot grow memory without bound. Eviction is eager on every put and
+ * lookups are thread-safe. Read the current size via [size] (test hook).
+ */
 object AgentLogoClouds {
-    private val cache = ConcurrentHashMap<String, AgentLogoCloud>()
+    /** Default cap for the per-agent cloud cache. */
+    const val DEFAULT_MAX_CLOUDS = 12
+
+    /** Current cap. Lowering it takes effect on the next put. */
+    @Volatile var maxClouds: Int = DEFAULT_MAX_CLOUDS
+
+    /** Number of clouds currently held. Exposed for tests. */
+    val size: Int get() = synchronized(lock) { cache.size }
+
+    /** Alias for the cap, for callers that prefer the conventional name. */
+    val maxSize: Int get() = maxClouds
+
+    private val lock = Any()
+    // Access-ordered map: the most-recently-read entry is the last one the
+    // iterator yields first, so the head is always the eviction candidate.
+    private val cache = LinkedHashMap<String, AgentLogoCloud>(16, 0.75f, true)
 
     fun cloudFor(agentId: String, context: Context): AgentLogoCloud {
         val key = agentId.lowercase()
-        cache[key]?.let { return it }
+        synchronized(lock) { cache[key]?.let { return it } }
         val cloud = AgentLogoBaker.bakeFromVectorDrawable(
             context, emblemByKey(key).drawableRes
         )
-        val prior = cache.putIfAbsent(key, cloud)
-        return prior ?: cloud
+        return put(key, cloud)
     }
 
-    fun clear() = cache.clear()
+    /** Non-baking peek: returns the cached cloud for [agentId], or null. */
+    fun cached(agentId: String): AgentLogoCloud? = synchronized(lock) {
+        cache[agentId.lowercase()]
+    }
+
+    /** Insert (or touch) a cloud under [agentId], evicting eldest entries. */
+    fun put(agentId: String, cloud: AgentLogoCloud): AgentLogoCloud {
+        val key = agentId.lowercase()
+        synchronized(lock) {
+            val prior = cache[key]
+            if (prior != null) return prior
+            cache[key] = cloud
+            while (cache.size > maxClouds) {
+                val eldest = cache.keys.firstOrNull() ?: break
+                cache.remove(eldest)
+            }
+            return cloud
+        }
+    }
+
+    fun contains(agentId: String): Boolean = synchronized(lock) {
+        cache.containsKey(agentId.lowercase())
+    }
+
+    fun clear() = synchronized(lock) { cache.clear() }
 }
+
+// ---------------------------------------------------------------------------
+// Per-frame point budget (testable maths — no Compose, no Canvas) + activity gate
+// ---------------------------------------------------------------------------
+//
+// See AgentLogoQueue's KDoc for the exact, line-level adoption steps in
+// AgentLogoMark.kt (async bake, budget wiring, and gate wiring).
+//
+// ## Hysteresis design
+//
+// computeFrameBudget is AIMD (additive increase, multiplicative decrease)
+// with a wide deadband, which is what stops the budget from oscillating:
+//
+//  - **Fast drop, slow recover.** One frame over 25 ms cuts the budget by
+//    25 % (multiplicative). Recovery only ever rises 10 % per frame, and
+//    only when frames are under 12 ms. A budget that is too high sheds load
+//    in 1–2 frames; a budget that is too low needs several sustained good
+//    frames to come back, so a borderline workload cannot flap up/down
+//    every frame.
+//  - **13 ms deadband (12–25 ms).** The budget holds unchanged through the
+//    whole band, absorbing normal 60 fps jitter around the 16.6 ms target
+//    without any movement at all.
+//  - **Floors and ceilings.** The budget never drops below
+//    [MIN_FRAME_BUDGET_POINTS] (still legible) and never exceeds [maxPoints].
+//  - **Total on hostile input.** NaN, infinite or negative frame times hold
+//    the current budget (no evidence to change); non-positive [maxPoints]
+//    returns 0.
+//
+// The caller should pass a smoothed frame time (e.g. a 5-frame EMA) rather
+// than a raw single-frame delta when it can; this function already tolerates
+// raw deltas, but smoothing widens the stable region on jittery frame
+// clocks.
+
+const val TARGET_FRAME_MS = 16.6f
+const val FRAME_DOWN_THRESHOLD_MS = 25f
+const val FRAME_UP_THRESHOLD_MS = 12f
+const val MIN_FRAME_BUDGET_POINTS = 24
+
+/**
+ * Next frame's point budget given the previous frame's duration.
+ *
+ * Pure and total: same inputs always give the same output, and it is defined
+ * for every input including 0, negative, NaN, and huge frame times.
+ *
+ * @param previousFrameMs duration of the previous frame in milliseconds
+ * @param currentPointBudget budget in force for the previous frame
+ * @param maxPoints maximum points available (e.g. cloud.count)
+ */
+fun computeFrameBudget(
+    previousFrameMs: Float,
+    currentPointBudget: Int,
+    maxPoints: Int
+): Int {
+    if (maxPoints <= 0) return 0
+    val clamped = currentPointBudget.coerceIn(0, maxPoints)
+    if (!previousFrameMs.isFinite() || previousFrameMs < 0f) return clamped
+    return when {
+        previousFrameMs > FRAME_DOWN_THRESHOLD_MS -> {
+            val step = maxOf(1, (clamped * 0.25f).toInt())
+            (clamped - step).coerceAtLeast(minOf(MIN_FRAME_BUDGET_POINTS, maxPoints))
+        }
+        previousFrameMs < FRAME_UP_THRESHOLD_MS -> {
+            if (clamped >= maxPoints) maxPoints
+            else {
+                val step = maxOf(1, (clamped * 0.10f).toInt())
+                (clamped + step).coerceAtMost(maxPoints)
+            }
+        }
+        else -> clamped
+    }
+}
+
+/**
+ * Total gate for whether the logo animation clock should run.
+ *
+ * Returns false when the mark is paused, offscreen/not visible, the app is
+ * backgrounded, or the system animator duration scale is 0. Callers should
+ * keep their withFrameNanos loop and their frame() recomputation inside
+ * this gate (see the adoption steps in AgentLogoQueue's KDoc).
+ *
+ * Pure maths — safe to unit-test without Compose.
+ *
+ * @param paused caller-supplied pause flag (e.g. AgentLogoMark's `paused`)
+ * @param visible whether the mark is currently on screen (viewport check)
+ * @param inBackground whether the app is backgrounded (lifecycle check)
+ * @param animatorScale system animator duration scale; <= 0 means disabled
+ */
+fun isActive(
+    paused: Boolean,
+    visible: Boolean = true,
+    inBackground: Boolean = false,
+    animatorScale: Float = 1f
+): Boolean = !paused && visible && !inBackground && animatorScale > 0f
 
 // ---------------------------------------------------------------------------
 // Motion profiles (pure functions of (cloud, t, state) -> dots)

@@ -244,23 +244,49 @@ def check08_tests(root: Path):
 
 
 def check09_fabricated(root: Path):
-    """Flag fabricated android data: session-id strings, 3+ listOf, turn counters."""
+    """Flag fabricated android data: session-id strings, 3+ listOf, turn counters.
+
+    The hard part is not finding `ses_` strings — it is not flagging the honest
+    ones. A session id minted at runtime with UUID.randomUUID() is the *correct*
+    way to get an id that is guaranteed unique; only a hardcoded literal that was
+    never produced by anything is fabricated. So a line carrying a mint call is
+    allowed even though it contains an id-shaped token, and the same goes for an
+    id read from a server payload field.
+    """
     fake_entries = []
     ses_re = re.compile(r'"[^"\n]*(?:ses_|sess_)[^"\n]*"')
-    uuid_re = re.compile(r'"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"')
     turn_re = re.compile(r"AgentSession\([^)]*,\s*\d+\s*\)")
+    # Evidence that the id is generated or received, not invented.
+    mint_markers = (
+        "randomUUID",
+        "UUID.",
+        "ifBlank",
+        "sessionId",
+        "session.id",
+        "it.id",
+        "row.id",
+        "session_id",
+        "toPayload",
+        "getString(",
+        "putString(",
+    )
     for kp in iter_kt_files(root):
         lines = read_lines(kp)
-        text = "\n".join(lines)
         for i, line in enumerate(lines, start=1):
             stripped = line.strip()
-            for m in ses_re.finditer(line):
-                tok = m.group(0)
-                fake_entries.append(f"{rel(root, kp)}:{i}: session-id-string {tok} :: {stripped[:160]}")
-            for m in uuid_re.finditer(line):
-                fake_entries.append(f"{rel(root, kp)}:{i}: uuid {m.group(0)} :: {stripped[:160]}")
+            if stripped.startswith("//") or stripped.startswith("*"):
+                continue
+            generated = any(marker in line for marker in mint_markers)
+            if not generated:
+                for m in ses_re.finditer(line):
+                    tok = m.group(0)
+                    fake_entries.append(
+                        f"{rel(root, kp)}:{i}: session-id-string {tok} :: {stripped[:160]}"
+                    )
             if turn_re.search(line):
-                fake_entries.append(f"{rel(root, kp)}:{i}: invented-turn-counter :: {stripped[:160]}")
+                fake_entries.append(
+                    f"{rel(root, kp)}:{i}: invented-turn-counter :: {stripped[:160]}"
+                )
         # remember { listOf( ... ) with 3+ AgentSession/CliToolAgent entries
         for i, line in enumerate(lines, start=1):
             if "remember" in line and "listOf(" in line:

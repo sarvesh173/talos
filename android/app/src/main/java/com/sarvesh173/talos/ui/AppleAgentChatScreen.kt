@@ -51,6 +51,8 @@ import com.sarvesh173.talos.ui.chat.ToolCallSummary
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.orb.OrbState
 import com.sarvesh173.talos.ui.orb.rememberAdaptiveOrbSpeed
+import com.sarvesh173.talos.ui.bot.AgentLogoMark
+import com.sarvesh173.talos.ui.bot.AgentLogoState
 import com.sarvesh173.talos.ui.orb.ThinkingOrb
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -254,7 +256,13 @@ fun AppleAgentChatScreen(
     }
 
     LaunchedEffect(sessionId) {
-        if (client.isPaired.value) client.switchRoom(sessionId)
+        // An empty id means "no session chosen yet". Mint a real one locally
+        // rather than inventing a plausible-looking constant that never existed
+        // on the host — the server would treat it as a live session.
+        val resolved = sessionId.ifBlank {
+            "ses_" + java.util.UUID.randomUUID().toString().replace("-", "").take(24)
+        }
+        if (client.isPaired.value) client.switchRoom(resolved)
     }
 
     // Past sessions: the core's rooms, with the local cache count so a room
@@ -301,12 +309,16 @@ fun AppleAgentChatScreen(
                         verticalAlignment = Alignment.Top,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        ThinkingOrb(
-                            state = orbState,
+                        // The agent's own mark is the loading animation, not a
+                        // generic orb: OpenCode's logo for OpenCode, Hermes' for
+                        // Hermes. Derived from the display name so the mark and
+                        // the header can never disagree about who is working.
+                        AgentLogoMark(
+                            agentId = agentName.lowercase().replace(" ", ""),
+                            state = AgentLogoState.Thinking,
                             size = 28.dp,
-                            ink = brandColor,
-                            speed = orbSpeed,
-                            label = "$agentName is working"
+                            intensity = orbSpeed,
+                            paused = !isThinking
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(

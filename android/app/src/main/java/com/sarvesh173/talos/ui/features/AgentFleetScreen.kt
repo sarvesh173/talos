@@ -35,6 +35,8 @@ import com.sarvesh173.talos.ui.agent.AgentRuntime
 import com.sarvesh173.talos.ui.agent.AgentRuntimeCard
 import com.sarvesh173.talos.ui.agent.AgentSummonSheet
 import com.sarvesh173.talos.ui.agent.ReasoningEffort
+import com.sarvesh173.talos.ui.bot.AgentBotIcon
+import com.sarvesh173.talos.ui.bot.BotState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -243,16 +245,19 @@ fun AgentFleetScreen(client: TalosClient) {
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(emblem.accent.copy(alpha = if (isDark) 0.20f else 0.12f))
-                                        .border(1.dp, emblem.accent.copy(alpha = 0.40f), RoundedCornerShape(12.dp)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    AgentEmblemIcon(emblem = emblem, size = 22.dp, tint = null)
-                                }
+                                // The bot mark is the agent's identity, drawn as a
+                                // live vector rather than a coloured squircle
+                                // behind a flat glyph. Idle agents hold still; a
+                                // working one animates, so the fleet reads at a
+                                // glance without a status pill explaining it.
+                                AgentBotIcon(
+                                    state = if (agent.installed) BotState.Idle else BotState.Sleeping,
+                                    size = 42.dp,
+                                    ink = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                    eyeInk = if (isDark) Color(0xFF0B0B0B) else Color.White,
+                                    particles = false,
+                                    announce = false
+                                )
 
                                 Spacer(modifier = Modifier.width(14.dp))
 

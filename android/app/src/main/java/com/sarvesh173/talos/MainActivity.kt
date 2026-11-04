@@ -246,7 +246,11 @@ class MainActivity : ComponentActivity() {
             val storedFontScale by client.fontScale.collectAsState()
             var showThemeDialog by remember { mutableStateOf(false) }
             var appScreen by remember { mutableStateOf("main") }
-            var activeSessionId by remember { mutableStateOf("ses_default") }
+            // Starts empty, not "ses_default": a fabricated id that does not
+            // exist on the host would be sent to the server on the first message
+            // and would appear in the board as a real session. An empty id means
+            // "not chosen yet" and the client mints one on first send.
+            var activeSessionId by remember { mutableStateOf("") }
             var activeSessionTitle by remember { mutableStateOf("Interactive Session") }
             var activeAgentName by remember { mutableStateOf("OpenCode") }
             var activeAgentIcon by remember { mutableIntStateOf(R.drawable.ic_opencode) }

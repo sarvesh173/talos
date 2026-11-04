@@ -53,6 +53,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Decode Release Keystore (if secrets configured)
+        # Real release signing: secrets RELEASE_KEYSTORE_BASE64,
+        # RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD.
+        # Absent -> warn and fall back to the debug keystore (local/PR builds
+        # still work). Never commit the decoded keystore.
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RELEASE_KEYSTORE_BASE64:-}" ]; then
+            echo "::warning::Release signing secrets absent — falling back to debug keystore."
+            exit 0
+          fi
+          mkdir -p android/app/keystore
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > android/app/keystore/release.keystore
+          chmod 600 android/app/keystore/release.keystore
+          {
+            echo "RELEASE_KEYSTORE_FILE=$GITHUB_WORKSPACE/android/app/keystore/release.keystore"
+            echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD"
+            echo "RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS"
+            echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
       - name: Assemble Release APK
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8"

@@ -26,12 +26,32 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        // Real release key: ONLY when CI secrets are present (decoded by
+        // .github/workflows/build-apk.yml to RELEASE_KEYSTORE_FILE). Absent
+        // secrets -> no "release" config -> release falls back to sharedDebug
+        // so local/CI builds without secrets still work. Never commit a
+        // keystore or secret values.
+        val releaseKeystorePath = System.getenv("RELEASE_KEYSTORE_FILE")
+        val releaseStorePassword = System.getenv("RELEASE_STORE_PASSWORD")
+        val releaseKeyAlias = System.getenv("RELEASE_KEY_ALIAS")
+        val releaseKeyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+        if (!releaseKeystorePath.isNullOrBlank() && !releaseStorePassword.isNullOrBlank() &&
+            !releaseKeyAlias.isNullOrBlank() && !releaseKeyPassword.isNullOrBlank() &&
+            file(releaseKeystorePath).exists()
+        ) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("sharedDebug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("sharedDebug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

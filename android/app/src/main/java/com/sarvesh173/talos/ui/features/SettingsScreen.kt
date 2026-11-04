@@ -56,6 +56,8 @@ fun SettingsScreen(
     onNavigateToDashboardControl: () -> Unit = {},
     onNavigateToAgentLifecycle: () -> Unit = {},
     onNavigateToKanban: () -> Unit = {},
+    onNavigateToReviewWork: () -> Unit = {},
+    onNavigateToJobs: () -> Unit = {},
     nodeEncryptionFingerprint: String? = null,
     borderTint: Color = Color.White.copy(alpha = 0.08f)
 ) {
@@ -325,6 +327,24 @@ fun SettingsScreen(
                     subtitle = "What each agent is calling",
                     icon = TalosIcons.TalosStrokeTransport,
                     onClick = onNavigateToKanban
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Review their work",
+                    subtitle = "Files an agent changed, line by line",
+                    icon = TalosIcons.TalosStrokeDoc,
+                    onClick = onNavigateToReviewWork
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Scheduled jobs",
+                    subtitle = "Work while you sleep",
+                    icon = TalosIcons.TalosStrokeOrb,
+                    onClick = onNavigateToJobs
                 )
             }
 

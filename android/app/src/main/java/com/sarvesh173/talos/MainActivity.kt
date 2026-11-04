@@ -104,6 +104,8 @@ import com.sarvesh173.talos.ui.features.SettingsScreen
 import com.sarvesh173.talos.ui.settings.DashboardControlScreen
 import com.sarvesh173.talos.ui.agents.AgentLifecycleScreen
 import com.sarvesh173.talos.ui.kanban.KanbanScreen
+import com.sarvesh173.talos.ui.review.ReviewWorkScreen
+import com.sarvesh173.talos.ui.cron.JobListScreen
 import com.sarvesh173.talos.ui.bot.AgentLogoCustomizeScreen
 import com.sarvesh173.talos.ui.features.LookAndFeelScreen
 import com.sarvesh173.talos.ui.features.ChatPreferencesScreen
@@ -398,6 +400,8 @@ class MainActivity : ComponentActivity() {
                     "cli_manager" -> "cli_manager"
                     "agent_chat", "chat" -> "agent_chat"
                     "thinking_orb" -> "thinking_orb"
+                    "review_work" -> "review_work"
+                    "jobs" -> "jobs"
                     else -> "main"
                 }
 
@@ -405,7 +409,8 @@ class MainActivity : ComponentActivity() {
                 BackHandler(enabled = true) {
                     when (appScreen) {
                         "look_and_feel", "chat_preferences", "security", "caching", "notifications",
-                        "dashboard_control", "agent_lifecycle", "kanban", "logo_customize" -> {
+                        "dashboard_control", "agent_lifecycle", "kanban", "logo_customize",
+                        "review_work", "jobs" -> {
                             appScreen = "settings"
                         }
                         "settings", "canvas", "diff", "hub", "gallery", "cli_manager", "chat" -> {
@@ -431,8 +436,9 @@ class MainActivity : ComponentActivity() {
                         val fadeSpec = M3EMotion.defaultEffects<Float>()
                         val appleSpringSpatial = spring<IntOffset>(dampingRatio = 0.85f, stiffness = 400f)
                         val appleSpringFloat = spring<Float>(dampingRatio = 0.85f, stiffness = 400f)
-                        val isSettingsSub = targetState in listOf("look_and_feel", "chat_preferences", "security", "caching", "notifications")
-                        val fromSettingsSub = initialState in listOf("look_and_feel", "chat_preferences", "security", "caching", "notifications")
+                        val settingsSubs = listOf("look_and_feel", "chat_preferences", "security", "caching", "notifications", "dashboard_control", "agent_lifecycle", "kanban", "logo_customize", "review_work", "jobs")
+                        val isSettingsSub = targetState in settingsSubs
+                        val fromSettingsSub = initialState in settingsSubs
                         if ((initialState == "main" && (targetState == "settings" || isSettingsSub)) ||
                             (initialState == "settings" && isSettingsSub)) {
                             // Apple iOS Push Transition (Slide from right with scale and fade)
@@ -613,7 +619,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToThinkingOrb = { appScreen = "thinking_orb" },
                                 onNavigateToDashboardControl = { appScreen = "dashboard_control" },
                                 onNavigateToAgentLifecycle = { appScreen = "agent_lifecycle" },
-                                onNavigateToKanban = { appScreen = "kanban" }
+                                onNavigateToKanban = { appScreen = "kanban" },
+                                onNavigateToReviewWork = { appScreen = "review_work" },
+                                onNavigateToJobs = { appScreen = "jobs" }
                             )
                         }
                         // Service control was previously reachable only from a
@@ -628,6 +636,19 @@ class MainActivity : ComponentActivity() {
                         }
                         "kanban" -> {
                             KanbanScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
+                        }
+                        "review_work" -> {
+                            ReviewWorkScreen(
+                                client = client,
+                                agentId = activeAgentName.lowercase().replace(" ", ""),
+                                onDone = { appScreen = "settings" }
+                            )
+                        }
+                        "jobs" -> {
+                            JobListScreen(
                                 client = client,
                                 onBack = { appScreen = "settings" }
                             )

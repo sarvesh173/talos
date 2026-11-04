@@ -1,15 +1,29 @@
 package com.sarvesh173.talos.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -18,21 +32,27 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -42,52 +62,134 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.R
 import com.sarvesh173.talos.network.TalosClient
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.sarvesh173.talos.ui.agents.AgentRoster
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 /**
- * TALOS WWDC25 True Liquid Glass Architecture
- * 
- * Authentic Apple Developer WWDC25 Liquid Glass Specifications:
- * 1. Molded Translucent Glass Pods & Convex Refractive Lenses.
- * 2. Prismatic Chromatic Sheen Borders (Cyan -> Azure -> Violet -> Coral).
- * 3. Ethereal Ceramic Glass Canvas with Ambient Prismatic Caustics.
- * 4. Embossed Frosted Liquid Glass [+] Action Lens.
- * 5. Single-Agent Direct Drill-Down & Emil Kowalski Damped Kinematics.
+ * TALOS agent hub — renders ONLY real data from GET /api/agents/roster.
+ *
+ * No fabricated agents, sessions, ids, titles or counts exist in this file.
+ * On request failure the hub shows an honest empty state and never falls
+ * back to invented rows. Not-installed agents render as unavailable.
  */
 
-data class AgentSession(
+// Apple HIG surface ramp and single accent.
+private val CanvasDark = Color(0xFF000000)
+private val CanvasLight = Color(0xFFF2F2F7)
+private val CardDark = Color(0xFF1C1C1E)
+private val CardLight = Color(0xFFFFFFFF)
+private val ElevatedDark = Color(0xFF2C2C2E)
+private val ElevatedLight = Color(0xFFE5E5EA)
+private val AccentDark = Color(0xFF0A84FF)
+private val AccentLight = Color(0xFF0071E3)
+private val StatusGreen = Color(0xFF30D158)
+private val MutedDark = Color(0xFF98989D)
+
+private val Tnum = TextStyle(fontFeatureSettings = "tnum")
+
+/** One real session row from the roster endpoint. */
+private data class RealSession(
     val id: String,
     val title: String,
-    val timestamp: String,
-    val status: String = "Active",
-    val turnsCount: Int = 1
+    val ageSeconds: Long?,
+    val status: String?,
+    val messageCount: Int?,
 )
 
-data class CliToolAgent(
+/** One real agent from the roster endpoint, enriched with roster metadata. */
+private data class RealAgent(
     val id: String,
     val name: String,
-    val description: String,
-    val iconRes: Int,
-    val brandColor: Color,
-    val coreGradients: List<Color>,
-    val sessions: List<AgentSession>
+    val installed: Boolean,
+    val sessionCount: Int,
+    val sessions: List<RealSession>,
+    val sessionsError: String?,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+private fun iconForAgent(agentId: String): Int = when (agentId) {
+    "opencode" -> R.drawable.ic_opencode
+    "hermes" -> R.drawable.ic_hermes
+    "claude-code", "claudecode" -> R.drawable.ic_claude
+    "codex" -> R.drawable.ic_codex
+    "omnirush" -> R.drawable.ic_omnirush
+    "openclaw" -> R.drawable.ic_openclaw
+    else -> R.drawable.ic_core
+}
 
-/**
- * Map a CLI tool to the core room that actually hosts it.
- *
- * The core seeds "the-council" for multi-agent work; per-tool rooms are created
- * on demand by the orchestrator. Until a tool has a dedicated room, the council
- * is the honest destination — sending to a made-up id silently drops messages.
- */
-private fun sessionRoomId(toolId: String): String = when (toolId) {
-    "hermes", "alya" -> "the-council"
-    "opencode", "claudecode", "codex", "omnirush" -> "war-room"
+private fun sessionRoomId(agentId: String): String = when (agentId) {
+    "hermes", "alya", "openclaw" -> "the-council"
+    "opencode", "claudecode", "claude-code", "codex", "omnirush" -> "war-room"
     else -> "the-council"
+}
+
+private fun formatAge(ageSeconds: Long?): String? {
+    if (ageSeconds == null || ageSeconds < 0) return null
+    return when {
+        ageSeconds < 60 -> "now"
+        ageSeconds < 3600 -> "${ageSeconds / 60}m"
+        ageSeconds < 86400 -> "${ageSeconds / 3600}h"
+        else -> "${ageSeconds / 86400}d"
+    }
+}
+
+private fun isActiveStatus(status: String?): Boolean =
+    status != null && (status.equals("active", ignoreCase = true) || status.equals("running", ignoreCase = true))
+
+private fun parseRoster(body: String): List<RealAgent> {
+    val agentsArray: JSONArray = JSONObject(body).optJSONArray("agents") ?: return emptyList()
+    val out = ArrayList<RealAgent>(agentsArray.length())
+    for (i in 0 until agentsArray.length()) {
+        val a = agentsArray.optJSONObject(i) ?: continue
+        val sessions = ArrayList<RealSession>()
+        val sessionsArray = a.optJSONArray("sessions")
+        if (sessionsArray != null) {
+            for (j in 0 until sessionsArray.length()) {
+                val s = sessionsArray.optJSONObject(j) ?: continue
+                sessions.add(
+                    RealSession(
+                        id = s.optString("id", ""),
+                        title = s.optString("title", "Untitled session").ifBlank { "Untitled session" },
+                        ageSeconds = if (s.has("age_seconds") && !s.isNull("age_seconds")) s.optLong("age_seconds") else null,
+                        status = if (s.has("status") && !s.isNull("status")) s.optString("status") else null,
+                        messageCount = if (s.has("message_count") && !s.isNull("message_count")) s.optInt("message_count") else null,
+                    )
+                )
+            }
+        }
+        out.add(
+            RealAgent(
+                id = a.optString("id", ""),
+                name = a.optString("name", a.optString("id", "Agent")).ifBlank { a.optString("id", "Agent") },
+                installed = a.optBoolean("installed", false),
+                sessionCount = a.optInt("session_count", sessions.size),
+                sessions = sessions,
+                sessionsError = if (a.has("sessions_error") && !a.isNull("sessions_error")) a.optString("sessions_error") else null,
+            )
+        )
+    }
+    return out
+}
+
+private suspend fun fetchRoster(client: TalosClient): List<RealAgent> = withContext(Dispatchers.IO) {
+    val http = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .build()
+    val builder = Request.Builder().url(client.baseUrl.trimEnd('/') + "/api/agents/roster").get()
+    if (client.apiToken.isNotBlank()) builder.header("Authorization", "Bearer " + client.apiToken)
+    http.newCall(builder.build()).execute().use { resp ->
+        if (!resp.isSuccessful) error("HTTP " + resp.code)
+        val body = resp.body?.string() ?: error("Empty roster response")
+        parseRoster(body)
+    }
 }
 
 @Composable
@@ -99,633 +201,372 @@ fun LandingScreen(
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
-    onOpenAgentChat: ((String, String, String, Int, Color) -> Unit)? = null
+    onOpenAgentChat: ((String, String, String, Int, Color) -> Unit)? = null,
 ) {
-    val context = LocalContext.current
-    val currentAccentName by client.accentColor.collectAsState()
-    val effectiveAccent = resolveAccentColor(currentAccentName, isDark)
+    val accent = if (isDark) AccentDark else AccentLight
+    val canvas = if (isDark) CanvasDark else CanvasLight
+    val card = if (isDark) CardDark else CardLight
+    val elevated = if (isDark) ElevatedDark else ElevatedLight
+    val hairline = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
+    val primaryText = if (isDark) Color.White else Color(0xFF1D1D1F)
+    val secondaryText = if (isDark) Color.White.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.60f)
+    val tertiaryText = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.40f)
 
-    val reducedMotion = rememberReducedMotion()
-    var selectedToolId by remember { mutableStateOf<String?>(null) }
+    var selectedAgentId by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    var agents by remember { mutableStateOf<List<RealAgent>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var failed by remember { mutableStateOf(false) }
+    var refreshTick by remember { mutableIntStateOf(0) }
 
-    val dynamicSessions = remember {
-        mutableStateMapOf<String, MutableList<AgentSession>>()
-    }
-
-    // Single-agent CLI tools with WWDC25 chromatic cores
-    val cliTools = remember {
-        listOf(
-            CliToolAgent(
-                id = "opencode",
-                name = "OpenCode",
-                description = "Pulse engine with max reasoning & stealth models",
-                iconRes = R.drawable.ic_opencode,
-                brandColor = Color(0xFF2563EB),
-                coreGradients = listOf(Color(0xFF007AFF), Color(0xFF5856D6)),
-                sessions = listOf(
-                    AgentSession("ses_e5dcc117fffePxuWJE6NrZxZhE", "LandingScreen 3-tier navigation design", "Just now", "Active", 20),
-                    AgentSession("ses_e5e5c8d1fffe6DqRGlZ47M0eTV", "Top 3 longest Kotlin files line counts", "3h ago", "Completed", 11),
-                    AgentSession("ses_e5e861b56ffeUVpjWqUAcuVCFL", "TALOS Android: Liquid Glass, Compose performance", "3h ago", "Completed", 22),
-                    AgentSession("ses_e5e69286affe4FWfpjXuY7eMoz", "Liquid Glass HIG audit", "3h ago", "Completed", 62),
-                    AgentSession("ses_e5e83ee12ffeofZa3GLd50S5b4", "Touch target audit", "3h ago", "Completed", 182),
-                    AgentSession("ses_e5e8131deffend7h5wuRHaMEgq", "Liquid Glass, 48dp targets, state hoisting", "4h ago", "Completed", 23)
-                )
-            ),
-            CliToolAgent(
-                id = "hermes",
-                name = "Hermes Agent",
-                description = "Nous Research autonomous multimodal gateway",
-                iconRes = R.drawable.ic_hermes,
-                brandColor = Color(0xFF7C4DFF),
-                coreGradients = listOf(Color(0xFF7C4DFF), Color(0xFFAF52DE)),
-                sessions = listOf(
-                    AgentSession("h_sess_1", "Kotlin Compose hierarchy cleanup", "12m ago", "Active", 9),
-                    AgentSession("h_sess_2", "Secret scope & memory quarantine", "1h ago", "Completed", 5),
-                    AgentSession("h_sess_3", "Screenshot coordinate comparison", "3h ago", "Completed", 14),
-                    AgentSession("h_sess_4", "Multi-unit workstream pipeline", "6h ago", "Completed", 22)
-                )
-            ),
-            CliToolAgent(
-                id = "claudecode",
-                name = "Claude Code",
-                description = "Anthropic architecture & synthesis suite",
-                iconRes = R.drawable.ic_claude,
-                brandColor = Color(0xFFD97757),
-                coreGradients = listOf(Color(0xFFFF9500), Color(0xFFFF2D55)),
-                sessions = listOf(
-                    AgentSession("c_sess_1", "Apple design spec decomposition", "30m ago", "Active", 4),
-                    AgentSession("c_sess_2", "UI touch target red-green matrix", "2h ago", "Completed", 7),
-                    AgentSession("c_sess_3", "State hoisting refactor pass", "4h ago", "Completed", 3)
-                )
-            ),
-            CliToolAgent(
-                id = "codex",
-                name = "Codex CLI",
-                description = "OpenAI high-throughput code synthesis",
-                iconRes = R.drawable.ic_codex,
-                brandColor = Color(0xFF10A37F),
-                coreGradients = listOf(Color(0xFF34C759), Color(0xFF00C7BE)),
-                sessions = listOf(
-                    AgentSession("cx_sess_1", "Compose vector drawable exporter", "1h ago", "Active", 2),
-                    AgentSession("cx_sess_2", "Inference latency profiling", "5h ago", "Completed", 11)
-                )
-            ),
-            CliToolAgent(
-                id = "omnirush",
-                name = "OmniRush",
-                description = "Sandboxed autonomous agent orchestrator",
-                iconRes = R.drawable.ic_omnirush,
-                brandColor = Color(0xFFA855F7),
-                coreGradients = listOf(Color(0xFFAF52DE), Color(0xFFFF2D55)),
-                sessions = listOf(
-                    AgentSession("om_sess_1", "Rootfs sandbox isolation pass", "40m ago", "Active", 5),
-                    AgentSession("om_sess_2", "Parallel fan-out dispatch", "3h ago", "Completed", 16)
-                )
-            )
-        )
-    }
-
-    LaunchedEffect(cliTools) {
-        cliTools.forEach { tool ->
-            if (!dynamicSessions.containsKey(tool.id)) {
-                dynamicSessions[tool.id] = tool.sessions.toMutableList()
-            }
+    LaunchedEffect(refreshTick) {
+        loading = true
+        failed = false
+        try {
+            agents = fetchRoster(client)
+        } catch (_: Exception) {
+            agents = emptyList()
+            failed = true
         }
+        loading = false
     }
 
-    val currentTool = remember(selectedToolId, cliTools) {
-        cliTools.firstOrNull { it.id == selectedToolId }
+    val selectedAgent = remember(selectedAgentId, agents) {
+        agents.firstOrNull { it.id == selectedAgentId }
     }
 
-    BackHandler(enabled = selectedToolId != null) {
-        TalosHaptics.sendHaptic(context)
-        selectedToolId = null
+    BackHandler(enabled = selectedAgentId != null) {
+        selectedAgentId = null
     }
 
-    val filteredTools = remember(searchQuery, cliTools) {
-        if (searchQuery.isBlank()) cliTools
-        else cliTools.filter {
-            it.name.contains(searchQuery, ignoreCase = true) ||
-            it.description.contains(searchQuery, ignoreCase = true)
-        }
+    fun openChat(agent: RealAgent, title: String) {
+        onOpenAgentChat?.invoke(sessionRoomId(agent.id), title, agent.name, iconForAgent(agent.id), accent)
     }
-
-    // WWDC25 Ethereal Ceramic Canvas with Prismatic Caustics
-    val canvasBg = if (isDark) Color(0xFF0B0C10) else Color(0xFFF6F8FA)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(canvasBg)
+            .background(canvas)
     ) {
-        // ==============================================================
-        // WWDC25 MOLDED GLASS GEOMETRY & OPTICAL REFRACTION CONTOURS
-        // ==============================================================
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            val w = size.width
-            val h = size.height
-            val glassOutline = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
-            val glassRim = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
-
-            // Upper molded optical lens pod contour
-            drawRoundRect(
-                color = glassOutline,
-                topLeft = Offset(w * 0.08f, h * 0.16f),
-                size = androidx.compose.ui.geometry.Size(120.dp.toPx(), 44.dp.toPx()),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(22.dp.toPx()),
-                style = Stroke(width = 1.2.dp.toPx())
-            )
-
-            // Prismatic Chromatic refraction line (WWDC25 spectrum track)
-            drawLine(
-                brush = Brush.linearGradient(
-                    listOf(
-                        Color(0xFF34C759).copy(alpha = if (isDark) 0.35f else 0.50f),
-                        Color(0xFF007AFF).copy(alpha = if (isDark) 0.40f else 0.55f),
-                        Color(0xFFAF52DE).copy(alpha = if (isDark) 0.38f else 0.50f),
-                        Color(0xFFFF2D55).copy(alpha = if (isDark) 0.35f else 0.45f)
-                    ),
-                    start = Offset(w * 0.35f, h * 0.18f),
-                    end = Offset(w * 0.92f, h * 0.18f)
-                ),
-                start = Offset(w * 0.35f, h * 0.18f),
-                end = Offset(w * 0.92f, h * 0.18f),
-                strokeWidth = 3.dp.toPx(),
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
-
-            // Molded Glass Circular Lens Orb
-            drawCircle(
-                color = glassRim,
-                radius = 48.dp.toPx(),
-                center = Offset(w * 0.5f, h * 0.74f),
-                style = Stroke(width = 1.2.dp.toPx())
-            )
-            drawCircle(
-                color = glassOutline,
-                radius = 20.dp.toPx(),
-                center = Offset(w * 0.5f, h * 0.74f),
-                style = Stroke(width = 1.2.dp.toPx())
-            )
-        }
-
-        // ==============================================================
-        // MAIN SURFACE WITH FLUID ANIMATED KINEMATICS
-        // ==============================================================
         AnimatedContent(
-            targetState = Pair(selectedToolId, currentTool),
+            targetState = selectedAgentId,
             transitionSpec = {
-                val isAdvancing = targetState.first != null
-                val slideDir = if (isAdvancing) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End
-
-                if (reducedMotion) {
-                    // Reduced motion: keep the change legible with a short cross-fade,
-                    // drop the spatial translation that causes vestibular discomfort.
-                    fadeIn(animationSpec = tween(fadeMillis(true), easing = LinearOutSlowInEasing))
-                        .togetherWith(fadeOut(animationSpec = tween(fadeMillis(true))))
-                } else {
-                    (fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) +
-                    slideIntoContainer(
-                        towards = slideDir,
-                        animationSpec = spatialSpring(false)
-                    )).togetherWith(
-                    fadeOut(animationSpec = tween(180)) +
-                    slideOutOfContainer(
-                        towards = slideDir,
-                        animationSpec = spatialSpring(false)
-                    ))
-                }
+                (fadeIn(animationSpec = tween(180)) + slideInHorizontally(initialOffsetX = { it / 4 }))
+                    .togetherWith(
+                        fadeOut(animationSpec = tween(180)) + slideOutHorizontally(targetOffsetX = { -it / 4 })
+                    )
             },
-            modifier = Modifier.fillMaxSize()
-        ) { (toolId, tool) ->
-            if (toolId == null || tool == null) {
-                // ======================================================
-                // ROOT HUB: WWDC25 MOLDED LIQUID GLASS PODS
-                // ======================================================
+            modifier = Modifier.fillMaxSize(),
+        ) { agentId ->
+            val agent = agents.firstOrNull { it.id == agentId }
+            if (agent == null) {
+                // Root hub: real agents only.
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(top = 96.dp, bottom = 110.dp)
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 96.dp, bottom = 110.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     item {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .defaultMinSize(minHeight = 48.dp)
                                 .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Cli tools",
-                                fontSize = 18.sp,
+                                text = "Agents",
+                                fontSize = 22.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                letterSpacing = (-0.25).sp
+                                color = primaryText,
+                                letterSpacing = (-0.25).sp,
                             )
+                            if (!loading && !failed) {
+                                Text(
+                                    text = "${agents.count { it.installed }} of ${agents.size} installed",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = secondaryText,
+                                    style = Tnum,
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
 
-                            // Molded Glass Capsule Badge
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isDark) Color(0xFF1C1D24).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.90f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.90f),
-                                            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f)
-                                        )
-                                    )
-                                ),
-                                shadowElevation = 1.dp,
-                                modifier = Modifier.height(24.dp)
+                    if (loading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Box(
-                                    modifier = Modifier.padding(horizontal = 12.dp),
-                                    contentAlignment = Alignment.Center
+                                CircularProgressIndicator(color = accent, modifier = Modifier.size(24.dp))
+                            }
+                        }
+                    } else if (failed) {
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = card,
+                                border = BorderStroke(0.5.dp, hairline),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Text(
-                                        text = "${filteredTools.size} installed",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = if (isDark) Color.White.copy(alpha = 0.70f) else Color(0xFF1D1D1F)
+                                        text = "Couldn't reach the host",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = primaryText,
+                                        letterSpacing = (-0.15).sp,
                                     )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "No agents were loaded. Check the connection and try again.",
+                                        fontSize = 13.sp,
+                                        color = secondaryText,
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(elevated)
+                                            .clickable { refreshTick++ }
+                                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = "Retry",
+                                            tint = accent,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Retry",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = accent,
+                                            letterSpacing = (-0.15).sp,
+                                        )
+                                    }
                                 }
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    items(filteredTools, key = { it.id }) { cliTool ->
-                        val sessionsCount = dynamicSessions[cliTool.id]?.size ?: cliTool.sessions.size
-
-                        // WWDC25 Liquid Glass Card with Refraction, Specular Rim, and Meniscus Reflection
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isDark) Color(0xFF141620).copy(alpha = 0.86f) else Color.White.copy(alpha = 0.92f),
-                            shadowElevation = 4.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = cliTool.brandColor, cornerRadius = 20.dp)
-                                .applePressable(0.97f, pressHaptic = true) {
-                                    selectedToolId = cliTool.id
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 64.dp)
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                    } else if (agents.isEmpty()) {
+                        item {
+                            Text(
+                                text = "No agents reported by the host.",
+                                fontSize = 13.sp,
+                                color = secondaryText,
+                                modifier = Modifier.padding(vertical = 16.dp),
+                            )
+                        }
+                    } else {
+                        val visible = if (searchQuery.isBlank()) agents else agents.filter {
+                            val rosterEntry = AgentRoster.byId(it.id)
+                            it.name.contains(searchQuery, ignoreCase = true) ||
+                                (rosterEntry?.subtitle?.contains(searchQuery, ignoreCase = true) == true)
+                        }
+                        items(visible, key = { it.id }) { realAgent ->
+                            val rosterEntry = AgentRoster.byId(realAgent.id)
+                            val subtitle = rosterEntry?.subtitle ?: "CLI agent"
+                            val lifecycleText = rosterEntry?.lifecycle?.label
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = card,
+                                border = BorderStroke(0.5.dp, hairline),
+                                modifier = Modifier.fillMaxWidth(),
                             ) {
-                                // Molded Convex Glass Lens containing SVG Logo
-                                Box(
+                                Row(
                                     modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(
-                                            Brush.linearGradient(
-                                                listOf(
-                                                    cliTool.brandColor.copy(alpha = if (isDark) 0.25f else 0.18f),
-                                                    cliTool.brandColor.copy(alpha = if (isDark) 0.10f else 0.08f)
-                                                )
-                                            )
-                                        )
-                                        .border(
-                                            BorderStroke(
-                                                1.dp,
-                                                Brush.verticalGradient(
-                                                    listOf(
-                                                        Color.White.copy(alpha = if (isDark) 0.45f else 0.90f),
-                                                        cliTool.brandColor.copy(alpha = 0.35f)
-                                                    )
-                                                )
-                                            ),
-                                            RoundedCornerShape(12.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
+                                        .fillMaxWidth()
+                                        .clickable(enabled = realAgent.installed) { selectedAgentId = realAgent.id }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                        .padding(end = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Image(
-                                        painter = painterResource(id = cliTool.iconRes),
-                                        contentDescription = cliTool.name,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(elevated),
+                                        contentAlignment = Alignment.Center,
                                     ) {
+                                        Icon(
+                                            painter = painterResource(id = iconForAgent(realAgent.id)),
+                                            contentDescription = realAgent.name,
+                                            tint = if (realAgent.installed) primaryText else tertiaryText,
+                                            modifier = Modifier.size(22.dp),
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = cliTool.name,
+                                            text = realAgent.name,
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                            letterSpacing = (-0.15).sp
+                                            color = if (realAgent.installed) primaryText else tertiaryText,
+                                            letterSpacing = (-0.15).sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
                                         )
-
-                                        // Liquid Core Pill with Glowing Green Dot
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = cliTool.brandColor.copy(alpha = if (isDark) 0.18f else 0.10f),
-                                            border = BorderStroke(0.8.dp, cliTool.brandColor.copy(alpha = 0.25f)),
-                                            modifier = Modifier.height(20.dp)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(5.dp)
-                                                        .clip(CircleShape)
-                                                        .background(StatusGreen)
-                                                )
-                                                Text(
-                                                    text = "$sessionsCount sessions",
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = cliTool.brandColor
-                                                )
-                                            }
-                                        }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = if (realAgent.installed) {
+                                                if (lifecycleText != null) "$subtitle · $lifecycleText" else subtitle
+                                            } else {
+                                                "Not installed on this host"
+                                            },
+                                            fontSize = 12.sp,
+                                            color = secondaryText,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
                                     }
-
-                                    Spacer(modifier = Modifier.height(2.dp))
-
-                                    Text(
-                                        text = cliTool.description,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Normal,
-                                        color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    if (realAgent.installed) {
+                                        Text(
+                                            text = "${realAgent.sessionCount} sessions",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = secondaryText,
+                                            style = Tnum,
+                                        )
+                                    }
                                 }
-
-                                Icon(
-                                    imageVector = TalosIcons.TalosChevronRight,
-                                    contentDescription = "Open ${cliTool.name}",
-                                    tint = if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.30f),
-                                    modifier = Modifier.size(16.dp)
-                                )
                             }
                         }
                     }
                 }
             } else {
-                // ======================================================
-                // DIRECT SESSIONS & WWDC25 LIQUID GLASS CREATE ACTION
-                // ======================================================
-                val sessions = dynamicSessions[tool.id] ?: tool.sessions
-
+                // Agent detail: real sessions only.
+                val query = searchQuery.trim()
+                val visibleSessions = if (query.isBlank()) agent.sessions else agent.sessions.filter {
+                    it.title.contains(query, ignoreCase = true)
+                }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(top = 96.dp, bottom = 110.dp)
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 96.dp, bottom = 110.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     item {
-                        // Back Navigation Breadcrumb
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .defaultMinSize(minHeight = 48.dp)
-                                .applePressable(0.96f, pressHaptic = true) {
-                                    selectedToolId = null
-                                }
                                 .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back to cli tools",
-                                tint = effectiveAccent,
-                                modifier = Modifier.size(20.dp)
+                                contentDescription = "Back to agents",
+                                tint = accent,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable { selectedAgentId = null },
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Cli tools",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = effectiveAccent
-                            )
-                            Text(
-                                text = " / ${tool.name}",
-                                fontSize = 14.sp,
+                                text = agent.name,
+                                fontSize = 22.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (isDark) Color.White.copy(alpha = 0.70f) else Color.Black.copy(alpha = 0.60f)
+                                color = primaryText,
+                                letterSpacing = (-0.25).sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // WWDC25 Molded Liquid Glass "Create session" Pod with Refraction, Rim, and Reflection
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = tool.brandColor,
-                            shadowElevation = 6.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 48.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = Color(0xFF34C759), cornerRadius = 20.dp)
-                                .applePressable(0.96f, pressHaptic = true) {
-                                    val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-                                    val newId = "sess_${System.currentTimeMillis()}"
-                                    val newTitle = "New ${tool.name} session"
-                                    val newSess = AgentSession(
-                                        id = newId,
-                                        title = newTitle,
-                                        timestamp = "$now (Just created)",
-                                        status = "Active",
-                                        turnsCount = 1
-                                    )
-                                    dynamicSessions.getOrPut(tool.id) { mutableListOf() }.add(0, newSess)
-                                    onOpenAgentChat?.invoke(sessionRoomId(tool.id), newTitle, tool.name, tool.iconRes, tool.brandColor)
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 16.dp, horizontal = 20.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Embossed Glass Lens Icon Container
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.25f))
-                                        .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.50f)), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "Create session",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Text(
-                                    text = "Create session",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color.White,
-                                    letterSpacing = (-0.1).sp
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Active sessions",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F),
-                                letterSpacing = (-0.1).sp
-                            )
-
-                            Text(
-                                text = "${sessions.size} total",
-                                fontSize = 12.sp,
-                                color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.40f)
-                            )
-                        }
-
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "${agent.sessions.size} sessions",
+                            fontSize = 12.sp,
+                            color = secondaryText,
+                            style = Tnum,
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    if (sessions.isEmpty()) {
+                    if (agent.sessions.isEmpty()) {
                         item {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = if (isDark) Color(0xFF141620).copy(alpha = 0.50f) else Color.White.copy(alpha = 0.70f),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 16.dp)
+                                color = card,
+                                border = BorderStroke(0.5.dp, hairline),
+                                modifier = Modifier.fillMaxWidth(),
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(24.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No sessions running yet. Tap \"Create session\" above.",
-                                        fontSize = 13.sp,
-                                        color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.40f)
-                                    )
-                                }
+                                Text(
+                                    text = agent.sessionsError ?: "No sessions yet for this agent.",
+                                    fontSize = 13.sp,
+                                    color = secondaryText,
+                                    modifier = Modifier.padding(20.dp),
+                                )
                             }
                         }
                     } else {
-                        items(sessions, key = { it.id }) { session ->
+                        items(visibleSessions, key = { it.id }) { session ->
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = if (isDark) Color(0xFF141620).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.92f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.85f),
-                                            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
-                                        )
-                                    )
-                                ),
-                                shadowElevation = 2.dp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .applePressable(0.97f, pressHaptic = true) {
-                                        onOpenAgentChat?.invoke(sessionRoomId(tool.id), session.title, tool.name, tool.iconRes, tool.brandColor)
-                                    }
+                                color = card,
+                                border = BorderStroke(0.5.dp, hairline),
+                                modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .defaultMinSize(minHeight = 56.dp)
+                                        .clickable { openChat(agent, session.title) }
                                         .padding(horizontal = 16.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    // WWDC25 Molded Jelly Status Indicator Dot
-                                    Box(
-                                        modifier = Modifier
-                                            .size(10.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (session.status == "Active") StatusGreen else Color(0xFF8E8E93)
-                                            )
-                                            .border(
-                                                BorderStroke(1.dp, Color.White.copy(alpha = 0.40f)),
-                                                CircleShape
-                                            )
-                                    )
-
-                                    Spacer(modifier = Modifier.width(16.dp))
-
+                                    if (isActiveStatus(session.status)) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(CircleShape)
+                                                .background(StatusGreen),
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                    }
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = session.title,
-                                            fontSize = 14.sp,
+                                            fontSize = 15.sp,
                                             fontWeight = FontWeight.Medium,
-                                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                            color = primaryText,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
                                         )
-
                                         Spacer(modifier = Modifier.height(2.dp))
-
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(
-                                                text = session.timestamp,
-                                                fontSize = 12.sp,
-                                                color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
-                                            )
-                                            Text(
-                                                text = "\u2022",
-                                                fontSize = 12.sp,
-                                                color = if (isDark) Color.White.copy(alpha = 0.30f) else Color.Black.copy(alpha = 0.25f)
-                                            )
-                                            Text(
-                                                text = "${session.turnsCount} turns",
-                                                fontSize = 12.sp,
-                                                color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
-                                            )
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            val age = formatAge(session.ageSeconds)
+                                            if (age != null) {
+                                                Text(
+                                                    text = age,
+                                                    fontSize = 12.sp,
+                                                    color = if (isDark) MutedDark else secondaryText,
+                                                    style = Tnum,
+                                                )
+                                            }
+                                            if (session.messageCount != null) {
+                                                Text(
+                                                    text = "${session.messageCount} messages",
+                                                    fontSize = 12.sp,
+                                                    color = secondaryText,
+                                                    style = Tnum,
+                                                )
+                                            }
                                         }
                                     }
-
-                                    Icon(
-                                        imageVector = TalosIcons.TalosChevronRight,
-                                        contentDescription = "Resume session",
-                                        tint = if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.30f),
-                                        modifier = Modifier.size(16.dp)
-                                    )
                                 }
                             }
                         }
@@ -734,103 +575,63 @@ fun LandingScreen(
             }
         }
 
-        // ==============================================================
-        // TOP FLOATING WWDC25 LIQUID GLASS CAPSULE BAR
-        // ==============================================================
+        // Top bar.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF161822).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.94f),
-                border = BorderStroke(
-                    1.dp,
-                    Brush.verticalGradient(
-                        listOf(
-                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.95f),
-                            if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
-                        )
-                    )
-                ),
-                shadowElevation = 4.dp
+                shape = RoundedCornerShape(16.dp),
+                color = card,
+                border = BorderStroke(0.5.dp, hairline),
             ) {
                 Row(
                     modifier = Modifier.padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (selectedToolId != null) {
-                        Box(
+                    if (selectedAgentId != null) {
+                        Row(
                             modifier = Modifier
-                                .defaultMinSize(minWidth = 72.dp, minHeight = 34.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(if (isDark) Color(0xFF252733) else Color(0xFFE5E5EA))
-                                .applePressable(0.94f, pressHaptic = true) {
-                                    selectedToolId = null
-                                }
-                                .padding(horizontal = 12.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = if (isDark) Color.White else Color(0xFF1D1D1F),
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Text(
-                                    text = "Back",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
-                                )
-                            }
-                        }
-                    } else {
-                        // Chat Button: Opens AppleAgentChatScreen
-                        Box(
-                            modifier = Modifier
-                                .size(width = 44.dp, height = 34.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .applePressable(0.94f, pressHaptic = true) {
-                                    // Open the room this hub is actually bound to,
-                                    // with the tool the user is looking at.
-                                    val tool = currentTool ?: cliTools.first()
-                                    val room = sessionRoomId(currentTool?.id ?: tool.id)
-                                    onOpenAgentChat?.invoke(room, "Active conversation", tool.name, tool.iconRes, tool.brandColor)
-                                },
-                            contentAlignment = Alignment.Center
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { selectedAgentId = null }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                imageVector = TalosIcons.TalosChat,
-                                contentDescription = "Chat",
-                                tint = if (isDark) Color.White.copy(alpha = 0.60f) else Color(0xFF1D1D1F).copy(alpha = 0.50f),
-                                modifier = Modifier.size(18.dp)
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = primaryText,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Back",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primaryText,
+                                letterSpacing = (-0.15).sp,
                             )
                         }
-
-                        // Agents Button: Stays on Hub
-                        Box(
+                    } else {
+                        Row(
                             modifier = Modifier
-                                .size(width = 44.dp, height = 34.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(if (isDark) Color(0xFF252733) else Color(0xFF1D1D1F))
-                                .applePressable(0.94f, pressHaptic = true) {
-                                },
-                            contentAlignment = Alignment.Center
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    selectedAgent?.let { openChat(it, "Active conversation") }
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(
-                                imageVector = TalosIcons.TalosHub,
-                                contentDescription = "Agents",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
+                            Text(
+                                text = "Chat",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primaryText,
+                                letterSpacing = (-0.15).sp,
                             )
                         }
                     }
@@ -838,63 +639,47 @@ fun LandingScreen(
             }
 
             Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = if (isDark) Color(0xFF161822).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.94f),
-                border = BorderStroke(
-                    1.dp,
-                    Brush.verticalGradient(
-                        listOf(
-                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.95f),
-                            if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
-                        )
-                    )
-                ),
-                shadowElevation = 4.dp
+                shape = RoundedCornerShape(16.dp),
+                color = card,
+                border = BorderStroke(0.5.dp, hairline),
             ) {
                 Row(
                     modifier = Modifier.padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 40.dp, height = 34.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .applePressable(0.94f, pressHaptic = true) {
-                                onToggleTheme()
-                            },
-                        contentAlignment = Alignment.Center
+                            .size(width = 36.dp, height = 32.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onToggleTheme() },
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Tune,
-                            contentDescription = "Filter",
-                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
-                            modifier = Modifier.size(18.dp)
+                            contentDescription = "Toggle theme",
+                            tint = primaryText,
+                            modifier = Modifier.size(18.dp),
                         )
                     }
-
                     Box(
                         modifier = Modifier
-                            .size(width = 40.dp, height = 34.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .applePressable(0.94f, pressHaptic = true) {
-                                onOpenSettings?.invoke() ?: onOpenWizard?.invoke()
-                            },
-                        contentAlignment = Alignment.Center
+                            .size(width = 36.dp, height = 32.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onOpenSettings?.invoke() ?: onOpenWizard?.invoke() },
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreHoriz,
                             contentDescription = "More options",
-                            tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
-                            modifier = Modifier.size(18.dp)
+                            tint = primaryText,
+                            modifier = Modifier.size(18.dp),
                         )
                     }
                 }
             }
         }
 
-        // ==============================================================
-        // FLOATING BOTTOM WWDC25 LIQUID GLASS CONTROLS
-        // ==============================================================
+        // Bottom search + new-session controls.
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -902,40 +687,29 @@ fun LandingScreen(
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = if (isDark) Color(0xFF141620).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f),
-                border = BorderStroke(
-                    1.dp,
-                    Brush.verticalGradient(
-                        listOf(
-                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.95f),
-                            if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
-                        )
-                    )
-                ),
-                shadowElevation = 5.dp,
+                shape = RoundedCornerShape(16.dp),
+                color = card,
+                border = BorderStroke(0.5.dp, hairline),
                 modifier = Modifier
                     .weight(1f)
-                    .height(54.dp)
+                    .height(48.dp),
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.40f),
-                        modifier = Modifier.size(20.dp)
+                        tint = tertiaryText,
+                        modifier = Modifier.size(18.dp),
                     )
-
                     Spacer(modifier = Modifier.width(12.dp))
-
                     BasicTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
@@ -943,69 +717,40 @@ fun LandingScreen(
                         textStyle = TextStyle(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Normal,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                            color = primaryText,
                         ),
-                        cursorBrush = SolidColor(effectiveAccent),
+                        cursorBrush = SolidColor(accent),
                         decorationBox = { innerTextField ->
                             if (searchQuery.isEmpty()) {
                                 Text(
-                                    text = if (selectedToolId != null) "Search active sessions" else "Search cli tools and engines",
+                                    text = if (selectedAgentId != null) "Search sessions" else "Search agents",
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.35f),
-                                    letterSpacing = (-0.1).sp
+                                    color = tertiaryText,
+                                    letterSpacing = (-0.1).sp,
                                 )
                             }
                             innerTextField()
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
 
-            // WWDC25 Embossed Molded Glass Circular Action Button
             Surface(
                 shape = CircleShape,
-                color = if (isDark) Color(0xFF222533).copy(alpha = 0.92f) else Color(0xFFE2E4EC),
-                border = BorderStroke(
-                    1.2.dp,
-                    Brush.linearGradient(
-                        listOf(
-                            Color.White.copy(alpha = if (isDark) 0.50f else 0.95f),
-                            Color(0xFF007AFF).copy(alpha = 0.30f),
-                            Color(0xFFAF52DE).copy(alpha = 0.25f),
-                            Color.White.copy(alpha = if (isDark) 0.10f else 0.40f)
-                        )
-                    )
-                ),
-                shadowElevation = 5.dp,
+                color = accent,
                 modifier = Modifier
-                    .size(54.dp)
-                    .applePressable(0.92f, pressHaptic = true) {
-                        val tool = currentTool ?: cliTools.first()
-                        val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-                        val newId = "sess_${System.currentTimeMillis()}"
-                        val newTitle = "New ${tool.name} session"
-                        val newSess = AgentSession(
-                            id = newId,
-                            title = newTitle,
-                            timestamp = "$now (Just created)",
-                            status = "Active",
-                            turnsCount = 1
-                        )
-                        dynamicSessions.getOrPut(tool.id) { mutableListOf() }.add(0, newSess)
-                        onOpenAgentChat?.invoke(sessionRoomId(tool.id), newTitle, tool.name, tool.iconRes, tool.brandColor)
-                    }
+                    .size(48.dp)
+                    .clickable(enabled = selectedAgent != null) {
+                        selectedAgent?.let { openChat(it, "New ${it.name} session") }
+                    },
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Default.Edit,
+                        imageVector = Icons.Default.Add,
                         contentDescription = "New session",
-                        tint = if (isDark) Color.White else Color(0xFF1D1D1F),
-                        modifier = Modifier.size(20.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }

@@ -636,6 +636,75 @@ async def list_pending_questions(token: str = Depends(require_auth)):
 
 
 # ---------------------------------------------------------------------------
+# OpenCode: the one CLI agent with a real live API
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/opencode/health")
+async def opencode_health(token: str = Depends(require_auth)):
+    """Authenticated probe of `opencode serve`.
+
+    Returns the real model list on success. On 401 it returns the exact
+    diagnostic instead of a generic failure, because this endpoint exists
+    specifically because the app spent a long time failing here silently.
+    """
+    from server.opencode_bridge import OpenCodeClient
+
+    client = OpenCodeClient()
+    result = client.health()
+    return {
+        "ok": result.ok,
+        "status": result.status,
+        "error": result.error,
+        "models": result.models,
+    }
+
+
+@app.get("/api/opencode/sessions")
+async def opencode_sessions(token: str = Depends(require_auth)):
+    """Real sessions from the live OpenCode server, newest first."""
+    from server.opencode_bridge import OpenCodeClient
+
+    result = OpenCodeClient().list_sessions()
+    if not result.ok:
+        return {"ok": False, "error": result.error, "sessions": []}
+    rows = (result.data or {}).get("data") or []
+    sessions = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        model = row.get("model") or {}
+        sessions.append(
+            {
+                "id": row.get("id"),
+                "title": (row.get("title") or "").strip() or "Untitled session",
+                "agent": row.get("agent"),
+                "model": model.get("id") if isinstance(model, dict) else None,
+                "project_id": row.get("projectID"),
+            }
+        )
+    return {"ok": True, "sessions": sessions, "count": len(sessions)}
+
+
+# ---------------------------------------------------------------------------
+# Agents: real roster + real sessions
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/agents/roster")
+async def agents_roster(token: str = Depends(require_auth)):
+    """Discovered engines and their real sessions.
+
+    Replaces the hardcoded CLI tool list the client used to render. Engines that
+    are not installed stay in the response with the reason, so the UI can say
+    "not installed" instead of inventing a session history.
+    """
+    from server.agent_sessions import discover_agent_sessions
+
+    return discover_agent_sessions()
+
+
+# ---------------------------------------------------------------------------
 # Kanban: the tool-call ledger
 # ---------------------------------------------------------------------------
 

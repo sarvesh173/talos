@@ -635,6 +635,66 @@ async def list_pending_questions(token: str = Depends(require_auth)):
     return orchestrator.pending_questions()
 
 
+@app.post("/api/kanban/events")
+async def kanban_ingest(payload: dict, token: str = Depends(require_auth)):
+    """Ingest one telemetry event from an agent plugin.
+
+    The OpenCode plugin posts here. Two things matter more than the happy path:
+
+    * the payload is redacted server-side as well as in the plugin, because a
+      single missed pattern on the client must not leak a credential into
+      SQLite and out to a phone over a websocket;
+    * a malformed event is rejected with a clear message rather than stored as a
+      half-row, so the board never shows a call with no tool name.
+    """
+    from server.tool_ledger import ledger, redact
+
+    room_id = str(payload.get("room_id") or "the-council")
+    event = payload.get("event") or {}
+    if not isinstance(event, dict):
+        raise HTTPException(status_code=400, detail="event must be an object")
+
+    kind = str(event.get("kind") or "")
+    tool = str(event.get("tool") or "").strip()
+    if not tool:
+        raise HTTPException(status_code=400, detail="event.tool is required")
+    if kind not in ("tool.start", "tool.finish"):
+        # Session and permission events are acknowledged but not ledgered here;
+        # they have their own surfaces and would otherwise pollute the board.
+        return {"ok": True, "recorded": False, "kind": kind}
+
+    agent_id = str(event.get("agentId") or "opencode")
+    agent_name = str(event.get("agentName") or "OpenCode")
+
+    if kind == "tool.start":
+        record = ledger.start(
+            room_id=room_id,
+            agent_id=agent_id,
+            agent_name=agent_name,
+            tool=tool,
+            arguments=event.get("arguments"),
+            is_delegate=bool(event.get("isDelegate")),
+            parent_agent_id=str(event.get("parentAgentId") or ""),
+        )
+        return {"ok": True, "recorded": True, "id": record.id}
+
+    # tool.finish closes the most recent running call for this agent+tool.
+    closed = ledger.close_open(
+        room_id=room_id,
+        agent_id=agent_id,
+        tool=tool,
+        status=str(event.get("status") or "ok"),
+        result_summary=str(event.get("resultSummary") or ""),
+        error=str(event.get("error") or ""),
+    )
+    if closed is None:
+        # A finish with no matching start means the plugin or the server
+        # restarted mid-call. Acknowledge it; inventing a zero-duration row
+        # would put a fake in the board.
+        return {"ok": True, "recorded": False, "reason": "no matching open call"}
+    return {"ok": True, "recorded": True, "id": closed.id}
+
+
 # ---------------------------------------------------------------------------
 # OpenCode: the one CLI agent with a real live API
 # ---------------------------------------------------------------------------

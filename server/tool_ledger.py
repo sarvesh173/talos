@@ -177,6 +177,39 @@ class ToolLedger:
                 logger.warning("Tool ledger persist failed: %s", exc)
         return record
 
+    def close_open(
+        self,
+        room_id: str,
+        agent_id: str,
+        tool: str,
+        status: str = "ok",
+        result_summary: str = "",
+        error: str = "",
+    ) -> Optional[ToolCallRecord]:
+        """Close the most recent running call for this agent and tool.
+
+        Needed by out-of-process reporters (the OpenCode plugin), which see a
+        start and a finish as two separate HTTP requests and cannot hand back the
+        record object. Matching on the newest open row for the pair is correct
+        because an agent cannot have two concurrent calls to the same tool within
+        one session in practice, and if it can, closing the newest is the least
+        wrong choice.
+        """
+        ring = self._rings.get(room_id, [])
+        for record in reversed(ring):
+            if (
+                record.agent_id == agent_id
+                and record.tool == tool
+                and record.status == "running"
+            ):
+                return self.finish(
+                    record,
+                    status=status,
+                    result_summary=result_summary,
+                    error=error,
+                )
+        return None
+
     def _append(self, room_id: str, record: ToolCallRecord) -> None:
         ring = self._rings.setdefault(room_id, [])
         ring.append(record)

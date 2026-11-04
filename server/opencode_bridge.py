@@ -93,8 +93,23 @@ def _password_from_process(pid_hint: Optional[int] = None) -> str:
     return ""
 
 
+def _password_from_systemd_unit() -> str:
+    """Parse Environment=OPENCODE_SERVER_PASSWORD from the serve unit."""
+    import re
+
+    unit = os.path.expanduser("~/.config/systemd/user/opencode-serve.service")
+    try:
+        for line in open(unit, encoding="utf-8", errors="ignore"):
+            m = re.match(r"\s*Environment\s*=\s*OPENCODE_SERVER_PASSWORD=(.*)\s*$", line)
+            if m and m.group(1).strip():
+                return m.group(1).strip()
+    except OSError:
+        pass
+    return ""
+
+
 def resolve_password(password: Optional[str] = None) -> str:
-    """Password lookup order: explicit, env, then the live process."""
+    """Password lookup order: explicit, env, hermes .env, systemd unit, live process."""
     if password:
         return password
     env = os.environ.get("OPENCODE_SERVER_PASSWORD", "").strip()
@@ -112,7 +127,10 @@ def resolve_password(password: Optional[str] = None) -> str:
                         return value
     except OSError:
         pass
-    return _password_from_process()
+    from_proc = _password_from_process()
+    if from_proc:
+        return from_proc
+    return _password_from_systemd_unit()
 
 
 def auth_header(password: Optional[str] = None) -> Dict[str, str]:
@@ -178,6 +196,34 @@ class OpenCodeClient:
             logger.warning("OpenCode request failed: %s", exc)
             return OpenCodeResult(ok=False, error=type(exc).__name__)
 
+    def _post(self, path: str, body: Dict[str, Any]) -> OpenCodeResult:
+        headers = auth_header(self._password)
+        if not headers:
+            return OpenCodeResult(ok=False, error="no OPENCODE_SERVER_PASSWORD available; cannot authenticate")
+        headers["Content-Type"] = "application/json"
+        payload = json.dumps(body).encode()
+        request = urllib.request.Request(f"{self.base_url}{path}", data=payload, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                try:
+                    return OpenCodeResult(ok=True, data=json.loads(response.read()), status=response.status)
+                except json.JSONDecodeError:
+                    return OpenCodeResult(ok=False, error="response was not JSON", status=response.status)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 401:
+                return OpenCodeResult(ok=False, status=401, error="OpenCode rejected the credential (401). Check OPENCODE_SERVER_PASSWORD.")
+            detail = ""
+            try:
+                detail = exc.read().decode(errors="replace")[:300]
+            except Exception:
+                pass
+            return OpenCodeResult(ok=False, status=exc.code, error=detail or f"HTTP {exc.code}")
+        except urllib.error.URLError as exc:
+            return OpenCodeResult(ok=False, error=f"unreachable: {exc.reason}")
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("OpenCode request failed: %s", exc)
+            return OpenCodeResult(ok=False, error=type(exc).__name__)
+
     def health(self) -> OpenCodeResult:
         """Cheapest authenticated call that proves the whole path works."""
         return self._get("/api/model")
@@ -185,8 +231,47 @@ class OpenCodeClient:
     def list_models(self) -> OpenCodeResult:
         return self._get("/api/model")
 
+    def create_session(self, title: Optional[str] = None) -> OpenCodeResult:
+        body: Dict[str, Any] = {"title": title} if title else {}
+        return self._post("/api/session", body)
+
+    @property
+    def session_id(self) -> Optional[str]:
+        return None
+
     def list_sessions(self) -> OpenCodeResult:
         return self._get("/api/session")
 
     def list_agents(self) -> OpenCodeResult:
         return self._get("/api/agent")
+
+    # --- async wrappers (contract: async health/list_models/create_session) ---
+    async def ahealth(self) -> OpenCodeResult:
+        import asyncio
+
+        return await asyncio.to_thread(self.health)
+
+    async def alist_models(self) -> OpenCodeResult:
+        import asyncio
+
+        return await asyncio.to_thread(self.list_models)
+
+    async def acreate_session(self, title: Optional[str] = None) -> OpenCodeResult:
+        import asyncio
+
+        return await asyncio.to_thread(self.create_session, title)
+
+    # Exact-name async API required by the bridge contract.
+    async def health_async(self) -> OpenCodeResult:
+        return await self.ahealth()
+
+    async def list_models_async(self) -> OpenCodeResult:
+        return await self.alist_models()
+
+    async def create_session_async(self, title: Optional[str] = None) -> OpenCodeResult:
+        return await self.acreate_session(title)
+
+
+# Backwards/contract-compatible alias: async-named class returning the same
+# OpenCodeResult(ok, models, error) shape.
+OpenCodeBridge = OpenCodeClient

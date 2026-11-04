@@ -1,0 +1,37 @@
+{
+  "name": "opencode-talos-bridge",
+  "version": "0.1.0",
+  "description": "Streams OpenCode tool-call telemetry to TALOS so the Kanban board shows what the agent is actually doing",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "talos",
+    "telemetry",
+    "observability"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types test/*.test.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@opencode/plugin": "^2.2.5",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

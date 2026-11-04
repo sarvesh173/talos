@@ -32,12 +32,14 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 from pathlib import Path
 import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set
 
+from core.llm_client import ModelClient
 from core.models import BusEvent, EventType, Message, Role
 from core.room_bus import bus as default_bus
 from server.db import save_message
@@ -117,6 +119,27 @@ class AgentSpec:
     bridging_phrase: str = "Building on the point above:"
 
     # -- context aware generation -------------------------------------------
+
+    def system_prompt(self, topic: str = "the request") -> str:
+        """The persona handed to the real model for this agent.
+
+        The role description is the operator's intent; the stance keeps each
+        agent from converging on the same answer. Kept short on purpose — a long
+        preamble costs tokens on every single turn and dilutes the instruction.
+        """
+        parts = [
+            f"You are {self.name}, one agent on a multi-agent council bench.",
+        ]
+        if self.role_description:
+            parts.append(self.role_description)
+        if self.stance and self.stance != "balanced":
+            parts.append(f"Your stance is {self.stance}.")
+        parts.append(
+            f"The user is discussing {topic}. Answer directly and concretely. "
+            "No preamble, no restating the question, no bullet-point soup. "
+            "If another agent already answered, build on it or disagree — do not repeat it."
+        )
+        return " ".join(parts)
 
     def thought_for(
         self,
@@ -465,6 +488,11 @@ class AgentOrchestrator:
         persist: bool = True,
         context_window: int = CONTEXT_WINDOW,
         max_turns_per_round: int = MAX_TURNS_PER_ROUND,
+        use_live_models: bool = False,
+        llm_base_url: str = "",
+        default_model: str = "stealth/crouton-alpha",
+        reasoning_effort: str = "high",
+        llm_timeout: float = 180.0,
     ) -> None:
         self.bus = event_bus if event_bus is not None else default_bus
         roster = list(agents or default_agents())
@@ -483,6 +511,15 @@ class AgentOrchestrator:
         self.persist = persist
         self.context_window = context_window
         self.max_turns_per_round = max_turns_per_round
+        # Live model execution. Tests construct the orchestrator with
+        # use_live_models=False so the suite never reaches the network.
+        self.use_live_models = use_live_models
+        self.llm_base_url = llm_base_url or os.environ.get(
+            "TALOS_LLM_BASE_URL", "http://127.0.0.1:4123/v1"
+        )
+        self.default_model = default_model
+        self.reasoning_effort = reasoning_effort
+        self.llm_timeout = llm_timeout
 
         self._registered_rooms: Set[str] = set()
         self._seen_messages: Set[str] = set()
@@ -682,6 +719,128 @@ class AgentOrchestrator:
         finally:
             self._rounds.pop(round_.round_id, None)
 
+    async def _stream_text(
+        self,
+        round_: "_Round",
+        turn: "_Turn",
+        text: str,
+        kind: str = "token",
+    ) -> None:
+        """Stream [text] to the bus as thought or token deltas."""
+        if not text:
+            return
+        chunk_size = 5 if kind == "thought" else 6
+        for chunk in _chunks(text, size=chunk_size):
+            if kind == "thought":
+                await self.bus.stream_thought(
+                    round_.room_id,
+                    turn.message_id,
+                    chunk,
+                    agent_id=turn.agent_id,
+                    agent_name=self.agents[turn.agent_id].name,
+                    color=self.agents[turn.agent_id].color,
+                )
+                turn.thoughts_emitted += 1
+            else:
+                await self.bus.stream_token(
+                    round_.room_id,
+                    turn.message_id,
+                    chunk,
+                    agent_id=turn.agent_id,
+                    agent_name=self.agents[turn.agent_id].name,
+                    color=self.agents[turn.agent_id].color,
+                )
+                turn.tokens_emitted += 1
+            if self.token_interval:
+                await asyncio.sleep(self.token_interval)
+
+    def _agent_messages(
+        self,
+        agent: "AgentSpec",
+        round_: "_Round",
+        context: List[Dict[str, str]],
+    ) -> List[Dict[str, str]]:
+        """Build the chat history handed to the model for one turn."""
+        system = agent.system_prompt(topic=_topic_of(round_.prompt))
+        messages: List[Dict[str, str]] = [{"role": "system", "content": system}]
+        for prior in context[-self.context_window :]:
+            speaker = prior.get("agent_name") or prior.get("agent_id") or "agent"
+            messages.append(
+                {"role": "assistant", "content": f"[{speaker}] {prior.get('content', '')}"}
+            )
+        messages.append({"role": "user", "content": round_.prompt})
+        return messages
+
+    async def _run_live_turn(
+        self,
+        agent: "AgentSpec",
+        round_: "_Round",
+        turn: "_Turn",
+        context: List[Dict[str, str]],
+    ) -> Optional[tuple]:
+        """Stream one real model turn.
+
+        Returns ``(thought, reply)`` on success, or ``None`` when the model is
+        unreachable so the caller can fall back. Deltas are forwarded to the bus
+        as they arrive, which is what makes the orb speed and the thinking panel
+        reflect the model instead of a fixed timer.
+        """
+        if not self.use_live_models:
+            return None
+        # Agents carry CLI aliases (`claude-code`, `hermes-agent`). Those are
+        # bench identities, not model ids the provider recognises — sending one
+        # upstream is a guaranteed 403. Any alias without a vendor prefix falls
+        # through to the configured default model.
+        model = agent.model or ""
+        if "/" not in model:
+            model = self.default_model
+        client = ModelClient(
+            base_url=self.llm_base_url,
+            model=model,
+            reasoning_effort=self.reasoning_effort,
+            timeout=self.llm_timeout,
+        )
+        messages = self._agent_messages(agent, round_, context)
+
+        thought_parts: List[str] = []
+        reply_parts: List[str] = []
+        saw_error = False
+
+        async for event in client.stream(messages):
+            if event.kind == "thought":
+                thought_parts.append(event.text)
+                await self.bus.stream_thought(
+                    round_.room_id,
+                    turn.message_id,
+                    event.text,
+                    agent_id=agent.id,
+                    agent_name=agent.name,
+                    color=agent.color,
+                )
+                turn.thoughts_emitted += 1
+            elif event.kind == "token":
+                reply_parts.append(event.text)
+                await self.bus.stream_token(
+                    round_.room_id,
+                    turn.message_id,
+                    event.text,
+                    agent_id=agent.id,
+                    agent_name=agent.name,
+                    color=agent.color,
+                )
+                turn.tokens_emitted += 1
+            elif event.kind == "error":
+                logger.warning("Live turn failed for %s (%s): %s", agent.id, model, event.detail)
+                saw_error = True
+
+        # A partial answer with an error is still worth keeping; a pure failure
+        # returns None so the caller can decide.
+        if saw_error and not reply_parts:
+            return None
+        if not reply_parts:
+            return None
+        return "".join(thought_parts).strip(), "".join(reply_parts).strip()
+
     async def _run_turn(
         self,
         agent: AgentSpec,
@@ -713,38 +872,21 @@ class AgentOrchestrator:
             await self._emit_typing(turn, True)
 
             topic = _topic_of(round_.prompt)
-            thought = agent.thought_for(round_.prompt, topic, context)
-            reply = agent.reply_for(round_.prompt, topic, context)
 
-            # Reasoning first, so the UI can render the thought panel.
-            for chunk in _chunks(thought, size=5):
-                await self.bus.stream_thought(
-                    round_.room_id,
-                    message_id,
-                    chunk,
-                    agent_id=agent.id,
-                    agent_name=agent.name,
-                    color=agent.color,
-                )
-                turn.thoughts_emitted += 1
-                if self.token_interval:
-                    await asyncio.sleep(self.token_interval)
-
-            if self.typing_lead:
-                await asyncio.sleep(self.typing_lead)
-
-            for chunk in _chunks(reply, size=6):
-                await self.bus.stream_token(
-                    round_.room_id,
-                    message_id,
-                    chunk,
-                    agent_id=agent.id,
-                    agent_name=agent.name,
-                    color=agent.color,
-                )
-                turn.tokens_emitted += 1
-                if self.token_interval:
-                    await asyncio.sleep(self.token_interval)
+            # Real model first. The template generator stays only as an offline
+            # fallback: a canned reply that looks like reasoning is worse than an
+            # honest "the provider is down", because the UI claims thought the
+            # model never had.
+            live = await self._run_live_turn(agent, round_, turn, context)
+            if live is None:
+                thought = agent.thought_for(round_.prompt, topic, context)
+                reply = agent.reply_for(round_.prompt, topic, context)
+                await self._stream_text(round_, turn, thought, kind="thought")
+                if self.typing_lead:
+                    await asyncio.sleep(self.typing_lead)
+                await self._stream_text(round_, turn, reply, kind="token")
+            else:
+                thought, reply = live
 
             message = Message(
                 id=message_id,
@@ -1287,4 +1429,11 @@ def default_agents() -> List[AgentSpec]:
         ),
     ]
 #: Process-wide orchestrator instance used by the FastAPI server.
-orchestrator = AgentOrchestrator()
+#: The process-wide orchestrator. Live models are on by default here — the
+#: single-player tests construct their own instance with the flag off, so the
+#: suite stays offline while the running core actually talks to the proxy.
+orchestrator = AgentOrchestrator(
+    use_live_models=os.environ.get("TALOS_LIVE_MODELS", "0") not in ("0", "false", "False", ""),
+    default_model=os.environ.get("TALOS_DEFAULT_MODEL", "stealth/crouton-alpha"),
+    reasoning_effort=os.environ.get("TALOS_REASONING_EFFORT", "high"),
+)

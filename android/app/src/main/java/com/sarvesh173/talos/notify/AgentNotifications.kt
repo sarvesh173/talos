@@ -47,7 +47,9 @@ object AgentNotifications {
     const val EXTRA_ROOM_ID = "room_id"
     const val EXTRA_AGENT_NAME = "agent_name"
     const val EXTRA_APPROVAL_ID = "approval_id"
+    const val EXTRA_QUESTION_ID = "question_id"
     const val EXTRA_APPROVE = "approve"
+    const val EXTRA_SCOPE = "scope"
 
     /** Group key so all agent chatter collapses into one stack. */
     private const val GROUP_AGENT = "talos.agent.group"
@@ -263,9 +265,9 @@ object AgentNotifications {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     setShortcutId(shortcutId(roomId))
                     setBubbleMetadata(
-                        Notification.BubbleMetadata.Builder(
+                        NotificationCompat.BubbleMetadata.Builder(
                             openRoomIntent(context, roomId, agentName),
-                            android.graphics.drawable.Icon.createWithResource(
+                            androidx.core.graphics.drawable.IconCompat.createWithResource(
                                 context, R.drawable.ic_notification
                             )
                         )

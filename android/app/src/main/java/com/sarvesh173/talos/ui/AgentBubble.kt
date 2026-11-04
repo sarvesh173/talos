@@ -319,7 +319,7 @@ private fun BubbleNoticeRow(
 
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (notice.needsApproval) {
-                MiniAction("Approve", Color(0xFF34C759), onApprove)
+                MiniAction("Approve", Color(0xFF34C759), onApprove, isDark)
                 MiniAction("Open", null, onOpen, isDark)
             } else {
                 MiniAction("Reply", notice.brandColor, { replyOpen = !replyOpen }, isDark)

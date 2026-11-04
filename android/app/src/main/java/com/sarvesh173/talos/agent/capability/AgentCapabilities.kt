@@ -21,6 +21,30 @@ import java.time.ZoneId
  * capabilities with separate grants, so every privileged surface gets its own
  * [Capability] with its own Android permissions and its own rationale.
  */
+private val HEALTH_READ = listOf(
+    "android.permission.health.READ_STEPS",
+    "android.permission.health.READ_HEART_RATE",
+    "android.permission.health.READ_SLEEP",
+    "android.permission.health.READ_EXERCISE",
+    "android.permission.health.READ_DISTANCE",
+    "android.permission.health.READ_TOTAL_CALORIES_BURNED",
+    "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+    "android.permission.health.READ_BLOOD_PRESSURE",
+    "android.permission.health.READ_BLOOD_GLUCOSE",
+    "android.permission.health.READ_BODY_TEMPERATURE",
+    "android.permission.health.READ_OXYGEN_SATURATION",
+    "android.permission.health.READ_WEIGHT",
+    "android.permission.health.READ_HEIGHT",
+    "android.permission.health.READ_RESTING_HEART_RATE",
+    "android.permission.health.READ_RESPIRATORY_RATE"
+)
+
+private val HEALTH_WRITE = listOf(
+    "android.permission.health.WRITE_EXERCISE",
+    "android.permission.health.WRITE_SLEEP",
+    "android.permission.health.WRITE_WEIGHT"
+)
+
 enum class Capability(
     val id: String,
     val title: String,
@@ -40,13 +64,13 @@ enum class Capability(
         id = "health",
         title = "Health",
         why = "Read steps, sleep, heart rate and workouts so answers can use them.",
-        permissions = Companion.HEALTH_READ
+        permissions = HEALTH_READ
     ),
     HealthWrite(
         id = "health_write",
         title = "Health (write)",
         why = "Log a workout or sleep session the agent recorded.",
-        permissions = Companion.HEALTH_WRITE
+        permissions = HEALTH_WRITE
     ),
     Alarms(
         id = "alarms",
@@ -273,8 +297,8 @@ class AlarmScheduler(private val context: Context) {
                 // java.time so callers never touch that numbering.
                 putExtra(
                     AlarmClock.EXTRA_DAYS,
-                    arrayListOf(
-                        *alarm.daysOfWeek.map { day ->
+                    ArrayList(
+                        alarm.daysOfWeek.map { day ->
                             when (day) {
                                 DayOfWeek.SUNDAY -> 1
                                 DayOfWeek.MONDAY -> 2
@@ -284,7 +308,7 @@ class AlarmScheduler(private val context: Context) {
                                 DayOfWeek.FRIDAY -> 6
                                 DayOfWeek.SATURDAY -> 7
                             }
-                        }.toIntArray()
+                        }
                     )
                 )
             }

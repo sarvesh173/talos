@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import secrets
 import sqlite3
+import threading
 import time
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
@@ -45,11 +46,61 @@ _MIGRATION_COLUMNS: Tuple[Tuple[str, str], ...] = (
 )
 
 
-def _get_connection() -> sqlite3.Connection:
-    _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
+# verify_token() runs on EVERY authenticated request, so the connection must
+# not be churned per call. One process-wide connection, serialised through a
+# re-entrant lock; close() is a no-op so existing call sites keep working.
+_CONN: Optional[sqlite3.Connection] = None
+_LOCK = threading.RLock()
+
+
+class _SharedConnection:
+    """Delegating wrapper over the process-wide connection."""
+
+    def __init__(self, conn: sqlite3.Connection) -> None:
+        self._conn = conn
+
+    def cursor(self):
+        with _LOCK:
+            return self._conn.cursor()
+
+    def execute(self, *a, **kw):
+        with _LOCK:
+            return self._conn.execute(*a, **kw)
+
+    def executemany(self, *a, **kw):
+        with _LOCK:
+            return self._conn.executemany(*a, **kw)
+
+    def commit(self):
+        with _LOCK:
+            self._conn.commit()
+
+    def rollback(self):
+        with _LOCK:
+            self._conn.rollback()
+
+    def close(self):
+        return None
+
+    def __getattr__(self, name):
+        with _LOCK:
+            return getattr(self._conn, name)
+
+
+def _get_connection() -> _SharedConnection:
+    global _CONN
+    with _LOCK:
+        if _CONN is not None:
+            return _SharedConnection(_CONN)
+        _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.commit()
+        _CONN = conn
+        return _SharedConnection(_CONN)
 
 
 def _table_columns(conn: sqlite3.Connection, table: str) -> List[str]:
@@ -61,7 +112,7 @@ def _table_columns(conn: sqlite3.Connection, table: str) -> List[str]:
         return []
 
 
-def _migrate(conn: sqlite3.Connection) -> None:
+def _migrate(conn) -> None:
     """Add any missing token-management columns."""
     existing = _table_columns(conn, "api_tokens")
     if not existing:

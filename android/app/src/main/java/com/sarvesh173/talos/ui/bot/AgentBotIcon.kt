@@ -75,7 +75,7 @@ fun AgentBotIcon(
     }
     LaunchedEffect(state) { if (frame > 0L) eng.setState(state, (if (lastMs > 0) lastMs else System.currentTimeMillis()) - eng.startedAt + eng.startedAt) }
     // sync shape
-    if (eng.shape != shape) eng.setShape(shape)
+    if (eng.shape != shape) eng.transitionTo(shape)
     val sem = if (announce) Modifier.semantics { contentDescription = label ?: "Agent ${state.name.lowercase()}" } else Modifier
     Canvas(modifier.size(size).then(sem)) {
         drawBot(eng, ink, eyeInk, particles, (frame / 1000f).toFloat())

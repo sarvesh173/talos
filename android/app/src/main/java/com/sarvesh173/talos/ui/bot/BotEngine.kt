@@ -112,7 +112,7 @@ class BotEngine {
         if (kotlin.random.Random.nextFloat() < 0.14f) { blinkQueue.add(now + 370 to 0.05f); blinkQueue.add(now + 480 to 1f) }
     }
 
-    fun setShape(s: BotShape) {
+    fun transitionTo(s: BotShape) {
         if (s == shape) return
         val prev = shape; val amt = cubicInOut(clampF(shapeBlend.x, 0f, 1f))
         shapeFromRing = if (amt >= 1f) prev.ring() else lerpRing(shapeFromRing, prev.ring(), amt)

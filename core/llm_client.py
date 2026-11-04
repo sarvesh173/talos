@@ -82,21 +82,37 @@ def protocol_for(model: str) -> str:
     return "anthropic" if (model or "").strip().lower().startswith("stealth/") else "openai"
 
 
-def _credential() -> str:
-    """Resolve the proxy credential. Never logged, never persisted here."""
-    value = os.environ.get(DEFAULT_KEY_ENV, "").strip()
+def _credential(env_name: str = DEFAULT_KEY_ENV) -> str:
+    """Resolve a provider credential. Never logged, never persisted here.
+
+    The key name follows the endpoint: the local proxy uses
+    ``COMMANDCODE_API_KEY``, OpenRouter uses ``OPENROUTER_API_KEY``. Reading the
+    wrong one silently produced "Missing Authentication header" 401s that look
+    like a broken model instead of a misconfigured client.
+    """
+    value = os.environ.get(env_name, "").strip()
     if value:
         return value
-    # Fall back to the Hermes env file so the core and the agent share one key.
+    # Fall back to the shared Hermes env file so core and agent use one key.
     env_path = os.path.expanduser("~/.hermes/.env")
     try:
         with open(env_path, "r", encoding="utf-8") as handle:
             for line in handle:
-                if line.startswith(f"{DEFAULT_KEY_ENV}="):
+                if line.startswith(f"{env_name}="):
                     return line.split("=", 1)[1].strip()
     except OSError:
         pass
     return ""
+
+
+def key_env_for(base_url: str) -> str:
+    """Which env var holds the credential for this endpoint."""
+    host = (base_url or "").lower()
+    if "openrouter.ai" in host:
+        return "OPENROUTER_API_KEY"
+    if "127.0.0.1" in host or "localhost" in host:
+        return DEFAULT_KEY_ENV
+    return DEFAULT_KEY_ENV
 
 
 def _delta_text(chunk: Dict) -> tuple[str, str]:
@@ -164,7 +180,7 @@ class ModelClient:
                 yield event
 
     def _headers(self, style: str) -> Dict[str, str]:
-        key = _credential()
+        key = _credential(key_env_for(self.base_url))
         headers = {"Content-Type": "application/json"}
         if not key:
             return headers
@@ -374,12 +390,14 @@ class ModelClient:
         started = time.perf_counter()
         thought: List[str] = []
         content: List[str] = []
+        token_events = 0
 
         async for event in self.stream(messages, max_tokens, temperature):
             if event.kind == "thought":
                 thought.append(event.text)
             elif event.kind == "token":
                 content.append(event.text)
+                token_events += 1
                 if result.ttft_ms is None:
                     result.ttft_ms = int((time.perf_counter() - started) * 1000)
             elif event.kind == "error":
@@ -397,7 +415,10 @@ class ModelClient:
         result.latency_ms = int((time.perf_counter() - started) * 1000)
         # Rough split so the UI has a number before a provider reports usage.
         result.prompt_tokens = sum(len(m.get("content", "")) for m in messages) // 4
-        result.completion_tokens = len(result.content) // 4
+        # ~4 chars/token, not the SSE event count: fast providers batch many
+        # tokens into a single delta, so counting events reported 5 tok/s for a
+        # stream genuinely running at 300.
+        result.completion_tokens = max(len(result.content) // 4, token_events)
         if result.error:
             result.content = ""
         return result
@@ -405,7 +426,7 @@ class ModelClient:
 
 async def probe(base_url: str = DEFAULT_BASE_URL) -> Dict:
     """Cheap liveness check used by the service gate."""
-    key = _credential()
+    key = _credential(key_env_for(base_url))
     headers = {"Authorization": f"Bearer {key}"} if key else {}
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:

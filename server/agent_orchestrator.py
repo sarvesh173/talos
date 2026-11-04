@@ -922,14 +922,18 @@ class AgentOrchestrator:
         if not reply_parts:
             return None
 
-        # Real numbers for the footer: nobody can fake a token rate because it
-        # is measured from the deltas that actually arrived.
+        # Real numbers for the footer. Token count is estimated from characters
+        # (~4 chars/token) rather than from the number of SSE events: providers
+        # batch several tokens into one delta, so counting events under-reports
+        # throughput by an order of magnitude on fast models.
         elapsed = max(time.perf_counter() - started_at, 1e-6)
+        chars = sum(len(part) for part in reply_parts)
+        est_tokens = max(event_count, int(chars / 4))
         turn.metrics = MessageMetrics(
             latency_ms=int(elapsed * 1000),
             ttft_ms=int((first_token_at - started_at) * 1000) if first_token_at else None,
-            completion_tokens=event_count,
-            tokens_per_second=round(event_count / elapsed, 2),
+            completion_tokens=est_tokens,
+            tokens_per_second=round(est_tokens / elapsed, 2),
             model=model,
         )
         return "".join(thought_parts).strip(), "".join(reply_parts).strip()

@@ -82,29 +82,52 @@ fun rememberAdaptiveOrbSpeed(
 /**
  * Map a measured chunk rate to an orb speed multiplier.
  *
- * A linear map is wrong here: real throughput on this machine spans 0.8 tok/s
- * (stealth/crouton-alpha) to 59.8 tok/s (GLM-5.3) — a 75x range that a linear
- * multiplier would either flatten into "barely different" or blow past any
- * sane cap before the fast end is even reached. Perception is logarithmic, so
- * the mapping is too: each doubling of throughput adds a fixed step of speed.
+ * Calibration is against measured per-user output speed, not localhost and not
+ * aggregate throughput. Verified 4 Nov 2026 from independent provider
+ * benchmarks:
  *
- *     rate <= 1        → baseline 1.0 (trickle looks like normal work)
- *     rate  =  5       → ~1.4
- *     rate  = 15       → ~1.8
- *     rate  = 30       → ~2.1
- *     rate  = 60       → ~2.4
- *     rate >= 90       → maxSpeed (saturated; faster reads as broken)
+ *     Cerebras Llama 4 Scout  2623  (fastest measured per-user)
+ *     Celeris-1                1581-1712
+ *     Mercury 2.5              1178
+ *     GLM-5.3-Flash (Inco)      593  (best public provider, AA-verified)
+ *     Groq Llama 4 Scout        621
+ *     SambaNova Llama 4 Scout   725
+ *     Nemotron 3.5 Super VL     428-485
+ *     Gemini 3.5 Flash Lite     402
+ *     GLM-5.3-Flash (Lambda)    140  per user at interactive latency
+ *     GLM-5.3-Flash (Petronella) 238  single user, 4x H200 FP8
+ *     DeepSeek V4.1 Flash       248
+ *     -> slow tail on local proxies: 5-70 tok/s
  *
- * The cap is the point the user asked for: "extreme fast nahi, uski bhi ek
- * limit honi chahiye."
+ * Aggregate numbers are traps and were deliberately excluded. "Lane0 1518",
+ * "Blackwell 10,000", "GLM-5.3-Flash 2591" are all *total server* throughput
+ * across many concurrent users — Lambda's own table shows the same model at
+ * 140 tok/s per user at C1 and 21 tok/s per user at C256. A per-user animation
+ * must be calibrated on per-user numbers or it lies.
+ *
+ * Real per-user spread: 5 → 3000 tok/s, ~9.2 octaves. log2 with 0.14/octave
+ * maps it onto a legible 1.0 → 2.6 curve:
+ *
+ *     rate =    5   → 1.33  (slow local proxy)
+ *     rate =   60   → 1.83
+ *     rate =  140   → 2.00  (GLM-5.3-Flash at interactive latency)
+ *     rate =  248   → 2.11  (DeepSeek V4.1 Flash)
+ *     rate =  621   → 2.30  (Llama 4 Scout on Groq)
+ *     rate =  725   → 2.33  (Llama 4 Scout on SambaNova)
+ *     rate = 1518   → 2.48  (Celeris-1)
+ *     rate = 2623   → 2.59  (Llama 4 Scout on Cerebras — the real ceiling)
+ *     rate >= 3000  → 2.60  (saturated)
+ *
+ * Saturation at the top is deliberate — that is the user's requirement:
+ * "extreme fast nahi, obviously uski bhi ek limit honi chahiye." Past the cap a
+ * faster animation stops reading as busy and starts reading as broken.
  */
 internal fun orbSpeedTarget(rate: Float, minSpeed: Float, maxSpeed: Float): Float {
     if (rate <= 0f) return minSpeed
-    // log2(rate) puts each doubling on one unit. 0.28 per octave spreads the
-    // real 1→60 tok/s band across 1.0→2.4 so the whole range stays legible
-    // instead of pinning at the cap after the second doubling.
+    // log2 puts each doubling on one unit; 0.14/octave spreads 5-3000 tok/s
+    // across the full 1.0-2.6 range without pinning early.
     val octaves = (kotlin.math.ln(rate.toDouble()) / kotlin.math.ln(2.0)).toFloat()
-    val target = 1f + (octaves.coerceAtLeast(0f) * 0.28f)
+    val target = 1f + (octaves.coerceAtLeast(0f) * 0.14f)
     return target.coerceIn(minSpeed, maxSpeed)
 }
 

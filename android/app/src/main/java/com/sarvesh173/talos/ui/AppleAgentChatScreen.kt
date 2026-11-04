@@ -42,6 +42,7 @@ import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.ui.agent.*
 import com.sarvesh173.talos.ui.avatar.AgentAvatar
 import com.sarvesh173.talos.ui.avatar.AgentAvatarEngine
+import com.sarvesh173.talos.ui.avatar.AvatarState
 import com.sarvesh173.talos.ui.avatar.AvatarIdentity
 import com.sarvesh173.talos.ui.chat.FileTouchSummary
 import com.sarvesh173.talos.ui.chat.MessageFooterView
@@ -758,6 +759,18 @@ private fun AgentBubble(
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
         val avatarEngine = remember(msg.agentId) {
             AgentAvatarEngine(AvatarIdentity.of(msg.agentId.ifBlank { "agent" }, agentName))
+        }
+        // The avatar is the agent's identity mark, not a spinner: it settles into
+        // a finished/settled expression once the turn has landed, and speeds up
+        // its breathing when the turn was produced fast.
+        LaunchedEffect(msg.id, msg.stats) {
+            avatarEngine.setState(
+                when {
+                    msg.stats == null -> AvatarState.Idle
+                    else -> AvatarState.Happy
+                }
+            )
+            msg.stats?.tokensPerSecond?.let { avatarEngine.setTempoFromRate(it) }
         }
         AgentAvatar(
             engine = avatarEngine,

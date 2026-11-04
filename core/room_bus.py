@@ -26,6 +26,8 @@ class RoomEventBus:
         self._binary_listeners: Dict[str, List[Callable[[bytes, str], Coroutine[Any, Any, None]]]] = {}
         # Global binary listeners receive binary frames across all rooms
         self._global_binary_listeners: List[Callable[[bytes, str], Coroutine[Any, Any, None]]] = []
+        # tool_call_id -> ledger record, so a finish event closes the right row.
+        self._open_tool_records: Dict[str, Any] = {}
         self._lock = asyncio.Lock()
 
     async def subscribe(self, room_id: str, ws: Any) -> None:
@@ -250,7 +252,37 @@ class RoomEventBus:
         await self.broadcast(event)
 
     async def stream_tool_call(self, room_id: str, message_id: str, tool_call: ToolCall) -> None:
-        """Publish tool execution start/update/finish state."""
+        """Publish tool execution start/update/finish state.
+
+        Every call is also appended to the tool ledger, which is what the Kanban
+        surface reads. Recording happens here rather than in the caller so no
+        call site can forget it — an invisible tool call is exactly the thing
+        this feature exists to prevent.
+        """
+        from server.tool_ledger import ledger
+
+        if tool_call.status == "running":
+            record = ledger.start(
+                room_id=room_id,
+                agent_id=tool_call.agent_id,
+                agent_name=tool_call.agent_name,
+                tool=tool_call.tool_name,
+                arguments=tool_call.arguments,
+                is_delegate=tool_call.is_delegate,
+                parent_agent_id=tool_call.parent_agent_id,
+            )
+            # Remember the ledger id so the finish event can close the same row.
+            self._open_tool_records[tool_call.call_id] = record
+        else:
+            record = self._open_tool_records.pop(tool_call.call_id, None)
+            if record is not None:
+                ledger.finish(
+                    record,
+                    status="ok" if tool_call.status in ("success", "completed") else "error",
+                    result_summary=tool_call.output or "",
+                    error="" if tool_call.status in ("success", "completed") else (tool_call.output or ""),
+                )
+
         event = BusEvent(
             event_type=EventType.tool_call_start if tool_call.status == "running" else EventType.tool_call_end,
             room_id=room_id,

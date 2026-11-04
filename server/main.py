@@ -37,6 +37,7 @@ from core.models import (
 from core.room_bus import bus
 from core.consensus import deliberate_proposal, list_room_proposals
 from server.agent_orchestrator import orchestrator
+from server.cli_engines import build_hierarchy
 from server.auth import (
     create_new_token,
     get_active_tokens,
@@ -474,6 +475,7 @@ async def delegate_child_agent(
         delegate_id=delegate_id,
         name=payload.name,
         task=payload.task,
+        description=payload.description or "",
         parent_id=parent_id,
         model=payload.model or "stealth/crouton-alpha",
         reasoning_effort=payload.reasoning_effort or "high",
@@ -487,6 +489,17 @@ async def delegate_child_agent(
 async def list_delegates(token: str = Depends(require_auth)):
     """List running and active delegate child agents with live countdowns."""
     return orchestrator.list_delegates()
+
+
+@app.get("/api/delegation/hierarchy")
+async def delegation_hierarchy(token: str = Depends(require_auth)):
+    """CLI engines discovered on this machine plus the delegates under each.
+
+    Replaces the client-side fallback that invented two engines with fake
+    delegates. An engine that is not installed comes back with
+    ``is_available: false`` and the reason, not a fabricated child tree.
+    """
+    return build_hierarchy(orchestrator.list_delegates())
 
 
 @app.post("/api/agents/delegates/{delegate_id}/cancel")
@@ -620,6 +633,60 @@ async def resolve_approval_endpoint(
 async def list_pending_questions(token: str = Depends(require_auth)):
     """Everything currently waiting on human decision/input, newest first."""
     return orchestrator.pending_questions()
+
+
+# ---------------------------------------------------------------------------
+# Kanban: the tool-call ledger
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/kanban/board")
+async def kanban_board(
+    room_id: str = "the-council",
+    limit: int = 120,
+    token: str = Depends(require_auth),
+):
+    """Live tool-call board: what every agent is calling right now.
+
+    Four lanes, in the order an operator cares about: in-flight calls, recent
+    calls, failures, and per-agent counters. Everything comes from the ledger
+    the bus writes on every invocation, so a call cannot happen without
+    appearing here.
+    """
+    from server.tool_ledger import ledger, summarize_arguments
+
+    running = ledger.running(room_id)
+    recent = ledger.recent(room_id, limit=limit)
+    failures = ledger.recent(room_id, limit=40, failures_only=True)
+    stats = ledger.stats(room_id)
+
+    def _row(entry: dict) -> dict:
+        return {
+            **entry,
+            "arguments_preview": summarize_arguments(entry.get("arguments")),
+        }
+
+    return {
+        "room_id": room_id,
+        "stats": stats,
+        "lanes": {
+            "running": [_row(r) for r in running],
+            "recent": [_row(r) for r in recent],
+            "failures": [_row(r) for r in failures],
+        },
+        "server_time": time.time(),
+    }
+
+
+@app.get("/api/kanban/stats")
+async def kanban_stats(
+    room_id: str = "the-council",
+    token: str = Depends(require_auth),
+):
+    """Compact per-agent / per-tool counters for the board header."""
+    from server.tool_ledger import ledger
+
+    return ledger.stats(room_id)
 
 
 @app.post("/api/questions/{question_id}/answer")

@@ -43,6 +43,13 @@ from core.llm_client import ModelClient
 from core.models import BusEvent, EventType, Message, MessageMetrics, Role
 from core.room_bus import bus as default_bus
 from server.db import save_message
+from server.delegate_watchdog import (
+    DelegateWatchdog,
+    compact_elapsed,
+    crossed_milestones,
+    format_elapsed,
+    next_milestone_in,
+)
 
 logger = logging.getLogger("agent_orchestrator")
 
@@ -495,6 +502,11 @@ class AgentOrchestrator:
         default_model: str = "deepseek/deepseek-v4-pro",
         reasoning_effort: str = "high",
         llm_timeout: float = 180.0,
+        delegate_client_factory: Any = None,
+        clock: Any = None,
+        watchdog_poll_interval: float = 30.0,
+        stall_threshold_seconds: float = 300.0,
+        notifier: Any = None,
     ) -> None:
         self.bus = event_bus if event_bus is not None else default_bus
         roster = list(agents or default_agents())
@@ -522,6 +534,27 @@ class AgentOrchestrator:
         self.default_model = default_model
         self.reasoning_effort = reasoning_effort
         self.llm_timeout = llm_timeout
+        #: Optional ``(base_url, model, reasoning_effort) -> client`` factory for
+        #: delegate turns. Tests inject a fake streaming client through this so
+        #: the suite never reaches the network; production leaves it ``None``
+        #: and uses :class:`ModelClient` directly.
+        self.delegate_client_factory = delegate_client_factory
+        #: Injectable clock (defaults to time.time). Tests pass a fake clock so
+        #: elapsed/stall/milestone logic never sleeps for real.
+        self._clock = clock or time.time
+        self.watchdog_poll_interval = watchdog_poll_interval
+        self.stall_threshold_seconds = stall_threshold_seconds
+        #: Optional human-readable notifier. Default None: bus events are the
+        #: transport (Android turns them into local notifications). No new
+        #: Telegram transport is invented here.
+        self._notifier = notifier
+        self._watchdog_task: Optional[asyncio.Task] = None
+        self._watchdog = DelegateWatchdog(
+            emit=self._emit_watchdog_event,
+            notify=notifier,
+            stall_threshold_seconds=stall_threshold_seconds,
+            clock=self._clock,
+        )
 
         self._registered_rooms: Set[str] = set()
         self._seen_messages: Set[str] = set()
@@ -557,14 +590,55 @@ class AgentOrchestrator:
     async def start(self, room_ids: Optional[Sequence[str]] = None) -> None:
         """Async-friendly wrapper around :meth:`attach`."""
         self.attach(room_ids)
+        self.start_watchdog()
+
+    def start_watchdog(self) -> None:
+        """Start the delegate watchdog polling task (idempotent)."""
+        if self._watchdog_task is not None and not self._watchdog_task.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._watchdog_task = loop.create_task(self._watchdog_loop())
+
+    async def _watchdog_loop(self) -> None:
+        while True:
+            try:
+                self.watchdog_poll()
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.error("Delegate watchdog poll failed: %s", exc)
+            await asyncio.sleep(self.watchdog_poll_interval)
+
+    def watchdog_poll(self, now: Optional[float] = None) -> List[Dict[str, Any]]:
+        """Run one watchdog pass over the delegate registry. Returns transitions."""
+        return self._watchdog.poll_once(self._delegate_registry(), now=now)
+
+    def _emit_watchdog_event(self, room_id: str, event_type: str, payload: Dict[str, Any]) -> None:
+        """Bus emission for watchdog transitions (existing _emit transport)."""
+        self._emit(room_id, event_type, payload)
 
     async def stop(self) -> None:
         """Cancel any in-flight turns and stop scheduling new ones."""
+        if self._watchdog_task is not None:
+            self._watchdog_task.cancel()
+            try:
+                await self._watchdog_task
+            except (asyncio.CancelledError, Exception):
+                pass
+            self._watchdog_task = None
         for task in list(self._tasks):
             task.cancel()
         if self._tasks:
             await asyncio.gather(*self._tasks, return_exceptions=True)
         self._tasks.clear()
+        for task in list(self._delegate_task_registry().values()):
+            task.cancel()
+        if self._delegate_task_registry():
+            await asyncio.gather(*self._delegate_task_registry().values(), return_exceptions=True)
+        self._delegate_task_registry().clear()
         self._active_turns.clear()
         self._rounds.clear()
 
@@ -1283,6 +1357,181 @@ class AgentOrchestrator:
             self._delegates: Dict[str, Dict[str, Any]] = {}
         return self._delegates
 
+    def _delegate_task_registry(self) -> Dict[str, asyncio.Task]:
+        if not hasattr(self, "_delegate_tasks"):
+            self._delegate_tasks: Dict[str, asyncio.Task] = {}
+        return self._delegate_tasks
+
+    def _resolve_delegate_model(self, model: str) -> str:
+        """Return a provider-recognisable model id for a delegate.
+
+        Delegate model ids may be CLI aliases (``claude-code``, ``hermes-agent``)
+        with no vendor prefix. Those are bench identities, not model ids the
+        proxy recognises, so any id without a ``/`` falls back to the
+        orchestrator default — the same rule :meth:`_run_live_turn` applies.
+        """
+        model = (model or "").strip()
+        return model if "/" in model else self.default_model
+
+    def _delegate_messages(self, record: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Build the scoped prompt for a delegate from its task + description."""
+        name = record.get("name") or record.get("id") or "delegate"
+        parent_id = record.get("parent_id") or "main"
+        task = (record.get("task") or "").strip() or "(no task specified)"
+        description = (record.get("description") or "").strip()
+        system = (
+            f"You are {name}, a delegate agent spawned by {parent_id} to do "
+            "one focused piece of work. Answer directly and concretely. "
+            "No preamble, no restating the task, no bullet-point soup."
+        )
+        user = task if not description else f"{task}\n\nContext: {description}"
+        return [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+
+    def _make_delegate_client(self, record: Dict[str, Any]):
+        """Build the streaming client for a delegate turn."""
+        model = self._resolve_delegate_model(record.get("model") or "")
+        reasoning_effort = record.get("reasoning_effort") or self.reasoning_effort
+        if self.delegate_client_factory is not None:
+            return self.delegate_client_factory(
+                base_url=self.llm_base_url,
+                model=model,
+                reasoning_effort=reasoning_effort,
+            )
+        return ModelClient(
+            base_url=self.llm_base_url,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            timeout=self.llm_timeout,
+        )
+
+    def _launch_delegate_task(self, delegate_id: str) -> None:
+        """Start the delegate's model turn on the running loop, if any.
+
+        Registration is a sync call (the REST endpoint and the lifecycle tests
+        call it without a running loop), so launching is best-effort: when
+        there is no running loop the delegate simply stays registered.
+        """
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        registry = self._delegate_task_registry()
+        existing = registry.get(delegate_id)
+        if existing is not None and not existing.done():
+            return
+        task = asyncio.create_task(self._run_delegate(delegate_id))
+        registry[delegate_id] = task
+        task.add_done_callback(lambda _t, did=delegate_id: registry.pop(did, None))
+
+    async def wait_for_delegate(self, delegate_id: str) -> Optional[Dict[str, Any]]:
+        """Await a delegate's running turn (if any) and return its record."""
+        task = self._delegate_task_registry().get(delegate_id)
+        if task is not None:
+            await asyncio.gather(task, return_exceptions=True)
+        return self._delegate_registry().get(delegate_id)
+
+    async def _wait_if_paused(self, record: Dict[str, Any]) -> bool:
+        """Block while a delegate is paused. False when it was stopped."""
+        while record.get("status") == "paused":
+            await asyncio.sleep(0.05)
+        return record.get("status") not in ("cancelled", "expired", "completed", "failed")
+
+    async def _run_delegate(self, delegate_id: str) -> None:
+        """Execute one delegate's real streaming model turn.
+
+        Streams ``thought``/``token`` deltas onto the room bus tagged with the
+        delegate id, updates ``progress``/``tokens_generated``/``elapsed_seconds``
+        as deltas arrive, honours pause/cancel, and expires on the delegate TTL.
+        """
+        record = self._delegate_registry().get(delegate_id)
+        if record is None:
+            return
+        started_at = record.get("started_at", time.time())
+        ttl = record.get("ttl_seconds", 3600)
+        try:
+            ttl = float(ttl)
+        except (TypeError, ValueError):
+            ttl = 3600.0
+        room_id = record.get("room_id") or ""
+        agent_name = record.get("name") or delegate_id
+        content_parts: List[str] = []
+        thought_parts: List[str] = []
+        client = self._make_delegate_client(record)
+        messages = self._delegate_messages(record)
+
+        def _tick() -> None:
+            record["elapsed_seconds"] = int(time.time() - started_at)
+            # Coarse live indicator until completion sets progress to 1.0.
+            record["progress"] = min(0.99, record.get("tokens_generated", 0) / 50.0)
+
+        try:
+            async with asyncio.timeout(ttl if ttl > 0 else 0.001):
+                async for event in client.stream(messages):
+                    if record.get("status") in ("cancelled", "expired"):
+                        return
+                    if not await self._wait_if_paused(record):
+                        return
+                    if event.kind == "thought":
+                        thought_parts.append(event.text)
+                        if room_id:
+                            await self.bus.stream_thought(
+                                room_id,
+                                delegate_id,
+                                event.text,
+                                agent_id=delegate_id,
+                                agent_name=agent_name,
+                            )
+                        _tick()
+                    elif event.kind == "token":
+                        content_parts.append(event.text)
+                        record["tokens_generated"] = record.get("tokens_generated", 0) + 1
+                        if room_id:
+                            await self.bus.stream_token(
+                                room_id,
+                                delegate_id,
+                                event.text,
+                                agent_id=delegate_id,
+                                agent_name=agent_name,
+                            )
+                        _tick()
+                    elif event.kind == "error":
+                        record["error"] = event.detail
+                        logger.warning(
+                            "Delegate %s model error (%s): %s",
+                            delegate_id,
+                            record.get("model"),
+                            event.detail,
+                        )
+                        break
+                    elif event.kind == "done":
+                        break
+        except TimeoutError:
+            record["status"] = "expired"
+            record["elapsed_seconds"] = int(time.time() - started_at)
+            if room_id:
+                self._emit(room_id, "delegate_expired", {"id": delegate_id})
+            return
+        except asyncio.CancelledError:
+            # cancel_delegate() already recorded the status; do not override.
+            if record.get("status") not in ("cancelled", "expired"):
+                record["status"] = "cancelled"
+            return
+
+        if record.get("status") in ("cancelled", "expired"):
+            return
+        record["output"] = "".join(content_parts).strip()
+        record["thought"] = "".join(thought_parts).strip()
+        record["elapsed_seconds"] = int(time.time() - started_at)
+        if record.get("error") and not content_parts:
+            record["status"] = "failed"
+            record["progress"] = 0.0
+        else:
+            record["status"] = "completed"
+            record["progress"] = 1.0
+
     def register_delegate(
         self,
         delegate_id: str,
@@ -1293,30 +1542,37 @@ class AgentOrchestrator:
         reasoning_effort: str = "high",
         ttl_seconds: int = 3600,
         room_id: str = "",
+        description: str = "",
     ) -> Dict[str, Any]:
-        """Spawn/summon a delegate child agent tracked by watchdog."""
+        """Spawn/summon a delegate child agent and start its model turn."""
         record = {
             "id": delegate_id,
             "name": name,
             "task": task,
+            "description": description,
             "parent_id": parent_id,
             "model": model,
             "reasoning_effort": reasoning_effort,
             "ttl_seconds": ttl_seconds,
             "room_id": room_id,
-            "started_at": time.time(),
+            "started_at": self._clock(),
+            "last_progress_at": self._clock(),
             "status": "running",
             "progress": 0.0,
             "tokens_generated": 0,
+            "elapsed_seconds": 0,
+            "output": "",
+            "thought": "",
         }
         self._delegate_registry()[delegate_id] = record
         if room_id:
             self._emit(room_id, "delegate_summoned", record)
+        self._launch_delegate_task(delegate_id)
         return record
 
     def list_delegates(self) -> List[Dict[str, Any]]:
         """List all active delegates with live ticking duration & watchdog check."""
-        now = time.time()
+        now = self._clock()
         registry = self._delegate_registry()
         result = []
         for did, rec in list(registry.items()):
@@ -1324,11 +1580,19 @@ class AgentOrchestrator:
             ttl = rec.get("ttl_seconds", 3600)
             if elapsed > ttl and rec.get("status") == "running":
                 rec["status"] = "expired"
+                task = self._delegate_task_registry().get(did)
+                if task is not None and not task.done():
+                    task.cancel()
                 if rec.get("room_id"):
                     self._emit(rec.get("room_id") or "", "delegate_expired", {"id": did})
             copy_rec = dict(rec)
-            copy_rec["elapsed_seconds"] = int(elapsed)
+            elapsed_clamped = max(0.0, elapsed)
+            copy_rec["elapsed_seconds"] = int(elapsed_clamped)
             copy_rec["remaining_seconds"] = max(0, int(ttl - elapsed))
+            copy_rec["elapsed_label"] = format_elapsed(elapsed_clamped)
+            copy_rec["elapsed_compact"] = compact_elapsed(elapsed_clamped)
+            copy_rec["milestones_crossed"] = crossed_milestones(elapsed_clamped)
+            copy_rec["next_milestone_in_seconds"] = next_milestone_in(elapsed_clamped)
             result.append(copy_rec)
         return sorted(result, key=lambda r: r.get("started_at", 0), reverse=True)
 
@@ -1338,6 +1602,9 @@ class AgentOrchestrator:
         if not rec:
             return False
         rec["status"] = "cancelled"
+        task = self._delegate_task_registry().get(delegate_id)
+        if task is not None and not task.done():
+            task.cancel()
         if rec.get("room_id"):
             self._emit(rec.get("room_id") or "", "delegate_cancelled", {"id": delegate_id})
         return True
@@ -1350,6 +1617,40 @@ class AgentOrchestrator:
         rec["status"] = "paused" if rec["status"] == "running" else "running"
         if rec.get("room_id"):
             self._emit(rec.get("room_id") or "", "delegate_paused", {"id": delegate_id, "status": rec["status"]})
+        return True
+
+    def update_delegate_progress(
+        self, delegate_id: str, progress: Optional[float] = None, tokens_generated: Optional[int] = None
+    ) -> bool:
+        """Record progress; resets the watchdog stall clock. False when unknown."""
+        rec = self._delegate_registry().get(delegate_id)
+        if not rec:
+            return False
+        if progress is not None:
+            rec["progress"] = progress
+        if tokens_generated is not None:
+            rec["tokens_generated"] = tokens_generated
+        rec["last_progress_at"] = self._clock()
+        return True
+
+    def complete_delegate(self, delegate_id: str) -> bool:
+        """Mark a delegate completed; watchdog emits the transition once."""
+        rec = self._delegate_registry().get(delegate_id)
+        if not rec:
+            return False
+        rec["status"] = "completed"
+        rec["progress"] = 1.0
+        rec["last_progress_at"] = self._clock()
+        return True
+
+    def fail_delegate(self, delegate_id: str, error: str = "") -> bool:
+        """Mark a delegate failed; watchdog emits the transition once."""
+        rec = self._delegate_registry().get(delegate_id)
+        if not rec:
+            return False
+        rec["status"] = "failed"
+        if error:
+            rec["error"] = error
         return True
 
 

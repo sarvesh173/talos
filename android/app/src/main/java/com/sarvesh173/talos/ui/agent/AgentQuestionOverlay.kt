@@ -401,22 +401,49 @@ fun AgentQuestionOverlay(
                         onAnswer(Answer.Granted(question.id, selectedScope))
                     }
                 } else {
-                    ActionPill(
-                        label = "Let the agent decide",
-                        tint = null,
-                        filled = false,
-                        isDark = isDark,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        onAnswer(Answer.Skipped(question.id))
+                    // Yes / no first — the most common agent question is a
+                    // yes/no, and it must be one tap, not a typed answer.
+                    // Custom free text stays below and the countdown above
+                    // stays visible throughout.
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ActionPill(
+                            label = "No",
+                            tint = Color(0xFFFF453A),
+                            filled = false,
+                            isDark = isDark,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            onAnswer(Answer.Choice(id = question.id, value = "no", label = "No"))
+                        }
+                        ActionPill(
+                            label = "Yes",
+                            tint = Color(0xFF34C759),
+                            filled = true,
+                            isDark = isDark,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            onAnswer(Answer.Choice(id = question.id, value = "yes", label = "Yes"))
+                        }
                     }
-                    ActionPill(
-                        label = "Close",
-                        tint = null,
-                        filled = false,
-                        isDark = isDark,
-                        modifier = Modifier.weight(1f)
-                    ) { onDismiss() }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ActionPill(
+                            label = "Let the agent decide",
+                            tint = null,
+                            filled = false,
+                            isDark = isDark,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            onAnswer(Answer.Skipped(question.id))
+                        }
+                        ActionPill(
+                            label = "Close",
+                            tint = null,
+                            filled = false,
+                            isDark = isDark,
+                            modifier = Modifier.weight(1f)
+                        ) { onDismiss() }
+                    }
                 }
             }
 

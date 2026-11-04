@@ -175,6 +175,12 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val _delegationHierarchy = MutableStateFlow<DelegationHierarchyDto?>(null)
     val delegationHierarchy: StateFlow<DelegationHierarchyDto?> = _delegationHierarchy.asStateFlow()
 
+    private val _delegationError = MutableStateFlow<String?>(null)
+    val delegationError: StateFlow<String?> = _delegationError.asStateFlow()
+
+    private val _delegationLoading = MutableStateFlow(false)
+    val delegationLoading: StateFlow<Boolean> = _delegationLoading.asStateFlow()
+
     private val _galleryImages = MutableStateFlow<List<GeneratedImageDto>>(emptyList())
     val galleryImages: StateFlow<List<GeneratedImageDto>> = _galleryImages.asStateFlow()
 
@@ -203,20 +209,31 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     fun fetchDelegationHierarchy() {
         scope.launch(Dispatchers.IO) {
+            _delegationLoading.value = true
+            _delegationError.value = null
             runCatching {
                 val req = Request.Builder()
-                    .url("$baseUrl/api/delegation/tree")
+                    .url("$baseUrl/api/delegation/hierarchy")
                     .get()
                     .build()
                 httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        val body = resp.body?.string() ?: return@use
-                        val parsed = json.decodeFromString<DelegationHierarchyDto>(body)
-                        _delegationHierarchy.value = parsed
+                    if (!resp.isSuccessful) {
+                        _delegationError.value = "Hierarchy request failed: HTTP ${resp.code}"
+                        return@use
                     }
+                    val body = resp.body?.string() ?: run {
+                        _delegationError.value = "Empty hierarchy response"
+                        return@use
+                    }
+                    val parsed = json.decodeFromString<DelegationHierarchyDto>(body)
+                    _delegationHierarchy.value = parsed
+                    _delegationError.value = null
                 }
             }.onFailure { e ->
+                _delegationError.value = e.message ?: "Failed to fetch delegation hierarchy"
                 Log.w(TAG, "Failed to fetch delegation hierarchy: ${e.message}")
+            }.also {
+                _delegationLoading.value = false
             }
         }
     }
@@ -1893,14 +1910,17 @@ data class CliEngineDto(
     val name: String,
     val command_binary: String,
     val is_available: Boolean,
+    val description: String? = null,
+    val resolved_path: String? = null,
     val delegates: List<DelegateLeadDto> = emptyList()
 )
 
 @kotlinx.serialization.Serializable
 data class DelegationHierarchyDto(
-    val total_engines: Int,
-    val total_delegates: Int,
-    val total_active_children: Int,
+    val total_engines: Int = 0,
+    val total_available_engines: Int? = null,
+    val total_delegates: Int = 0,
+    val total_active_children: Int = 0,
     val engines: List<CliEngineDto> = emptyList()
 )
 

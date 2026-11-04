@@ -45,6 +45,11 @@ class EventType(str, Enum):
     delegate_expired = "delegate_expired"
     delegate_cancelled = "delegate_cancelled"
     delegate_paused = "delegate_paused"
+    delegate_completed = "delegate_completed"
+    delegate_failed = "delegate_failed"
+    delegate_stalled = "delegate_stalled"
+    delegate_milestone = "delegate_milestone"
+    delegate_resumed = "delegate_resumed"
 
 
 class GrantScope(str, Enum):
@@ -83,6 +88,12 @@ class ToolCall(BaseModel):
     status: str = "running"  # running, success, failed
     started_at: float = Field(default_factory=time.time)
     finished_at: Optional[float] = None
+    #: Who invoked the tool. Without these the Kanban board cannot attribute a
+    #: call to an agent, which is the whole point of the surface.
+    agent_id: str = ""
+    agent_name: str = ""
+    is_delegate: bool = False
+    parent_agent_id: str = ""
 
 
 class AgentProfile(BaseModel):

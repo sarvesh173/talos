@@ -308,6 +308,23 @@ PROVIDER_CATALOG: Tuple[ProviderSpec, ...] = (
         timeout=20.0,
         notes="Unauthenticated local bridge; upstream is IP rate-limited.",
     ),
+    ProviderSpec(
+        id="openrouter",
+        name="OpenRouter",
+        vendor="OpenRouter",
+        base_url="https://openrouter.ai/api/v1",
+        api_style="openai",
+        default_model="stealth/crouton-alpha",
+        docs_url="https://openrouter.ai/docs",
+        credential_env_vars=("OPENROUTER_API_KEY",),
+        context_length=1048576,
+        timeout=25.0,
+        notes=(
+            "Live catalog: 400+ models, fetched at runtime from /api/v1/models. "
+            "Free tier is 100 requests/hour; paid keys raise that ceiling. The "
+            "model list is never hardcoded — the proxy tier changes weekly."
+        ),
+    ),
     _hermes_spec(),
 )
 
@@ -325,6 +342,7 @@ REQUIRED_PROVIDER_IDS: Tuple[str, ...] = (
     "hermes",
     "commandcode",
     "opencode",
+    "openrouter",
 )
 
 

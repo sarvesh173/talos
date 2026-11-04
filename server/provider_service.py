@@ -77,11 +77,31 @@ def _extract_models(payload: Any) -> List[ProviderModel]:
         if isinstance(model_id, str) and model_id.startswith("models/"):
             model_id = model_id.split("/", 1)[1]
         context_length = None
-        for key in ("context_length", "context_length_tokens", "inputTokenLimit", "max_input_tokens"):
+        for key in (
+            "context_length",
+            "context_length_tokens",
+            "inputTokenLimit",
+            "max_input_tokens",
+            "max_context_length",
+            "context_window",
+        ):
             value = entry.get(key)
             if isinstance(value, int) and value > 0:
                 context_length = value
                 break
+        # OpenRouter nests it: {"top_provider": {"context_length": N}}.
+        if context_length is None:
+            for holder in ("top_provider", "limits", "capabilities"):
+                nested = entry.get(holder)
+                if not isinstance(nested, dict):
+                    continue
+                for key in ("context_length", "max_input_tokens", "max_context_length"):
+                    value = nested.get(key)
+                    if isinstance(value, int) and value > 0:
+                        context_length = value
+                        break
+                if context_length:
+                    break
         models.append(
             ProviderModel(
                 id=str(model_id),
@@ -263,7 +283,7 @@ class ProviderService:
                     and not force
                     and (now - (cached.checked_at or 0)) < self._cache_ttl
                 )
-                if fresh:
+                if fresh and cached is not None:
                     results.append(cached)
                 else:
                     to_probe.append(spec)

@@ -65,8 +65,9 @@ import java.util.Locale
  *   scripted reply;
  * - the agent's working state drives a Thinking Orb (native port of
  *   Jakubantalik/thinking-orbs), so "thinking" is visible instead of implied;
- * - the model picker sits at the bottom beside the composer and collapses the
- *   moment the message field takes focus — the field always wins;
+ * - the model picker sits at the bottom beside the composer and stays hidden
+ *   by default — it appears only while the composer text starts with '/' and
+ *   hides again the moment the '/' is deleted;
  * - attach opens one sheet for camera, photos, files, drawings and stickers; a
  *   picked image is previewed for confirmation before it is sent, and can be
  *   annotated or discarded;
@@ -171,9 +172,15 @@ fun AppleAgentChatScreen(
     val rooms by client.rooms.collectAsState()
     val scope = rememberCoroutineScope()
 
-    // The composer always wins over the picker.
-    LaunchedEffect(composerFocused) {
-        if (composerFocused) showModelPicker = false
+    // Slash commands stay hidden until the user actually types '/'.
+    // The model palette + chip are the command surface; they activate only
+    // while the composer text starts with '/' and hide again when it is deleted.
+    val slashActive = inputText.startsWith("/")
+
+    // The command surface is slash-gated, not focus-gated: typing '/' shows it
+    // even though the field is focused, deleting it hides it again.
+    LaunchedEffect(slashActive) {
+        showModelPicker = slashActive
     }
 
     BackHandler {
@@ -281,7 +288,9 @@ fun AppleAgentChatScreen(
                 if (msg.sender == "user") {
                     UserBubble(msg, isDark, brandColor)
                 } else {
-                    AgentBubble(msg, isDark, brandColor, agentIconRes, agentName)
+                    AgentBubble(msg, isDark, brandColor, agentIconRes, agentName) { reply ->
+                        client.sendMessage(reply)
+                    }
                 }
             }
 
@@ -521,9 +530,10 @@ fun AppleAgentChatScreen(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Model picker: sits directly above the composer, collapses on focus.
+            // Slash-gated command surface: visible only while the composer
+            // text starts with '/'. Deleting the '/' hides it again.
             AnimatedVisibility(
-                visible = showModelPicker && !composerFocused,
+                visible = showModelPicker && slashActive,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
@@ -537,7 +547,9 @@ fun AppleAgentChatScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            if (showModelPicker && slashActive) {
+                Spacer(modifier = Modifier.height(6.dp))
+            }
 
             Surface(
                 shape = RoundedCornerShape(28.dp),
@@ -580,28 +592,31 @@ fun AppleAgentChatScreen(
 
                     Spacer(modifier = Modifier.width(6.dp))
 
-                    // Model chip — tap opens the picker, focus closes it.
-                    Box(
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(brandColor.copy(alpha = 0.14f))
-                            .applePressable(0.94f, pressHaptic = true) { showModelPicker = !showModelPicker }
-                            .padding(horizontal = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = (selectedModel ?: "auto").substringAfterLast("/"),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = brandColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 84.dp)
-                        )
-                    }
+                    // Model chip: hidden by default. Only appears as part of
+                    // the slash command surface when the composer starts with '/'.
+                    if (slashActive) {
+                        Box(
+                            modifier = Modifier
+                                .heightIn(min = 48.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(brandColor.copy(alpha = 0.14f))
+                                .applePressable(0.94f, pressHaptic = true) { showModelPicker = !showModelPicker }
+                                .padding(horizontal = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = (selectedModel ?: "auto").substringAfterLast("/"),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = brandColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.widthIn(max = 84.dp)
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
 
                     BasicTextField(
                         value = inputText,
@@ -754,8 +769,15 @@ private fun AgentBubble(
     isDark: Boolean,
     brandColor: Color,
     agentIconRes: Int,
-    agentName: String
+    agentName: String,
+    onDirectiveReply: (String) -> Unit = {}
 ) {
+    // SYSTEM.md rich directives: prose stays in the bubble, :::talos blocks
+    // render as full-width interactive cards below it. Interactive answers
+    // go back as the next user turn via onDirectiveReply.
+    val parsed = remember(msg.id, msg.text) { TalosDirectiveParser.parse(msg.text) }
+    val hasDirectives = parsed.directives.isNotEmpty()
+    Column(modifier = Modifier.fillMaxWidth()) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
         val avatarEngine = remember(msg.agentId) {
             AgentAvatarEngine(AvatarIdentity.of(msg.agentId.ifBlank { "agent" }, agentName))
@@ -791,12 +813,15 @@ private fun AgentBubble(
                 .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = shape)
         ) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                val bubbleText = if (hasDirectives) parsed.prose else msg.text
+                if (bubbleText.isNotBlank()) {
                 Text(
-                    text = msg.text,
+                    text = bubbleText,
                     fontSize = 15.sp,
                     color = if (isDark) Color.White else Color(0xFF1D1D1F),
                     letterSpacing = (-0.1).sp
                 )
+                }
                 msg.stats?.let { stats ->
                     Spacer(modifier = Modifier.height(6.dp))
                     MessageFooterView(
@@ -814,6 +839,23 @@ private fun AgentBubble(
                 )
             }
         }
+    }
+    if (hasDirectives) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(start = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            parsed.directives.forEach { directive ->
+                TalosDirectiveHost(
+                    directive = directive,
+                    isDark = isDark,
+                    brandColor = brandColor,
+                    onReply = onDirectiveReply
+                )
+            }
+        }
+    }
     }
 }
 

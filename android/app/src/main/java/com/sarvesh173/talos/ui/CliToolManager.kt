@@ -37,65 +37,21 @@ fun CliToolManagerScreen(
     onBack: () -> Unit
 ) {
     val hierarchyDto by client.delegationHierarchy.collectAsState()
+    val hierarchyError by client.delegationError.collectAsState()
+    val hierarchyLoading by client.delegationLoading.collectAsState()
     var spawningDelegateId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         client.fetchDelegationHierarchy()
     }
 
-    // Default fallback engines if offline / connecting
-    val fallbackEngines = remember {
-        listOf(
-            CliEngineDto(
-                id = "omnirush",
-                name = "OmniRush Engine",
-                command_binary = "omnirush",
-                is_available = true,
-                delegates = listOf(
-                    DelegateLeadDto(
-                        id = "del_omni_ui",
-                        name = "UI Refactoring Lead",
-                        engine_id = "omnirush",
-                        assigned_model = "agy/gemini-3.8-flash-tiered",
-                        reasoning_effort = "Medium",
-                        command_turn_limit = 50,
-                        turns_consumed = 24,
-                        is_paused = false,
-                        children = listOf(
-                            SubagentChildDto("c_1", "Motion Token Validator", "del_omni_ui", "Physics & Easing", "running", 14),
-                            SubagentChildDto("c_2", "Color Contrast Auditor", "del_omni_ui", "WCAG 2.2 Gate", "completed", 10)
-                        )
-                    )
-                )
-            ),
-            CliEngineDto(
-                id = "opencode",
-                name = "OpenCode Zen Bridge",
-                command_binary = "opencode serve",
-                is_available = true,
-                delegates = listOf(
-                    DelegateLeadDto(
-                        id = "del_open_rust",
-                        name = "Rust Core Maintainer",
-                        engine_id = "opencode",
-                        assigned_model = "space-bunny-free",
-                        reasoning_effort = "High",
-                        command_turn_limit = 60,
-                        turns_consumed = 32,
-                        is_paused = false,
-                        children = listOf(
-                            SubagentChildDto("c_3", "Tokio Runtime Watcher", "del_open_rust", "Async Threading", "running", 20)
-                        )
-                    )
-                )
-            )
-        )
-    }
-
-    val displayEngines = hierarchyDto?.engines ?: fallbackEngines
-    val totalActiveChildren = hierarchyDto?.total_active_children ?: displayEngines.sumOf { eng ->
-        eng.delegates.sumOf { del -> del.children.count { it.state.equals("running", ignoreCase = true) } }
-    }
+    // Real engines only, from GET /api/delegation/hierarchy. No fabricated
+    // fallback: while loading or after a failure the screen says so.
+    val displayEngines = hierarchyDto?.engines ?: emptyList()
+    val totalActiveChildren = hierarchyDto?.total_active_children
+        ?: displayEngines.sumOf { eng ->
+            eng.delegates.sumOf { del -> del.children.count { it.state.equals("running", ignoreCase = true) } }
+        }
 
     Scaffold(
         topBar = {
@@ -109,7 +65,12 @@ fun CliToolManagerScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "$totalActiveChildren subagents active across ${displayEngines.size} CLI engines",
+                            text = when {
+                                hierarchyDto == null && hierarchyLoading -> "Loading engines from core…"
+                                hierarchyDto == null && hierarchyError != null -> "Unavailable — ${hierarchyError}"
+                                hierarchyDto == null -> "No engine data yet"
+                                else -> "$totalActiveChildren subagents active across ${displayEngines.size} CLI engines"
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -153,9 +114,41 @@ fun CliToolManagerScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            items(displayEngines, key = { it.id }) { engine ->
-                CliEngineCard(
-                    engine = engine,
+            if (hierarchyDto == null && displayEngines.isEmpty()) {
+                item(key = "hierarchy_empty_state") {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text(
+                                text = when {
+                                    hierarchyLoading -> "Loading engines…"
+                                    hierarchyError != null -> "Could not load engines"
+                                    else -> "No engines discovered"
+                                },
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = when {
+                                    hierarchyLoading -> "Fetching discovered CLI engines from the core."
+                                    hierarchyError != null -> "Unavailable: $hierarchyError. Tap refresh to retry."
+                                    else -> "No CLI engines were discovered on this machine yet. Install an engine or tap refresh."
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            } else {
+                items(displayEngines, key = { it.id }) { engine ->
+                    CliEngineCard(
+                        engine = engine,
                     onUpdateQuota = { delegateId, limit, effort ->
                         client.updateDelegateQuota(delegateId, limit, effort)
                     },
@@ -171,7 +164,8 @@ fun CliToolManagerScreen(
                     onTerminateChild = { childId ->
                         client.terminateChildSubagent(childId)
                     }
-                )
+                    )
+                }
             }
         }
     }
@@ -280,6 +274,21 @@ private fun CliEngineCard(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        if (!engine.is_available) {
+                            Text(
+                                text = engine.description?.takeIf { it.isNotBlank() }
+                                    ?.let { "Unavailable — $it (binary not found on this machine)" }
+                                    ?: "Unavailable — binary not found on this machine",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else if (engine.description?.isNotBlank() == true) {
+                            Text(
+                                text = engine.description!!,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 

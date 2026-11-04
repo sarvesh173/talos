@@ -68,8 +68,7 @@ fun rememberAdaptiveOrbSpeed(
             val target = if (sinceLast >= idleSeconds) {
                 minSpeed
             } else {
-                // ~1 chunk/s is the tuned baseline; scale from there and clamp.
-                (1f + rate * 0.12f).coerceIn(minSpeed, maxSpeed)
+                orbSpeedTarget(rate, minSpeed, maxSpeed)
             }
             // Asymmetric smoothing: fast up, slow down.
             val factor = if (target > speed) 0.35f else 0.08f
@@ -78,6 +77,35 @@ fun rememberAdaptiveOrbSpeed(
     }
 
     return speed
+}
+
+/**
+ * Map a measured chunk rate to an orb speed multiplier.
+ *
+ * A linear map is wrong here: real throughput on this machine spans 0.8 tok/s
+ * (stealth/crouton-alpha) to 59.8 tok/s (GLM-5.3) — a 75x range that a linear
+ * multiplier would either flatten into "barely different" or blow past any
+ * sane cap before the fast end is even reached. Perception is logarithmic, so
+ * the mapping is too: each doubling of throughput adds a fixed step of speed.
+ *
+ *     rate <= 1        → baseline 1.0 (trickle looks like normal work)
+ *     rate  =  5       → ~1.4
+ *     rate  = 15       → ~1.8
+ *     rate  = 30       → ~2.1
+ *     rate  = 60       → ~2.4
+ *     rate >= 90       → maxSpeed (saturated; faster reads as broken)
+ *
+ * The cap is the point the user asked for: "extreme fast nahi, uski bhi ek
+ * limit honi chahiye."
+ */
+internal fun orbSpeedTarget(rate: Float, minSpeed: Float, maxSpeed: Float): Float {
+    if (rate <= 0f) return minSpeed
+    // log2(rate) puts each doubling on one unit. 0.28 per octave spreads the
+    // real 1→60 tok/s band across 1.0→2.4 so the whole range stays legible
+    // instead of pinning at the cap after the second doubling.
+    val octaves = (kotlin.math.ln(rate.toDouble()) / kotlin.math.ln(2.0)).toFloat()
+    val target = 1f + (octaves.coerceAtLeast(0f) * 0.28f)
+    return target.coerceIn(minSpeed, maxSpeed)
 }
 
 private fun nowMillis(): Long = System.nanoTime() / 1_000_000

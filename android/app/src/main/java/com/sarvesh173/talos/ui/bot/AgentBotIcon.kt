@@ -220,11 +220,11 @@ private fun DrawScope.drawMorph(eng: BotEngine, amt: Float, s: Float, scale: Flo
             drawCircle(ink.copy(alpha = 0.5f + 0.5f * pulse), r * 0.35f, Offset(s + cos(a) * r, s + sin(a) * r * 0.6f))
         }
         "orbit" -> { drawCircle(ink.copy(alpha = 0.6f), r * 0.25f, Offset(s + cos(eng.spinAngle) * r, s + sin(eng.spinAngle) * r * 0.4f)); drawCircle(ink.copy(alpha = 0.4f), r * 0.2f, Offset(s - cos(eng.spinAngle) * r, s - sin(eng.spinAngle) * r * 0.4f)) }
-        "radar" -> { drawArc(ink, -90f, eng.spinAngle * 57.29f, false, Offset(s - r, s - r), Size(kotlin.math.min(r * 2f, this.size.minDimension), kotlin.math.min(r * 2f, this.size.minDimension)), Stroke(2f * scale)); drawCircle(ink, r * 0.2f, Offset(s, s)) }
-        "progress" -> drawArc(ink, -90f, 360f * amt, false, Offset(s - r, s - r), Size(kotlin.math.min(r * 2f, this.size.minDimension), kotlin.math.min(r * 2f, this.size.minDimension)), Stroke(3f * scale))
+        "radar" -> { drawArc(ink, -90f, eng.spinAngle * 57.29f, false, Offset(s - r, s - r), Size(kotlin.math.min(r * 2f, this.size.minDimension), kotlin.math.min(r * 2f, this.size.minDimension)), style = Stroke(2f * scale)); drawCircle(ink, r * 0.2f, Offset(s, s)) }
+        "progress" -> drawArc(ink, -90f, 360f * amt, false, Offset(s - r, s - r), Size(kotlin.math.min(r * 2f, this.size.minDimension), kotlin.math.min(r * 2f, this.size.minDimension)), style = Stroke(3f * scale))
         "gather" -> for (i in 0..5) { val a = i * PI.toFloat() / 3f; val d = r * (1f - amt * 0.5f); drawCircle(ink, r * 0.18f, Offset(s + cos(a) * d, s + sin(a) * d)) }
         "wave" -> for (i in 0..6) { val h = r * sin(eng.spinAngle * 4f + i * 0.9f); drawCircle(ink, r * 0.22f, Offset(s - r + i * r / 3f, s + h * 0.5f)) }
-        "whirl" -> drawArc(ink, eng.spinAngle * 57f, 270f, false, Offset(s - r, s - r), Size(kotlin.math.min(r * 2f, this.size.minDimension), kotlin.math.min(r * 2f, this.size.minDimension)), Stroke(3f * scale))
+        "whirl" -> drawArc(ink, eng.spinAngle * 57f, 270f, false, Offset(s - r, s - r), Size(kotlin.math.min(r * 2f, this.size.minDimension), kotlin.math.min(r * 2f, this.size.minDimension)), style = Stroke(3f * scale))
         "bang" -> { drawCircle(ink, r * 0.2f, Offset(s, s - r * 0.4f)); drawCircle(ink, r * 0.2f, Offset(s, s + r * 0.4f)) }
         "standby" -> drawCircle(ink.copy(alpha = 1f - amt), r * 0.9f, Offset(s, s))
         else -> drawCircle(ink.copy(alpha = amt), r * 0.5f, Offset(s, s))

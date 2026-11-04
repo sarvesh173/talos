@@ -109,6 +109,14 @@ app.add_middleware(
 # Mount media uploads directory
 app.mount("/uploads", StaticFiles(directory=str(_UPLOADS_DIR)), name="uploads")
 
+# Feature routes: conversation fork, search, prompt library, model comparison,
+# diff review. These modules existed with passing tests but had no HTTP surface,
+# so the app could never reach them. Kept in their own module so this file stays
+# a list of the core chat endpoints.
+from server.feature_routes import router as feature_router  # noqa: E402
+
+app.include_router(feature_router)
+
 
 async def require_auth(authorization: Optional[str] = Header(None)) -> str:
     """Verify Bearer token on protected REST routes."""

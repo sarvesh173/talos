@@ -221,14 +221,24 @@ class ToolLedger:
 
     def recent(
         self,
-        room_id: str,
+        room_id: Optional[str] = None,
         limit: int = 100,
         agent_id: Optional[str] = None,
         delegates_only: bool = False,
         failures_only: bool = False,
     ) -> List[Dict[str, Any]]:
-        ring = self._rings.get(room_id, [])
-        rows = ring
+        """Most recent calls, newest first.
+
+        ``room_id=None`` reads across every room, which is what a review of one
+        agent's work needs: a delegate may have run in several rooms and the
+        caller should not have to know which. Passing a room keeps the old
+        per-room behaviour exactly.
+        """
+        if room_id is None:
+            rows = [record for ring in self._rings.values() for record in ring]
+            rows.sort(key=lambda r: getattr(r, "started_at", 0) or 0)
+        else:
+            rows = self._rings.get(room_id, [])
         if agent_id:
             rows = [r for r in rows if r.agent_id == agent_id]
         if delegates_only:

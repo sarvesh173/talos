@@ -103,6 +103,13 @@ dependencies {
     // M3E shape engine: RoundedPolygon / Morph (stable 1.1.0)
     implementation("androidx.graphics:graphics-shapes:1.1.0")
 
+    // Biometric unlock (app lock). 1.2.0-alpha05 is the release that accepts a
+    // FragmentActivity on API 21+ without the legacy FingerprintManager path.
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    // MainActivity is a FragmentActivity (it extends ComponentActivity, so
+    // setContent and lifecycleScope keep working).
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
+
     // Networking (OkHttp for WebSockets & Tailscale REST)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 

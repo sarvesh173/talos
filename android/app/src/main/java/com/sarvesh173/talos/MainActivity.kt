@@ -7,7 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -100,6 +100,12 @@ import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.core.feature.FeatureCatalog
 import com.sarvesh173.talos.core.feature.FeatureScope
 import com.sarvesh173.talos.core.motion.MotionTokens
+import com.sarvesh173.talos.ui.entry.AppLockController
+import com.sarvesh173.talos.ui.entry.AppLockPrompt
+import com.sarvesh173.talos.ui.entry.AppLockStore
+import com.sarvesh173.talos.ui.entry.LockState
+import com.sarvesh173.talos.ui.entry.isBiometricAvailable
+import com.sarvesh173.talos.ui.entry.shouldLock
 import com.sarvesh173.talos.ui.features.SettingsScreen
 import com.sarvesh173.talos.ui.settings.DashboardControlScreen
 import com.sarvesh173.talos.ui.agents.AgentLifecycleScreen
@@ -120,9 +126,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private lateinit var client: TalosClient
+
+    /** On-device lock state. Guards UI reachability, not provider credentials. */
+    private lateinit var appLockStore: AppLockStore
+    private lateinit var appLock: AppLockController
+    private var lockVersion by mutableIntStateOf(0)
 
     /**
      * Accept a pairing link from the agent or Chrome (link or QR) and store the
@@ -158,6 +169,18 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handlePairingIntent(intent)
+    }
+
+    /**
+     * App lock: remember when the app stopped being visible. The lock decision
+     * itself is made on resume (via shouldLock) so the idle grace is honoured
+     * rather than locking on every brief app switch.
+     */
+    override fun onStop() {
+        super.onStop()
+        if (::appLockStore.isInitialized && appLockStore.enabled) {
+            appLockStore.lastBackgroundedMs = System.currentTimeMillis()
+        }
     }
 
     override fun onDestroy() {
@@ -235,6 +258,14 @@ class MainActivity : ComponentActivity() {
             client.refreshRooms()
             client.switchRoom("the-council")
         }
+
+        appLockStore = AppLockStore(this)
+        appLock = AppLockController(
+            enabled = appLockStore.enabled,
+            hasBiometric = isBiometricAvailable(this),
+            pinConfigured = appLockStore.hasPin,
+            graceSeconds = appLockStore.graceSeconds
+        )
 
         setContent {
             val storedTheme by client.themeMode.collectAsState()
@@ -341,6 +372,69 @@ class MainActivity : ComponentActivity() {
                 fontScaleName = storedFontScale,
                 remoteConfig = remoteTheme
             ) {
+                // ------------------------------------------------------------
+                // App lock gate.
+                //
+                // Sits ABOVE all content: while locked, none of the screens
+                // below are composed, so no provider list, recent message or
+                // credential hint can flash behind the prompt.
+                //
+                // The resume check lives here because Compose owns the
+                // lifecycle observer that already drives the service gate.
+                // ------------------------------------------------------------
+                val lifecycleForLock = androidx.lifecycle.compose.LocalLifecycleOwner.current
+                DisposableEffect(lifecycleForLock, appLock.enabled) {
+                    val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                        if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME &&
+                            appLock.enabled
+                        ) {
+                            val last = appLockStore.lastBackgroundedMs
+                            if (last > 0L &&
+                                shouldLock(last, System.currentTimeMillis(), appLock.graceSeconds)
+                            ) {
+                                appLock.onAppBackgrounded(
+                                    appLock.state, System.currentTimeMillis()
+                                )
+                                // The controller exposes state through a plain
+                                // var, so nudge Compose with a version counter.
+                                lockVersion++
+                            }
+                        }
+                    }
+                    lifecycleForLock.lifecycle.addObserver(observer)
+                    onDispose { lifecycleForLock.lifecycle.removeObserver(observer) }
+                }
+
+                // Read the counter so a state change recomposes this branch.
+                @Suppress("UNUSED_EXPRESSION")
+                lockVersion
+
+                val lockedNow = appLock.state.let { it !is LockState.Unlocked }
+                if (lockedNow) {
+                    AppLockPrompt(
+                        hasBiometric = appLock.hasBiometric,
+                        graceSeconds = appLock.graceSeconds,
+                        consecutiveFailures = appLock.consecutiveFailures,
+                        pinSalt = appLockStore.saltBytes(),
+                        pinHashHex = appLockStore.pinHashHex,
+                        onUnlocked = {
+                            appLock.onUnlocked(appLock.state)
+                            appLockStore.lastBackgroundedMs = 0L
+                            lockVersion++
+                        },
+                        onSkipForSession = {
+                            appLock.onUnlocked(appLock.state)
+                            appLockStore.lastBackgroundedMs = 0L
+                            lockVersion++
+                        },
+                        onAuthFailed = {
+                            appLock.onAuthFailed(appLock.state, System.currentTimeMillis())
+                            lockVersion++
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+
                 if (showThemeDialog) {
                     ThemeSelectionDialog(
                         currentPreset = activePreset,
@@ -776,6 +870,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                }
                 }
                 }
                 }

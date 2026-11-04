@@ -223,4 +223,4 @@ private fun hsvToColor(h: Float, s: Float, v: Float): Color {
 
 /** x^n that keeps the sign, for the superellipse. */
 private fun signPow(x: Float, n: Float): Float =
-    if (x < 0f) -pow(-x, n) else pow(x, n)
+    if (x < 0f) -(-x).pow(n) else x.pow(n)

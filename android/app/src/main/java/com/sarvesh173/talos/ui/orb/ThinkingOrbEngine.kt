@@ -68,7 +68,7 @@ data class OrbOpts(
     val dimBase: Float? = null
 )
 
-internal const val GOLDEN = PI * (3 - sqrt(5.0))
+internal const val GOLDEN = 2.399963229728653
 
 /** Deterministic hash in [0, 1). Same constant as upstream, so layouts match. */
 internal fun hashD(a: Number, b: Number): Float {

@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -171,7 +172,7 @@ fun MessageFooterView(
                 text = "⌄",
                 fontSize = 11.sp,
                 color = muted,
-                modifier = Modifier.graphicsLayerRotate(rotation)
+                modifier = Modifier.rotate(rotation)
             )
         }
 
@@ -468,10 +469,4 @@ internal fun formatRate(tps: Float): String = when {
     else -> tps.toInt().toString()
 }
 
-/** Rotate without importing graphicsLayer at every call site. */
-private fun Modifier.graphicsLayerRotate(degrees: Float): Modifier =
-    this.then(
-        androidx.compose.ui.graphics.graphicsLayer {
-            rotationZ = degrees
-        }
-    )
+

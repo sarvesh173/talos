@@ -90,36 +90,7 @@ enum class Capability(
         permissions = emptyList()
     );
 
-    companion object {
-        /**
-         * Health Connect declares one permission per record type. Listing them
-         * here rather than in the manifest alone keeps the grant prompt and the
-         * manifest from drifting apart.
-         */
-        val HEALTH_READ = listOf(
-            "android.permission.health.READ_STEPS",
-            "android.permission.health.READ_HEART_RATE",
-            "android.permission.health.READ_SLEEP",
-            "android.permission.health.READ_EXERCISE",
-            "android.permission.health.READ_DISTANCE",
-            "android.permission.health.READ_TOTAL_CALORIES_BURNED",
-            "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
-            "android.permission.health.READ_BLOOD_PRESSURE",
-            "android.permission.health.READ_BLOOD_GLUCOSE",
-            "android.permission.health.READ_BODY_TEMPERATURE",
-            "android.permission.health.READ_OXYGEN_SATURATION",
-            "android.permission.health.READ_WEIGHT",
-            "android.permission.health.READ_HEIGHT",
-            "android.permission.health.READ_RESTING_HEART_RATE",
-            "android.permission.health.READ_RESPIRATORY_RATE"
-        )
-
-        val HEALTH_WRITE = listOf(
-            "android.permission.health.WRITE_EXERCISE",
-            "android.permission.health.WRITE_SLEEP",
-            "android.permission.health.WRITE_WEIGHT"
-        )
-    }
+    
 }
 
 /** Whether a capability is currently usable. */

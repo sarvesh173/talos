@@ -86,17 +86,23 @@ fun rememberAdaptiveOrbSpeed(
  * aggregate throughput. Verified 4 Nov 2026 from independent provider
  * benchmarks:
  *
- * Ceiling: 5000 tok/s. Chosen 4 Nov 2026 as roughly 2x the fastest measured
- * per-user number (Cerebras Llama 4 Scout 2623), so the next generation of
- * hardware fits without the animation losing meaning today. Anything above it
- * is saturated rather than unrepresentable — the UI reports the real number and
- * offers a one-click GitHub issue to raise the constant.
+ * Ceiling: 20000 tok/s. Raised 4 Nov 2026 after Taalas HC1 (Llama 3.1 8B
+ * hardwired into silicon) demonstrated ~17,000 tok/s per user on their public
+ * ChatJimmy demo — roughly 6.5x the previous fastest measured number. A model
+ * that exists today must not saturate the animation, so the ceiling sits above
+ * it rather than below.
+ *
+ * The point of a high ceiling is future-proofing: when 40,000 tok/s hardware
+ * ships, only this constant and the derived slope change, not the UI.
+ *
+ * Anything above the ceiling is saturated rather than unrepresentable — the UI
+ * still reports the real number and offers a one-click GitHub issue to raise it.
  * See: .github/SPEED_LIMIT_REPORT.md
  *
- * When a report lands, raising this means: bump MAX_CALIBRATED_RATE, and rescale
- * CURVE_SLOPE so 5 -> MAX_CALIBRATED_RATE still spans 1.0 -> maxSpeed.
+ * Raising the limit = bump MAX_CALIBRATED_RATE. curveSlope() rescales
+ * automatically so 5 -> MAX_CALIBRATED_RATE still spans 1.0 -> maxSpeed.
  */
-const MAX_CALIBRATED_RATE = 5000f
+const MAX_CALIBRATED_RATE = 20000f
 
 /** log2 slope that spreads 5..MAX_CALIBRATED_RATE across 1.0..maxSpeed. */
 private fun curveSlope(maxSpeed: Float): Float {

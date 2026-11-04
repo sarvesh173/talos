@@ -1,6 +1,6 @@
 # Speed report: model exceeded the animation ceiling
 
-The orb animation saturates at **5,000 output tokens/second per user**. That is a
+The orb animation saturates at **20,000 output tokens/second per user**. That is a
 deliberate, future-proofed ceiling — not a claim about what hardware can do.
 
 If a model is genuinely streaming faster than that, the animation is no longer
@@ -72,6 +72,7 @@ the ceiling for that would make every normal reply animate at maximum speed.
 
 | Per-user output | Model | Provider |
 |---|---|---|
+| ~17,000 | Llama 3.1 8B (hardwired silicon) | Taalas HC1 / ChatJimmy |
 | 2623 | Llama 4 Scout | Cerebras |
 | 1581–1712 | Celeris-1 | Celeris |
 | 1178 | Mercury 2.5 | Inception |
@@ -83,6 +84,13 @@ the ceiling for that would make every normal reply animate at maximum speed.
 | 248 | DeepSeek V4.1 Flash | DeepSeek |
 | 140 | GLM-5.3-Flash | Lambda (C1, interactive) |
 
-The ceiling sits at 5000 — roughly 2x the fastest per-user number measured as of
-this writing, which leaves room for the next generation without the animation
+The ceiling sits at 20,000 — above the fastest per-user number measured as of
+this writing (Taalas HC1, ~17,000 tok/s from an 8B model hardwired into custom
+silicon). That leaves headroom for the next generation without the animation
 losing meaning today.
+
+Note that Taalas is a special case: it is not downloadable weights or a
+trillion-parameter model, it is an 8B model with an aggressive 3-6 bit
+quantization baked into proprietary silicon, and its public demo caps context
+at 6,144 tokens. It still counts as a real per-user measurement, which is why
+the ceiling moved above it.

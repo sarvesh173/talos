@@ -1,12 +1,12 @@
 name: Speed ceiling exceeded
-description: A model streamed faster than the 5,000 tok/s animation ceiling and the orb could not keep up
-title: "[speed] <model-id> exceeds 5000 tok/s"
+description: A model streamed faster than the 20,000 tok/s animation ceiling and the orb could not keep up
+title: "[speed] <model-id> exceeds 20000 tok/s"
 labels: ["speed-limit", "needs-verification"]
 body:
   - type: markdown
     attributes:
       value: |
-        The orb animation saturates at **5,000 output tokens/second per user**.
+        The orb animation saturates at **20,000 output tokens/second per user**.
 
         If a model genuinely streams faster, the animation stops telling the
         truth and the ceiling should move. Fill this in and the constant gets

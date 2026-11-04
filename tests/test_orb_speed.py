@@ -13,7 +13,7 @@ These tests pin the properties that matter:
 import math
 import unittest
 
-MAX_CALIBRATED_RATE = 5000.0
+MAX_CALIBRATED_RATE = 20000.0
 MIN_SPEED = 0.55
 MAX_SPEED = 2.6
 
@@ -56,19 +56,22 @@ class MonotonicityTest(unittest.TestCase):
 
 class CeilingTest(unittest.TestCase):
     def test_ceiling_maps_to_max_speed(self):
-        self.assertAlmostEqual(orb_speed_target(5000), MAX_SPEED, places=2)
+        self.assertAlmostEqual(orb_speed_target(20000), MAX_SPEED, places=2)
 
     def test_absurd_rate_is_still_capped(self):
-        for rate in (6000, 10_000, 100_000, 1_000_000):
+        for rate in (25000, 40_000, 100_000, 1_000_000):
             self.assertEqual(
                 orb_speed_target(rate), MAX_SPEED, f"{rate} tok/s escaped the cap"
             )
 
     def test_ceiling_detection_is_strict(self):
-        self.assertFalse(exceeds_ceiling(4999))
-        self.assertFalse(exceeds_ceiling(5000), "exactly at the ceiling is not a breach")
-        self.assertTrue(exceeds_ceiling(5001))
-        self.assertTrue(exceeds_ceiling(6200))
+        # Taalas HC1 (17000) must NOT trip the report prompt — it is real and
+        # already accommodated. Only genuinely faster hardware should.
+        self.assertFalse(exceeds_ceiling(17000))
+        self.assertFalse(exceeds_ceiling(19999))
+        self.assertFalse(exceeds_ceiling(20000), "exactly at the ceiling is not a breach")
+        self.assertTrue(exceeds_ceiling(20001))
+        self.assertTrue(exceeds_ceiling(40000))
 
 
 class LegibilityTest(unittest.TestCase):
@@ -84,6 +87,13 @@ class LegibilityTest(unittest.TestCase):
         (2623, "Llama 4 Scout @ Cerebras"),
     )
 
+    #: Above the Cisco-class band the curve compresses by design; these are
+    #: checked for ordering rather than a minimum gap.
+    SILICON_ANCHORS = (
+        (2623, "Llama 4 Scout @ Cerebras"),
+        (17000, "Taalas HC1 (Llama 3.1 8B in silicon)"),
+    )
+
     def test_consecutive_anchors_are_distinguishable(self):
         speeds = [orb_speed_target(rate) for rate, _ in self.ANCHORS]
         for i in range(1, len(speeds)):
@@ -95,15 +105,24 @@ class LegibilityTest(unittest.TestCase):
             )
 
     def test_fastest_measured_model_has_headroom_below_the_cap(self):
-        """Cerebras 2623 sits under 5000 so the ceiling is not already in use."""
+        """Cerebras 2623 sits well under 20000 so the ceiling is not in use."""
         speed = orb_speed_target(2623)
-        self.assertLess(speed, MAX_SPEED, "the fastest real model already saturates")
-        self.assertGreater(speed, 2.3, "the fastest real model should still read as fast")
+        self.assertLess(speed, MAX_SPEED, "the fastest mainstream model already saturates")
+        self.assertGreater(speed, 2.0, "the fastest mainstream model should read as fast")
 
-    def test_a_local_proxy_and_a_cloud_flash_model_differ_a_lot(self):
+    def test_silicon_class_hardware_fits_under_the_ceiling(self):
+        """Taalas HC1 at 17000 tok/s must be representable, not saturated."""
+        self.assertLess(orb_speed_target(17000), MAX_SPEED)
+        self.assertGreater(orb_speed_target(17000), orb_speed_target(2623))
+
+    def test_forty_thousand_is_a_breach(self):
+        """A reported 40000 tok/s is exactly what the issue template is for."""
+        self.assertTrue(exceeds_ceiling(40000))
+
+    def test_a_local_proxy_and_a_cloud_flash_model_differ(self):
         slow = orb_speed_target(6)
         fast = orb_speed_target(248)
-        self.assertGreater(fast - slow, 0.8)
+        self.assertGreater(fast - slow, 0.5)
 
 
 if __name__ == "__main__":

@@ -86,49 +86,62 @@ fun rememberAdaptiveOrbSpeed(
  * aggregate throughput. Verified 4 Nov 2026 from independent provider
  * benchmarks:
  *
- *     Cerebras Llama 4 Scout  2623  (fastest measured per-user)
- *     Celeris-1                1581-1712
- *     Mercury 2.5              1178
- *     GLM-5.3-Flash (Inco)      593  (best public provider, AA-verified)
- *     Groq Llama 4 Scout        621
- *     SambaNova Llama 4 Scout   725
- *     Nemotron 3.5 Super VL     428-485
- *     Gemini 3.5 Flash Lite     402
- *     GLM-5.3-Flash (Lambda)    140  per user at interactive latency
+ * Ceiling: 5000 tok/s. Chosen 4 Nov 2026 as roughly 2x the fastest measured
+ * per-user number (Cerebras Llama 4 Scout 2623), so the next generation of
+ * hardware fits without the animation losing meaning today. Anything above it
+ * is saturated rather than unrepresentable — the UI reports the real number and
+ * offers a one-click GitHub issue to raise the constant.
+ * See: .github/SPEED_LIMIT_REPORT.md
+ *
+ * When a report lands, raising this means: bump MAX_CALIBRATED_RATE, and rescale
+ * CURVE_SLOPE so 5 -> MAX_CALIBRATED_RATE still spans 1.0 -> maxSpeed.
+ */
+const MAX_CALIBRATED_RATE = 5000f
+
+/** log2 slope that spreads 5..MAX_CALIBRATED_RATE across 1.0..maxSpeed. */
+private fun curveSlope(maxSpeed: Float): Float {
+    // octaves spanned from the floor (5 tok/s) to the ceiling
+    val octaves = (kotlin.math.ln((MAX_CALIBRATED_RATE / 5f).toDouble()) /
+        kotlin.math.ln(2.0)).toFloat()
+    return if (octaves <= 0f) 0f else (maxSpeed - 1f) / octaves
+}
+
+/**
+ * Map a measured rate to an orb speed multiplier.
+ *
+ * Calibrated on measured per-user output speed, not localhost and not aggregate
+ * throughput. Verified 4 Nov 2026 from independent benchmarks:
+ *
+ *     Cerebras Llama 4 Scout    2623   <- fastest measured per-user
+ *     Celeris-1                 1581-1712
+ *     Mercury 2.5               1178
+ *     SambaNova Llama 4 Scout    725
+ *     Groq Llama 4 Scout         621
+ *     GLM-5.3-Flash (Inco)       593
+ *     Nemotron 3.5 Super VL      428-485
+ *     Gemini 3.5 Flash Lite      402
+ *     DeepSeek V4.1 Flash        248
  *     GLM-5.3-Flash (Petronella) 238  single user, 4x H200 FP8
- *     DeepSeek V4.1 Flash       248
+ *     GLM-5.3-Flash (Lambda)     140  per user at interactive latency
  *     -> slow tail on local proxies: 5-70 tok/s
  *
  * Aggregate numbers are traps and were deliberately excluded. "Lane0 1518",
- * "Blackwell 10,000", "GLM-5.3-Flash 2591" are all *total server* throughput
- * across many concurrent users — Lambda's own table shows the same model at
- * 140 tok/s per user at C1 and 21 tok/s per user at C256. A per-user animation
- * must be calibrated on per-user numbers or it lies.
- *
- * Real per-user spread: 5 → 3000 tok/s, ~9.2 octaves. log2 with 0.14/octave
- * maps it onto a legible 1.0 → 2.6 curve:
- *
- *     rate =    5   → 1.33  (slow local proxy)
- *     rate =   60   → 1.83
- *     rate =  140   → 2.00  (GLM-5.3-Flash at interactive latency)
- *     rate =  248   → 2.11  (DeepSeek V4.1 Flash)
- *     rate =  621   → 2.30  (Llama 4 Scout on Groq)
- *     rate =  725   → 2.33  (Llama 4 Scout on SambaNova)
- *     rate = 1518   → 2.48  (Celeris-1)
- *     rate = 2623   → 2.59  (Llama 4 Scout on Cerebras — the real ceiling)
- *     rate >= 3000  → 2.60  (saturated)
- *
- * Saturation at the top is deliberate — that is the user's requirement:
- * "extreme fast nahi, obviously uski bhi ek limit honi chahiye." Past the cap a
- * faster animation stops reading as busy and starts reading as broken.
+ * "Blackwell 10,000" and "GLM-5.3 2591" are *total server* throughput across
+ * concurrent users — Lambda's own table shows the same model at 140 tok/s per
+ * user at C1 and 21 tok/s per user at C256. A per-user animation must be
+ * calibrated on per-user numbers or it lies by up to 40x.
  */
 internal fun orbSpeedTarget(rate: Float, minSpeed: Float, maxSpeed: Float): Float {
     if (rate <= 0f) return minSpeed
-    // log2 puts each doubling on one unit; 0.14/octave spreads 5-3000 tok/s
-    // across the full 1.0-2.6 range without pinning early.
-    val octaves = (kotlin.math.ln(rate.toDouble()) / kotlin.math.ln(2.0)).toFloat()
-    val target = 1f + (octaves.coerceAtLeast(0f) * 0.14f)
+    val floor = 5f
+    val clamped = rate.coerceAtLeast(floor)
+    val octaves = (kotlin.math.ln((clamped / floor).toDouble()) /
+        kotlin.math.ln(2.0)).toFloat()
+    val target = 1f + octaves * curveSlope(maxSpeed)
     return target.coerceIn(minSpeed, maxSpeed)
 }
+
+/** True when a measured rate is past the ceiling and the UI should offer the report link. */
+internal fun exceedsSpeedCeiling(rate: Float): Boolean = rate > MAX_CALIBRATED_RATE
 
 private fun nowMillis(): Long = System.nanoTime() / 1_000_000

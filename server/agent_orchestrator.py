@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set
 
 from core.llm_client import ModelClient
-from core.models import BusEvent, EventType, Message, Role
+from core.models import BusEvent, EventType, Message, MessageMetrics, Role
 from core.room_bus import bus as default_bus
 from server.db import save_message
 
@@ -362,6 +362,8 @@ class _Turn:
     finished_at: Optional[float] = None
     tokens_emitted: int = 0
     thoughts_emitted: int = 0
+    #: Real cost/speed numbers for this turn, measured from the stream.
+    metrics: Optional[MessageMetrics] = None
 
 
 @dataclass
@@ -805,6 +807,9 @@ class AgentOrchestrator:
         thought_parts: List[str] = []
         reply_parts: List[str] = []
         saw_error = False
+        started_at = time.perf_counter()
+        first_token_at: Optional[float] = None
+        event_count = 0
 
         async for event in client.stream(messages):
             if event.kind == "thought":
@@ -819,7 +824,10 @@ class AgentOrchestrator:
                 )
                 turn.thoughts_emitted += 1
             elif event.kind == "token":
+                if first_token_at is None:
+                    first_token_at = time.perf_counter()
                 reply_parts.append(event.text)
+                event_count += 1
                 await self.bus.stream_token(
                     round_.room_id,
                     turn.message_id,
@@ -839,6 +847,17 @@ class AgentOrchestrator:
             return None
         if not reply_parts:
             return None
+
+        # Real numbers for the footer: nobody can fake a token rate because it
+        # is measured from the deltas that actually arrived.
+        elapsed = max(time.perf_counter() - started_at, 1e-6)
+        turn.metrics = MessageMetrics(
+            latency_ms=int(elapsed * 1000),
+            ttft_ms=int((first_token_at - started_at) * 1000) if first_token_at else None,
+            completion_tokens=event_count,
+            tokens_per_second=round(event_count / elapsed, 2),
+            model=model,
+        )
         return "".join(thought_parts).strip(), "".join(reply_parts).strip()
 
     async def _run_turn(
@@ -898,6 +917,7 @@ class AgentOrchestrator:
                 thought=thought,
                 reply_to_id=turn.reply_to_id,
                 created_at=time.time(),
+                metrics=turn.metrics,
             )
 
             await self._emit_typing(turn, False)

@@ -20,6 +20,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.CallSplit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -294,11 +301,17 @@ fun AppleAgentChatScreen(
         ) {
             items(messages, key = { it.id }) { msg ->
                 if (msg.sender == "user") {
-                    UserBubble(msg, isDark, brandColor)
+                    UserBubble(msg, isDark, brandColor, onLongClick = { selectedMessageForAction = msg })
                 } else {
-                    AgentBubble(msg, isDark, brandColor, agentIconRes, agentName) { reply ->
-                        client.sendMessage(reply)
-                    }
+                    AgentBubble(
+                        msg = msg,
+                        isDark = isDark,
+                        brandColor = brandColor,
+                        agentIconRes = agentIconRes,
+                        agentName = agentName,
+                        onDirectiveReply = { reply -> client.sendMessage(reply) },
+                        onLongClick = { selectedMessageForAction = msg }
+                    )
                 }
             }
 
@@ -733,6 +746,168 @@ fun AppleAgentChatScreen(
             }
         )
     }
+
+    // Message context menu dialog (Fork, Copy, Prompt Library)
+    selectedMessageForAction?.let { targetMsg ->
+        AlertDialog(
+            onDismissRequest = { if (!isForking) selectedMessageForAction = null },
+            title = {
+                Text(
+                    text = "Message Actions",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = targetMsg.text.take(80) + if (targetMsg.text.length > 80) "..." else "",
+                        fontSize = 13.sp,
+                        color = talosTextMuted,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // 1. Branch / Fork conversation
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .applePressable(0.96f) {
+                                if (!isForking) {
+                                    scope.launch {
+                                        isForking = true
+                                        val activeRoom = sessionId.ifBlank { client.currentRoomId.value }
+                                        val title = "Fork: ${targetMsg.text.take(20)}"
+                                        val result = client.forkRoom(activeRoom, targetMsg.id, title)
+                                        isForking = false
+                                        selectedMessageForAction = null
+                                        if (result?.ok == true && result.room_id != null) {
+                                            client.switchRoom(result.room_id)
+                                        }
+                                    }
+                                }
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CallSplit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = if (isForking) "Forking conversation..." else "Fork from here",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                                Text(
+                                    text = "Branch into a new thread from this point",
+                                    fontSize = 11.sp,
+                                    color = talosTextMuted
+                                )
+                            }
+                        }
+                    }
+
+                    // 2. Copy message text
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .applePressable(0.96f) {
+                                clipboardManager.setText(AnnotatedString(targetMsg.text))
+                                selectedMessageForAction = null
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Copy text",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                            )
+                        }
+                    }
+
+                    // 3. Save as reusable prompt
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .applePressable(0.96f) {
+                                scope.launch {
+                                    client.createPrompt(
+                                        title = targetMsg.text.take(30),
+                                        body = targetMsg.text
+                                    )
+                                    selectedMessageForAction = null
+                                }
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BookmarkBorder,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Save as reusable prompt",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                                Text(
+                                    text = "Add to your prompt library",
+                                    fontSize = 11.sp,
+                                    color = talosTextMuted
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(
+                    onClick = { if (!isForking) selectedMessageForAction = null }
+                ) {
+                    Text("Close", color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        )
+    }
+
 }
 
 // ---------------------------------------------------------------------------
@@ -740,7 +915,12 @@ fun AppleAgentChatScreen(
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun UserBubble(msg: ChatMessage, isDark: Boolean, brandColor: Color) {
+private fun UserBubble(
+    msg: ChatMessage,
+    isDark: Boolean,
+    brandColor: Color,
+    onLongClick: () -> Unit = {}
+) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         val shape = RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
         Surface(
@@ -750,6 +930,9 @@ private fun UserBubble(msg: ChatMessage, isDark: Boolean, brandColor: Color) {
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .clip(shape)
+                .pointerInput(msg.id) {
+                    detectTapGestures(onLongPress = { onLongClick() })
+                }
                 .appleLiquidGlassOptics(
                     isDark = isDark,
                     chromaticGlow = Color.White.copy(alpha = 0.5f),
@@ -782,7 +965,8 @@ private fun AgentBubble(
     brandColor: Color,
     agentIconRes: Int,
     agentName: String,
-    onDirectiveReply: (String) -> Unit = {}
+    onDirectiveReply: (String) -> Unit = {},
+    onLongClick: () -> Unit = {}
 ) {
     // SYSTEM.md rich directives: prose stays in the bubble, :::talos blocks
     // render as full-width interactive cards below it. Interactive answers

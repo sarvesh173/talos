@@ -1778,6 +1778,129 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     put("answer", answer)
                     put("option_value", optionValue)
                 }
+
+    /**
+     * Full-text search across messages via SQLite FTS5 backend.
+     */
+    suspend fun searchConversations(
+        query: String,
+        roomId: String? = null,
+        limit: Int = 20
+    ): SearchResponseDto? = withContext(Dispatchers.IO) {
+        if (query.isBlank()) return@withContext null
+        runCatching {
+            val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+            val roomParam = if (roomId != null) "&room_id=${java.net.URLEncoder.encode(roomId, "UTF-8")}" else ""
+            val req = Request.Builder()
+                .url("$baseUrl/api/search?q=$encodedQuery&limit=$limit$roomParam")
+                .header("Authorization", "Bearer ${token.value}")
+                .get()
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val body = resp.body?.string() ?: return@use null
+                json.decodeFromString<SearchResponseDto>(body)
+            }
+        }.getOrNull()
+    }
+
+    /**
+     * Branch a conversation at one message into a new room (LibreChat-style fork).
+     */
+    suspend fun forkRoom(
+        roomId: String,
+        messageId: String,
+        title: String? = null
+    ): ForkResultDto? = withContext(Dispatchers.IO) {
+        if (roomId.isBlank() || messageId.isBlank()) return@withContext null
+        runCatching {
+            val payload = buildJsonObject {
+                put("message_id", messageId)
+                if (title != null) put("title", title)
+            }
+            val req = Request.Builder()
+                .url("$baseUrl/api/rooms/$roomId/fork")
+                .header("Authorization", "Bearer ${token.value}")
+                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val body = resp.body?.string() ?: return@use null
+                json.decodeFromString<ForkResultDto>(body)
+            }
+        }.getOrNull()
+    }
+
+    /**
+     * Forks of this room, oldest first.
+     */
+    suspend fun getRoomLineage(roomId: String): List<RoomRefDto> = withContext(Dispatchers.IO) {
+        if (roomId.isBlank()) return@withContext emptyList()
+        runCatching {
+            val req = Request.Builder()
+                .url("$baseUrl/api/rooms/$roomId/lineage")
+                .header("Authorization", "Bearer ${token.value}")
+                .get()
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use emptyList()
+                val body = resp.body?.string() ?: return@use emptyList()
+                json.decodeFromString<List<RoomRefDto>>(body)
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /**
+     * Reusable prompt templates with {{vars}}.
+     */
+    suspend fun listPrompts(category: String? = null, query: String? = null): List<PromptDto> = withContext(Dispatchers.IO) {
+        runCatching {
+            val urlBuilder = java.lang.StringBuilder("$baseUrl/api/prompts?")
+            if (category != null) urlBuilder.append("category=").append(java.net.URLEncoder.encode(category, "UTF-8")).append("&")
+            if (query != null) urlBuilder.append("q=").append(java.net.URLEncoder.encode(query, "UTF-8"))
+            val req = Request.Builder()
+                .url(urlBuilder.toString().trimEnd('?', '&'))
+                .header("Authorization", "Bearer ${token.value}")
+                .get()
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use emptyList()
+                val body = resp.body?.string() ?: return@use emptyList()
+                json.decodeFromString<List<PromptDto>>(body)
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /**
+     * Save a new prompt into the prompt library.
+     */
+    suspend fun createPrompt(
+        title: String,
+        body: String,
+        category: String? = null,
+        variables: List<String>? = null
+    ): PromptDto? = withContext(Dispatchers.IO) {
+        runCatching {
+            val payload = buildJsonObject {
+                put("title", title)
+                put("body", body)
+                if (category != null) put("category", category)
+                if (variables != null) {
+                    put("variables", kotlinx.serialization.json.JsonArray(variables.map { kotlinx.serialization.json.JsonPrimitive(it) }))
+                }
+            }
+            val req = Request.Builder()
+                .url("$baseUrl/api/prompts")
+                .header("Authorization", "Bearer ${token.value}")
+                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val respBody = resp.body?.string() ?: return@use null
+                json.decodeFromString<PromptDto>(respBody)
+            }
+        }.getOrNull()
+    }
                 val req = Request.Builder()
                     .url("$baseUrl/api/questions/$id/answer")
                     .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
@@ -2049,3 +2172,54 @@ data class AgentQuestionUi(
     val onTimeout: String? get() = on_timeout
     val roomId: String get() = room_id
 }
+
+@kotlinx.serialization.Serializable
+data class SearchHitDto(
+    @kotlinx.serialization.SerialName("message_id") val message_id: String,
+    @kotlinx.serialization.SerialName("room_id") val room_id: String,
+    @kotlinx.serialization.SerialName("room_name") val room_name: String = "",
+    @kotlinx.serialization.SerialName("sender_name") val sender_name: String = "",
+    @kotlinx.serialization.SerialName("snippet") val snippet: String = "",
+    @kotlinx.serialization.SerialName("created_at") val created_at: Double = 0.0,
+    @kotlinx.serialization.SerialName("match_offsets") val match_offsets: List<Int> = emptyList()
+)
+
+@kotlinx.serialization.Serializable
+data class SearchResponseDto(
+    @kotlinx.serialization.SerialName("ok") val ok: Boolean = true,
+    @kotlinx.serialization.SerialName("query") val query: String = "",
+    @kotlinx.serialization.SerialName("total_hits") val total_hits: Int = 0,
+    @kotlinx.serialization.SerialName("backend") val backend: String = "fts5",
+    @kotlinx.serialization.SerialName("hits") val hits: List<SearchHitDto> = emptyList()
+)
+
+@kotlinx.serialization.Serializable
+data class ForkResultDto(
+    @kotlinx.serialization.SerialName("ok") val ok: Boolean = true,
+    @kotlinx.serialization.SerialName("room_id") val room_id: String? = null,
+    @kotlinx.serialization.SerialName("error_code") val error_code: String? = null,
+    @kotlinx.serialization.SerialName("error") val error: String? = null,
+    @kotlinx.serialization.SerialName("copied_message_count") val copied_message_count: Int = 0,
+    @kotlinx.serialization.SerialName("created") val created: Boolean = false
+)
+
+@kotlinx.serialization.Serializable
+data class RoomRefDto(
+    @kotlinx.serialization.SerialName("id") val id: String,
+    @kotlinx.serialization.SerialName("name") val name: String,
+    @kotlinx.serialization.SerialName("parent_room_id") val parent_room_id: String? = null,
+    @kotlinx.serialization.SerialName("forked_at_message_id") val forked_at_message_id: String? = null,
+    @kotlinx.serialization.SerialName("created_at") val created_at: Double? = null,
+    @kotlinx.serialization.SerialName("updated_at") val updated_at: Double? = null
+)
+
+@kotlinx.serialization.Serializable
+data class PromptDto(
+    @kotlinx.serialization.SerialName("id") val id: String,
+    @kotlinx.serialization.SerialName("title") val title: String,
+    @kotlinx.serialization.SerialName("body") val body: String,
+    @kotlinx.serialization.SerialName("category") val category: String? = null,
+    @kotlinx.serialization.SerialName("variables") val variables: List<String> = emptyList(),
+    @kotlinx.serialization.SerialName("created_at") val created_at: Double? = null,
+    @kotlinx.serialization.SerialName("updated_at") val updated_at: Double? = null
+)

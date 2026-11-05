@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.R
 import com.sarvesh173.talos.network.TalosClient
+import com.sarvesh173.talos.network.SearchHitDto
 import com.sarvesh173.talos.ui.agents.AgentRoster
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -214,6 +215,17 @@ fun LandingScreen(
 
     var selectedAgentId by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    var searchHits by remember { mutableStateOf<List<SearchHitDto>>(emptyList()) }
+
+    LaunchedEffect(searchQuery) {
+        val q = searchQuery.trim()
+        if (q.length >= 2) {
+            kotlinx.coroutines.delay(250)
+            searchHits = client.searchConversations(q)?.hits ?: emptyList()
+        } else {
+            searchHits = emptyList()
+        }
+    }
     var agents by remember { mutableStateOf<List<RealAgent>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var failed by remember { mutableStateOf(false) }
@@ -370,6 +382,59 @@ fun LandingScreen(
                                 modifier = Modifier.padding(vertical = 16.dp),
                             )
                         }
+
+                    if (searchHits.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Conversation hits",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = secondaryText,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                            )
+                        }
+                        items(searchHits, key = { it.message_id }) { hit ->
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = card,
+                                border = BorderStroke(0.5.dp, hairline),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        client.switchRoom(hit.room_id)
+                                        onOpenSession(hit.room_id, hit.room_name.ifBlank { "Search Result" })
+                                    }
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = hit.room_name.ifBlank { hit.room_id },
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = accent
+                                        )
+                                        Text(
+                                            text = hit.sender_name,
+                                            fontSize = 11.sp,
+                                            color = tertiaryText
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = hit.snippet,
+                                        fontSize = 13.sp,
+                                        color = primaryText,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
                     } else {
                         val visible = if (searchQuery.isBlank()) agents else agents.filter {
                             val rosterEntry = AgentRoster.byId(it.id)

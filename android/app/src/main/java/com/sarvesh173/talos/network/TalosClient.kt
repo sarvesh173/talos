@@ -1778,124 +1778,6 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     put("answer", answer)
                     put("option_value", optionValue)
                 }
-
-    /**
-     * Full-text search across messages via SQLite FTS5 backend.
-     */
-    suspend fun searchConversations(
-        query: String,
-        roomId: String? = null,
-        limit: Int = 20
-    ): SearchResponseDto? = withContext(Dispatchers.IO) {
-        if (query.isBlank()) return@withContext null
-        runCatching {
-            val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
-            val roomParam = if (roomId != null) "&room_id=${java.net.URLEncoder.encode(roomId, "UTF-8")}" else ""
-            val req = Request.Builder()
-                .url("$baseUrl/api/search?q=$encodedQuery&limit=$limit$roomParam")
-                                .get()
-                .build()
-            httpClient.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@use null
-                val body = resp.body?.string() ?: return@use null
-                json.decodeFromString<SearchResponseDto>(body)
-            }
-        }.getOrNull()
-    }
-
-    /**
-     * Branch a conversation at one message into a new room (LibreChat-style fork).
-     */
-    suspend fun forkRoom(
-        roomId: String,
-        messageId: String,
-        title: String? = null
-    ): ForkResultDto? = withContext(Dispatchers.IO) {
-        if (roomId.isBlank() || messageId.isBlank()) return@withContext null
-        runCatching {
-            val payload = buildJsonObject {
-                put("message_id", messageId)
-                if (title != null) put("title", title)
-            }
-            val req = Request.Builder()
-                .url("$baseUrl/api/rooms/$roomId/fork")
-                                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
-                .build()
-            httpClient.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@use null
-                val body = resp.body?.string() ?: return@use null
-                json.decodeFromString<ForkResultDto>(body)
-            }
-        }.getOrNull()
-    }
-
-    /**
-     * Forks of this room, oldest first.
-     */
-    suspend fun getRoomLineage(roomId: String): List<RoomRefDto> = withContext(Dispatchers.IO) {
-        if (roomId.isBlank()) return@withContext emptyList()
-        runCatching {
-            val req = Request.Builder()
-                .url("$baseUrl/api/rooms/$roomId/lineage")
-                                .get()
-                .build()
-            httpClient.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@use emptyList()
-                val body = resp.body?.string() ?: return@use emptyList()
-                json.decodeFromString<List<RoomRefDto>>(body)
-            }
-        }.getOrDefault(emptyList())
-    }
-
-    /**
-     * Reusable prompt templates with {{vars}}.
-     */
-    suspend fun listPrompts(category: String? = null, query: String? = null): List<PromptDto> = withContext(Dispatchers.IO) {
-        runCatching {
-            val urlBuilder = java.lang.StringBuilder("$baseUrl/api/prompts?")
-            if (category != null) urlBuilder.append("category=").append(java.net.URLEncoder.encode(category, "UTF-8")).append("&")
-            if (query != null) urlBuilder.append("q=").append(java.net.URLEncoder.encode(query, "UTF-8"))
-            val req = Request.Builder()
-                .url(urlBuilder.toString().trimEnd('?', '&'))
-                                .get()
-                .build()
-            httpClient.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@use emptyList()
-                val body = resp.body?.string() ?: return@use emptyList()
-                json.decodeFromString<List<PromptDto>>(body)
-            }
-        }.getOrDefault(emptyList())
-    }
-
-    /**
-     * Save a new prompt into the prompt library.
-     */
-    suspend fun createPrompt(
-        title: String,
-        body: String,
-        category: String? = null,
-        variables: List<String>? = null
-    ): PromptDto? = withContext(Dispatchers.IO) {
-        runCatching {
-            val payload = buildJsonObject {
-                put("title", title)
-                put("body", body)
-                if (category != null) put("category", category)
-                if (variables != null) {
-                    put("variables", kotlinx.serialization.json.JsonArray(variables.map { kotlinx.serialization.json.JsonPrimitive(it) }))
-                }
-            }
-            val req = Request.Builder()
-                .url("$baseUrl/api/prompts")
-                                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
-                .build()
-            httpClient.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@use null
-                val respBody = resp.body?.string() ?: return@use null
-                json.decodeFromString<PromptDto>(respBody)
-            }
-        }.getOrNull()
-    }
                 val req = Request.Builder()
                     .url("$baseUrl/api/questions/$id/answer")
                     .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
@@ -1980,7 +1862,127 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         list.add(QueuedMessage(roomId, text))
         saveOfflineQueue(list)
     }
+
+    /**
+     * Full-text search across messages via SQLite FTS5 backend.
+     */
+    suspend fun searchConversations(
+        query: String,
+        roomId: String? = null,
+        limit: Int = 20
+    ): SearchResponseDto? = withContext(Dispatchers.IO) {
+        if (query.isBlank()) return@withContext null
+        runCatching {
+            val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+            val roomParam = if (roomId != null) "&room_id=${java.net.URLEncoder.encode(roomId, "UTF-8")}" else ""
+            val req = Request.Builder()
+                .url("$baseUrl/api/search?q=$encodedQuery&limit=$limit$roomParam")
+                .get()
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val body = resp.body?.string() ?: return@use null
+                json.decodeFromString<SearchResponseDto>(body)
+            }
+        }.getOrNull()
+    }
+
+    /**
+     * Branch a conversation at one message into a new room (LibreChat-style fork).
+     */
+    suspend fun forkRoom(
+        roomId: String,
+        messageId: String,
+        title: String? = null
+    ): ForkResultDto? = withContext(Dispatchers.IO) {
+        if (roomId.isBlank() || messageId.isBlank()) return@withContext null
+        runCatching {
+            val payload = buildJsonObject {
+                put("message_id", messageId)
+                if (title != null) put("title", title)
+            }
+            val req = Request.Builder()
+                .url("$baseUrl/api/rooms/$roomId/fork")
+                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val body = resp.body?.string() ?: return@use null
+                json.decodeFromString<ForkResultDto>(body)
+            }
+        }.getOrNull()
+    }
+
+    /**
+     * Forks of this room, oldest first.
+     */
+    suspend fun getRoomLineage(roomId: String): List<RoomRefDto> = withContext(Dispatchers.IO) {
+        if (roomId.isBlank()) return@withContext emptyList()
+        runCatching {
+            val req = Request.Builder()
+                .url("$baseUrl/api/rooms/$roomId/lineage")
+                .get()
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use emptyList()
+                val body = resp.body?.string() ?: return@use emptyList()
+                json.decodeFromString<List<RoomRefDto>>(body)
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /**
+     * Reusable prompt templates with {{vars}}.
+     */
+    suspend fun listPrompts(category: String? = null, query: String? = null): List<PromptDto> = withContext(Dispatchers.IO) {
+        runCatching {
+            val urlBuilder = java.lang.StringBuilder("$baseUrl/api/prompts?")
+            if (category != null) urlBuilder.append("category=").append(java.net.URLEncoder.encode(category, "UTF-8")).append("&")
+            if (query != null) urlBuilder.append("q=").append(java.net.URLEncoder.encode(query, "UTF-8"))
+            val req = Request.Builder()
+                .url(urlBuilder.toString().trimEnd('?', '&'))
+                .get()
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use emptyList()
+                val body = resp.body?.string() ?: return@use emptyList()
+                json.decodeFromString<List<PromptDto>>(body)
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /**
+     * Save a new prompt into the prompt library.
+     */
+    suspend fun createPrompt(
+        title: String,
+        body: String,
+        category: String? = null,
+        variables: List<String>? = null
+    ): PromptDto? = withContext(Dispatchers.IO) {
+        runCatching {
+            val payload = buildJsonObject {
+                put("title", title)
+                put("body", body)
+                if (category != null) put("category", category)
+                if (variables != null) {
+                    put("variables", kotlinx.serialization.json.JsonArray(variables.map { kotlinx.serialization.json.JsonPrimitive(it) }))
+                }
+            }
+            val req = Request.Builder()
+                .url("$baseUrl/api/prompts")
+                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val respBody = resp.body?.string() ?: return@use null
+                json.decodeFromString<PromptDto>(respBody)
+            }
+        }.getOrNull()
+    }
+
 }
+
 
 @kotlinx.serialization.Serializable
 data class QueuedMessage(
@@ -2167,6 +2169,7 @@ data class AgentQuestionUi(
     val onTimeout: String? get() = on_timeout
     val roomId: String get() = room_id
 }
+
 
 @kotlinx.serialization.Serializable
 data class SearchHitDto(

@@ -1,5 +1,7 @@
 package com.sarvesh173.talos.ui
 
+import com.sarvesh173.talos.network.*
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*

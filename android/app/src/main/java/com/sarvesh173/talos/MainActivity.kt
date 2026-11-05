@@ -134,6 +134,23 @@ class MainActivity : FragmentActivity() {
     private lateinit var appLockStore: AppLockStore
     private lateinit var appLock: AppLockController
     private var lockVersion by mutableIntStateOf(0)
+    private var pendingScreen by mutableStateOf<String?>(null)
+
+    private fun resolveScreenFromIntent(intent: Intent?): String? {
+        val data = intent?.data ?: return intent?.getStringExtra("talos.route")
+        if (data.scheme != "talos") return null
+        return when (data.host?.lowercase()) {
+            "new-chat", "chat" -> "agent_chat"
+            "live-voice", "voice" -> "thinking_orb"
+            "tools", "kanban" -> "kanban"
+            "settings" -> "settings"
+            "review" -> "review_work"
+            "jobs", "cron" -> "jobs"
+            "dashboard", "services" -> "dashboard_control"
+            "section" -> data.getQueryParameter("name")
+            else -> null
+        }
+    }
 
     /**
      * Accept a pairing link from the agent or Chrome (link or QR) and store the
@@ -169,6 +186,10 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handlePairingIntent(intent)
+        pendingScreen = resolveScreenFromIntent(intent)
+        resolveScreenFromIntent(intent)?.let {
+            pendingScreen = it
+        }
     }
 
     /**
@@ -282,7 +303,13 @@ class MainActivity : FragmentActivity() {
             val storedFont by client.selectedFont.collectAsState()
             val storedFontScale by client.fontScale.collectAsState()
             var showThemeDialog by remember { mutableStateOf(false) }
-            var appScreen by remember { mutableStateOf("main") }
+            var appScreen by remember { mutableStateOf(pendingScreen ?: "main") }
+            LaunchedEffect(pendingScreen) {
+                pendingScreen?.let {
+                    appScreen = it
+                    pendingScreen = null
+                }
+            }
             // Starts empty, not "ses_default": a fabricated id that does not
             // exist on the host would be sent to the server on the first message
             // and would appear in the board as a real session. An empty id means

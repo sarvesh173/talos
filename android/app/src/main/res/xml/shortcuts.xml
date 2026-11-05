@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new_chat"
+        android:enabled="true"
+        android:icon="@drawable/ic_opencode"
+        android:shortcutShortLabel="@string/shortcut_new_chat"
+        android:shortcutLongLabel="@string/shortcut_new_chat_desc">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.sarvesh173.talos"
+            android:targetClass="com.sarvesh173.talos.MainActivity"
+            android:data="talos://new-chat" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="live_voice"
+        android:enabled="true"
+        android:icon="@drawable/ic_hermes"
+        android:shortcutShortLabel="@string/shortcut_live_voice"
+        android:shortcutLongLabel="@string/shortcut_live_voice_desc">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.sarvesh173.talos"
+            android:targetClass="com.sarvesh173.talos.MainActivity"
+            android:data="talos://live-voice" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="tool_activity"
+        android:enabled="true"
+        android:icon="@drawable/ic_core"
+        android:shortcutShortLabel="@string/shortcut_tools"
+        android:shortcutLongLabel="@string/shortcut_tools_desc">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.sarvesh173.talos"
+            android:targetClass="com.sarvesh173.talos.MainActivity"
+            android:data="talos://tools" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="review_work"
+        android:enabled="true"
+        android:icon="@drawable/ic_mesh_network"
+        android:shortcutShortLabel="@string/shortcut_review"
+        android:shortcutLongLabel="@string/shortcut_review_desc">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.sarvesh173.talos"
+            android:targetClass="com.sarvesh173.talos.MainActivity"
+            android:data="talos://review" />
+    </shortcut>
+</shortcuts>

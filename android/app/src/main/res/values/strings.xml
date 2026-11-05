@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">TALOS</string>
     <string name="tagline">AI-Native Multi-Agent Hub</string>
+    <string name="shortcut_new_chat">New chat</string>
+    <string name="shortcut_new_chat_desc">Start a new conversation with an agent</string>
+    <string name="shortcut_live_voice">Live voice</string>
+    <string name="shortcut_live_voice_desc">Open the thinking orb for real-time voice</string>
+    <string name="shortcut_tools">Tool activity</string>
+    <string name="shortcut_tools_desc">Live operations Kanban board</string>
+    <string name="shortcut_review">Review work</string>
+    <string name="shortcut_review_desc">Inspect agent diffs and changed files</string>
 </resources>

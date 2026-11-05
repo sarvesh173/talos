@@ -1793,8 +1793,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             val roomParam = if (roomId != null) "&room_id=${java.net.URLEncoder.encode(roomId, "UTF-8")}" else ""
             val req = Request.Builder()
                 .url("$baseUrl/api/search?q=$encodedQuery&limit=$limit$roomParam")
-                .header("Authorization", "Bearer ${token.value}")
-                .get()
+                                .get()
                 .build()
             httpClient.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@use null
@@ -1820,8 +1819,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             }
             val req = Request.Builder()
                 .url("$baseUrl/api/rooms/$roomId/fork")
-                .header("Authorization", "Bearer ${token.value}")
-                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
                 .build()
             httpClient.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@use null
@@ -1839,8 +1837,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         runCatching {
             val req = Request.Builder()
                 .url("$baseUrl/api/rooms/$roomId/lineage")
-                .header("Authorization", "Bearer ${token.value}")
-                .get()
+                                .get()
                 .build()
             httpClient.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@use emptyList()
@@ -1860,8 +1857,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             if (query != null) urlBuilder.append("q=").append(java.net.URLEncoder.encode(query, "UTF-8"))
             val req = Request.Builder()
                 .url(urlBuilder.toString().trimEnd('?', '&'))
-                .header("Authorization", "Bearer ${token.value}")
-                .get()
+                                .get()
                 .build()
             httpClient.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@use emptyList()
@@ -1891,8 +1887,7 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             }
             val req = Request.Builder()
                 .url("$baseUrl/api/prompts")
-                .header("Authorization", "Bearer ${token.value}")
-                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                                .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
                 .build()
             httpClient.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@use null

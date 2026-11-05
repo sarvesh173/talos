@@ -180,6 +180,9 @@ fun AppleAgentChatScreen(
     }
     val rooms by client.rooms.collectAsState()
     val scope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
+    var selectedMessageForAction by remember { mutableStateOf<ChatMessage?>(null) }
+    var isForking by remember { mutableStateOf(false) }
 
     // Slash commands stay hidden until the user actually types '/'.
     // The model palette + chip are the command surface; they activate only

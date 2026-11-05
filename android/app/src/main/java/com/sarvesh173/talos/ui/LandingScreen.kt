@@ -402,7 +402,13 @@ fun LandingScreen(
                                     .fillMaxWidth()
                                     .clickable {
                                         client.switchRoom(hit.room_id)
-                                        onOpenSession(hit.room_id, hit.room_name.ifBlank { "Search Result" })
+                                        onOpenAgentChat?.invoke(
+                                            hit.room_id,
+                                            hit.room_name.ifBlank { "Search Result" },
+                                            hit.sender_name.ifBlank { "Agent" },
+                                            iconForAgent(hit.room_id),
+                                            accent
+                                        )
                                     }
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {

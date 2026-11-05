@@ -80,7 +80,7 @@ data class ToolCallDto(
         if (arguments_preview.isNotBlank()) return arguments_preview
         val raw = arguments?.toString().orEmpty()
         if (raw.isBlank() || raw == "null") return ""
-        val flat = " ".join(raw.split(Regex("\\s+")).filter { it.isNotEmpty() })
+        val flat = raw.split(Regex("\\s+")).filter { it.isNotEmpty() }.joinToString(" ")
         return if (flat.length <= 160) flat else flat.take(159) + "…"
     }
 }

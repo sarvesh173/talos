@@ -88,7 +88,7 @@ private val GridUnit = 4.dp
 private val kanbanJson = Json {
     ignoreUnknownKeys = true
     isLenient = true
-    coerceInput = true
+    coerceInputValues = true
     explicitNulls = false
 }
 
@@ -199,7 +199,7 @@ private fun KanbanHeader(board: KanbanBoardDto?, onBack: (() -> Unit)?) {
                     text = "Tool Calls",
                     color = PrimaryText,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Semibold,
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = "Live operations board",
@@ -304,7 +304,7 @@ private fun KanbanHeader(board: KanbanBoardDto?, onBack: (() -> Unit)?) {
                             text = if (agent.is_delegate) "D" else "M",
                             color = if (agent.is_delegate) Accent else SecondaryText,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Semibold,
+                            fontWeight = FontWeight.SemiBold,
                             style = Tnum,
                         )
                         Spacer(modifier = Modifier.width(GridUnit))
@@ -349,7 +349,7 @@ private fun CounterCell(label: String, value: Int, modifier: Modifier = Modifier
             text = value.toString(),
             color = PrimaryText,
             fontSize = 22.sp,
-            fontWeight = FontWeight.Semibold,
+            fontWeight = FontWeight.SemiBold,
             style = Tnum,
         )
     }
@@ -486,7 +486,7 @@ private fun LaneTitle(title: String, count: Int) {
             text = title,
             color = PrimaryText,
             fontSize = 15.sp,
-            fontWeight = FontWeight.Semibold,
+            fontWeight = FontWeight.SemiBold,
             modifier = Modifier.weight(1f),
         )
         Text(
@@ -524,7 +524,7 @@ private fun ToolCallCard(row: ToolCallDto, serverTime: Double) {
                 text = row.tool.ifBlank { "(unknown tool)" },
                 color = PrimaryText,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Semibold,
+                fontWeight = FontWeight.SemiBold,
                 fontFamily = FontFamily.Monospace,
                 modifier = Modifier.weight(1f),
             )
@@ -546,7 +546,7 @@ private fun ToolCallCard(row: ToolCallDto, serverTime: Double) {
             text = attribution,
             color = if (row.is_delegate) Accent else SecondaryText,
             fontSize = 12.sp,
-            fontWeight = if (row.is_delegate) FontWeight.Semibold else FontWeight.Normal,
+            fontWeight = if (row.is_delegate) FontWeight.SemiBold else FontWeight.Normal,
         )
 
         val preview = row.previewText()
@@ -608,7 +608,7 @@ private fun relativeDuration(row: ToolCallDto, serverTime: Double): String {
 }
 
 @Composable
-private fun LoadingState() {
+private fun androidx.compose.foundation.layout.ColumnScope.LoadingState() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -620,7 +620,7 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun EmptyState(text: String) {
+private fun androidx.compose.foundation.layout.ColumnScope.EmptyState(text: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -635,7 +635,7 @@ private fun EmptyState(text: String) {
 }
 
 @Composable
-private fun UnreachableState(onRetry: () -> Unit) {
+private fun androidx.compose.foundation.layout.ColumnScope.UnreachableState(onRetry: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -651,7 +651,7 @@ private fun UnreachableState(onRetry: () -> Unit) {
             text = "Host unreachable",
             color = PrimaryText,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Semibold,
+            fontWeight = FontWeight.SemiBold,
         )
         Text(
             text = "The Kanban board could not be loaded from " + KanbanApi.BOARD_PATH,

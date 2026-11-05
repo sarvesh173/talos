@@ -1,4 +1,5 @@
 package com.sarvesh173.talos.ui.avatar
+import kotlin.math.abs
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -124,7 +125,7 @@ internal fun parseIdentityHex(raw: String): Color? {
     val h = raw.trim().removePrefix("#")
     if (h.length != 6 || h.any { it !in '0'..'9' && it !in 'a'..'f' && it !in 'A'..'F' }) return null
     val value = h.toIntOrNull(16) ?: return null
-    return Color(0xFF000000 or value)
+    return Color(0xFF000000L or (value.toLong() and 0xFFFFFFL))
 }
 
 /** Custom hex carried by a custom [paletteId], e.g. "#FFFFFF", or null. */
@@ -626,7 +627,7 @@ private fun drawOrb(
             size = androidx.compose.ui.geometry.Size(rx * 2f, orbR * (0.35f + 0.65f * t) * 2f),
             style = Stroke(width = w * 0.010f)
         )
-        void(turns)
+        
     }
 
     // Surface dots: fibonacci sphere, projected. shellDepth pulls them
@@ -651,7 +652,7 @@ private fun drawOrb(
             radius = dotR,
             center = androidx.compose.ui.geometry.Offset(px, py)
         )
-        void(px); void(py)
+        
     }
 
     // Scan highlight: latitude sweep, speed from scanSpeed.

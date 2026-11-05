@@ -30,6 +30,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -200,6 +203,7 @@ fun DashboardControlScreen(
     liveStatuses: Map<String, ServiceStatus> = emptyMap(),
     onProbe: (suspend () -> Boolean)? = null,
     onOpenTailscale: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -242,13 +246,33 @@ fun DashboardControlScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
-            Text(
-                text = "Services",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryText,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                if (onBack != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clickable { onBack() },
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = PrimaryText,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(
+                    text = "Services",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryText
+                )
+            }
 
             // ---- Honest error banner: names the real cause. ----
             when (diagnosis) {

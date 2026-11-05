@@ -479,24 +479,9 @@ class MainActivity : FragmentActivity() {
                     )
                 } else {
                 val activeTarget = when (appScreen) {
-                    "landing" -> "landing"
-                    "wizard" -> "wizard"
-                    "settings" -> "settings"
-                    "look_and_feel" -> "look_and_feel"
-                    "chat_preferences" -> "chat_preferences"
-                    "security" -> "security"
-                    "caching" -> "caching"
-                    "notifications" -> "notifications"
-                    "canvas" -> "canvas"
-                    "diff" -> "diff"
-                    "hub" -> "hub"
-                    "gallery" -> "gallery"
-                    "cli_manager" -> "cli_manager"
-                    "agent_chat", "chat" -> "agent_chat"
-                    "thinking_orb" -> "thinking_orb"
-                    "review_work" -> "review_work"
-                    "jobs" -> "jobs"
-                    else -> "main"
+                    "landing", "main" -> "main"
+                    "chat" -> "agent_chat"
+                    else -> appScreen
                 }
 
                 val currentActivity = LocalContext.current as? Activity
@@ -507,7 +492,8 @@ class MainActivity : FragmentActivity() {
                         "review_work", "jobs" -> {
                             appScreen = "settings"
                         }
-                        "settings", "canvas", "diff", "hub", "gallery", "cli_manager", "chat" -> {
+                        "settings", "canvas", "diff", "hub", "gallery", "cli_manager", "chat",
+                        "browser", "whiteboard" -> {
                             appScreen = "main"
                         }
                         "agent_chat", "thinking_orb" -> {

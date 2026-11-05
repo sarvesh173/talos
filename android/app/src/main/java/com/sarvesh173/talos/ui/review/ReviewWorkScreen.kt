@@ -1,5 +1,9 @@
 package com.sarvesh173.talos.ui.review
 
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ContentCopy
+
 import android.content.Context
 import android.provider.Settings
 import android.widget.Toast
@@ -162,7 +166,7 @@ private val CardShape = RoundedCornerShape(12.dp)
 private val reviewJson = Json {
     ignoreUnknownKeys = true
     isLenient = true
-    coerceInput = true
+    coerceInputValues = true
     explicitNulls = false
 }
 
@@ -304,7 +308,7 @@ private fun ReviewHeader(
                     text = if (summary != null) "${summary.total_files} files changed" else "Review its work",
                     color = PrimaryText,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Semibold,
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = when {
@@ -354,7 +358,7 @@ private fun ReviewErrorState(message: String, onRetry: () -> Unit) {
             text = if (message == "Agent not found") "Agent not found" else "Review unavailable",
             color = PrimaryText,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Semibold,
+            fontWeight = FontWeight.SemiBold,
         )
         Text(text = message, color = SecondaryText, fontSize = 13.sp)
         TextButton(onClick = onRetry) {
@@ -383,7 +387,7 @@ private fun ReviewEmptyState(agentId: String, sinceMs: Long?) {
             text = "No file changes recorded",
             color = PrimaryText,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Semibold,
+            fontWeight = FontWeight.SemiBold,
         )
         Text(text = "Run $agentId", color = SecondaryText, fontSize = 13.sp)
         Text(text = window, color = SecondaryText, fontSize = 13.sp)

@@ -134,7 +134,7 @@ fun AgentLogoCustomizeScreen(
             Text(
                 text = "Logo customization",
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Semibold,
+                fontWeight = FontWeight.SemiBold,
                 color = PrimaryText
             )
         }
@@ -511,7 +511,7 @@ private fun GroupCard(
             Text(
                 text = title,
                 fontSize = 15.sp,
-                fontWeight = FontWeight.Semibold,
+                fontWeight = FontWeight.SemiBold,
                 color = PrimaryText
             )
             if (onReset != null) {

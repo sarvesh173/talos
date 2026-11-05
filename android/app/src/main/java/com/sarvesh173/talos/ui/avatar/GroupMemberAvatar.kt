@@ -1,4 +1,6 @@
 package com.sarvesh173.talos.ui.avatar
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
@@ -469,8 +471,8 @@ fun MemberAvatarStrip(
                     if (bitmap != null && effectiveForm == IdentityForm.Photo) {
                         drawImage(
                             image = bitmap,
-                            topLeft = Offset(ccx - cellR, ccy - cellR),
-                            size = Size(cellR * 2f, cellR * 2f)
+                            dstOffset = IntOffset((ccx - cellR).toInt(), (ccy - cellR).toInt()),
+                            dstSize = IntSize((cellR * 2f).toInt(), (cellR * 2f).toInt())
                         )
                     } else {
                         drawMemberGlyph(

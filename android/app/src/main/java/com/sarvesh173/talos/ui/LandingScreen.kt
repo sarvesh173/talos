@@ -90,7 +90,7 @@ private val ElevatedDark = Color(0xFF2C2C2E)
 private val ElevatedLight = Color(0xFFE5E5EA)
 private val AccentDark = Color(0xFF0A84FF)
 private val AccentLight = Color(0xFF0071E3)
-private val StatusGreen = Color(0xFF30D158)
+private val LandingStatusGreen = Color(0xFF30D158)
 private val MutedDark = Color(0xFF98989D)
 
 private val Tnum = TextStyle(fontFeatureSettings = "tnum")
@@ -533,7 +533,7 @@ fun LandingScreen(
                                             modifier = Modifier
                                                 .size(8.dp)
                                                 .clip(CircleShape)
-                                                .background(StatusGreen),
+                                                .background(LandingStatusGreen),
                                         )
                                         Spacer(modifier = Modifier.width(12.dp))
                                     }

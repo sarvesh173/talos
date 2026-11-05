@@ -221,9 +221,9 @@ object AgentLogoBaker {
         val logoAng = FloatArray(n)
         val seatAng = FloatArray(n)
         for (i in 0 until n) {
-            logoAng[i] = atan2(points[i * 3 + 1], points[i * 3])
-            val (sx, sy, _) = fibDir(i, n)
-            seatAng[i] = atan2(sy, sx)
+            logoAng[i] = atan2(points[i * 3 + 1].toDouble(), points[i * 3].toDouble()).toFloat()
+            val (sx, sy, _) = LogoMotion.fibDir(i, n)
+            seatAng[i] = atan2(sy.toDouble(), sx.toDouble()).toFloat()
         }
         val byLogoBoxed = Array(n) { it }
         val bySeatBoxed = Array(n) { it }

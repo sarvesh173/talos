@@ -1,5 +1,9 @@
 package com.sarvesh173.talos.ui.orb
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Alignment
+
 import android.content.Context
 import android.provider.Settings
 import androidx.compose.foundation.background
@@ -377,16 +381,16 @@ fun ReasoningOrb(
             for (i in 0 until dotCount) {
                 val t = if (dotCount == 1) 0.5f else i.toFloat() / (dotCount - 1).toFloat()
                 val y = 1f - t * 2f
-                val rRing = sqrt((1f - y * y).coerceAtLeast(0f))
-                val theta = GOLDEN * i + seed * 0.01f + safeIntensity * 0.05f
-                val x = cos(theta) * rRing
-                val z = sin(theta) * rRing
+                val rRing = kotlin.math.sqrt((1f - y * y).coerceAtLeast(0f).toDouble()).toFloat()
+                val theta = GOLDEN * i.toFloat() + seed * 0.01f + safeIntensity * 0.05f
+                val x = kotlin.math.cos(theta.toDouble()).toFloat() * rRing
+                val z = kotlin.math.sin(theta.toDouble()).toFloat() * rRing
                 val depth = 0.5f + 0.5f * z
                 val px = centre.x + x * radius * 0.92f
                 val py = centre.y + y * radius * 0.92f
                 val ink = 0.35f + 0.65f * depth
                 drawCircle(
-                    color = Color.White.copy(alpha = 0.25f + 0.75f * ink),
+                    color = Color.White.copy(alpha = (0.25f + 0.75f * ink).coerceIn(0f, 1f)),
                     radius = (baseDot * (0.4f + depth)).coerceAtLeast(0.5f),
                     center = Offset(px, py),
                 )

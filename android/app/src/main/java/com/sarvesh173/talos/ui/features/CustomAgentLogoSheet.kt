@@ -1,4 +1,6 @@
 package com.sarvesh173.talos.ui.features
+import kotlin.math.min
+import kotlin.math.max
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -214,8 +216,8 @@ fun CustomAgentLogoSheet(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    focusedIndicatorColor = accent,
-                    unfocusedIndicatorColor = hairline,
+                    focusedBorderColor = accent,
+                    unfocusedBorderColor = hairline,
                     cursorColor = accent
                 )
             )

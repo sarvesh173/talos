@@ -23,6 +23,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.Mood
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -60,7 +67,8 @@ fun AttachmentSheet(
     isDark: Boolean,
     onDismiss: () -> Unit,
     onPickImage: (PendingImage) -> Unit,
-    onSendText: (String) -> Unit
+    onSendText: (String) -> Unit,
+    onOpenPrompts: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -141,33 +149,36 @@ fun AttachmentSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AttachTile("Camera", isDark) {
+                AttachTile("Camera", Icons.Default.CameraAlt, isDark) {
                     val granted = ContextCompat.checkSelfPermission(
                         context, Manifest.permission.CAMERA
                     ) == PackageManager.PERMISSION_GRANTED
                     if (granted) takePicture.launch(null)
                     else cameraPermission.launch(Manifest.permission.CAMERA)
                 }
-                AttachTile("Photos", isDark) {
+                AttachTile("Photos", Icons.Default.PhotoLibrary, isDark) {
                     pickImage.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
                 }
-                AttachTile("Files", isDark) { pickFile.launch("*/*") }
+                AttachTile("Files", Icons.Default.Folder, isDark) { pickFile.launch("*/*") }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AttachTile("Draw", isDark) {
+                AttachTile("Draw", Icons.Default.Brush, isDark) {
                     onSendText("[Whiteboard sketch attached — open the canvas to annotate]")
                     onDismiss()
                 }
-                AttachTile("Sticker", isDark) {
+                AttachTile("Sticker", Icons.Default.Mood, isDark) {
                     onSendText(StickerCatalog.randomPick())
                     onDismiss()
                 }
-                Spacer(modifier = Modifier.weight(1f))
+                AttachTile("Prompts", Icons.Default.Bookmark, isDark) {
+                    onDismiss()
+                    onOpenPrompts?.invoke()
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -176,7 +187,7 @@ fun AttachmentSheet(
 }
 
 @Composable
-private fun AttachTile(label: String, isDark: Boolean, onClick: () -> Unit) {
+private fun AttachTile(label: String, icon: ImageVector, isDark: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(18.dp)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -195,7 +206,7 @@ private fun AttachTile(label: String, isDark: Boolean, onClick: () -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Add,
+                imageVector = icon,
                 contentDescription = label,
                 tint = if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
                 modifier = Modifier.size(22.dp)

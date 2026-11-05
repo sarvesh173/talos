@@ -119,6 +119,7 @@ fun AppleAgentChatScreen(
     var showModelPicker by remember { mutableStateOf(false) }
     var selectedModel by remember { mutableStateOf<String?>(null) }
     var showAttachSheet by remember { mutableStateOf(false) }
+    var showPromptLibrary by remember { mutableStateOf(false) }
     var pendingImage by remember { mutableStateOf<PendingImage?>(null) }
     var showTelemetry by remember { mutableStateOf(false) }
     var composerFocused by remember { mutableStateOf(false) }
@@ -732,7 +733,21 @@ fun AppleAgentChatScreen(
             isDark = isDark,
             onDismiss = { showAttachSheet = false },
             onPickImage = { pendingImage = it; showAttachSheet = false },
-            onSendText = { text -> client.sendMessage(text); showAttachSheet = false }
+            onSendText = { text -> client.sendMessage(text); showAttachSheet = false },
+            onOpenPrompts = { showPromptLibrary = true }
+        )
+    }
+
+    if (showPromptLibrary) {
+        PromptLibrarySheet(
+            client = client,
+            isDark = isDark,
+            brandColor = brandColor,
+            onDismiss = { showPromptLibrary = false },
+            onSelectPrompt = { promptText ->
+                inputText = promptText
+                showPromptLibrary = false
+            }
         )
     }
 

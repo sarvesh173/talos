@@ -1,6 +1,10 @@
 package com.sarvesh173.talos.ui.features
 
 import com.sarvesh173.talos.ui.TalosIcons
+import com.sarvesh173.talos.ui.entry.NotificationSoundStore
+import com.sarvesh173.talos.ui.entry.SoundEvent
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.VolumeUp
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
@@ -424,6 +428,111 @@ fun NotificationsScreen(
                 }
             }
 
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // -----------------------------------------------------------------
+            // 4. SYNTHESISED EVENT SOUNDS (Apple Inset Grouped)
+            // -----------------------------------------------------------------
+            Text(
+                text = "Synthesised event sounds",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.15).sp,
+                color = talosTextMuted,
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            )
+
+            val soundEvents = listOf(
+                Triple("Task complete", "Warm ascending tone (880Hz → 1320Hz)", SoundEvent.TaskComplete),
+                Triple("Task error", "Descending alert tone (440Hz → 220Hz)", SoundEvent.TaskError),
+                Triple("Approval needed", "Attention chime (660Hz → 990Hz)", SoundEvent.ApprovalNeeded),
+                Triple("Message received", "Crisp notification ping (1046Hz → 1568Hz)", SoundEvent.MessageReceived),
+                Triple("Delegate spawned", "Subagent launch chime (523Hz → 1046Hz)", SoundEvent.DelegateSpawned),
+                Triple("Delegate finished", "Subagent return tone (784Hz → 523Hz)", SoundEvent.DelegateFinished),
+                Triple("Service stopped", "Deep stop tone (392Hz → 262Hz)", SoundEvent.ServiceStopped),
+                Triple("Voice ready", "Bright voice session chime (1318Hz → 1760Hz)", SoundEvent.VoiceReady)
+            )
+
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                border = BorderStroke(0.6.dp, if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .appleLiquidGlassOptics(
+                        isDark = isDark,
+                        chromaticGlow = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 20.dp
+                    )
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    soundEvents.forEachIndexed { index, (title, desc, event) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f).padding(end = 12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.VolumeUp,
+                                    contentDescription = null,
+                                    tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF1D1D1F),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(14.dp))
+                                Column {
+                                    Text(
+                                        text = title,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        letterSpacing = (-0.15).sp,
+                                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = desc,
+                                        fontSize = 11.sp,
+                                        lineHeight = 14.sp,
+                                        color = talosTextMuted
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.05f))
+                                    .applePressable(0.92f) {
+                                        NotificationSoundStore.play(context, event)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = "Test $title",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        if (index < soundEvents.size - 1) {
+                            HorizontalDivider(
+                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(start = 50.dp)
+                            )
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(28.dp))
         }
     }

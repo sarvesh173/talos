@@ -1,6 +1,14 @@
 package com.sarvesh173.talos.ui.features
 
 import com.sarvesh173.talos.ui.TalosIcons
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.sarvesh173.talos.ui.entry.AppLockStore
+import com.sarvesh173.talos.ui.entry.PinHasher
+import androidx.compose.material.icons.filled.Pin
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,6 +48,15 @@ fun SecurityScreen(
     onBack: () -> Unit
 ) {
     val isDark = LocalIsDark.current
+    val context = LocalContext.current
+    val lockStore = remember { AppLockStore(context) }
+    var appLockEnabled by remember { mutableStateOf(lockStore.enabled) }
+    var hasPin by remember { mutableStateOf(lockStore.hasPin) }
+    var graceSeconds by remember { mutableStateOf(lockStore.graceSeconds) }
+    var showPinDialog by remember { mutableStateOf(false) }
+    var pinInput by remember { mutableStateOf("") }
+    var pinError by remember { mutableStateOf<String?>(null) }
+
     val scrollState = rememberScrollState()
     val requireBiometrics by client.requireBiometrics.collectAsState()
 
@@ -154,6 +171,128 @@ fun SecurityScreen(
                             checked = requireBiometrics,
                             onCheckedChange = { client.setRequireBiometrics(it) }
                         )
+                    }
+
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(start = 56.dp)
+                    )
+
+                    // Row 2: Passcode Lock (AppLockStore)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f).padding(end = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    text = "Passcode app lock",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = (-0.2).sp,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (hasPin) "4-digit PIN configured" else "No PIN set (tap to configure)",
+                                    fontSize = 12.sp,
+                                    lineHeight = 16.sp,
+                                    color = talosTextMuted
+                                )
+                            }
+                        }
+                        AppleToggleSwitch(
+                            checked = appLockEnabled,
+                            onCheckedChange = { enable ->
+                                if (enable && !hasPin) {
+                                    showPinDialog = true
+                                } else {
+                                    appLockEnabled = enable
+                                    lockStore.enabled = enable
+                                }
+                            }
+                        )
+                    }
+
+                    if (appLockEnabled) {
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            thickness = 0.5.dp,
+                            modifier = Modifier.padding(start = 56.dp)
+                        )
+
+                        // Row 3: Lock timeout selector
+                        val timeoutOptions = listOf(
+                            0 to "Immediately",
+                            60 to "1 minute",
+                            300 to "5 minutes",
+                            900 to "15 minutes",
+                            3600 to "1 hour"
+                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Timer,
+                                    contentDescription = null,
+                                    tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF1D1D1F),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "Lock timeout",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                timeoutOptions.forEach { (sec, label) ->
+                                    val isSelected = graceSeconds == sec
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .applePressable(0.94f) {
+                                                graceSeconds = sec
+                                                lockStore.graceSeconds = sec
+                                            }
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 10.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) Color.White else (if (isDark) Color.White.copy(alpha = 0.8f) else Color(0xFF1D1D1F)),
+                                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     HorizontalDivider(
@@ -276,4 +415,72 @@ fun SecurityScreen(
             Spacer(modifier = Modifier.height(28.dp))
         }
     }
+if (showPinDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showPinDialog = false
+                pinInput = ""
+                pinError = null
+            },
+            title = {
+                Text(text = "Set 4-Digit Passcode", fontWeight = FontWeight.SemiBold)
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Enter a 4-digit PIN to lock TALOS when leaving the app.",
+                        fontSize = 13.sp,
+                        color = talosTextMuted
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = pinInput,
+                        onValueChange = {
+                            if (it.length <= 4 && it.all { c -> c.isDigit() }) {
+                                pinInput = it
+                                pinError = null
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        isError = pinError != null,
+                        supportingText = pinError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (pinInput.length == 4) {
+                            lockStore.setPin(pinInput)
+                            lockStore.enabled = true
+                            appLockEnabled = true
+                            hasPin = true
+                            showPinDialog = false
+                            pinInput = ""
+                            pinError = null
+                        } else {
+                            pinError = "PIN must be exactly 4 digits"
+                        }
+                    }
+                ) {
+                    Text("Save PIN")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showPinDialog = false
+                        pinInput = ""
+                        pinError = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
 }

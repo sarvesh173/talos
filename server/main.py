@@ -542,6 +542,23 @@ async def get_orchestrator_status(token: str = Depends(require_auth)):
     return orchestrator.status()
 
 
+@app.get("/api/processes")
+async def list_processes(token: str = Depends(require_auth)):
+    """Every agent round running right now, with live elapsed time.
+
+    The supervisor screen needs per-process rows to show a timer and a kill
+    button; ``/api/orchestrator/status`` only carries counts.
+    """
+    rows = orchestrator.processes()
+    return {"processes": rows, "count": len(rows)}
+
+
+@app.post("/api/processes/{round_id}/kill")
+async def kill_process(round_id: str, token: str = Depends(require_auth)):
+    """Cancel one running round. Reports the real outcome, never a guess."""
+    return orchestrator.cancel_round(round_id)
+
+
 @app.get("/api/providers", response_model=List[ProviderInfo])
 async def list_providers(token: str = Depends(require_auth), force: bool = Query(False)):
     """Live health snapshot of every configured model provider (latency, status, context length)."""

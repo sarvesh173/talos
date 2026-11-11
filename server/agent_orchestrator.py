@@ -384,6 +384,9 @@ class _Round:
     reply_to_id: Optional[str] = None
     created_at: float = field(default_factory=time.time)
     finished_at: Optional[float] = None
+    #: Index of the agent currently taking its turn, and how many already spoke.
+    current_index: int = 0
+    completed: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -560,6 +563,8 @@ class AgentOrchestrator:
         self._seen_messages: Set[str] = set()
         self._active_turns: Dict[str, _Turn] = {}
         self._rounds: Dict[str, _Round] = {}
+        #: round_id -> task, so one round can be cancelled without killing the fleet.
+        self._round_tasks: Dict[str, "asyncio.Task[None]"] = {}
         self._tasks: Set[asyncio.Task] = set()
         self._room_locks: Dict[str, asyncio.Lock] = {}
         self._history: Dict[str, List[Dict[str, str]]] = {}
@@ -762,6 +767,14 @@ class AgentOrchestrator:
         task = asyncio.create_task(self._run_round(round_))
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
+        self._round_tasks[round_id] = task
+
+        def _forget(finished: asyncio.Task) -> None:
+            # A cancelled round must not linger in the supervisor list.
+            if self._round_tasks.get(round_id) is finished:
+                self._round_tasks.pop(round_id, None)
+
+        task.add_done_callback(_forget)
 
     async def _run_round(self, round_: _Round) -> None:
         """Run every agent of the round, one turn at a time."""
@@ -773,9 +786,11 @@ class AgentOrchestrator:
                     agent = self.agents.get(agent_id)
                     if agent is None:
                         continue
+                    round_.current_index = index
                     reply = await self._run_turn(agent, round_, index, context)
                     if reply is None:
                         continue
+                    round_.completed = index + 1
                     context.append(
                         {
                             "agent_id": agent.id,
@@ -1096,6 +1111,85 @@ class AgentOrchestrator:
             }
             for turn in self._active_turns.values()
         ]
+
+    def processes(self) -> List[Dict[str, Any]]:
+        """Every round that is running right now, with real elapsed time.
+
+        The UI needs this to show a live process list; without it the app can
+        only report "active_turns: 3" and cannot say which agent, in which room,
+        for how long, or offer to stop one.
+        """
+        now = time.time()
+        rows: List[Dict[str, Any]] = []
+        for round_id, round_ in list(self._rounds.items()):
+            if round_.finished_at is not None:
+                continue
+            current = (
+                round_.agents[round_.current_index]
+                if 0 <= round_.current_index < len(round_.agents)
+                else None
+            )
+            agent = self.agents.get(current) if current else None
+            rows.append(
+                {
+                    "id": round_id,
+                    "kind": "round",
+                    "room_id": round_.room_id,
+                    "prompt": round_.prompt,
+                    "agent_id": current,
+                    "agent_name": agent.name if agent else None,
+                    "agent_color": agent.color if agent else None,
+                    "turn": round_.current_index + 1,
+                    "total_turns": len(round_.agents),
+                    "completed_turns": round_.completed,
+                    "started_at": round_.created_at,
+                    "elapsed_seconds": round(now - round_.created_at, 1),
+                    "cancellable": round_id in self._round_tasks,
+                }
+            )
+        rows.sort(key=lambda row: row["started_at"])
+        return rows
+
+    def cancel_round(self, round_id: str) -> Dict[str, Any]:
+        """Cancel one running round. Returns what actually happened.
+
+        ``orchestrator.stop()`` kills every turn in the fleet, which is far too
+        blunt for a per-process kill switch. This cancels exactly one round's
+        task and reports whether it found one; the caller must not be told a
+        cancellation succeeded when nothing was running.
+        """
+        round_ = self._rounds.get(round_id)
+        if round_ is None:
+            return {
+                "cancelled": False,
+                "reason": "no running round with that id",
+                "round_id": round_id,
+            }
+
+        task = self._round_tasks.get(round_id)
+        if task is None:
+            return {
+                "cancelled": False,
+                "reason": "round has no cancellable task (already finishing)",
+                "round_id": round_id,
+            }
+
+        if task.done():
+            return {
+                "cancelled": False,
+                "reason": "round already finished",
+                "round_id": round_id,
+            }
+
+        task.cancel()
+        round_.finished_at = time.time()
+        return {
+            "cancelled": True,
+            "round_id": round_id,
+            "room_id": round_.room_id,
+            "cancelled_at": round_.finished_at,
+            "elapsed_seconds": round(round_.finished_at - round_.created_at, 1),
+        }
 
     def status(self) -> Dict[str, Any]:
         """Return a compact status payload for the REST surface."""

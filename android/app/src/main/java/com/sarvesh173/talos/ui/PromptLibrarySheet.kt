@@ -23,9 +23,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sarvesh173.talos.network.HostResult
 import com.sarvesh173.talos.network.PromptDto
 import com.sarvesh173.talos.network.TalosClient
 import kotlinx.coroutines.launch
@@ -46,15 +48,24 @@ fun PromptLibrarySheet(
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var prompts by remember { mutableStateOf<List<PromptDto>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    // Why the library could not be read, or null when the host answered.
+    var failure by remember { mutableStateOf<String?>(null) }
     var showCreateDialog by remember { mutableStateOf(false) }
 
     fun refresh() {
         scope.launch {
             isLoading = true
-            prompts = client.listPrompts(
+            when (val result = client.listPrompts(
                 category = selectedCategory,
                 query = searchQuery.ifBlank { null }
-            )
+            )) {
+                is HostResult.Ok -> {
+                    prompts = result.value
+                    failure = null
+                }
+                // A library we could not read is not an empty library.
+                is HostResult.Failed -> failure = result.reason
+            }
             isLoading = false
         }
     }
@@ -203,6 +214,27 @@ fun PromptLibrarySheet(
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = brandColor, modifier = Modifier.size(28.dp))
+                }
+            } else if (failure != null) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(160.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Couldn't read the prompt library",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            text = failure!!,
+                            fontSize = 12.sp,
+                            color = talosTextMuted,
+                            textAlign = TextAlign.Center
+                        )
+                        TextButton(onClick = { refresh() }) { Text("Retry") }
+                    }
                 }
             } else if (prompts.isEmpty()) {
                 Box(modifier = Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) {

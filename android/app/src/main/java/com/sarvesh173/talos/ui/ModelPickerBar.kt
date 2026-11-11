@@ -41,6 +41,8 @@ fun ModelPickerBar(
     onClose: () -> Unit
 ) {
     val providers by client.providers.collectAsState()
+    val providersLoading by client.providersLoading.collectAsState()
+    val providersError by client.providersError.collectAsState()
 
     LaunchedEffect(Unit) { client.fetchProviders() }
 
@@ -67,7 +69,13 @@ fun ModelPickerBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (models.isEmpty()) "Loading models" else "${models.size} models",
+                // "Loading models" was a permanent lie when the fetch failed.
+                text = when {
+                    providersError != null -> "Models unavailable"
+                    providersLoading && models.isEmpty() -> "Loading models"
+                    models.isEmpty() -> "No models"
+                    else -> "${models.size} models"
+                },
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f),

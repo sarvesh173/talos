@@ -590,6 +590,10 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private val _providers = MutableStateFlow<List<ProviderSnapshotDto>>(emptyList())
     val providers: StateFlow<List<ProviderSnapshotDto>> = _providers.asStateFlow()
+    private val _providersLoading = MutableStateFlow(false)
+    val providersLoading: StateFlow<Boolean> = _providersLoading.asStateFlow()
+    private val _providersError = MutableStateFlow<String?>(null)
+    val providersError: StateFlow<String?> = _providersError.asStateFlow()
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
@@ -1971,8 +1975,8 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     /**
      * Reusable prompt templates with {{vars}}.
      */
-    suspend fun listPrompts(category: String? = null, query: String? = null): List<PromptDto> = withContext(Dispatchers.IO) {
-        runCatching {
+    suspend fun listPrompts(category: String? = null, query: String? = null): HostResult<List<PromptDto>> = withContext(Dispatchers.IO) {
+        try {
             val urlBuilder = java.lang.StringBuilder("$baseUrl/api/prompts?")
             if (category != null) urlBuilder.append("category=").append(java.net.URLEncoder.encode(category, "UTF-8")).append("&")
             if (query != null) urlBuilder.append("q=").append(java.net.URLEncoder.encode(query, "UTF-8"))
@@ -1981,11 +1985,17 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 .get()
                 .build()
             httpClient.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@use emptyList()
-                val body = resp.body?.string() ?: return@use emptyList()
-                json.decodeFromString<List<PromptDto>>(body)
+                val body = resp.body?.string().orEmpty()
+                if (!resp.isSuccessful) {
+                    // An unreadable library is not an empty library.
+                    HostResult.Failed(hostReason(resp.code))
+                } else {
+                    HostResult.Ok(json.decodeFromString<List<PromptDto>>(body))
+                }
             }
-        }.getOrDefault(emptyList())
+        } catch (e: Exception) {
+            HostResult.Failed(transportReason(e))
+        }
     }
 
     /**

@@ -542,14 +542,20 @@ fun LandingScreen(
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back to agents",
-                                tint = accent,
+                            // The glyph is small; the target must not be.
+                            Box(
                                 modifier = Modifier
-                                    .size(20.dp)
+                                    .size(48.dp)
                                     .clickable { selectedAgentId = null },
-                            )
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Back to agents",
+                                    tint = accent,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = agent.name,

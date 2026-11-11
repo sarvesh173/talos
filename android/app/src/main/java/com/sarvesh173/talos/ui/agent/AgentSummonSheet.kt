@@ -164,20 +164,28 @@ fun AgentSummonSheet(
                     )
                 }
 
+                // 48dp hitbox with the 36dp circle centred inside it: the
+                // visual reads the same, the finger gets a reachable target.
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(if (isDark) Color.White.copy(0.08f) else Color.Black.copy(0.05f))
+                        .size(48.dp)
                         .clickable { onDismiss() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        tint = if (isDark) Color.White.copy(0.70f) else Color.Black.copy(0.60f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(if (isDark) Color.White.copy(0.08f) else Color.Black.copy(0.05f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = if (isDark) Color.White.copy(0.70f) else Color.Black.copy(0.60f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 

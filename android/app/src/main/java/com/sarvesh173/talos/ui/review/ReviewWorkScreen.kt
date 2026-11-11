@@ -451,14 +451,19 @@ private fun FileChangeCard(change: FileChangeDto, reducedMotion: Boolean, onCopy
                 fontFamily = FontFamily.Monospace,
             )
             Spacer(modifier = Modifier.width(GridUnit))
-            Icon(
-                imageVector = Icons.Default.ContentCopy,
-                contentDescription = "Copy diff",
-                tint = AccentBlue,
+            Box(
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(48.dp)
                     .clickable(onClick = onCopyDiff),
-            )
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = "Copy diff",
+                    tint = AccentBlue,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
         if (reducedMotion) {
             // Animator scale 0: expand instantly, no animation at all.

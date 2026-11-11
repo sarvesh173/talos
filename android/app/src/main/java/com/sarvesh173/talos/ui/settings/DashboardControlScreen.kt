@@ -253,7 +253,7 @@ fun DashboardControlScreen(
                 if (onBack != null) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(48.dp)
                             .clickable { onBack() },
                         contentAlignment = androidx.compose.ui.Alignment.Center
                     ) {

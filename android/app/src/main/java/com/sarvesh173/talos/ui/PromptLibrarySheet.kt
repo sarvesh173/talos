@@ -153,14 +153,21 @@ fun PromptLibrarySheet(
                         }
                     )
                     if (searchQuery.isNotEmpty()) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Clear",
-                            tint = talosTextMuted,
+                        // A 16dp clear glyph is a coin toss to hit; give it a
+                        // real target while keeping the glyph the same size.
+                        Box(
                             modifier = Modifier
-                                .size(16.dp)
-                                .clickable { searchQuery = "" }
-                        )
+                                .size(48.dp)
+                                .clickable { searchQuery = "" },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = talosTextMuted,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }

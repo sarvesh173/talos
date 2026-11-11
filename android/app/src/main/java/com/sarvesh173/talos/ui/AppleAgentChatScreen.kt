@@ -109,6 +109,20 @@ private fun formatClock(epochSeconds: Double): String =
     SimpleDateFormat("HH:mm", Locale.getDefault())
         .format(Date((epochSeconds * 1000).toLong()))
 
+/**
+ * The label for a reply the core produced without a model.
+ *
+ * When no provider answers, the orchestrator falls back to a canned template
+ * so the room keeps moving. That text is indistinguishable from a real answer
+ * on screen, so the bubble says what it is. The reason the core gave
+ * ("model unreachable", "live models disabled") rides along in parentheses.
+ */
+private fun simulatedLabel(reason: String?): String {
+    val base = "Simulated — no model was reached"
+    val why = reason?.trim().orEmpty()
+    return if (why.isEmpty()) base else "$base ($why)"
+}
+
 @Composable
 fun AppleAgentChatScreen(
     client: TalosClient,

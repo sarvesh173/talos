@@ -668,7 +668,7 @@ private fun OverviewStep() {
                 badge = {
                     Image(
                         painter = painterResource(R.drawable.ic_step_fleet),
-                        contentDescription = "Agent Fleet",
+                        contentDescription = "Agent fleet",
                         modifier = Modifier.size(28.dp),
                         colorFilter = ColorFilter.tint(CyberViolet)
                     )

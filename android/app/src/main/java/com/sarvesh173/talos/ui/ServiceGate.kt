@@ -133,7 +133,7 @@ fun ServiceGateScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "TALOS MESH",
+                        text = "TALOS mesh",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp,

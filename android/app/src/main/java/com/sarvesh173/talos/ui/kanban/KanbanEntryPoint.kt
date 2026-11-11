@@ -142,7 +142,7 @@ fun KanbanOverflowItem(onOpen: () -> Unit) {
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Tool Calls",
+                text = "Tool calls",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 16.sp,
                     letterSpacing = (-0.2).sp

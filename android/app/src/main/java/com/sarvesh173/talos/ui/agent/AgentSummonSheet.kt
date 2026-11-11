@@ -151,7 +151,7 @@ fun AgentSummonSheet(
             ) {
                 Column {
                     Text(
-                        text = "Summon Agent",
+                        text = "Summon agent",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isDark) Color.White else Color(0xFF1D1D1F),
@@ -389,7 +389,7 @@ fun AgentSummonSheet(
                 // Lifespan / TTL
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "WATCHDOG TTL",
+                        text = "Watchdog TTL",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isDark) Color.White.copy(0.50f) else Color.Black.copy(0.45f),
@@ -431,7 +431,7 @@ fun AgentSummonSheet(
 
             // Task / Directive
             Text(
-                text = "TASK DIRECTIVE",
+                text = "Task directive",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (isDark) Color.White.copy(0.50f) else Color.Black.copy(0.45f),
@@ -486,7 +486,7 @@ fun AgentSummonSheet(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Summon Delegate",
+                    text = "Summon delegate",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,

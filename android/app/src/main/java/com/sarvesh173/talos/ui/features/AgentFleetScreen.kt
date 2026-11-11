@@ -87,7 +87,7 @@ fun AgentFleetScreen(client: TalosClient) {
         ) {
             Column {
                 Text(
-                    text = "Agent Fleet",
+                    text = "Agent fleet",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = if (isDark) Color.White else Color(0xFF1D1D1F),

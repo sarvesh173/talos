@@ -797,7 +797,7 @@ fun AppleAgentChatScreen(
             onDismissRequest = { if (!isForking) selectedMessageForAction = null },
             title = {
                 Text(
-                    text = "Message Actions",
+                    text = "Message actions",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (isDark) Color.White else Color(0xFF1D1D1F)

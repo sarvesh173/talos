@@ -196,7 +196,7 @@ private fun KanbanHeader(board: KanbanBoardDto?, onBack: (() -> Unit)?) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Tool Calls",
+                    text = "Tool calls",
                     color = PrimaryText,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,

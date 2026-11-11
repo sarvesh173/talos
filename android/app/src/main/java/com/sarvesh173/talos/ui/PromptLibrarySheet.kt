@@ -95,7 +95,7 @@ fun PromptLibrarySheet(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Prompt Library",
+                        text = "Prompt library",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = primaryText

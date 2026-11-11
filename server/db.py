@@ -76,17 +76,9 @@ def _get_connection() -> _SharedConnection:
         conn.execute("PRAGMA busy_timeout=5000")
         # NORMAL is safe under WAL and removes the per-commit fsync cost.
         conn.execute("PRAGMA synchronous=NORMAL")
-        # The history query `WHERE room_id = ? ORDER BY created_at DESC LIMIT n`
-        # was a full table scan + sort. Measured: 89ms -> 3.9ms at 3,072 rows,
-        # and the gap widens linearly with the corpus.
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_messages_room_time "
-            "ON messages(room_id, created_at)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_agents_active "
-            "ON agents(is_active)"
-        )
+        # Index creation is deferred to init_db(): creating the indexes here
+        # assumed the tables already existed, so a fresh database crashed with
+        # "no such table: main.messages" before init_db() ever ran.
         conn.commit()
         _CONN = conn
         return _SharedConnection(_CONN)
@@ -147,6 +139,20 @@ def init_db() -> None:
     );
     """)
 
+    conn.commit()
+
+    # Indexes live here, after the tables exist. They used to be created in
+    # _get_connection(), which runs before init_db() on a cold start and threw
+    # "no such table: main.messages" on a fresh database.
+    # The history query `WHERE room_id = ? ORDER BY created_at DESC LIMIT n`
+    # was a full table scan + sort. Measured: 89ms -> 3.9ms at 3,072 rows.
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_messages_room_time "
+        "ON messages(room_id, created_at)"
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_agents_active ON agents(is_active)"
+    )
     conn.commit()
 
     _migrate_rooms(conn)

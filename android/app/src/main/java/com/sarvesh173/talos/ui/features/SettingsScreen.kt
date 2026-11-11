@@ -254,11 +254,24 @@ fun SettingsScreen(
                             scope.launch {
                                 isTransportUpdating = true
                                 try {
-                                    client.updateConfig(urlText.trim(), tokenText)
-                                    transportEnabled = true
-                                    isSuccess = true
-                                    statusMessage = "Handshake verified successfully"
-                                    Toast.makeText(context, "Transport updated", Toast.LENGTH_SHORT).show()
+                                    // updateConfig only writes prefs — it cannot
+                                    // throw and it never contacts the host, so
+                                    // this branch used to report a verified
+                                    // handshake for an endpoint that was never
+                                    // reached. Probe it first, then save.
+                                    val (reachable, reason) =
+                                        client.verifyAndConnect(urlText.trim(), tokenText)
+                                    if (reachable) {
+                                        client.updateConfig(urlText.trim(), tokenText)
+                                        transportEnabled = true
+                                        isSuccess = true
+                                        statusMessage = "Handshake verified successfully"
+                                        Toast.makeText(context, "Transport updated", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        isSuccess = false
+                                        // The probe's own words, not a guess.
+                                        statusMessage = reason
+                                    }
                                 } catch (_: Exception) {
                                     isSuccess = false
                                     statusMessage = "Handshake could not be verified"

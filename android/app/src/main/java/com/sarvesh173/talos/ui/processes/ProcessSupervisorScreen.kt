@@ -252,14 +252,34 @@ fun ProcessSupervisorScreen(
             )
         }
         Text(
-            text = if (processes.isEmpty() && loadError == null) {
-                "No agent rounds running."
-            } else {
-                processes.size.toString() + " running"
+            text = when {
+                // 'loading' was assigned and never read, so the first paint
+                // said "No agent rounds running." before anything had loaded.
+                loading -> "Checking for running rounds…"
+                loadError != null -> "Counts unknown — host unreachable"
+                processes.isEmpty() -> "No agent rounds running."
+                else -> processes.size.toString() + " running"
             },
             fontSize = 13.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+
+        if (loading) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                CircularProgressIndicator(
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = "Reading rounds from the host…",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
 
         if (loadError != null) {
             Column(

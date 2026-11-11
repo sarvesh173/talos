@@ -25,9 +25,10 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@opencode/plugin": "^2.2.5"
+  },
   "devDependencies": {
-    "@opencode/plugin": "^2.2.5",
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },

@@ -46,6 +46,25 @@ Every tool returns the failure as text, not an exception:
 `talos_health` exists so the model can tell a host problem from a bad request
 before concluding anything about the repository.
 
+## How OpenCode finds the entrypoint
+
+Worth knowing before editing the layout, because the failure is silent:
+
+- A **local directory** is resolved at the package root. With a `package.json`
+  that has both `name` and `exports`, those are honoured like a published
+  package; without them OpenCode looks for `index.ts`/`index.js` at the root.
+  That is why the root `index.ts` re-exports `src/index.ts` — a directory whose
+  entry lives only in a subdirectory loads nothing and logs nothing
+  (opencode#52300, #61262).
+- Only the **plugin directory** goes in config or the discovery path, never a
+  file inside it.
+- Listing the same directory in both `opencode.jsonc` and
+  `.opencode/plugins/` loads it twice and reports both as failed.
+- `@opencode/plugin` belongs in `dependencies`, not `devDependencies`: the
+  published package imports it at runtime, so a dev-only entry installs cleanly
+  and then fails to import on the user's machine. Every published plugin checked
+  does this.
+
 ## Develop
 
 ```bash

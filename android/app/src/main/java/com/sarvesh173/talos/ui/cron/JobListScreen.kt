@@ -53,12 +53,21 @@ import com.sarvesh173.talos.ui.AppleToggleSwitch
 import com.sarvesh173.talos.ui.LocalIsDark
 import com.sarvesh173.talos.ui.applePressable
 import com.sarvesh173.talos.ui.talosTextMuted
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 /**
  * Scheduled jobs — "Work while you sleep".
@@ -97,6 +106,113 @@ private val successGreen = Color(0xFF30D158)
 private val failedRed = Color(0xFFFF453A)
 private val mono = FontFamily.Monospace
 private val stampFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, h:mm a")
+
+// -- Live job API -------------------------------------------------------------
+// The screen previously took `jobs` as a parameter that every caller left empty,
+// so a working scheduler rendered as "No scheduled jobs yet" forever. These
+// mirror the server contract in server/job_scheduler.py; unknown fields are
+// ignored so a backend addition can never crash the screen.
+
+private val jobJson = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
+    coerceInputValues = true
+    explicitNulls = false
+}
+
+private val jobHttp = OkHttpClient.Builder()
+    .connectTimeout(5, TimeUnit.SECONDS)
+    .readTimeout(10, TimeUnit.SECONDS)
+    .build()
+
+@Serializable
+private data class JobDto(
+    val id: String = "",
+    val name: String = "",
+    val prompt: String = "",
+    val cron_expr: String = "",
+    val deliver: String = "local",
+    val profile: String = "maintainer",
+    val notify_on_run: Boolean = true,
+    val enabled: Boolean = true,
+    val running: Boolean = false,
+    val running_since: Double? = null,
+    val next_run_at: String? = null,
+)
+
+@Serializable
+private data class RunDto(
+    val started_at: String? = null,
+    val duration_seconds: Double = 0.0,
+    val output_bytes: Long = 0L,
+    val status: String = "success",
+)
+
+private fun jobRequest(client: TalosClient, path: String, method: String = "GET", body: String? = null): Request {
+    val builder = Request.Builder().url(client.baseUrl.trimEnd('/') + path)
+    if (client.apiToken.isNotBlank()) {
+        builder.header("Authorization", "Bearer " + client.apiToken)
+    }
+    val jsonBody = (body ?: "{}").toRequestBody("application/json".toMediaType())
+    when (method) {
+        "POST" -> builder.post(jsonBody)
+        "PATCH" -> builder.patch(jsonBody)
+        else -> builder.get()
+    }
+    return builder.build()
+}
+
+private fun jobPayload(client: TalosClient, path: String, method: String = "GET", body: String? = null): String =
+    jobHttp.newCall(jobRequest(client, path, method, body)).execute().use { response ->
+        if (!response.isSuccessful) {
+            throw IllegalStateException("HTTP " + response.code)
+        }
+        response.body?.string().orEmpty()
+    }
+
+private suspend fun fetchJobs(client: TalosClient): List<JobUi> = withContext(Dispatchers.IO) {
+    val body = jobPayload(client, "/api/jobs")
+    if (body.isBlank()) return@withContext emptyList()
+    jobJson.decodeFromString<List<JobDto>>(body).map { dto ->
+        JobUi(
+            id = dto.id,
+            name = dto.name.ifBlank { dto.prompt.take(40) },
+            prompt = dto.prompt,
+            cronExpr = dto.cron_expr,
+            deliver = dto.deliver,
+            profile = dto.profile,
+            notifyOnRun = dto.notify_on_run,
+            enabled = dto.enabled,
+            running = dto.running,
+            runningSinceEpochMs = dto.running_since?.let { (it * 1000).toLong() }
+                ?: dto.next_run_at?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() }
+                ?: 0L,
+            nextRunLabel = nextRunLabel(dto.cron_expr, LocalDateTime.now()),
+        )
+    }
+}
+
+private suspend fun fetchJobRuns(client: TalosClient, jobId: String): List<RunUi> = withContext(Dispatchers.IO) {
+    val body = jobPayload(client, "/api/jobs/" + jobId + "/runs")
+    if (body.isBlank()) return@withContext emptyList()
+    jobJson.decodeFromString<List<RunDto>>(body).map { dto ->
+        RunUi(
+            startedAtEpochMs = dto.started_at?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() } ?: 0L,
+            durationSeconds = dto.duration_seconds.toLong(),
+            outputBytes = dto.output_bytes,
+            status = dto.status,
+        )
+    }
+}
+
+private fun runJobNow(client: TalosClient, jobId: String) {
+    jobPayload(client, "/api/jobs/" + jobId + "/run", method = "POST")
+}
+
+/** Server-side `/pause` flips `enabled`; no body, no client-side toggle state. */
+private fun setJobPaused(client: TalosClient, jobId: String) {
+    jobPayload(client, "/api/jobs/" + jobId + "/pause", method = "POST")
+}
 
 /** Small cron next-run calculator (5 fields: minute hour dom month dow). */
 fun nextRunLabel(cronExpr: String, from: LocalDateTime): String {
@@ -163,29 +279,93 @@ fun JobListScreen(
     onToggle: (JobUi) -> Unit = {}
 ) {
     var selectedId by remember { mutableStateOf<String?>(null) }
-    val selected = jobs.firstOrNull { it.id == selectedId }
+    var liveJobs by remember { mutableStateOf<List<JobUi>>(jobs) }
+    var liveRuns by remember { mutableStateOf<List<RunUi>>(runs) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var loading by remember { mutableStateOf(true) }
+    var refreshTick by remember { mutableStateOf(0) }
+
+    LaunchedEffect(client, refreshTick) {
+        loading = true
+        try {
+            liveJobs = fetchJobs(client)
+            loadError = null
+        } catch (e: Exception) {
+            // Never fall back to fabricated rows: an unreachable host is an
+            // error state, not an empty schedule.
+            loadError = e.message ?: "Couldn't reach the host"
+            liveJobs = emptyList()
+        } finally {
+            loading = false
+        }
+    }
+
+    val selected = liveJobs.firstOrNull { it.id == selectedId }
+
+    LaunchedEffect(selectedId, client) {
+        val id = selectedId ?: return@LaunchedEffect
+        liveRuns = runCatching { fetchJobRuns(client, id) }.getOrDefault(emptyList())
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize()) {
             JobTopBar(title = if (selected == null) "Scheduled jobs" else "Work while you sleep", onBack = {
                 if (selected == null) onBack() else selectedId = null
             })
-            if (selected == null) {
-                JobListColumn(
-                    jobs = jobs,
+            when {
+                loading && liveJobs.isEmpty() -> JobLoading()
+                loadError != null && liveJobs.isEmpty() -> JobUnreachable(
+                    message = loadError ?: "Couldn't reach the host",
+                    onRetry = { refreshTick++ }
+                )
+                selected == null -> JobListColumn(
+                    jobs = liveJobs,
                     onOpen = { selectedId = it.id },
                     modifier = Modifier.weight(1f)
                 )
-            } else {
-                JobDetailColumn(
+                else -> JobDetailColumn(
                     job = selected,
-                    runs = runs,
-                    onRunNow = { onRunNow(selected) },
-                    onToggle = { onToggle(selected) },
+                    runs = liveRuns,
+                    onRunNow = {
+                        onRunNow(selected)
+                        runCatching { runJobNow(client, selected.id) }
+                        refreshTick++
+                    },
+                    onToggle = {
+                        onToggle(selected)
+                        runCatching { setJobPaused(client, selected.id) }
+                        refreshTick++
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun JobLoading() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+    }
+}
+
+@Composable
+private fun JobUnreachable(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Couldn't reach the host",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(text = message, fontSize = 13.sp, color = talosTextMuted)
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedButton(onClick = onRetry) { Text("Retry") }
     }
 }
 

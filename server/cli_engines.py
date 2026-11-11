@@ -16,6 +16,7 @@ with the reason instead of being invented.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 from dataclasses import dataclass, field
@@ -113,6 +114,127 @@ def _resolve(engine: CliEngineSpec) -> Optional[str]:
     return None
 
 
+#: Where operators drop their own engine manifests. One JSON file per engine.
+MANIFEST_DIR = os.path.expanduser("~/.talos/agents")
+
+
+class ManifestError(ValueError):
+    """A manifest file exists but cannot be trusted. Named, never skipped."""
+
+
+def _manifest_fields(raw: Dict, source: str) -> Dict:
+    """Validate one manifest object into ``CliEngineSpec`` keyword arguments.
+
+    A half-written manifest is a configuration mistake the operator must see,
+    so every problem raises a message naming the file and the offending field.
+    Silently dropping a manifest would make an agent look "not installed" when
+    the real fault is a typo in its path.
+    """
+    if not isinstance(raw, dict):
+        raise ManifestError(f"{source}: expected a JSON object, got {type(raw).__name__}")
+
+    engine_id = str(raw.get("id") or "").strip()
+    if not engine_id:
+        raise ManifestError(f"{source}: 'id' is required (a short stable key)")
+
+    binary = str(raw.get("binary") or "").strip()
+    custom_binary_path = str(raw.get("path") or "").strip()
+    if not binary and not custom_binary_path:
+        raise ManifestError(f"{source}: needs 'binary' (looked up on PATH) or 'path' (absolute)")
+
+    enabled = raw.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise ManifestError(f"{source}: 'enabled' must be true or false")
+
+    fallback_paths = raw.get("fallback_paths") or []
+    if not isinstance(fallback_paths, list) or not all(isinstance(p, str) for p in fallback_paths):
+        raise ManifestError(f"{source}: 'fallback_paths' must be a list of strings")
+
+    if custom_binary_path:
+        fallback_paths = [custom_binary_path, *fallback_paths]
+
+    return {
+        "id": engine_id,
+        "name": str(raw.get("name") or engine_id.replace("-", " ").title()),
+        "binary": binary or os.path.basename(custom_binary_path),
+        "command": str(raw.get("command") or binary or custom_binary_path),
+        "description": str(raw.get("description") or f"Custom engine from {source}"),
+        "fallback_paths": tuple(fallback_paths),
+        "enabled": enabled,
+    }
+
+
+def load_custom_engines(manifest_dir: Optional[str] = None) -> List[CliEngineSpec]:
+    """Read operator-supplied engine manifests.
+
+    FEATURE.md §1 promises a custom manifest loader at ``~/.talos/agents/*.json``
+    and the catalog only ever shipped the built-in tuple, so a user-registered
+    agent was invisible. This reads that directory for real.
+
+    A malformed file never aborts discovery: it is reported through
+    :func:`manifest_errors` so the UI can show "your manifest is broken"
+    instead of "your agent is missing".
+    """
+    directory = manifest_dir or MANIFEST_DIR
+    if not os.path.isdir(directory):
+        return []
+
+    specs: List[CliEngineSpec] = []
+    seen = {spec.id for spec in CLI_ENGINES}
+    for name in sorted(os.listdir(directory)):
+        if not name.endswith(".json"):
+            continue
+        path = os.path.join(directory, name)
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                raw = json.load(handle)
+            fields = _manifest_fields(raw, name)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ManifestError(f"{name}: {exc}") from exc
+
+        if fields["id"] in seen:
+            raise ManifestError(f"{name}: id '{fields['id']}' is already a built-in engine")
+        if not fields["enabled"]:
+            seen.add(fields["id"])
+            continue
+        seen.add(fields["id"])
+        specs.append(CliEngineSpec(**{k: v for k, v in fields.items() if k != "enabled"}))
+    return specs
+
+
+def manifest_errors(manifest_dir: Optional[str] = None) -> List[str]:
+    """Every manifest problem, as operator-readable strings. Empty when clean.
+
+    Validates with the same rules ``load_custom_engines`` enforces, including
+    duplicate ids — otherwise a manifest rejected at load time would report
+    zero errors here and the UI could not explain why the agent vanished.
+    """
+    directory = manifest_dir or MANIFEST_DIR
+    if not os.path.isdir(directory):
+        return []
+    errors: List[str] = []
+    seen = {spec.id for spec in CLI_ENGINES}
+    for name in sorted(os.listdir(directory)):
+        if not name.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(directory, name), "r", encoding="utf-8") as handle:
+                fields = _manifest_fields(json.load(handle), name)
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"{name}: {exc}")
+            continue
+        except ManifestError as exc:
+            errors.append(str(exc))
+            continue
+
+        engine_id = fields["id"]
+        if engine_id in seen:
+            errors.append(f"{name}: id '{engine_id}' is already a built-in engine")
+            continue
+        seen.add(engine_id)
+    return errors
+
+
 @dataclass
 class CliEngine:
     """A discovered engine plus the delegates running under it."""
@@ -137,10 +259,23 @@ class CliEngine:
         }
 
 
-def discover_engines() -> List[CliEngine]:
-    """Return every known engine with its real availability."""
+def discover_engines(manifest_dir: Optional[str] = None) -> List[CliEngine]:
+    """Return every known engine with its real availability.
+
+    Built-in engines first, then operator manifests from
+    ``~/.talos/agents/*.json``. A broken manifest does not abort discovery —
+    it is surfaced through ``manifest_errors`` in :func:`build_hierarchy` so
+    the operator sees a configuration fault instead of a vanished agent.
+    """
+    specs = list(CLI_ENGINES)
+    try:
+        specs.extend(load_custom_engines(manifest_dir))
+    except ManifestError:
+        # Reported separately; built-ins stay usable.
+        pass
+
     engines: List[CliEngine] = []
-    for spec in CLI_ENGINES:
+    for spec in specs:
         path = _resolve(spec)
         engines.append(
             CliEngine(
@@ -215,6 +350,7 @@ def build_hierarchy(delegates: List[Dict]) -> Dict:
         "total_available_engines": sum(1 for e in payload_engines if e["is_available"]),
         "total_delegates": total_delegates,
         "total_active_children": total_children,
+        "manifest_errors": manifest_errors(),
         "engines": payload_engines,
     }
 

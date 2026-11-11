@@ -96,6 +96,28 @@ class PersistenceTest(unittest.TestCase):
             reloaded = store.get_job(job.id)
             self.assertEqual(reloaded.last_run_at, datetime(2026, 1, 1, 6, 0))
 
+    def test_run_now_writes_exactly_one_completed_record(self):
+        """Regression: run_now used to append a 'running' row at the start and a
+        second finished row at the end, leaving a permanent phantom 'running'
+        entry per run. One execution must produce exactly one record, and that
+        record must be terminal."""
+        from server.job_scheduler import run_now
+
+        with tempfile.TemporaryDirectory() as tmp:
+            store = JobStore(str(Path(tmp) / "t.db"))
+            job = _job(name="single-record")
+            store.save_job(job)
+
+            record = run_now(job, store=store)
+
+            runs = store.list_runs(job.id)
+            self.assertEqual(
+                len(runs), 1, f"expected 1 run record, got {len(runs)}: {[r.status for r in runs]}"
+            )
+            self.assertIn(record.status, ("success", "failed"))
+            self.assertNotEqual(runs[0].status, "running")
+            self.assertIsNotNone(runs[0].finished_at)
+
 
 class Endpoint404Test(unittest.IsolatedAsyncioTestCase):
     async def test_unknown_job_returns_404(self):

@@ -420,7 +420,10 @@ def run_now(job: Job, store: Optional[JobStore] = None) -> RunRecord:
     """
     started = datetime.now()
     record = RunRecord(job_id=job.id, started_at=started, agent_id=job.profile)
-    (store or get_store()).append_run(record)
+    # One row per run. The record is persisted only after it has a final
+    # status: an earlier version appended a "running" row here and then
+    # appended a second, finished copy at the end, so every run left a
+    # permanent phantom "running" entry that never completed.
     try:
         from core.models import Message, Role
         from server.db import save_message

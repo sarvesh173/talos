@@ -397,7 +397,7 @@ fun ServiceGateScreen(
                 OutlinedTextField(
                     value = customApiKey,
                     onValueChange = { customApiKey = it; verifyError = null },
-                    label = { Text("Host API key (talos_sk_...)") },
+                    label = { Text("API") },
                     placeholder = { Text("Paste key from laptop") },
                     singleLine = true,
                     visualTransformation = if (isKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),

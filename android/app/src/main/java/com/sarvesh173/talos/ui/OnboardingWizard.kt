@@ -974,7 +974,7 @@ private fun MeshStep(
                 )
 
                 Text(
-                    text = "Host API Key (talos_sk_...):",
+                    text = "API:",
                     color = WizardMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold
@@ -985,7 +985,7 @@ private fun MeshStep(
                         tokenInput = it
                         onTokenChanged(it.trim())
                     },
-                    placeholder = { Text("Paste key output by agent", fontSize = 12.sp) },
+                    placeholder = { Text("Paste API", fontSize = 12.sp) },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.fillMaxWidth()
@@ -1174,7 +1174,7 @@ private fun TokenStep(
                         inputToken = it
                         onTokenChanged(it.trim())
                     },
-                    label = { Text("API key (talos_sk_...)") },
+                    label = { Text("API") },
                     placeholder = { Text("Paste host-generated API key") },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),

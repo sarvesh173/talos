@@ -8,6 +8,7 @@ so adding one never touches another's dependencies.
 | Plugin | Target | Purpose |
 |---|---|---|
 | [`opencode-talos-bridge`](./opencode-talos-bridge) | OpenCode 2.x | Streams tool calls, results and permission prompts to the Kanban board |
+| [`opencode-talos-control`](./opencode-talos-control) | OpenCode 2.x | Read tools so the agent can query the host's agents, processes, diff and mesh |
 
 ## Adding a plugin
 

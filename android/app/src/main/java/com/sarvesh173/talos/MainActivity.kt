@@ -2329,7 +2329,7 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Host API Key (talos_sk_...):",
+                    text = "API:",
                     color = TextMuted,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,

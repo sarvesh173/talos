@@ -93,7 +93,15 @@ data class ChatMessage(
     val timestamp: String,
     val codeBlock: String? = null,
     val stats: MessageStats? = null,
-    val agentId: String = ""
+    val agentId: String = "",
+    /**
+     * True when the text is a canned template the core fell back to, not
+     * something a model wrote. Carried from the wire so the bubble can say so
+     * instead of passing canned prose off as an answer.
+     */
+    val simulated: Boolean = false,
+    /** Why the fallback happened, when it did ("model unreachable", ...). */
+    val simulatedReason: String? = null
 )
 
 /** Clock label for a core timestamp (epoch seconds). */
@@ -242,7 +250,9 @@ fun AppleAgentChatScreen(
                 timestamp = formatClock(msg.created_at),
                 codeBlock = null,
                 stats = stats,
-                agentId = msg.sender_id
+                agentId = msg.sender_id,
+                simulated = msg.simulated,
+                simulatedReason = msg.simulatedReason
             )
         }
     }
@@ -1037,6 +1047,25 @@ private fun AgentBubble(
                     color = if (isDark) Color.White else Color(0xFF1D1D1F),
                     letterSpacing = (-0.1).sp
                 )
+                }
+                // A canned template reply is not the model's answer. Say so
+                // under the bubble instead of letting it pass as one.
+                if (msg.simulated) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(StatusAmber)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = simulatedLabel(msg.simulatedReason),
+                            fontSize = 11.sp,
+                            color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f)
+                        )
+                    }
                 }
                 msg.stats?.let { stats ->
                     Spacer(modifier = Modifier.height(6.dp))

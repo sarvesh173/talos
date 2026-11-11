@@ -85,7 +85,18 @@ data class Message(
     val tool_records: List<ToolCallRecordDto> = emptyList(),
     val files_touched: List<FileTouchDto> = emptyList(),
     val agent_id: String? = null,
-    val parent_agent_id: String? = null
+    val parent_agent_id: String? = null,
+    /**
+     * True when this text is a canned template, not something a model wrote.
+     *
+     * The core falls back to templates when no provider is reachable. Without
+     * this flag the app renders that prose exactly like a real model answer,
+     * which is the fabrication this project refuses to ship. Defaults to false
+     * so an older core that never sends the field still parses.
+     */
+    val simulated: Boolean = false,
+    /** Why the fallback happened, when it did ("model unreachable", ...). */
+    @SerialName("simulated_reason") val simulatedReason: String? = null
 )
 
 @Serializable

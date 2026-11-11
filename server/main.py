@@ -119,6 +119,7 @@ app.mount("/uploads", StaticFiles(directory=str(_UPLOADS_DIR)), name="uploads")
 # so the app could never reach them. Kept in their own module so this file stays
 # a list of the core chat endpoints.
 from server.feature_routes import router as feature_router  # noqa: E402
+from server.custom_providers import router as custom_providers_router  # noqa: E402
 from server.job_scheduler import SchedulerTick, router as jobs_router  # noqa: E402
 
 #: The cron tick loop. Started in lifespan(); its status is exposed below so a
@@ -129,6 +130,7 @@ from server.backup_routes import router as backup_router  # noqa: E402
 app.include_router(feature_router)
 app.include_router(jobs_router)
 app.include_router(backup_router)
+app.include_router(custom_providers_router)
 
 
 async def require_auth(authorization: Optional[str] = Header(None)) -> str:

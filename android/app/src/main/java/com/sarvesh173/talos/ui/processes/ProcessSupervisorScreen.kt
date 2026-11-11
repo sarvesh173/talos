@@ -192,6 +192,7 @@ private fun formatElapsed(seconds: Double): String {
 @Composable
 fun ProcessSupervisorScreen(
     client: TalosClient,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var processes by remember { mutableStateOf<List<ProcessUi>>(emptyList()) }
@@ -234,12 +235,22 @@ fun ProcessSupervisorScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = "Processes",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Back",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(end = 12.dp)
+                    .clickable { onBack() },
+            )
+            Text(
+                text = "Processes",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
         Text(
             text = if (processes.isEmpty() && loadError == null) {
                 "No agent rounds running."

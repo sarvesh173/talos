@@ -112,6 +112,7 @@ import com.sarvesh173.talos.ui.agents.AgentLifecycleScreen
 import com.sarvesh173.talos.ui.kanban.KanbanScreen
 import com.sarvesh173.talos.ui.review.ReviewWorkScreen
 import com.sarvesh173.talos.ui.cron.JobListScreen
+import com.sarvesh173.talos.ui.processes.ProcessSupervisorScreen
 import com.sarvesh173.talos.ui.bot.AgentLogoCustomizeScreen
 import com.sarvesh173.talos.ui.features.LookAndFeelScreen
 import com.sarvesh173.talos.ui.features.ChatPreferencesScreen
@@ -728,7 +729,8 @@ class MainActivity : FragmentActivity() {
                                 onNavigateToAgentLifecycle = { appScreen = "agent_lifecycle" },
                                 onNavigateToKanban = { appScreen = "kanban" },
                                 onNavigateToReviewWork = { appScreen = "review_work" },
-                                onNavigateToJobs = { appScreen = "jobs" }
+                                onNavigateToJobs = { appScreen = "jobs" },
+                                onNavigateToProcesses = { appScreen = "processes" }
                             )
                         }
                         // Service control was previously reachable only from a
@@ -756,6 +758,12 @@ class MainActivity : FragmentActivity() {
                         }
                         "jobs" -> {
                             JobListScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
+                        }
+                        "processes" -> {
+                            ProcessSupervisorScreen(
                                 client = client,
                                 onBack = { appScreen = "settings" }
                             )

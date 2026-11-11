@@ -58,6 +58,7 @@ fun SettingsScreen(
     onNavigateToKanban: () -> Unit = {},
     onNavigateToReviewWork: () -> Unit = {},
     onNavigateToJobs: () -> Unit = {},
+    onNavigateToProcesses: () -> Unit = {},
     nodeEncryptionFingerprint: String? = null,
     borderTint: Color = Color.White.copy(alpha = 0.08f)
 ) {
@@ -345,6 +346,15 @@ fun SettingsScreen(
                     subtitle = "Work while you sleep",
                     icon = TalosIcons.TalosStrokeOrb,
                     onClick = onNavigateToJobs
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Running processes",
+                    subtitle = "Live agent rounds, with Stop",
+                    icon = TalosIcons.TalosStrokeOrb,
+                    onClick = onNavigateToProcesses
                 )
             }
 

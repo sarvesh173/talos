@@ -29,6 +29,7 @@ private val apiHttpClient = OkHttpClient.Builder()
 
 suspend fun TalosClient.fetchAgents(): HostResult<List<AgentInfo>> = withContext(Dispatchers.IO) {
     hostCall(
+        apiHttpClient,
         Request.Builder()
             .url("$baseUrl/api/agents")
             .header("Authorization", "Bearer $apiToken")
@@ -38,6 +39,7 @@ suspend fun TalosClient.fetchAgents(): HostResult<List<AgentInfo>> = withContext
 
 suspend fun TalosClient.fetchAgentContext(agentId: String): HostResult<ContextTelemetry> = withContext(Dispatchers.IO) {
     hostCall(
+        apiHttpClient,
         Request.Builder()
             .url("$baseUrl/api/agents/$agentId/context")
             .header("Authorization", "Bearer $apiToken")
@@ -47,6 +49,7 @@ suspend fun TalosClient.fetchAgentContext(agentId: String): HostResult<ContextTe
 
 suspend fun TalosClient.fetchRoomBreakdown(roomId: String): HostResult<RoomContextBreakdown> = withContext(Dispatchers.IO) {
     hostCall(
+        apiHttpClient,
         Request.Builder()
             .url("$baseUrl/api/rooms/$roomId/context-breakdown")
             .header("Authorization", "Bearer $apiToken")
@@ -56,6 +59,7 @@ suspend fun TalosClient.fetchRoomBreakdown(roomId: String): HostResult<RoomConte
 
 suspend fun TalosClient.fetchCustomProviders(): HostResult<List<CustomProvider>> = withContext(Dispatchers.IO) {
     hostCall(
+        apiHttpClient,
         Request.Builder()
             .url("$baseUrl/api/providers/custom")
             .header("Authorization", "Bearer $apiToken")

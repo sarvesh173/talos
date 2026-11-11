@@ -28,6 +28,7 @@ import com.sarvesh173.talos.data.AgentInfo
 import com.sarvesh173.talos.data.DelegateInfo
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.network.fetchAgents
+import com.sarvesh173.talos.network.HostResult
 import com.sarvesh173.talos.network.switchAgentModel
 import com.sarvesh173.talos.ui.*
 import com.sarvesh173.talos.ui.agent.AgentKind

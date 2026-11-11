@@ -35,10 +35,11 @@ sealed interface HostResult<out T> {
  * a 500 means the host is broken, not that the list is empty.
  */
 internal inline fun <T> hostCall(
+    client: OkHttpClient,
     request: Request,
     crossinline parse: (String) -> T,
 ): HostResult<T> = try {
-    apiHttpClient.newCall(request).execute().use { resp ->
+    client.newCall(request).execute().use { resp ->
         val body = resp.body?.string().orEmpty()
         if (resp.isSuccessful) {
             try {

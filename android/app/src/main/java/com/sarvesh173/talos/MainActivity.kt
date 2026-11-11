@@ -309,7 +309,13 @@ class MainActivity : FragmentActivity() {
             val storedFont by client.selectedFont.collectAsState()
             val storedFontScale by client.fontScale.collectAsState()
             var showThemeDialog by remember { mutableStateOf(false) }
-            var appScreen by remember { mutableStateOf(pendingScreen ?: "main") }
+            // A first launch belongs on the landing screen, where Get Started
+            // leads into onboarding. Opening on "main" skipped straight past it
+            // whenever a token happened to be stored, so the Tailscale address
+            // was only ever reachable from Settings.
+            var appScreen by remember {
+                mutableStateOf(pendingScreen ?: if (client.isPaired.value) "main" else "landing")
+            }
             LaunchedEffect(pendingScreen) {
                 pendingScreen?.let {
                     appScreen = it

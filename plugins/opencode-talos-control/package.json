@@ -19,7 +19,7 @@
     "mesh",
     "tools"
   ],
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",

@@ -105,4 +105,4 @@ point is `Plugin.define({ id, setup })`, not a function returning a hook map.
 
 ## Licence
 
-MIT
+GPL-3.0-or-later

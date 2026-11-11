@@ -120,4 +120,4 @@ The output APK will be placed in `android/app/build/outputs/apk/debug/`.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+GNU General Public License v3.0. See [LICENSE](LICENSE) for details.

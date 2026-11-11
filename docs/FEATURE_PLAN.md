@@ -107,6 +107,48 @@ Share as a read-only link served by the host.
 - Cost: low for export, medium for share links (needs an unguessable token and
   a scope check).
 
+## 3a. Agent-initiated fake call — reference only, do not copy
+
+**The idea.** The agent can put a call through to the phone. No SIM, no number,
+no carrier, no cost, unlimited. The screen looks exactly like a real incoming
+call — ring, answer, decline, keypad, speaker — and everything stays inside the
+phone.
+
+**Why it belongs in TALOS.** The point of the app is talking to the agent. If the
+agent hits something it needs you for, a real incoming-call screen is the one
+notification you cannot miss; a banner is the one you can.
+
+**How the platform does it.** Android owns the incoming-call UI. The supported
+route is to register a phone account with `TelecomManager`, then call
+`addNewIncomingCall(accountHandle, extras)` with the caller name and number in
+the incoming-call extras. The system draws the rest. The app supplies a
+`ConnectionService` that answers with a `Connection` whose audio it controls.
+`CAPABILITY_CALL_PROVIDER` plus `SCHEME_TEL` are the capabilities involved.
+
+**Reference: <https://github.com/DDOneApps/Phony>** — an open-source app that
+simulates incoming calls in Material 3.
+
+> **Warning — read this before touching the code.**
+>
+> This reference is here so the mechanism is understandable, not so it can be
+> copied. TALOS and Phony share nothing: different app, different package, no
+> code was taken from it and none should be. Do not copy its files, its class
+> names, its strings or its resources. Do not vendor the repository. Do not
+> depend on it.
+>
+> It is GPL-3.0. TALOS is now GPL-3.0 too, so the licenses would not clash, but
+> that is not the reason to look: the reason is that reading how a telecom
+> connection is driven teaches the shape of the problem, and writing the small
+> amount TALOS needs from that shape is the work.
+>
+> Use it to understand the system. Write TALOS' own implementation.
+
+**State:** not started. Not code, not a screen, not a plugin.
+
+**The part that is not obvious.** The first run has to register the phone account
+and the user has to enable it in system settings; without that the call will not
+appear. That step is part of the feature, not an edge case.
+
 ## 4. Deliberately not doing
 
 - **Multi-user auth, RBAC, SSO** (LibreChat/Open WebUI). TALOS is a personal

@@ -245,8 +245,10 @@ def _export_messages(db_path: Path, out_path: Path) -> int:
     columns = _column_names(db_path, "messages")
     room_columns = _column_names(db_path, "rooms") if "rooms" in tables else []
 
+    # Qualify every column: once `rooms` is joined, a bare "id" or "name" makes
+    # SQLite raise "ambiguous column name" and the whole snapshot fails.
     select_parts = [
-        f'"{name}"' if name in columns else f'NULL AS "{name}"'
+        f'"messages"."{name}"' if name in columns else f'NULL AS "{name}"'
         for name in (
             "id",
             "room_id",

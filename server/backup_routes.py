@@ -118,7 +118,8 @@ async def list_snapshots_endpoint(
 
 @router.post("/snapshots", status_code=201)
 async def create_snapshot_endpoint(
-    req: CreateSnapshotRequest, token: str = Depends(require_auth)
+    req: CreateSnapshotRequest = CreateSnapshotRequest(),
+    token: str = Depends(require_auth),
 ):
     """Take a snapshot now. Returns the manifest summary of the new archive."""
     destination = _destination(req.dest_dir)
@@ -147,7 +148,8 @@ async def restore_snapshot_endpoint(
 
 @router.post("/prune")
 async def prune_snapshots_endpoint(
-    req: PruneRequest, token: str = Depends(require_auth)
+    req: PruneRequest = PruneRequest(),
+    token: str = Depends(require_auth),
 ):
     """Delete the oldest snapshots beyond ``keep``."""
     destination = _destination(req.dest_dir)

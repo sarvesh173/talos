@@ -115,9 +115,11 @@ app.mount("/uploads", StaticFiles(directory=str(_UPLOADS_DIR)), name="uploads")
 # a list of the core chat endpoints.
 from server.feature_routes import router as feature_router  # noqa: E402
 from server.job_scheduler import router as jobs_router  # noqa: E402
+from server.backup_routes import router as backup_router  # noqa: E402
 
 app.include_router(feature_router)
 app.include_router(jobs_router)
+app.include_router(backup_router)
 
 
 async def require_auth(authorization: Optional[str] = Header(None)) -> str:

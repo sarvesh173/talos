@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -352,6 +353,10 @@ fun LandingScreen(
                                             .clip(RoundedCornerShape(12.dp))
                                             .background(elevated)
                                             .clickable { refreshTick++ }
+                                            // 16dp glyph + 12dp padding is a 40dp
+                                            // row; hold the 48dp floor so the
+                                            // retry target is reachable.
+                                            .heightIn(min = 48.dp)
                                             .padding(horizontal = 16.dp, vertical = 12.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {

@@ -352,7 +352,7 @@ fun MessageBubble(
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.1).sp
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = emblem.accent.copy(alpha = 0.10f)
@@ -360,7 +360,7 @@ fun MessageBubble(
                         Text(
                             text = emblem.role.substringBefore(" · ").ifBlank { emblem.role },
                             color = emblem.accent,
-                            fontSize = 9.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
@@ -569,7 +569,7 @@ fun NativeAudioPlayerBubble(
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -578,7 +578,7 @@ fun NativeAudioPlayerBubble(
                             tint = mutedColor,
                             modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = audioTitle,
                             color = contentColor,
@@ -606,7 +606,7 @@ fun NativeAudioPlayerBubble(
                             .height(24.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = { /* local save */ },
                     modifier = Modifier.size(48.dp)
@@ -661,7 +661,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                         tint = accent,
                         modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (isArtifact) "Hermes Studio Artifact" else "Hermes Image Studio",
                         style = MaterialTheme.typography.labelSmall,
@@ -676,7 +676,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                 ) {
                     Text(
                         text = style,
-                        fontSize = 9.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = accent,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
@@ -684,7 +684,7 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (isGenerating) {
                 val infiniteTransition = rememberInfiniteTransition(label = "img_shimmer")
@@ -743,10 +743,10 @@ fun ImageGenerationPromptBubble(content: String, isHuman: Boolean) {
                                         .size(10.dp)
                                         .background(StatusGreen, CircleShape)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "SYNTHESIS READY",
-                                    fontSize = 10.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = StatusGreen
                                 )
@@ -824,7 +824,7 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "OPENBOARD WHITEBOARD",
@@ -852,7 +852,7 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
                     Text(
                         text = "CANVAS",
                         color = MaterialTheme.colorScheme.tertiary,
-                        fontSize = 9.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
@@ -860,7 +860,7 @@ fun SketchAttachmentBubble(content: String, isHuman: Boolean) {
             }
 
             if (bitmap != null) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Image(
                     bitmap = bitmap,
                     contentDescription = "Whiteboard Drawing",
@@ -923,7 +923,7 @@ fun CapturedPhotoBubble(content: String, isHuman: Boolean) {
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "CAMERA ATTACHMENT",
@@ -948,14 +948,14 @@ fun CapturedPhotoBubble(content: String, isHuman: Boolean) {
                     Text(
                         text = "READY",
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 9.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (bitmap != null) {
                 Image(
@@ -1020,7 +1020,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "MESH NODE GEOLOCATION",
@@ -1046,7 +1046,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                     Text(
                         text = "VERIFIED",
                         color = StatusGreen,
-                        fontSize = 9.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
@@ -1068,12 +1068,12 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                         modifier = Modifier.padding(vertical = 12.dp)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("LATITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = talosTextMuted)
+                            Text("LATITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 11.sp, color = talosTextMuted)
                             Text("$lat°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = if (isDark) Color.White else Color(0xFF1D1D1F))
                         }
                         Box(modifier = Modifier.height(28.dp).width(1.dp).background(if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("LONGITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = talosTextMuted)
+                            Text("LONGITUDE", style = MaterialTheme.typography.labelSmall, fontSize = 11.sp, color = talosTextMuted)
                             Text("$lon°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = if (isDark) Color.White else Color(0xFF1D1D1F))
                         }
                     }
@@ -1102,7 +1102,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(Icons.Default.Map, contentDescription = null, tint = Color(0xFF2997FF), modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text("Open maps", fontSize = 12.sp, color = if (isDark) Color.White else Color(0xFF1D1D1F), fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -1124,7 +1124,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text("Copy", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -1189,7 +1189,7 @@ fun NativeVideoPreviewBubble(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = videoUrl.substringAfterLast("/").ifBlank { "Video Stream" },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1229,7 +1229,7 @@ fun CollapsibleThoughtBlock(thoughtText: String) {
                     tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Reasoning process",
                     color = MaterialTheme.colorScheme.tertiary,
@@ -1285,7 +1285,7 @@ fun ToolCallItem(tool: ToolCall) {
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(14.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = tool.tool_name,
                     color = MaterialTheme.colorScheme.onSurface,

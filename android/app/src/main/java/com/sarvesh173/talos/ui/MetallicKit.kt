@@ -260,11 +260,11 @@ fun MetalStatusPill(
                     .clip(CircleShape)
                     .background(statusColor)
             )
-            Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = text.uppercase(),
                 color = statusColor,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp
             )
@@ -323,7 +323,7 @@ fun MetalContextRing(
         Text(
             text = "${(usagePct * 100).toInt()}%",
             color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold
         )
     }
@@ -561,11 +561,11 @@ fun BreathingHaloBadge(
                     .clip(CircleShape)
                     .background(color.copy(alpha = alpha))
             )
-            Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = text.uppercase(),
                 color = color,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp
             )

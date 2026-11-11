@@ -47,25 +47,25 @@ enum class AgentRolePreset(
         defaultPrompt = "You are a senior generalist agent. Analyze the goal, break it into thin verifiable slices, and execute each step cleanly."
     ),
     ARCHITECT(
-        title = "Code Architect",
+        title = "Code architect",
         description = "Deep code architecture, system design, refactoring, and review",
         color = Color(0xFF5856D6),
         defaultPrompt = "You are a principal software architect. Audit design patterns, maintain modular boundaries, and enforce clean architecture."
     ),
     SCOUT(
-        title = "Research Scout",
+        title = "Research scout",
         description = "Web reconnaissance, document analysis, and finding skills",
         color = Color(0xFF34C759),
         defaultPrompt = "You are a research scout agent. Discover tools, scrape relevant documentation, verify findings, and present cited evidence."
     ),
     AUDITOR(
-        title = "Security Auditor",
+        title = "Security auditor",
         description = "Vulnerability review, test suite verification, and contract safety",
         color = Color(0xFFFF9500),
         defaultPrompt = "You are a security auditor. Hunt down regressions, inspect permissions, review diffs, and ensure zero credentials leak."
     ),
     DESIGNER(
-        title = "UI Designer",
+        title = "UI designer",
         description = "Apple Liquid Glass polish, micro-animations, and visual craft",
         color = Color(0xFFAF52DE),
         defaultPrompt = "You are a design engineer following Apple HIG and WWDC25 Liquid Glass standards. Ensure 48dp minimum targets and specular rims."
@@ -247,7 +247,7 @@ fun AgentSummonSheet(
                     Box(
                         modifier = Modifier
                             .heightIn(min = 44.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(
                                 if (isSelected) role.color.copy(alpha = if (isDark) 0.24f else 0.16f)
                                 else if (isDark) Color.White.copy(0.05f) else Color.Black.copy(0.04f)
@@ -257,14 +257,14 @@ fun AgentSummonSheet(
                                     if (isSelected) 1.2.dp else 0.8.dp,
                                     if (isSelected) role.color else if (isDark) Color.White.copy(0.08f) else Color.Black.copy(0.06f)
                                 ),
-                                RoundedCornerShape(14.dp)
+                                RoundedCornerShape(16.dp)
                             )
                             .clickable {
                                 selectedRole = role
                                 agentName = "${role.title} Agent"
                                 taskPrompt = role.defaultPrompt
                             }
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -277,7 +277,7 @@ fun AgentSummonSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Model Selection
             Text(
@@ -288,14 +288,14 @@ fun AgentSummonSheet(
                 letterSpacing = 0.5.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 DELEGATE_MODELS.forEach { (modelId, modelLabel) ->
                     val isSelected = selectedModel == modelId
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(
                                 if (isSelected) selectedRole.color.copy(alpha = if (isDark) 0.18f else 0.12f)
                                 else if (isDark) Color.White.copy(0.04f) else Color.Black.copy(0.03f)
@@ -305,7 +305,7 @@ fun AgentSummonSheet(
                                     if (isSelected) 1.2.dp else 0.8.dp,
                                     if (isSelected) selectedRole.color else if (isDark) Color.White.copy(0.08f) else Color.Black.copy(0.05f)
                                 ),
-                                RoundedCornerShape(14.dp)
+                                RoundedCornerShape(16.dp)
                             )
                             .clickable { selectedModel = modelId }
                             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -334,7 +334,7 @@ fun AgentSummonSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Reasoning Effort & TTL Row
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -362,7 +362,7 @@ fun AgentSummonSheet(
                                 modifier = Modifier
                                     .weight(1f)
                                     .heightIn(min = 36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(if (isSel) selectedRole.color else Color.Transparent)
                                     .clickable { selectedReasoning = level },
                                 contentAlignment = Alignment.Center
@@ -402,7 +402,7 @@ fun AgentSummonSheet(
                                 modifier = Modifier
                                     .weight(1f)
                                     .heightIn(min = 36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(if (isSel) selectedRole.color else Color.Transparent)
                                     .clickable { selectedTtl = mins },
                                 contentAlignment = Alignment.Center
@@ -419,7 +419,7 @@ fun AgentSummonSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Task / Directive
             Text(

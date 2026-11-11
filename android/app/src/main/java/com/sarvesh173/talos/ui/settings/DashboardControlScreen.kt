@@ -398,9 +398,9 @@ private fun GroupCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(RowSurface)
-            .border(BorderStroke(1.dp, borderTint), RoundedCornerShape(10.dp))
+            .border(BorderStroke(1.dp, borderTint), RoundedCornerShape(12.dp))
             .padding(vertical = 4.dp)
     ) {
         content()
@@ -471,9 +471,9 @@ private fun ErrorBanner(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(RowSurface)
-            .border(BorderStroke(1.dp, ErrorRed), RoundedCornerShape(10.dp))
+            .border(BorderStroke(1.dp, ErrorRed), RoundedCornerShape(12.dp))
             .padding(12.dp)
     ) {
         Text(

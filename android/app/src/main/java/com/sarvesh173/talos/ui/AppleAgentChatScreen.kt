@@ -350,7 +350,7 @@ fun AppleAgentChatScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(start = 36.dp),
                         verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // The agent's own mark is the loading animation, not a
                         // generic orb: OpenCode's logo for OpenCode, Hermes' for
@@ -603,7 +603,7 @@ fun AppleAgentChatScreen(
             }
 
             if (showModelPicker && slashActive) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             Surface(
@@ -625,7 +625,7 @@ fun AppleAgentChatScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 52.dp)
-                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
                     // Plus: camera, photos, files, drawing, stickers.
@@ -645,7 +645,7 @@ fun AppleAgentChatScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     // Model chip: hidden by default. Only appears as part of
                     // the slash command surface when the composer starts with '/'.
@@ -656,7 +656,7 @@ fun AppleAgentChatScreen(
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(brandColor.copy(alpha = 0.14f))
                                 .applePressable(0.94f, pressHaptic = true) { showModelPicker = !showModelPicker }
-                                .padding(horizontal = 10.dp),
+                                .padding(horizontal = 12.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -670,7 +670,7 @@ fun AppleAgentChatScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     BasicTextField(
@@ -699,7 +699,7 @@ fun AppleAgentChatScreen(
                             .padding(vertical = 12.dp)
                     )
 
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     val hasText = inputText.isNotBlank()
                     Box(
@@ -806,7 +806,7 @@ fun AppleAgentChatScreen(
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
                         text = targetMsg.text.take(80) + if (targetMsg.text.length > 80) "..." else "",
@@ -1065,7 +1065,7 @@ private fun AgentBubble(
                 // A canned template reply is not the model's answer. Say so
                 // under the bubble instead of letting it pass as one.
                 if (msg.simulated) {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
@@ -1073,7 +1073,7 @@ private fun AgentBubble(
                                 .clip(CircleShape)
                                 .background(StatusAmber)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = simulatedLabel(msg.simulatedReason),
                             fontSize = 11.sp,
@@ -1082,7 +1082,7 @@ private fun AgentBubble(
                     }
                 }
                 msg.stats?.let { stats ->
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     MessageFooterView(
                         stats = stats,
                         isDark = isDark,

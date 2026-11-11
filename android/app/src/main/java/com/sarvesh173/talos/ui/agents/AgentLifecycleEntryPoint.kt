@@ -39,12 +39,12 @@ import com.sarvesh173.talos.ui.applePressable
  *    onNavigateToAgentLifecycle: () -> Unit = {},
  *
  * 2) SettingsScreen.kt — in the "Look & feel / Chat / Thinking Orb" SettingsGroup
- *    (lines 264-289), after the "Thinking Orb" SettingsMinimalRow (lines 283-288),
+ *    (lines 264-289), after the "Thinking orb" SettingsMinimalRow (lines 283-288),
  *    add:
  *    SettingsDivider()
  *
  *    AgentLifecycleSettingsRow(onOpen = onNavigateToAgentLifecycle)
- *    This places the row last in that group, after "Thinking Orb"; the divider
+ *    This places the row last in that group, after "Thinking orb"; the divider
  *    keeps the inset-grouped separator rhythm.
  *
  * 3) SettingsScreen.kt — add the import (next to other ui imports, line 32):

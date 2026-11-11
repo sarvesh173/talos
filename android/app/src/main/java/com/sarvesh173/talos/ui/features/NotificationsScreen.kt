@@ -486,7 +486,7 @@ fun NotificationsScreen(
                                     tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF1D1D1F),
                                     modifier = Modifier.size(20.dp)
                                 )
-                                Spacer(modifier = Modifier.width(14.dp))
+                                Spacer(modifier = Modifier.width(16.dp))
                                 Column {
                                     Text(
                                         text = title,
@@ -507,7 +507,7 @@ fun NotificationsScreen(
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.05f))
                                     .applePressable(0.92f) {
                                         NotificationSoundStore.play(context, event)
@@ -527,7 +527,7 @@ fun NotificationsScreen(
                             HorizontalDivider(
                                 color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
                                 thickness = 0.5.dp,
-                                modifier = Modifier.padding(start = 50.dp)
+                                modifier = Modifier.padding(start = 48.dp)
                             )
                         }
                     }

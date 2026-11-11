@@ -387,6 +387,6 @@ private fun LifecycleDivider() {
     HorizontalDivider(
         color = MaterialTheme.colorScheme.outlineVariant,
         thickness = 0.5.dp,
-        modifier = Modifier.padding(start = 54.dp)
+        modifier = Modifier.padding(start = 56.dp)
     )
 }

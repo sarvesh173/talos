@@ -78,7 +78,7 @@ fun TalosDirectiveHost(
             .background(surface)
             .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = shape)
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         when (directive) {
             is ChartDirective -> ChartBlock(directive, strong, muted, brandColor)
@@ -105,7 +105,7 @@ fun TalosDirectiveHost(
         answered?.let { reply ->
             Text(
                 text = "Sent · $reply",
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 color = muted,
                 modifier = Modifier.padding(top = 2.dp)
             )
@@ -196,7 +196,7 @@ private fun ChartBlock(d: ChartDirective, strong: Color, muted: Color, brand: Co
         d.x.forEach { label ->
             Text(
                 text = label,
-                fontSize = 9.sp,
+                fontSize = 11.sp,
                 color = muted,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -211,7 +211,7 @@ private fun ChartBlock(d: ChartDirective, strong: Color, muted: Color, brand: Co
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(8.dp).clip(CircleShape).background(SeriesPalette.getOrElse(i) { brand }))
                     Spacer(Modifier.width(5.dp))
-                    Text("${s.name}${if (d.unit.isNotBlank()) " (${d.unit})" else ""}", fontSize = 10.sp, color = muted)
+                    Text("${s.name}${if (d.unit.isNotBlank()) " (${d.unit})" else ""}", fontSize = 11.sp, color = muted)
                 }
             }
         }
@@ -237,14 +237,14 @@ private fun SelectBlock(
     var selectedIds by remember(d) { mutableStateOf(d.options.filter { it.checked }.map { it.id }.toSet()) }
     Text(
         text = if (d.multi) "Pick any" else "Pick one",
-        fontSize = 10.sp,
+        fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.6.sp,
         color = muted
     )
     d.options.forEach { option ->
         val selected = selectedIds.contains(option.id)
-        val rowShape = RoundedCornerShape(13.dp)
+        val rowShape = RoundedCornerShape(12.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -262,7 +262,7 @@ private fun SelectBlock(
                         setOf(option.id)
                     }
                 }
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -272,8 +272,8 @@ private fun SelectBlock(
             // tick (single) or checkbox (multi), drawn to the 18dp metric
             if (d.multi) {
                 Box(
-                    modifier = Modifier.size(18.dp).clip(RoundedCornerShape(5.dp))
-                        .border(BorderStroke(1.5.dp, if (selected) brand else muted.copy(alpha = 0.5f)), RoundedCornerShape(5.dp))
+                    modifier = Modifier.size(18.dp).clip(RoundedCornerShape(8.dp))
+                        .border(BorderStroke(1.5.dp, if (selected) brand else muted.copy(alpha = 0.5f)), RoundedCornerShape(8.dp))
                         .background(if (selected) brand else Color.Transparent),
                     contentAlignment = Alignment.Center
                 ) {
@@ -295,7 +295,7 @@ private fun SelectBlock(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .clip(RoundedCornerShape(13.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(if (canSubmit) brand else (if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.05f)))
             .applePressable(0.96f, pressHaptic = true) { if (canSubmit) onSubmit(d.options.map { it.id }.filter { it in selectedIds }) },
         contentAlignment = Alignment.Center
@@ -364,7 +364,7 @@ private fun ConfirmBlock(
                 }
                 Text(
                     text = if (remaining <= 0) "0" else if (remaining < 60) "${remaining}s" else "${remaining / 60}m",
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = FontFamily.Monospace,
                     color = ringTint
@@ -391,7 +391,7 @@ private fun BlockButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(13.dp)
+    val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = modifier
             .heightIn(min = 48.dp)
@@ -421,7 +421,7 @@ private fun PermissionBlock(
     onAnswer: (String) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Permission", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp, color = muted, modifier = Modifier.weight(1f))
+        Text("Permission", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp, color = muted, modifier = Modifier.weight(1f))
         Text(d.tool, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = brand)
     }
     if (d.reason.isNotBlank()) Text(d.reason, fontSize = 14.sp, lineHeight = 19.sp, color = strong)
@@ -432,7 +432,7 @@ private fun PermissionBlock(
             lineHeight = 16.sp,
             fontFamily = FontFamily.Monospace,
             color = if (isDark) Color(0xFF7DD3FC) else Color(0xFF0369A1),
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                 .background(if (isDark) Color(0xFF0D0D10) else Color(0xFFF2F2F7)).padding(12.dp),
             maxLines = 6,
             overflow = TextOverflow.Ellipsis
@@ -488,7 +488,7 @@ private fun GameBlock(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 moves.forEach { (move, glyph) ->
                     Box(
-                        modifier = Modifier.weight(1f).heightIn(min = 60.dp).clip(RoundedCornerShape(14.dp))
+                        modifier = Modifier.weight(1f).heightIn(min = 60.dp).clip(RoundedCornerShape(16.dp))
                             .background(if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f))
                             .applePressable(0.94f, pressHaptic = true) { onReply("move: \"$move\"") },
                         contentAlignment = Alignment.Center
@@ -496,7 +496,7 @@ private fun GameBlock(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(glyph, fontSize = 24.sp)
                             Spacer(Modifier.height(2.dp))
-                            Text(move, fontSize = 10.sp, color = muted)
+                            Text(move, fontSize = 11.sp, color = muted)
                         }
                     }
                 }
@@ -505,9 +505,9 @@ private fun GameBlock(
         "tic-tac-toe" -> {
             val boardRaw = (d.state["board"] as? List<*>) ?: (d.state["cells"] as? List<*>)
             var localBoard by remember(d) { mutableStateOf(boardRaw?.map { it?.toString() ?: "" } ?: List(9) { "" }) }
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (row in 0 until 3) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         for (col in 0 until 3) {
                             val i = row * 3 + col
                             val mark = localBoard.getOrNull(i).orEmpty()
@@ -545,7 +545,7 @@ private fun GameBlock(
                 },
                 fontSize = 12.sp, color = muted
             )
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StepperButton("−", isDark, brand) { guess = max(min, guess - 1) }
                 Text("$guess", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, color = strong, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
                 StepperButton("+", isDark, brand) { guess = min(max, guess + 1) }
@@ -587,7 +587,7 @@ private fun EmojiBlock(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowItems.forEach { emoji ->
                     Box(
-                        modifier = Modifier.weight(1f).heightIn(min = 56.dp).clip(RoundedCornerShape(14.dp))
+                        modifier = Modifier.weight(1f).heightIn(min = 56.dp).clip(RoundedCornerShape(16.dp))
                             .background(if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f))
                             .applePressable(0.92f, pressHaptic = true) { onPick(emoji) },
                         contentAlignment = Alignment.Center
@@ -611,7 +611,7 @@ private fun CardsBlock(d: CardsDirective, isDark: Boolean, strong: Color, muted:
     d.items.forEach { item ->
         val accent = accentColor(item.accent)
         Row(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                 .background(if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f))
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -621,15 +621,15 @@ private fun CardsBlock(d: CardsDirective, isDark: Boolean, strong: Color, muted:
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = strong, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (item.subtitle.isNotBlank()) {
-                    Text(item.subtitle, fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(item.subtitle, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             if (item.badge.isNotBlank()) {
                 Spacer(Modifier.width(8.dp))
                 Box(
-                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(accent.copy(alpha = 0.14f)).padding(horizontal = 7.dp, vertical = 3.dp)
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(accent.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
-                    Text(item.badge, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = accent)
+                    Text(item.badge, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = accent)
                 }
             }
         }

@@ -263,7 +263,7 @@ fun AgentCanvasScreen(
                     FilterChip(
                         selected = isSelected,
                         onClick = { selectedCli = cli },
-                        label = { Text(cli.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                        label = { Text(cli.uppercase(), fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
                             selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -443,7 +443,7 @@ fun AgentCanvasScreen(
                             Text("Assigned model", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(node.model, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
@@ -451,7 +451,7 @@ fun AgentCanvasScreen(
                             Text("Reasoning effort", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(node.reasoningEffort, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
@@ -501,7 +501,7 @@ fun AgentCanvasScreen(
                                     Toast.makeText(context, "Model switched to $modelName", Toast.LENGTH_SHORT).show()
                                 }
                             },
-                            label = { Text(modelName, fontSize = 10.sp) },
+                            label = { Text(modelName, fontSize = 11.sp) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
                                 selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -540,7 +540,7 @@ fun AgentCanvasScreen(
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(if (isPaused) "Resume" else "Pause", color = MaterialTheme.colorScheme.onSurface)
                     }
 
@@ -555,7 +555,7 @@ fun AgentCanvasScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text("Terminate", color = MaterialTheme.colorScheme.error)
                         }
                     } else if (node.tier.startsWith("Tier 2")) {
@@ -623,7 +623,7 @@ fun AgentCanvasScreen(
                             FilterChip(
                                 selected = selectedEngineId == engineId,
                                 onClick = { selectedEngineId = engineId },
-                                label = { Text(engineId.uppercase(), fontSize = 10.sp) }
+                                label = { Text(engineId.uppercase(), fontSize = 11.sp) }
                             )
                         }
                     }
@@ -786,7 +786,7 @@ private fun StatusPill(status: AgentStatus) {
     ) {
         Text(
             text = label,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             color = fg
         )
@@ -968,7 +968,7 @@ private fun CanvasNodeView(
                                 }
                             )
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = node.name,
                         style = MaterialTheme.typography.labelMedium,

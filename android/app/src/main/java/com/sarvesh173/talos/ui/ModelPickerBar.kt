@@ -51,7 +51,7 @@ fun ModelPickerBar(
     }
 
     val surface = if (isDark) Color(0xFF1A1A1E).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.97f)
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(20.dp)
 
     Column(
         modifier = Modifier
@@ -80,13 +80,13 @@ fun ModelPickerBar(
                 color = brandColor,
                 modifier = Modifier
                     .heightIn(min = 32.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .applePressable(0.94f, pressHaptic = true) { onClose() }
                     .padding(horizontal = 8.dp, vertical = 6.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyRow(
             contentPadding = PaddingValues(horizontal = 12.dp),
@@ -124,13 +124,13 @@ fun ModelPickerBar(
                     if (model.contextLength != null) {
                         Text(
                             text = "${model.contextLength!! / 1024}k",
-                            fontSize = 9.sp,
+                            fontSize = 11.sp,
                             color = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)
                         )
                     } else {
                         Text(
                             text = providerName,
-                            fontSize = 9.sp,
+                            fontSize = 11.sp,
                             maxLines = 1,
                             color = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)
                         )

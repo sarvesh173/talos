@@ -79,7 +79,7 @@ fun ApprovalBanner(
                 label = "Waiting for approval",
                 announce = false
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Needs your approval",
                 fontSize = 13.sp,
@@ -153,7 +153,7 @@ fun ApprovalBanner(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 40.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .applePressable(0.97f, pressHaptic = true) { onAlwaysAllow() },
             contentAlignment = Alignment.Center
         ) {
@@ -191,7 +191,7 @@ fun SessionHistorySheet(
     onOpen: (SessionSummary) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(20.dp)
     val strong = if (isDark) Color.White else Color(0xFF1D1D1F)
     val muted = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f)
 
@@ -217,9 +217,9 @@ fun SessionHistorySheet(
                 color = brandColor,
                 modifier = Modifier
                     .heightIn(min = 32.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .applePressable(0.95f, pressHaptic = true) { onDismiss() }
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
             )
         }
 
@@ -235,7 +235,7 @@ fun SessionHistorySheet(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(sessions, key = { it.id }) { s ->
                     val isCurrent = s.id == currentId
@@ -268,13 +268,13 @@ fun SessionHistorySheet(
                                     if (s.messageCount > 0) append(" · ${s.messageCount} messages")
                                     else append(" · no local history")
                                 },
-                                fontSize = 10.sp,
+                                fontSize = 11.sp,
                                 color = muted,
                                 maxLines = 1
                             )
                         }
                         if (isCurrent) {
-                            Text("Now", fontSize = 10.sp, color = brandColor)
+                            Text("Now", fontSize = 11.sp, color = brandColor)
                         }
                     }
                 }

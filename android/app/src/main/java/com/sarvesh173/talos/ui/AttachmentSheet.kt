@@ -188,7 +188,7 @@ fun AttachmentSheet(
 
 @Composable
 private fun AttachTile(label: String, icon: ImageVector, isDark: Boolean, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(20.dp)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(84.dp)
@@ -212,7 +212,7 @@ private fun AttachTile(label: String, icon: ImageVector, isDark: Boolean, onClic
                 modifier = Modifier.size(22.dp)
             )
         }
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
             fontSize = 11.sp,
@@ -352,13 +352,13 @@ fun ImageConfirmSheet(
                 onValueChange = { localCaption = it },
                 placeholder = { Text("Add a message (optional)") },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(16.dp),
                 maxLines = 3
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextButton(
                     onClick = { annotate = !annotate },
                     modifier = Modifier.heightIn(min = 48.dp)
@@ -373,11 +373,11 @@ fun ImageConfirmSheet(
                 Button(
                     onClick = { onSend(localCaption, image.bytes) },
                     modifier = Modifier.heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = brandColor)
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Send", fontWeight = FontWeight.SemiBold)
                 }
             }

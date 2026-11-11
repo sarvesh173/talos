@@ -71,7 +71,7 @@ fun DirectiveReplyBar(
             .heightIn(min = 52.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(Color(0xFF2C2C2E))
-            .padding(horizontal = 6.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.Bottom
     ) {
         BasicTextField(
@@ -100,7 +100,7 @@ fun DirectiveReplyBar(
                 .focusRequester(focusRequester)
                 .padding(horizontal = 8.dp, vertical = 12.dp)
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Box(
             modifier = Modifier
                 .size(48.dp)

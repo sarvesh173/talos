@@ -264,10 +264,10 @@ fun SecurityScreen(
                                     color = if (isDark) Color.White else Color(0xFF1D1D1F)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 timeoutOptions.forEach { (sec, label) ->
                                     val isSelected = graceSeconds == sec
@@ -283,7 +283,7 @@ fun SecurityScreen(
                                     ) {
                                         Text(
                                             text = label,
-                                            fontSize = 10.sp,
+                                            fontSize = 11.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                             color = if (isSelected) Color.White else (if (isDark) Color.White.copy(alpha = 0.8f) else Color(0xFF1D1D1F)),
                                             modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
@@ -423,7 +423,7 @@ if (showPinDialog) {
                 pinError = null
             },
             title = {
-                Text(text = "Set 4-Digit Passcode", fontWeight = FontWeight.SemiBold)
+                Text(text = "Set 4-digit passcode", fontWeight = FontWeight.SemiBold)
             },
             text = {
                 Column {

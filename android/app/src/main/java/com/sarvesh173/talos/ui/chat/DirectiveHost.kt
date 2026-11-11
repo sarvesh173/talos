@@ -200,14 +200,14 @@ fun DirectiveHost(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "Question ${index + 1} of ${questions.size}",
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MutedColor,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
                     text = current.type,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AccentColor
                 )
@@ -250,7 +250,7 @@ private fun PermissionQuestion(
 ) {
     Text(
         text = "Permission",
-        fontSize = 10.sp,
+        fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         color = MutedColor
     )
@@ -442,7 +442,7 @@ private fun CountdownRing(deadlineSeconds: Int, onTimeout: () -> Unit) {
         }
         Text(
             text = if (secondsLabel < 60) "${secondsLabel}s" else "${secondsLabel / 60}m",
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.Monospace,
             color = ringTint
@@ -474,7 +474,7 @@ private fun SelectQuestion(
     }
     Text(
         text = if (directive.multi) "Pick any" else "Pick one",
-        fontSize = 10.sp,
+        fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         color = MutedColor
     )

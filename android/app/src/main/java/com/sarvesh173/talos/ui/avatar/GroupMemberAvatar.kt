@@ -499,7 +499,7 @@ fun MemberAvatarStrip(
                 Text(
                     text = "+$overflow",
                     color = scheme.onSurface,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center
                 )

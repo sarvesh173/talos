@@ -185,7 +185,7 @@ fun AgentQuestionOverlay(
                     label = null,
                     announce = false
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = question.agentName.ifBlank { "Agent" },
                     fontSize = 13.sp,
@@ -209,12 +209,12 @@ fun AgentQuestionOverlay(
                             .padding(horizontal = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Waiting", fontSize = 9.sp, color = muted)
+                        Text("Waiting", fontSize = 11.sp, color = muted)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // ---- what ----
             Text(
@@ -227,7 +227,7 @@ fun AgentQuestionOverlay(
             )
 
             if (question.detail.isNotBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = question.detail,
                     fontSize = 13.sp,
@@ -246,7 +246,7 @@ fun AgentQuestionOverlay(
                     color = if (isDark) Color(0xFF7DD3FC) else Color(0xFF0369A1),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(if (isDark) Color(0xFF0D0D10) else Color(0xFFF2F2F7))
                         .padding(12.dp),
                     maxLines = 8,
@@ -281,7 +281,7 @@ fun AgentQuestionOverlay(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "If you allow it",
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.6.sp,
                     color = muted
@@ -295,10 +295,10 @@ fun AgentQuestionOverlay(
                         isDark = isDark,
                         accent = accent
                     ) { selectedScope = scope }
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             // ---- custom answer ----
@@ -479,9 +479,9 @@ private fun CountdownPill(remaining: Int, progress: Float, urgent: Boolean, isDa
     val tint = if (urgent) Color(0xFFFF453A) else if (isDark) Color.White.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.55f)
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(9.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(tint.copy(alpha = 0.12f))
-            .padding(horizontal = 9.dp, vertical = 5.dp)
+            .padding(horizontal = 8.dp, vertical = 5.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // A thin bar reads as "time draining" without needing a ring gauge.
@@ -500,14 +500,14 @@ private fun CountdownPill(remaining: Int, progress: Float, urgent: Boolean, isDa
                         .background(tint)
                 )
             }
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = when {
                     remaining <= 0 -> "expired"
                     remaining < 60 -> "${remaining}s"
                     else -> "${remaining / 60}m ${remaining % 60}s"
                 },
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = FontFamily.Monospace,
                 color = tint
@@ -523,7 +523,7 @@ private fun QuestionOptionRow(
     accent: Color,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(13.dp)
+    val shape = RoundedCornerShape(12.dp)
     val tint = when (option.kind) {
         OptionKind.Affirmative -> Color(0xFF34C759)
         OptionKind.Negative -> Color(0xFFFF453A)
@@ -537,7 +537,7 @@ private fun QuestionOptionRow(
             .background(tint.copy(alpha = 0.10f))
             .border(BorderStroke(0.8.dp, tint.copy(alpha = 0.32f)), shape)
             .applePressable(0.97f, pressHaptic = true) { onClick() }
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Text(
@@ -573,7 +573,7 @@ private fun ScopeRow(
                 shape
             )
             .applePressable(0.97f, pressHaptic = true) { onClick() }
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -585,7 +585,7 @@ private fun ScopeRow(
             )
             Text(
                 text = scope.blurb,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.42f)
             )
         }
@@ -621,7 +621,7 @@ private fun ActionPill(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(13.dp)
+    val shape = RoundedCornerShape(12.dp)
     val base = tint ?: (if (isDark) Color.White.copy(alpha = 0.90f) else Color(0xFF1D1D1F))
     Box(
         modifier = modifier

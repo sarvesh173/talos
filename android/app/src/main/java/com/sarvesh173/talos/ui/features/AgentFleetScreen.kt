@@ -110,7 +110,7 @@ fun AgentFleetScreen(client: TalosClient) {
                         .applePressable(0.96f, pressHaptic = true) {
                             showSummonSheet = true
                         }
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -120,7 +120,7 @@ fun AgentFleetScreen(client: TalosClient) {
                             tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Summon",
                             fontSize = 13.sp,
@@ -221,7 +221,7 @@ fun AgentFleetScreen(client: TalosClient) {
                 } else {
                     items(agents, key = { it.id }) { agent ->
                         val emblem = emblemByKey(agent.id)
-                        val shape = RoundedCornerShape(18.dp)
+                        val shape = RoundedCornerShape(20.dp)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -259,7 +259,7 @@ fun AgentFleetScreen(client: TalosClient) {
                                     announce = false
                                 )
 
-                                Spacer(modifier = Modifier.width(14.dp))
+                                Spacer(modifier = Modifier.width(16.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -272,16 +272,16 @@ fun AgentFleetScreen(client: TalosClient) {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Box(
                                             modifier = Modifier
-                                                .clip(RoundedCornerShape(6.dp))
+                                                .clip(RoundedCornerShape(8.dp))
                                                 .background(
                                                     if (agent.installed) Color(0xFF34C759).copy(alpha = 0.18f)
                                                     else Color(0xFFFF9500).copy(alpha = 0.18f)
                                                 )
-                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                .padding(horizontal = 8.dp, vertical = 2.dp)
                                         ) {
                                             Text(
                                                 text = if (agent.installed) "Installed" else "Missing",
-                                                fontSize = 10.sp,
+                                                fontSize = 11.sp,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = if (agent.installed) Color(0xFF34C759) else Color(0xFFFF9500)
                                             )

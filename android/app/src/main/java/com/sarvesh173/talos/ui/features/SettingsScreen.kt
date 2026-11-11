@@ -293,7 +293,7 @@ fun SettingsScreen(
                 SettingsDivider()
 
                 SettingsMinimalRow(
-                    title = "Thinking Orb",
+                    title = "Thinking orb",
                     subtitle = "Animation, colour, shape",
                     icon = TalosIcons.TalosStrokeOrb,
                     onClick = onNavigateToThinkingOrb

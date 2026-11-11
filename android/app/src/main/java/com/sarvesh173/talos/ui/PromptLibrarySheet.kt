@@ -93,7 +93,7 @@ fun PromptLibrarySheet(
                         tint = brandColor,
                         modifier = Modifier.size(24.dp)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Prompt Library",
                         fontSize = 20.sp,
@@ -104,7 +104,7 @@ fun PromptLibrarySheet(
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
                         .applePressable(0.92f) { showCreateDialog = true },
                     contentAlignment = Alignment.Center
@@ -118,7 +118,7 @@ fun PromptLibrarySheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Search Bar
             Surface(
@@ -184,13 +184,13 @@ fun PromptLibrarySheet(
                             fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             color = if (isSelected) Color.White else (if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF1D1D1F)),
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Prompt Cards List
             if (isLoading) {
@@ -208,11 +208,11 @@ fun PromptLibrarySheet(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(prompts, key = { it.id }) { prompt ->
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(16.dp),
                             color = cardBg,
                             border = BorderStroke(0.5.dp, hairline),
                             modifier = Modifier
@@ -236,20 +236,20 @@ fun PromptLibrarySheet(
                                     )
                                     prompt.category?.let { cat ->
                                         Surface(
-                                            shape = RoundedCornerShape(6.dp),
+                                            shape = RoundedCornerShape(8.dp),
                                             color = brandColor.copy(alpha = 0.12f)
                                         ) {
                                             Text(
                                                 text = cat,
-                                                fontSize = 10.sp,
+                                                fontSize = 11.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = brandColor,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                             )
                                         }
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = prompt.body,
                                     fontSize = 13.sp,
@@ -259,7 +259,7 @@ fun PromptLibrarySheet(
                                 )
                                 if (prompt.variables.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         prompt.variables.forEach { v ->
                                             Surface(
                                                 shape = RoundedCornerShape(4.dp),
@@ -267,7 +267,7 @@ fun PromptLibrarySheet(
                                             ) {
                                                 Text(
                                                     text = "{{$v}}",
-                                                    fontSize = 10.sp,
+                                                    fontSize = 11.sp,
                                                     color = talosTextMuted,
                                                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                                                 )
@@ -294,10 +294,10 @@ fun PromptLibrarySheet(
         AlertDialog(
             onDismissRequest = { showCreateDialog = false },
             title = {
-                Text(text = "New Prompt Template", fontWeight = FontWeight.SemiBold)
+                Text(text = "New prompt template", fontWeight = FontWeight.SemiBold)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = newTitle,
                         onValueChange = { newTitle = it },

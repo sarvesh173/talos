@@ -103,7 +103,7 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Thinking Orb",
+                text = "Thinking orb",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = strong
@@ -134,7 +134,7 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
                         label = "Orb preview"
                     )
                 }
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "${state.name.lowercase()} · ${sizeDp.toInt()}dp · ${"%.2f".format(speed)}×",
                     fontSize = 11.sp,
@@ -232,9 +232,9 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
             text = "The frame the orb sits in. Nest a second shape inside for a combined form.",
             fontSize = 11.sp,
             color = muted,
-            modifier = Modifier.padding(bottom = 10.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(OrbShell.entries.toList()) { s ->
                 val selected = shell == s
                 Column(
@@ -255,7 +255,7 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = s.label,
-                        fontSize = 9.sp,
+                        fontSize = 11.sp,
                         color = if (selected) ink else muted,
                         maxLines = 1
                     )
@@ -281,9 +281,9 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .background(if (adaptiveSpeed) ink.copy(alpha = 0.10f) else Color.Transparent)
-                .border(BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant), RoundedCornerShape(14.dp))
+                .border(BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant), RoundedCornerShape(16.dp))
                 .applePressable(0.97f, pressHaptic = true) { adaptiveSpeed = !adaptiveSpeed }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -303,7 +303,7 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
             )
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         SectionHeader("Base speed  ·  ${"%.2f".format(speed)}×", strong)
         Slider(
@@ -321,11 +321,11 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 52.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .background(if (paused) ink.copy(alpha = 0.14f) else Color.Transparent)
                 .border(
                     BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant),
-                    RoundedCornerShape(14.dp)
+                    RoundedCornerShape(16.dp)
                 )
                 .applePressable(0.97f, pressHaptic = true) { paused = !paused }
                 .padding(horizontal = 16.dp),
@@ -345,7 +345,7 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
         }
 
         if (reducedMotion) {
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "System animations are off, so the orb already renders a static frame.",
                 fontSize = 11.sp,
@@ -471,13 +471,13 @@ private fun SectionHeader(text: String, strong: Color) {
         fontSize = 13.sp,
         fontWeight = FontWeight.SemiBold,
         color = strong,
-        modifier = Modifier.padding(bottom = 10.dp)
+        modifier = Modifier.padding(bottom = 12.dp)
     )
 }
 
 @Composable
 private fun PresetChip(label: String, isSelected: Boolean, ink: Color, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
             .heightIn(min = 40.dp)
@@ -538,7 +538,7 @@ private fun HueSlider(hue: Float, onChange: (Float) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(28.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .background(
                     androidx.compose.ui.graphics.Brush.horizontalGradient(
                         (0..360 step 30).map { hslToColor(it.toFloat(), 1f, 0.55f) }

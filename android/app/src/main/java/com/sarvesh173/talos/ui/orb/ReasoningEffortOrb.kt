@@ -471,7 +471,7 @@ fun ReasoningEffortPicker(
         }
     }
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         ReasoningOrb(
             agentId = "effort-picker",
             effort = selected,
@@ -489,7 +489,7 @@ fun ReasoningEffortPicker(
         // that do not exist; steps are honest about the seven real stops.
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             tiers.forEachIndexed { index, tier ->

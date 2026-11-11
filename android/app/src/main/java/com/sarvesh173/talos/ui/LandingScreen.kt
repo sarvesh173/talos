@@ -330,12 +330,12 @@ fun LandingScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(20.dp),
+                                        .padding(16.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Text(
                                         text = "Couldn't reach the host",
-                                        fontSize = 15.sp,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = primaryText,
                                         letterSpacing = (-0.15).sp,
@@ -343,16 +343,16 @@ fun LandingScreen(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "No agents were loaded. Check the connection and try again.",
-                                        fontSize = 13.sp,
+                                        fontSize = 14.sp,
                                         color = secondaryText,
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Row(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(elevated)
                                             .clickable { refreshTick++ }
-                                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                                            .padding(horizontal = 16.dp, vertical = 12.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Icon(
@@ -364,7 +364,7 @@ fun LandingScreen(
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "Retry",
-                                            fontSize = 13.sp,
+                                            fontSize = 14.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = accent,
                                             letterSpacing = (-0.15).sp,
@@ -377,7 +377,7 @@ fun LandingScreen(
                         item {
                             Text(
                                 text = "No agents reported by the host.",
-                                fontSize = 13.sp,
+                                fontSize = 14.sp,
                                 color = secondaryText,
                                 modifier = Modifier.padding(vertical = 16.dp),
                             )
@@ -387,7 +387,7 @@ fun LandingScreen(
                         item {
                             Text(
                                 text = "Conversation hits",
-                                fontSize = 13.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = secondaryText,
                                 modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
@@ -421,18 +421,22 @@ fun LandingScreen(
                                             text = hit.room_name.ifBlank { hit.room_id },
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = accent
+                                            color = accent,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
                                         )
                                         Text(
                                             text = hit.sender_name,
-                                            fontSize = 11.sp,
-                                            color = tertiaryText
+                                            fontSize = 12.sp,
+                                            color = tertiaryText,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = hit.snippet,
-                                        fontSize = 13.sp,
+                                        fontSize = 14.sp,
                                         color = primaryText,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -468,7 +472,7 @@ fun LandingScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(40.dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(elevated),
                                         contentAlignment = Alignment.Center,
                                     ) {
@@ -490,7 +494,7 @@ fun LandingScreen(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                         )
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = if (realAgent.installed) {
                                                 if (lifecycleText != null) "$subtitle · $lifecycleText" else subtitle
@@ -578,9 +582,9 @@ fun LandingScreen(
                             ) {
                                 Text(
                                     text = agent.sessionsError ?: "No sessions yet for this agent.",
-                                    fontSize = 13.sp,
+                                    fontSize = 14.sp,
                                     color = secondaryText,
-                                    modifier = Modifier.padding(20.dp),
+                                    modifier = Modifier.padding(16.dp),
                                 )
                             }
                         }
@@ -611,13 +615,14 @@ fun LandingScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = session.title,
-                                            fontSize = 15.sp,
+                                            fontSize = 16.sp,
                                             fontWeight = FontWeight.Medium,
                                             color = primaryText,
+                                            letterSpacing = (-0.15).sp,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                         )
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Spacer(modifier = Modifier.height(4.dp))
                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                             val age = formatAge(session.ageSeconds)
                                             if (age != null) {
@@ -786,16 +791,17 @@ fun LandingScreen(
                         onValueChange = { searchQuery = it },
                         singleLine = true,
                         textStyle = TextStyle(
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
                             color = primaryText,
+                            letterSpacing = (-0.1).sp,
                         ),
                         cursorBrush = SolidColor(accent),
                         decorationBox = { innerTextField ->
                             if (searchQuery.isEmpty()) {
                                 Text(
                                     text = if (selectedAgentId != null) "Search sessions" else "Search agents",
-                                    fontSize = 15.sp,
+                                    fontSize = 14.sp,
                                     color = tertiaryText,
                                     letterSpacing = (-0.1).sp,
                                 )

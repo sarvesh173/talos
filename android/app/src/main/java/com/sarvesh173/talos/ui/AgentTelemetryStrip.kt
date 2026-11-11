@@ -63,7 +63,7 @@ fun AgentTelemetryStrip(
 
 
     val surface = if (isDark) Color(0xFF141418).copy(alpha = 0.97f) else Color.White.copy(alpha = 0.98f)
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(20.dp)
     val muted = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f)
     val strong = if (isDark) Color.White else Color(0xFF1D1D1F)
 
@@ -93,7 +93,7 @@ fun AgentTelemetryStrip(
                 label = if (isTyping) "$agentName is working" else "$agentName is idle",
                 announce = false
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = if (isTyping) "Working" else "Idle",
@@ -103,7 +103,7 @@ fun AgentTelemetryStrip(
                 )
                 Text(
                     text = modelLabel,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     color = muted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -111,7 +111,7 @@ fun AgentTelemetryStrip(
                 if (lastThought.isNotBlank()) {
                     Text(
                         text = lastThought.takeLast(180),
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         lineHeight = 13.sp,
                         color = muted.copy(alpha = 0.75f),
                         maxLines = 3,
@@ -148,7 +148,7 @@ fun AgentTelemetryStrip(
 
         val diff = gitDiff
         if (diff != null && diff.files.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -193,7 +193,7 @@ private fun TelemetryCell(
         modifier = modifier
             .clip(shape)
             .background(if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f))
-            .padding(horizontal = 10.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(
             text = value,
@@ -204,7 +204,7 @@ private fun TelemetryCell(
         )
         Text(
             text = label,
-            fontSize = 9.sp,
+            fontSize = 11.sp,
             color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f),
             maxLines = 1
         )
@@ -235,7 +235,7 @@ private fun DiffViewer(diff: GitDiffSummaryDto, isDark: Boolean) {
         items(diff.files) { file ->
             Text(
                 text = file.path,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = FontFamily.Monospace,
                 color = if (isDark) Color.White.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.60f),
@@ -249,7 +249,7 @@ private fun DiffViewer(diff: GitDiffSummaryDto, isDark: Boolean) {
                 }
                 Text(
                     text = "$prefix ${line.content}",
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     color = ink,
                     modifier = Modifier

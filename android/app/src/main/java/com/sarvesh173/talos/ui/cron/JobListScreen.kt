@@ -362,7 +362,7 @@ private fun JobUnreachable(message: String, onRetry: () -> Unit) {
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(text = message, fontSize = 13.sp, color = talosTextMuted)
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedButton(onClick = onRetry) { Text("Retry") }
@@ -586,7 +586,7 @@ private fun StatusDot(status: String, small: Boolean = false) {
 @Composable
 private fun RunRow(run: RunUi) {
     val stamp = LocalDateTime.ofInstant(Instant.ofEpochMilli(run.startedAtEpochMs), ZoneId.systemDefault()).format(stampFormat)
-    Row(modifier = Modifier.fillMaxWidth().applePressable(0.97f) { }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Row(modifier = Modifier.fillMaxWidth().applePressable(0.97f) { }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         StatusDot(status = run.status)
         Column {
             Text(text = stamp, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)

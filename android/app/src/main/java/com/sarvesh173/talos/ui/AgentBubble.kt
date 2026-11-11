@@ -146,7 +146,7 @@ fun AgentBubble(
                     ) {
                         Text(
                             text = if (unread > 9) "9+" else unread.toString(),
-                            fontSize = 9.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -162,12 +162,12 @@ fun AgentBubble(
                     // fraction of the window instead, so the bubble always fits.
                     .widthIn(max = 320.dp)
                     .fillMaxWidth(0.86f)
-                    .shadow(16.dp, RoundedCornerShape(22.dp), ambientColor = Color.Black.copy(alpha = 0.35f))
-                    .clip(RoundedCornerShape(22.dp))
+                    .shadow(16.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.35f))
+                    .clip(RoundedCornerShape(20.dp))
                     .background(if (isDark) Color(0xFF141418).copy(alpha = 0.98f) else Color.White)
                     .border(
                         BorderStroke(0.8.dp, if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.07f)),
-                        RoundedCornerShape(22.dp)
+                        RoundedCornerShape(20.dp)
                     )
                     .padding(14.dp)
             ) {
@@ -244,7 +244,7 @@ private fun BubbleNoticeRow(
 ) {
     var replyOpen by remember(notice.id) { mutableStateOf(false) }
     var replyText by remember(notice.id) { mutableStateOf("") }
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(16.dp)
 
     Column(
         modifier = Modifier
@@ -303,10 +303,10 @@ private fun BubbleNoticeRow(
         }
 
         if (notice.command.isNotBlank()) {
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = notice.command,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                 color = if (isDark) Color(0xFF7DD3FC) else Color(0xFF0369A1),
                 modifier = Modifier
@@ -321,7 +321,7 @@ private fun BubbleNoticeRow(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (notice.needsApproval) {
                 MiniAction("Approve", Color(0xFF34C759), onApprove, isDark)
                 MiniAction("Open", null, onOpen, isDark)
@@ -359,11 +359,11 @@ private fun BubbleNoticeRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 40.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(if (isDark) Color.White.copy(alpha = 0.07f) else Color.Black.copy(alpha = 0.05f))
-                        .padding(horizontal = 10.dp, vertical = 10.dp)
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 MiniAction(
                     "Send",
                     notice.brandColor,
@@ -388,7 +388,7 @@ private fun MiniAction(
     onClick: () -> Unit,
     isDark: Boolean
 ) {
-    val shape = RoundedCornerShape(9.dp)
+    val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
             .heightIn(min = 36.dp)

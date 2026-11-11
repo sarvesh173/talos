@@ -947,7 +947,7 @@ private fun MeshStep(
                             Text(
                                 text = "Connected (200 ok)",
                                 color = MaterialTheme.colorScheme.tertiary,
-                                fontSize = 10.sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
@@ -1359,7 +1359,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                             .clip(CircleShape)
                             .background(StatusGreen)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${AgentEmblems.size} Online",
                         color = StatusGreen,
@@ -1419,7 +1419,7 @@ private fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
                                     Text(
                                         text = emblem.role.substringBefore("·").trim(),
                                         color = WizardMuted,
-                                        fontSize = 10.sp,
+                                        fontSize = 11.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )

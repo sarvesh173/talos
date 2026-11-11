@@ -108,9 +108,9 @@ fun MessageFooterView(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 34.dp)
-                .clip(RoundedCornerShape(9.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .applePressable(0.98f, pressHaptic = true) { expanded = !expanded }
-                .padding(vertical = 6.dp),
+                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             stats.latencyMs?.let { ms ->
@@ -137,13 +137,13 @@ fun MessageFooterView(
                 // change anything, and did it mostly add or remove".
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (stats.totalAdditions > 0) {
-                        Text("+${stats.totalAdditions}", fontSize = 10.sp, color = Color(0xFF32D74B), fontFamily = FontFamily.Monospace)
+                        Text("+${stats.totalAdditions}", fontSize = 11.sp, color = Color(0xFF32D74B), fontFamily = FontFamily.Monospace)
                     }
                     if (stats.totalAdditions > 0 && stats.totalDeletions > 0) {
-                        Text(" ", fontSize = 10.sp)
+                        Text(" ", fontSize = 11.sp)
                     }
                     if (stats.totalDeletions > 0) {
-                        Text("−${stats.totalDeletions}", fontSize = 10.sp, color = Color(0xFFFF453A), fontFamily = FontFamily.Monospace)
+                        Text("−${stats.totalDeletions}", fontSize = 11.sp, color = Color(0xFFFF453A), fontFamily = FontFamily.Monospace)
                     }
                 }
                 Dot(muted)
@@ -151,7 +151,7 @@ fun MessageFooterView(
             if (stats.model != null) {
                 Text(
                     text = stats.model.substringAfterLast('/'),
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     color = muted.copy(alpha = 0.8f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -182,7 +182,7 @@ fun MessageFooterView(
             exit = fadeOut() + shrinkVertically()
         ) {
             Column {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -252,7 +252,7 @@ fun MessageFooterView(
 
                 // ---- tool calls ----
                 if (stats.toolCalls.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     SectionLabel("Tool calls", muted)
                     stats.toolCalls.forEach { call ->
                         ToolCallRow(call, isDark, muted, strong, accent) { onOpenTool(call) }
@@ -261,7 +261,7 @@ fun MessageFooterView(
 
                 // ---- files ----
                 if (stats.filesTouched.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     SectionLabel("Files", muted)
                     stats.filesTouched.forEach { file ->
                         FileTouchRow(file, isDark, muted, strong, accent) { onOpenDiff(file) }
@@ -276,7 +276,7 @@ fun MessageFooterView(
 private fun MetricChip(text: String, muted: Color) {
     Text(
         text = text,
-        fontSize = 10.sp,
+        fontSize = 11.sp,
         color = muted,
         fontFamily = FontFamily.Monospace,
         maxLines = 1
@@ -285,14 +285,14 @@ private fun MetricChip(text: String, muted: Color) {
 
 @Composable
 private fun Dot(muted: Color) {
-    Text(" · ", fontSize = 10.sp, color = muted.copy(alpha = 0.55f))
+    Text(" · ", fontSize = 11.sp, color = muted.copy(alpha = 0.55f))
 }
 
 @Composable
 private fun SectionLabel(text: String, muted: Color) {
     Text(
         text = text.uppercase(),
-        fontSize = 9.sp,
+        fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.7.sp,
         color = muted.copy(alpha = 0.75f),
@@ -309,13 +309,13 @@ private fun DetailRow(label: String, value: String, muted: Color, strong: Color)
     ) {
         Text(
             text = label,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             color = muted,
             modifier = Modifier.width(58.dp)
         )
         Text(
             text = value,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             color = strong.copy(alpha = 0.8f),
             fontFamily = FontFamily.Monospace,
             maxLines = 2,
@@ -354,18 +354,18 @@ private fun ToolCallRow(
                 .clip(CircleShape)
                 .background(statusColor)
         )
-        Spacer(modifier = Modifier.width(7.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = call.name,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             color = strong.copy(alpha = 0.85f),
             fontFamily = FontFamily.Monospace
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = call.summary,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             color = muted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -374,7 +374,7 @@ private fun ToolCallRow(
         call.durationMs?.let {
             Text(
                 text = formatDuration(it),
-                fontSize = 9.sp,
+                fontSize = 11.sp,
                 color = muted.copy(alpha = 0.7f),
                 fontFamily = FontFamily.Monospace
             )
@@ -414,20 +414,20 @@ private fun FileTouchRow(
         )
         Text(
             text = file.fileName,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             color = strong.copy(alpha = 0.85f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
         if (file.additions > 0) {
-            Text("+${file.additions}", fontSize = 9.sp, color = Color(0xFF32D74B), fontFamily = FontFamily.Monospace)
+            Text("+${file.additions}", fontSize = 11.sp, color = Color(0xFF32D74B), fontFamily = FontFamily.Monospace)
         }
         if (file.additions > 0 && file.deletions > 0) {
-            Text(" ", fontSize = 9.sp)
+            Text(" ", fontSize = 11.sp)
         }
         if (file.deletions > 0) {
-            Text("−${file.deletions}", fontSize = 9.sp, color = Color(0xFFFF453A), fontFamily = FontFamily.Monospace)
+            Text("−${file.deletions}", fontSize = 11.sp, color = Color(0xFFFF453A), fontFamily = FontFamily.Monospace)
         }
     }
 }

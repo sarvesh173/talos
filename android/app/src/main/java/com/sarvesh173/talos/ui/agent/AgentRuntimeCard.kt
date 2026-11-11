@@ -93,7 +93,7 @@ fun AgentRuntimeCard(
                 label = null,
                 announce = false
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -105,7 +105,7 @@ fun AgentRuntimeCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     KindBadge(agent.kind, accent, isDark)
                 }
                 Text(
@@ -131,7 +131,7 @@ fun AgentRuntimeCard(
                 color = strong
             )
 
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             Box(
                 modifier = Modifier
@@ -150,7 +150,7 @@ fun AgentRuntimeCard(
 
         // Delegate lifetime bar. Only shown when a TTL exists.
         if (agent.ttlSeconds != null && agent.ttlSeconds > 0) {
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             val fraction = (elapsed.toFloat() / agent.ttlSeconds.toFloat()).coerceIn(0f, 1f)
             val barColor = when {
                 fraction > 0.85f -> Color(0xFFFF453A)
@@ -180,11 +180,11 @@ fun AgentRuntimeCard(
             exit = fadeOut() + shrinkVertically()
         ) {
             Column {
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // ---- model ----
                 FieldLabel("Model", muted)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(models.distinct()) { m ->
                         val selected = agent.model == m
                         Chip(
@@ -200,7 +200,7 @@ fun AgentRuntimeCard(
 
                 // ---- reasoning ----
                 FieldLabel("Reasoning", muted)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(ReasoningEffort.entries.toList()) { effort ->
                         Chip(
                             label = effort.label,
@@ -212,7 +212,7 @@ fun AgentRuntimeCard(
                 }
                 Text(
                     text = agent.reasoning.blurb,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     color = muted,
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -247,7 +247,7 @@ fun AgentRuntimeCard(
                         .padding(horizontal = 12.dp, vertical = 12.dp)
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(
@@ -292,13 +292,13 @@ private fun KindBadge(kind: AgentKind, accent: Color, isDark: Boolean) {
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(5.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(bg)
-            .padding(horizontal = 5.dp, vertical = 2.dp)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
         Text(
             text = label,
-            fontSize = 8.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.6.sp,
             color = if (kind == AgentKind.Main) accent else (if (isDark) Color.White.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.55f))
@@ -310,11 +310,11 @@ private fun KindBadge(kind: AgentKind, accent: Color, isDark: Boolean) {
 private fun FieldLabel(text: String, muted: Color) {
     Text(
         text = text,
-        fontSize = 10.sp,
+        fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.6.sp,
         color = muted,
-        modifier = Modifier.padding(bottom = 6.dp)
+        modifier = Modifier.padding(bottom = 8.dp)
     )
 }
 
@@ -326,7 +326,7 @@ private fun Chip(
     isDark: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(9.dp)
+    val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
             .heightIn(min = 44.dp)
@@ -340,7 +340,7 @@ private fun Chip(
                 shape
             )
             .applePressable(0.95f, pressHaptic = true) { onClick() }
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(

@@ -157,7 +157,11 @@ fun AgentBubble(
             // ---- expanded mini view ----
             Column(
                 modifier = Modifier
-                    .width(320.dp)
+                    // A fixed 320dp card overflows a 320dp phone (and the 360dp
+                    // compact case once the chat gutter is taken out). Cap at a
+                    // fraction of the window instead, so the bubble always fits.
+                    .widthIn(max = 320.dp)
+                    .fillMaxWidth(0.86f)
                     .shadow(16.dp, RoundedCornerShape(22.dp), ambientColor = Color.Black.copy(alpha = 0.35f))
                     .clip(RoundedCornerShape(22.dp))
                     .background(if (isDark) Color(0xFF141418).copy(alpha = 0.98f) else Color.White)

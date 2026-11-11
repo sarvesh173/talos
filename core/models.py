@@ -203,6 +203,14 @@ class Message(BaseModel):
     agent_id: Optional[str] = None
     parent_agent_id: Optional[str] = None
 
+    #: True when no model produced this text. The orchestrator falls back to
+    #: canned templates when the upstream model is unreachable, and an unmarked
+    #: template reply is indistinguishable from a real one — the app renders it
+    #: as the agent's answer. Set here so the bubble can say so.
+    simulated: bool = False
+    #: Why it fell back, when it did ("model unreachable", "live models off").
+    simulated_reason: Optional[str] = None
+
 
 class Room(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:12])

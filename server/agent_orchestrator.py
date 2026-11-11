@@ -990,9 +990,21 @@ class AgentOrchestrator:
             # honest "the provider is down", because the UI claims thought the
             # model never had.
             live = await self._run_live_turn(agent, round_, turn, context)
+            simulated = False
+            simulated_reason: Optional[str] = None
             if live is None:
+                # The template fallback keeps the room alive when no model is
+                # reachable, but its text is not the agent's answer. Flag it so
+                # the app can label the bubble instead of passing canned prose
+                # off as a model reply.
                 thought = agent.thought_for(round_.prompt, topic, context)
                 reply = agent.reply_for(round_.prompt, topic, context)
+                simulated = True
+                simulated_reason = (
+                    "live models disabled"
+                    if not self.use_live_models
+                    else "model unreachable"
+                )
                 await self._stream_text(round_, turn, thought, kind="thought")
                 if self.typing_lead:
                     await asyncio.sleep(self.typing_lead)
@@ -1011,6 +1023,8 @@ class AgentOrchestrator:
                 reply_to_id=turn.reply_to_id,
                 created_at=time.time(),
                 metrics=turn.metrics,
+                simulated=simulated,
+                simulated_reason=simulated_reason,
             )
 
             await self._emit_typing(turn, False)

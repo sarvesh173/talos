@@ -122,7 +122,9 @@ def init_db() -> None:
         tool_calls_json TEXT DEFAULT '[]',
         attachments_json TEXT DEFAULT '[]',
         reply_to_id TEXT,
-        created_at REAL
+        created_at REAL,
+        simulated INTEGER DEFAULT 0,
+        simulated_reason TEXT
     );
     """)
 
@@ -156,6 +158,7 @@ def init_db() -> None:
     conn.commit()
 
     _migrate_rooms(conn)
+    _migrate_messages(conn)
 
     # Seed default profiles and rooms if table is empty
     cur.execute("SELECT COUNT(*) as cnt FROM rooms")
@@ -163,6 +166,23 @@ def init_db() -> None:
         _seed_defaults(conn)
 
     conn.close()
+
+
+def _migrate_messages(conn) -> None:
+    """Add the provenance columns that mark a reply as model-free.
+
+    `simulated` was introduced after the first databases existed; init_db() is
+    run against them, so the columns must be added here rather than assumed.
+    Without it save_message() references a column an old file does not have and
+    every agent turn fails to persist.
+    """
+    existing = _table_columns(conn, "messages")
+    cur = conn.cursor()
+    if "simulated" not in existing:
+        cur.execute("ALTER TABLE messages ADD COLUMN simulated INTEGER DEFAULT 0")
+    if "simulated_reason" not in existing:
+        cur.execute("ALTER TABLE messages ADD COLUMN simulated_reason TEXT")
+    conn.commit()
 
 
 def _migrate_rooms(conn) -> None:
@@ -495,8 +515,8 @@ def save_message(msg: Message) -> None:
     INSERT OR REPLACE INTO messages (
         id, room_id, sender_id, sender_name, sender_role,
         content, thought, tool_calls_json, attachments_json,
-        reply_to_id, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        reply_to_id, created_at, simulated, simulated_reason
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         msg.id,
         msg.room_id,
@@ -508,7 +528,9 @@ def save_message(msg: Message) -> None:
         json.dumps([t.model_dump() for t in msg.tool_calls]),
         json.dumps(msg.attachments),
         msg.reply_to_id,
-        msg.created_at
+        msg.created_at,
+        1 if msg.simulated else 0,
+        msg.simulated_reason,
     ))
     # Update room updated_at
     cur.execute("UPDATE rooms SET updated_at = ? WHERE id = ?", (msg.created_at, msg.room_id))
@@ -540,7 +562,9 @@ def get_room_messages(room_id: str, limit: int = 100) -> List[Message]:
             tool_calls=tool_calls,
             attachments=attachments,
             reply_to_id=r["reply_to_id"],
-            created_at=r["created_at"]
+            created_at=r["created_at"],
+            simulated=bool(r["simulated"]) if "simulated" in r.keys() else False,
+            simulated_reason=r["simulated_reason"] if "simulated_reason" in r.keys() else None,
         ))
     conn.close()
     return messages

@@ -17,6 +17,32 @@ android {
         versionName = "2.11.35"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Bypass switches are compiled in, never read at runtime from a file:
+        // a shipped APK must not be able to flip itself into a fake-data mode.
+        buildConfigField("boolean", "BYPASS_MESH_GATE", "false")
+        buildConfigField("boolean", "ALLOW_SIMULATED_REPLIES", "false")
+    }
+
+    // A second, clearly-labelled APK for working on the app itself: it skips
+    // the Tailscale gate and labels simulated replies instead of blocking, so
+    // the whole UI is reachable on a machine with no mesh. Its applicationId
+    // is suffixed .dev, so it installs alongside the real app and can never be
+    // mistaken for a production build.
+    flavorDimensions += "channel"
+    productFlavors {
+        create("prod") {
+            dimension = "channel"
+            applicationIdSuffix = ""
+            versionNameSuffix = ""
+        }
+        create("dev") {
+            dimension = "channel"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("boolean", "BYPASS_MESH_GATE", "true")
+            buildConfigField("boolean", "ALLOW_SIMULATED_REPLIES", "true")
+        }
     }
 
     signingConfigs {

@@ -375,7 +375,16 @@ class MainActivity : FragmentActivity() {
                     status
                 }
 
-                if (mesh != null && mesh.tailscale_enabled != false) {
+                // The dev build skips the mesh requirement so the whole UI is
+                // reachable on a machine with no Tailscale. It is a compile-time
+                // constant from the dev product flavor, not a runtime flag a
+                // shipped APK could flip: the prod flavor compiles this to false.
+                val devBypass = BuildConfig.BYPASS_MESH_GATE
+
+                if (devBypass) {
+                    failedProbesCount = 0
+                    gateState = ServiceGateState.Ready
+                } else if (mesh != null && mesh.tailscale_enabled != false) {
                     failedProbesCount = 0
                     gateState = ServiceGateState.Ready
                 } else if (mesh != null && mesh.tailscale_enabled == false) {

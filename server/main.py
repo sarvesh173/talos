@@ -815,6 +815,116 @@ async def agents_roster(token: str = Depends(require_auth)):
 
 
 # ---------------------------------------------------------------------------
+# Git diff: what actually changed in the working tree
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/git/diff")
+async def git_diff(token: str = Depends(require_auth)):
+    """Working-tree diff for the repository the core is running in.
+
+    The Android diff screen has always called this endpoint; it did not exist,
+    so the screen could only ever answer 404. Nothing is synthesised here: if
+    git is missing or the path is not a repository, that is a 503 with the
+    reason, never an empty diff that would read as "nothing changed".
+    """
+    repo = Path(__file__).resolve().parent.parent
+
+    def _run(*args: str) -> str:
+        return subprocess.run(
+            ["git", *args],
+            cwd=str(repo),
+            capture_output=True,
+            text=True,
+            timeout=20,
+        ).stdout
+
+    try:
+        inside = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            cwd=str(repo),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        raise HTTPException(status_code=503, detail="git is not available on the host")
+    if inside.returncode != 0 or inside.stdout.strip() != "true":
+        raise HTTPException(status_code=503, detail=f"{repo} is not a git repository")
+
+    branch = _run("rev-parse", "--abbrev-ref", "HEAD").strip() or "detached"
+
+    # -U0 keeps the payload small; the screen shows every hunk it is given.
+    raw = _run("diff", "HEAD", "--no-color", "--unified=3")
+
+    files: List[Dict[str, Any]] = []
+    current: Optional[Dict[str, Any]] = None
+    old_no = new_no = 0
+
+    for line in raw.splitlines():
+        if line.startswith("diff --git "):
+            if current is not None:
+                files.append(current)
+            parts = line.split(" b/", 1)
+            path = parts[1] if len(parts) == 2 else line.split()[-1]
+            current = {
+                "filename": path.rsplit("/", 1)[-1],
+                "path": path,
+                "additions": 0,
+                "deletions": 0,
+                "lines": [],
+            }
+            continue
+        if current is None:
+            continue
+        if line.startswith("@@"):
+            # @@ -a,b +c,d @@
+            try:
+                span = line.split("@@")[1].strip()
+                minus, plus = span.split(" ")
+                old_no = int(minus[1:].split(",")[0])
+                new_no = int(plus[1:].split(",")[0])
+            except (IndexError, ValueError):
+                old_no = new_no = 0
+            current["lines"].append(
+                {"line_type": "hunk", "old_num": None, "new_num": None, "content": line}
+            )
+            continue
+        if line.startswith("+++") or line.startswith("---"):
+            continue
+
+        if line.startswith("+"):
+            current["additions"] += 1
+            current["lines"].append(
+                {"line_type": "add", "old_num": None, "new_num": new_no, "content": line[1:]}
+            )
+            new_no += 1
+        elif line.startswith("-"):
+            current["deletions"] += 1
+            current["lines"].append(
+                {"line_type": "del", "old_num": old_no, "new_num": None, "content": line[1:]}
+            )
+            old_no += 1
+        else:
+            body = line[1:] if line.startswith(" ") else line
+            current["lines"].append(
+                {"line_type": "context", "old_num": old_no, "new_num": new_no, "content": body}
+            )
+            old_no += 1
+            new_no += 1
+
+    if current is not None:
+        files.append(current)
+
+    return {
+        "branch": branch,
+        "total_additions": sum(f["additions"] for f in files),
+        "total_deletions": sum(f["deletions"] for f in files),
+        "files": files,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Kanban: the tool-call ledger
 # ---------------------------------------------------------------------------
 

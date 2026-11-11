@@ -916,6 +916,13 @@ class SendMessageRequest(BaseModel):
 
 @app.post("/api/messages", response_model=Message)
 async def post_message(req: SendMessageRequest, token: str = Depends(require_auth)):
+    # A message to a room that does not exist is an orphan: it would sit in the
+    # database with no room listing it, invisible to every client yet returned by
+    # a direct GET. Refuse it so senders learn the room id is wrong.
+    # "the-council" is the ambient room the orchestrator always answers in; it
+    # is exempt because it is created lazily on first use.
+    if req.room_id != "the-council" and get_room(req.room_id) is None:
+        raise HTTPException(status_code=404, detail=f"no such room: {req.room_id}")
     msg = Message(
         room_id=req.room_id,
         sender_id=req.sender_id,

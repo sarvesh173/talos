@@ -33,7 +33,7 @@ from server.auth import (
     init_auth_db,
     verify_token,
 )
-from server.db import init_db
+from server.db import create_room, init_db
 from server.main import app
 
 
@@ -295,6 +295,13 @@ class TestCouncilOrchestration(MeshE2ETestCase):
 
     async def test_message_in_dm_does_not_wake_the_full_bench(self):
         token = create_new_token("e2e-dm-client")
+        # The DM room must exist: posting to an unknown room is refused now that
+        # orphan messages are blocked. Creating it keeps this test about the
+        # thing it actually asserts — an unaddressed DM must not wake the bench.
+        try:
+            create_room(room_id="core-dm", name="Core DM")
+        except Exception:
+            pass  # already created by an earlier test in the same database
         socket = RecordingSocket("core-dm")
         await bus.subscribe("core-dm", socket)
         self.addAsyncCleanup(bus.unsubscribe, "core-dm", socket)

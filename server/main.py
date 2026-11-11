@@ -84,9 +84,14 @@ async def lifespan(app: FastAPI):
     # council traffic and mentions, then schedules staggered agent turns.
     await orchestrator.start()
     logger.info("Agent orchestrator active. Agents: %s", [a for a in orchestrator.agent_order])
+
+    # Start the cron tick loop. `due_jobs()` had no caller before this, so a
+    # job created through the API only ever ran when someone pressed Run.
+    scheduler_tick.start()
     yield
     # Shutdown
     logger.info("Shutting down TALOS Core Server.")
+    await scheduler_tick.stop()
     await orchestrator.stop()
 
 
@@ -114,7 +119,11 @@ app.mount("/uploads", StaticFiles(directory=str(_UPLOADS_DIR)), name="uploads")
 # so the app could never reach them. Kept in their own module so this file stays
 # a list of the core chat endpoints.
 from server.feature_routes import router as feature_router  # noqa: E402
-from server.job_scheduler import router as jobs_router  # noqa: E402
+from server.job_scheduler import SchedulerTick, router as jobs_router  # noqa: E402
+
+#: The cron tick loop. Started in lifespan(); its status is exposed below so a
+#: silently dead scheduler is visible instead of looking like "no jobs due".
+scheduler_tick = SchedulerTick()
 from server.backup_routes import router as backup_router  # noqa: E402
 
 app.include_router(feature_router)
@@ -540,6 +549,16 @@ async def pause_delegate(
 async def get_orchestrator_status(token: str = Depends(require_auth)):
     """Live status of the multi-agent turn coordinator."""
     return orchestrator.status()
+
+
+@app.get("/api/scheduler/status")
+async def get_scheduler_status(token: str = Depends(require_auth)):
+    """Tick count, in-flight jobs, and throttle window.
+
+    Without this a stopped tick loop is invisible: the schedule renders, jobs
+    never fire, and nothing on the host says why.
+    """
+    return scheduler_tick.status()
 
 
 @app.get("/api/processes")

@@ -21,12 +21,13 @@ import asyncio
 import json
 import logging
 import sqlite3
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger("job_scheduler")
 
@@ -459,6 +460,136 @@ def run_now(job: Job, store: Optional[JobStore] = None) -> RunRecord:
     record.finished_at = datetime.now()
     record_run(job, record, store=store)
     return record
+
+
+# -- The tick loop -----------------------------------------------------------
+#
+# `due_jobs()` existed with tests and no caller, so a cron job created through
+# the API never fired: the app showed a schedule that only ran when someone
+# pressed Run. This loop is that caller.
+#
+# `run_now` is synchronous — it touches SQLite and may dispatch on a bus — so
+# each job runs on its own thread. A slow or wedged job therefore delays the
+# next tick rather than blocking the event loop (and with it every websocket).
+
+#: How often to look for due jobs.
+TICK_SECONDS = 20.0
+
+#: Minimum gap between two runs of the same job. A job whose cron fires every
+#: minute and whose run takes longer than that must not pile up overlapping
+#: executions; this is the same reason cron has /dev/null and a lock file.
+MIN_RERUN_SECONDS = 45.0
+
+
+class SchedulerTick:
+    """Fires due jobs on a background task, one thread per run."""
+
+    def __init__(
+        self,
+        store: Optional[JobStore] = None,
+        tick_seconds: float = TICK_SECONDS,
+        min_rerun_seconds: float = MIN_RERUN_SECONDS,
+        runner: Optional[Callable[[Job, JobStore], RunRecord]] = None,
+        now: Optional[Callable[[], datetime]] = None,
+    ) -> None:
+        self.store = store or JobStore()
+        self.tick_seconds = tick_seconds
+        self.min_rerun_seconds = min_rerun_seconds
+        self._runner = runner or (lambda job, store: run_now(job, store=store))
+        self._now = now or datetime.now
+        self._task: Optional[asyncio.Task] = None
+        self._stop = asyncio.Event()
+        #: Job ids whose thread is still running — never start a second one.
+        self._in_flight: set = set()
+        self._last_started: Dict[str, datetime] = {}
+        self.ticks = 0
+        self.runs_started = 0
+
+    # -- lifecycle ---------------------------------------------------------
+
+    def start(self) -> None:
+        if self._task is not None and not self._task.done():
+            return
+        self._stop.clear()
+        self._task = asyncio.create_task(self._loop())
+        logger.info("Job scheduler ticking every %.0fs", self.tick_seconds)
+
+    async def stop(self) -> None:
+        self._stop.set()
+        if self._task is not None:
+            self._task.cancel()
+            try:
+                await self._task
+            except (asyncio.CancelledError, Exception):
+                pass
+            self._task = None
+
+    # -- one tick ----------------------------------------------------------
+
+    def tick(self) -> List[str]:
+        """Run every job that is due now. Returns the ids actually started.
+
+        Public and synchronous so tests can drive it without a clock.
+        """
+        moment = self._now()
+        try:
+            jobs = self.store.list_jobs()
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.error("Scheduler could not list jobs: %s", exc)
+            return []
+
+        started: List[str] = []
+        for job in due_jobs(jobs, moment):
+            if job.id in self._in_flight:
+                logger.debug("Job %s still running; skipping this slot", job.id)
+                continue
+            last = self._last_started.get(job.id)
+            if last is not None and (moment - last).total_seconds() < self.min_rerun_seconds:
+                logger.debug("Job %s rerun throttled", job.id)
+                continue
+            self._start(job)
+            started.append(job.id)
+        self.ticks += 1
+        return started
+
+    def _start(self, job: Job) -> None:
+        self._in_flight.add(job.id)
+        self._last_started[job.id] = self._now()
+        self.runs_started += 1
+
+        def _work() -> None:
+            try:
+                self._runner(job, self.store)
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.error("Scheduled job %s crashed: %s", job.id, exc)
+            finally:
+                self._in_flight.discard(job.id)
+
+        thread = threading.Thread(target=_work, name=f"scheduled-{job.id}", daemon=True)
+        thread.start()
+
+    async def _loop(self) -> None:
+        while not self._stop.is_set():
+            try:
+                self.tick()
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.error("Scheduler tick failed: %s", exc)
+            try:
+                await asyncio.wait_for(self._stop.wait(), timeout=self.tick_seconds)
+            except asyncio.TimeoutError:
+                continue
+
+    # -- introspection -----------------------------------------------------
+
+    def status(self) -> Dict[str, Any]:
+        return {
+            "running": self._task is not None and not self._task.done(),
+            "tick_seconds": self.tick_seconds,
+            "min_rerun_seconds": self.min_rerun_seconds,
+            "ticks": self.ticks,
+            "runs_started": self.runs_started,
+            "in_flight": sorted(self._in_flight),
+        }
 
 
 # -- FastAPI router ----------------------------------------------------------

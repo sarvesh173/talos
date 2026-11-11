@@ -245,6 +245,10 @@ class CliEngine:
     is_available: bool
     description: str = ""
     resolved_path: Optional[str] = None
+    #: Bare binary name that was probed, e.g. "opencode". Distinct from
+    #: [command_binary], which is how the agent is started ("opencode serve") and
+    #: is not a valid argument to `which`.
+    binary: str = ""
     delegates: List[Dict] = field(default_factory=list)
 
     def to_payload(self) -> Dict:
@@ -252,6 +256,7 @@ class CliEngine:
             "id": self.id,
             "name": self.name,
             "command_binary": self.command_binary,
+            "binary": self.binary,
             "is_available": self.is_available,
             "description": self.description,
             "resolved_path": self.resolved_path,
@@ -282,6 +287,7 @@ def discover_engines(manifest_dir: Optional[str] = None) -> List[CliEngine]:
                 id=spec.id,
                 name=spec.name,
                 command_binary=spec.command,
+                binary=spec.binary,
                 is_available=path is not None,
                 description=spec.description,
                 resolved_path=path,

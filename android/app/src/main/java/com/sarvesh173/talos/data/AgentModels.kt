@@ -100,7 +100,6 @@ data class CliRosterEntry(
     val installed: Boolean = false,
     val binary: String? = null,
     @SerialName("binary_name") val binaryName: String = "",
-    val command: String = "",
     @SerialName("session_count") val sessionCount: Int = 0,
     @SerialName("sessions_error") val sessionsError: String = ""
 )

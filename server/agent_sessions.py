@@ -66,8 +66,6 @@ class AgentReport:
     #: the command that was run instead of keeping its own id -> command map,
     #: which would drift from the host the moment an engine is renamed.
     binary_name: str = ""
-    #: How the agent is normally started, as the host knows it.
-    command: str = ""
     sessions: List[AgentSessionRow] = field(default_factory=list)
     #: Why sessions could not be listed, when they could not be.
     sessions_error: str = ""
@@ -79,7 +77,6 @@ class AgentReport:
             "installed": self.installed,
             "binary": self.binary,
             "binary_name": self.binary_name,
-            "command": self.command,
             "session_count": len(self.sessions),
             "sessions": [s.to_payload() for s in self.sessions],
             "sessions_error": self.sessions_error,
@@ -145,7 +142,6 @@ def discover_agent_sessions(limit_per_agent: int = 20) -> Dict[str, Any]:
             installed=engine.is_available,
             binary=engine.resolved_path,
             binary_name=engine.binary,
-            command=engine.command,
         )
         reader = _SESSION_READERS.get(engine.id)
         if reader is None:

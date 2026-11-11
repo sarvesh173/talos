@@ -40,6 +40,8 @@ fun ImageGalleryScreen(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val galleryImages by client.galleryImages.collectAsState()
+    val galleryLoading by client.galleryLoading.collectAsState()
+    val galleryError by client.galleryError.collectAsState()
     var selectedImage by remember { mutableStateOf<GeneratedImageDto?>(null) }
     var showGenerateDialog by remember { mutableStateOf(false) }
 
@@ -106,7 +108,45 @@ fun ImageGalleryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        if (galleryImages.isEmpty()) {
+        if (galleryError != null) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(24.dp)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Couldn't read the gallery",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // A gallery we could not read is not an empty gallery.
+                    Text(
+                        text = galleryError!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    TextButton(onClick = { client.fetchImageGallery() }) { Text("Retry") }
+                }
+            }
+        } else if (galleryLoading && galleryImages.isEmpty()) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize().padding(innerPadding)
+            ) {
+                MetallicCircularLoader(
+                    size = 40.dp,
+                    strokeWidth = 3.dp,
+                    accentColor = MaterialTheme.colorScheme.primary
+                )
+            }
+        } else if (galleryImages.isEmpty()) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier

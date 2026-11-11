@@ -183,6 +183,10 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     private val _galleryImages = MutableStateFlow<List<GeneratedImageDto>>(emptyList())
     val galleryImages: StateFlow<List<GeneratedImageDto>> = _galleryImages.asStateFlow()
+    private val _galleryLoading = MutableStateFlow(false)
+    val galleryLoading: StateFlow<Boolean> = _galleryLoading.asStateFlow()
+    private val _galleryError = MutableStateFlow<String?>(null)
+    val galleryError: StateFlow<String?> = _galleryError.asStateFlow()
 
     private val _gitDiff = MutableStateFlow<GitDiffSummaryDto?>(null)
     val gitDiff: StateFlow<GitDiffSummaryDto?> = _gitDiff.asStateFlow()
@@ -386,6 +390,8 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
 
     fun fetchImageGallery() {
         scope.launch(Dispatchers.IO) {
+            _galleryLoading.value = true
+            _galleryError.value = null
             runCatching {
                 val req = Request.Builder()
                     .url("$baseUrl/api/image/gallery")
@@ -393,14 +399,19 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     .build()
                 httpClient.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
-                        val body = resp.body?.string() ?: return@use
-                        val parsed = json.decodeFromString<List<GeneratedImageDto>>(body)
-                        _galleryImages.value = parsed
+                        val body = resp.body?.string().orEmpty()
+                        _galleryImages.value = json.decodeFromString<List<GeneratedImageDto>>(body)
+                        _galleryError.value = null
+                    } else {
+                        // An unreadable gallery is not an empty gallery.
+                        _galleryError.value = hostReason(resp.code)
                     }
                 }
             }.onFailure { e ->
+                _galleryError.value = transportReason(e)
                 Log.w(TAG, "Failed to fetch gallery images: ${e.message}")
             }
+            _galleryLoading.value = false
         }
     }
 
@@ -2247,3 +2258,19 @@ data class PromptDto(
     @kotlinx.serialization.SerialName("created_at") val created_at: Double? = null,
     @kotlinx.serialization.SerialName("updated_at") val updated_at: Double? = null
 )
+
+/** The sentence a screen should show for an HTTP status from the core. */
+private fun hostReason(code: Int): String = when (code) {
+    401, 403 -> "The host rejected this device's token."
+    404 -> "The host has no such endpoint."
+    in 500..599 -> "The host is failing (HTTP $code)."
+    else -> "The host refused the request (HTTP $code)."
+}
+
+/** The sentence a screen should show for a transport-level failure. */
+private fun transportReason(e: Throwable): String = when (e) {
+    is java.net.SocketTimeoutException -> "The host did not answer in time."
+    is java.net.UnknownHostException -> "The host name does not resolve."
+    is java.net.ConnectException -> "Couldn't reach the host."
+    else -> "Couldn't reach the host."
+}

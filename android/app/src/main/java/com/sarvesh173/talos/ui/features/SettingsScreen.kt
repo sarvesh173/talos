@@ -59,6 +59,7 @@ fun SettingsScreen(
     onNavigateToReviewWork: () -> Unit = {},
     onNavigateToJobs: () -> Unit = {},
     onNavigateToProcesses: () -> Unit = {},
+    onNavigateToSupportedClis: () -> Unit = {},
     nodeEncryptionFingerprint: String? = null,
     borderTint: Color = Color.White.copy(alpha = 0.08f)
 ) {
@@ -332,6 +333,15 @@ fun SettingsScreen(
                     subtitle = "Which agents stay running",
                     icon = TalosIcons.TalosStrokeAgent,
                     onClick = onNavigateToAgentLifecycle
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Supported CLIs",
+                    subtitle = "Which agents the host can find",
+                    icon = TalosIcons.TalosStrokeAgent,
+                    onClick = onNavigateToSupportedClis
                 )
 
                 SettingsDivider()

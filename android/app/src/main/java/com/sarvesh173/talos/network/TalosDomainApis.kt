@@ -37,6 +37,23 @@ suspend fun TalosClient.fetchAgents(): HostResult<List<AgentInfo>> = withContext
     ) { body -> domainJson.decodeFromString<List<AgentInfo>>(body) }
 }
 
+/**
+ * Which CLI engines the host can actually find, and where.
+ *
+ * This is the roster the Supported CLIs screen renders. The host probes PATH
+ * with `which` and reports the resolved path, so the app never decides on its
+ * own whether an agent is installed.
+ */
+suspend fun TalosClient.fetchCliRoster(): HostResult<CliRoster> = withContext(Dispatchers.IO) {
+    hostCall(
+        apiHttpClient,
+        Request.Builder()
+            .url("$baseUrl/api/agents/roster")
+            .header("Authorization", "Bearer $apiToken")
+            .build()
+    ) { body -> domainJson.decodeFromString<CliRoster>(body) }
+}
+
 suspend fun TalosClient.fetchAgentContext(agentId: String): HostResult<ContextTelemetry> = withContext(Dispatchers.IO) {
     hostCall(
         apiHttpClient,

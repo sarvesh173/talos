@@ -85,3 +85,30 @@ data class SummonAgentPayload(
     val avatar: String? = null,
     @SerialName("is_active") val isActive: Boolean = true
 )
+
+/**
+ * One CLI engine exactly as the host reports it.
+ *
+ * [installed] and [binary] come from the host's own `shutil.which` probe, so a
+ * row that says installed has been checked, not assumed. [binary] is null when
+ * the probe found nothing.
+ */
+@Serializable
+data class CliRosterEntry(
+    val id: String,
+    val name: String,
+    val installed: Boolean = false,
+    val binary: String? = null,
+    @SerialName("binary_name") val binaryName: String = "",
+    val command: String = "",
+    @SerialName("session_count") val sessionCount: Int = 0,
+    @SerialName("sessions_error") val sessionsError: String = ""
+)
+
+/** `/api/agents/roster` envelope. */
+@Serializable
+data class CliRoster(
+    val agents: List<CliRosterEntry> = emptyList(),
+    @SerialName("installed_count") val installedCount: Int = 0,
+    @SerialName("total_count") val totalCount: Int = 0
+)

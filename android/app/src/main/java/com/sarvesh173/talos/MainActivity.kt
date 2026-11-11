@@ -120,6 +120,7 @@ import com.sarvesh173.talos.ui.features.SecurityScreen
 import com.sarvesh173.talos.ui.features.CachingScreen
 import com.sarvesh173.talos.ui.features.NotificationsScreen
 import com.sarvesh173.talos.ui.features.ThinkingOrbSettingsScreen
+import com.sarvesh173.talos.ui.features.SupportedClisScreen
 import com.sarvesh173.talos.ui.*
 import com.sarvesh173.talos.ui.TalosHaptics
 import kotlinx.coroutines.Dispatchers
@@ -762,7 +763,8 @@ class MainActivity : FragmentActivity() {
                                 onNavigateToKanban = { appScreen = "kanban" },
                                 onNavigateToReviewWork = { appScreen = "review_work" },
                                 onNavigateToJobs = { appScreen = "jobs" },
-                                onNavigateToProcesses = { appScreen = "processes" }
+                                onNavigateToProcesses = { appScreen = "processes" },
+                                onNavigateToSupportedClis = { appScreen = "supported_clis" }
                             )
                         }
                         // Service control was previously reachable only from a
@@ -774,6 +776,12 @@ class MainActivity : FragmentActivity() {
                         }
                         "agent_lifecycle" -> {
                             AgentLifecycleScreen(onBack = { appScreen = "settings" })
+                        }
+                        "supported_clis" -> {
+                            SupportedClisScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
                         }
                         "kanban" -> {
                             KanbanScreen(

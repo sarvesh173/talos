@@ -313,8 +313,14 @@ class MainActivity : FragmentActivity() {
             // leads into onboarding. Opening on "main" skipped straight past it
             // whenever a token happened to be stored, so the Tailscale address
             // was only ever reachable from Settings.
+            // A device that has never completed setup goes straight into the
+            // onboarding wizard. LandingScreen is the agent hub, not a welcome
+            // screen — it has no Get Started button (onGetStarted is declared
+            // and never used), so "open on landing" led nowhere on first launch.
             var appScreen by remember {
-                mutableStateOf(pendingScreen ?: if (client.isPaired.value) "main" else "landing")
+                mutableStateOf(
+                    pendingScreen ?: if (client.isPaired.value) "main" else "wizard"
+                )
             }
             LaunchedEffect(pendingScreen) {
                 pendingScreen?.let {

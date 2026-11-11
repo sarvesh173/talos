@@ -1,5 +1,8 @@
 package com.sarvesh173.talos.network
 
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
 /**
  * The outcome of a read against the TALOS core.
  *
@@ -34,37 +37,39 @@ sealed interface HostResult<out T> {
  * A non-2xx response is a failure with the status on it, not an empty result —
  * a 500 means the host is broken, not that the list is empty.
  */
-internal inline fun <T> hostCall(
+internal fun <T> hostCall(
     client: OkHttpClient,
     request: Request,
-    crossinline parse: (String) -> T,
-): HostResult<T> = try {
-    client.newCall(request).execute().use { resp ->
-        val body = resp.body?.string().orEmpty()
-        if (resp.isSuccessful) {
-            try {
-                HostResult.Ok(parse(if (body.isBlank()) "[]" else body))
-            } catch (e: Exception) {
-                HostResult.Failed("The host sent something this app could not read.")
-            }
-        } else {
-            HostResult.Failed(
-                when (resp.code) {
+    parse: (String) -> T,
+): HostResult<T> {
+    val resp = try {
+        client.newCall(request).execute()
+    } catch (e: Exception) {
+        return HostResult.Failed(transportReason(e))
+    }
+    resp.use {
+        val body = it.body?.string().orEmpty()
+        if (!it.isSuccessful) {
+            return HostResult.Failed(
+                when (it.code) {
                     401, 403 -> "The host rejected this device's token."
                     404 -> "The host has no such endpoint."
-                    in 500..599 -> "The host is failing (HTTP ${resp.code})."
-                    else -> "The host refused the request (HTTP ${resp.code})."
+                    in 500..599 -> "The host is failing (HTTP ${it.code})."
+                    else -> "The host refused the request (HTTP ${it.code})."
                 }
             )
         }
-    }
-} catch (e: Exception) {
-    HostResult.Failed(
-        when (e) {
-            is java.net.SocketTimeoutException -> "The host did not answer in time."
-            is java.net.UnknownHostException -> "The host name does not resolve."
-            is java.net.ConnectException -> "Couldn't reach the host."
-            else -> "Couldn't reach the host."
+        return try {
+            HostResult.Ok(parse(if (body.isBlank()) "[]" else body))
+        } catch (e: Exception) {
+            HostResult.Failed("The host sent a reply this app could not read.")
         }
-    )
+    }
+}
+
+private fun transportReason(e: Exception): String = when (e) {
+    is java.net.SocketTimeoutException -> "The host did not answer in time."
+    is java.net.UnknownHostException -> "The host name does not resolve."
+    is java.net.ConnectException -> "Couldn't reach the host."
+    else -> "Couldn't reach the host."
 }

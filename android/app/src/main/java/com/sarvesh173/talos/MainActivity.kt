@@ -662,9 +662,15 @@ class MainActivity : FragmentActivity() {
                                 onToggleTheme = {
                                     client.toggleTheme(isCurrentlyDark)
                                 },
-                                onGetStarted = {},
+                                // First launch goes to onboarding, which is where the
+                                // Tailscale address belongs. Settings holds the same
+                                // two fields for the case the address or token changed.
+                                onGetStarted = {
+                                    client.markLaunched()
+                                    appScreen = if (client.isPaired.value) "main" else "wizard"
+                                },
                                 onOpenWizard = {
-                                    appScreen = "settings"
+                                    appScreen = "wizard"
                                 },
                                 onOpenSettings = {
                                     appScreen = "settings"

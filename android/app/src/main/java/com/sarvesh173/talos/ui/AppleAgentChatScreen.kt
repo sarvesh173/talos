@@ -134,6 +134,9 @@ fun AppleAgentChatScreen(
     isDark: Boolean = true,
     onBack: () -> Unit
 ) {
+    // The dot was green whenever the agent was not mid-thought, with no regard
+    // for whether the socket was up: a false "all good" on a dead connection.
+    val isConnected by client.isConnected.collectAsState()
     val context = LocalContext.current
     val listState = rememberLazyListState()
 
@@ -480,7 +483,13 @@ fun AppleAgentChatScreen(
                         )
                         Box(
                             modifier = Modifier.size(5.dp).clip(CircleShape)
-                                .background(if (isThinking) StatusAmber else StatusGreen)
+                                .background(
+                                    when {
+                                        !isConnected -> StatusRed
+                                        isThinking -> StatusAmber
+                                        else -> StatusGreen
+                                    }
+                                )
                         )
                     }
                     Text(

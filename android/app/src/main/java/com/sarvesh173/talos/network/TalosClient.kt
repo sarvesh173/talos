@@ -187,8 +187,18 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val _gitDiff = MutableStateFlow<GitDiffSummaryDto?>(null)
     val gitDiff: StateFlow<GitDiffSummaryDto?> = _gitDiff.asStateFlow()
 
+    // A null diff used to mean both "not loaded yet" and "could not be read",
+    // so the screen showed a spinner that never resolved. These two make the
+    // three states separable.
+    private val _gitDiffLoading = MutableStateFlow(false)
+    val gitDiffLoading: StateFlow<Boolean> = _gitDiffLoading.asStateFlow()
+    private val _gitDiffError = MutableStateFlow<String?>(null)
+    val gitDiffError: StateFlow<String?> = _gitDiffError.asStateFlow()
+
     fun fetchGitDiff() {
         scope.launch(Dispatchers.IO) {
+            _gitDiffLoading.value = true
+            _gitDiffError.value = null
             runCatching {
                 val req = Request.Builder()
                     .url("$baseUrl/api/git/diff")
@@ -196,14 +206,30 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     .build()
                 httpClient.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
-                        val body = resp.body?.string() ?: return@use
-                        val parsed = json.decodeFromString<GitDiffSummaryDto>(body)
-                        _gitDiff.value = parsed
+                        val body = resp.body?.string().orEmpty()
+                        _gitDiff.value = json.decodeFromString<GitDiffSummaryDto>(body)
+                        _gitDiffError.value = null
+                    } else {
+                        _gitDiffError.value = when (resp.code) {
+                            401, 403 -> "The host rejected this device's token."
+                            404 -> "The host has no such endpoint."
+                            in 500..599 -> "The host is failing (HTTP ${resp.code})."
+                            else -> "The host refused the request (HTTP ${resp.code})."
+                        }
                     }
                 }
             }.onFailure { e ->
+                // Surfaced to the screen instead of only the log, so the user
+                // is not left watching a spinner that will never finish.
+                _gitDiffError.value = when (e) {
+                    is java.net.SocketTimeoutException -> "The host did not answer in time."
+                    is java.net.UnknownHostException -> "The host name does not resolve."
+                    is java.net.ConnectException -> "Couldn't reach the host."
+                    else -> e.message ?: "Couldn't read the diff."
+                }
                 Log.w(TAG, "Failed to fetch git diff: ${e.message}")
             }
+            _gitDiffLoading.value = false
         }
     }
 

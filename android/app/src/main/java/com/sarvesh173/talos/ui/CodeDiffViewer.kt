@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.network.TalosClient
@@ -50,6 +51,8 @@ fun CodeDiffViewer(
     val motion = LocalTalosMotion.current
     val clipboardManager = LocalClipboardManager.current
     val diffSummary by client.gitDiff.collectAsState()
+    val diffLoading by client.gitDiffLoading.collectAsState()
+    val diffError by client.gitDiffError.collectAsState()
     var selectedFileIndex by remember { mutableIntStateOf(0) }
     var showOnlyChanges by remember { mutableStateOf(false) }
 
@@ -132,7 +135,37 @@ fun CodeDiffViewer(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         when {
-            currentDiff == null -> {
+            // A failure first: otherwise the null-diff branch below spins forever.
+            diffError != null -> {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(24.dp)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Couldn't read the git diff",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = diffError!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TextButton(onClick = { client.fetchGitDiff() }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+            }
+            currentDiff == null && diffLoading -> {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -152,6 +185,20 @@ fun CodeDiffViewer(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+            }
+            currentDiff == null -> {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    Text(
+                        text = "No diff loaded.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
             files.isEmpty() -> {

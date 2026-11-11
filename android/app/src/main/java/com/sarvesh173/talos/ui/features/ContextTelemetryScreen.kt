@@ -22,16 +22,24 @@ fun ContextTelemetryScreen(client: TalosClient) {
     var telemetry by remember { mutableStateOf<ContextTelemetry?>(null) }
     var roomBreakdown by remember { mutableStateOf<RoomContextBreakdown?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+    // null = never tried, "" = the host answered, anything else = why it failed
+    var failure by remember { mutableStateOf<String?>(null) }
+    var hasLoaded by remember { mutableStateOf(false) }
 
     val currentRoomId by client.currentRoomId.collectAsState()
 
     fun refresh() {
         scope.launch {
             isLoading = true
-            telemetry = client.fetchAgentContext("hermes")
+            val result = client.fetchAgentContext("hermes")
+            telemetry = result.valueOrNull()
+            failure = (result as? HostResult.Failed)?.reason
             if (currentRoomId.isNotBlank()) {
-                roomBreakdown = client.fetchRoomBreakdown(currentRoomId)
+                roomBreakdown = client.fetchRoomBreakdown(currentRoomId).valueOrNull()
+            } else {
+                roomBreakdown = null
             }
+            hasLoaded = true
             isLoading = false
         }
     }
@@ -71,6 +79,49 @@ fun ContextTelemetryScreen(client: TalosClient) {
             )
         }
 
+        // Four distinct states, never collapsed into one another.
+        if (isLoading && !hasLoaded) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                Text(
+                    text = "Reading telemetry from the host…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else if (failure != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Couldn't read telemetry",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Text(
+                        text = failure!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    TextButton(onClick = { refresh() }) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
+
         // Hero Gauge Card
         MetalCard(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -86,24 +137,33 @@ fun ContextTelemetryScreen(client: TalosClient) {
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    // Absolute values, never a substitute zero: "0 / 1,000,000"
+                    // read as a real measurement when the fetch had actually
+                    // failed. A dash says "not measured" instead.
+                    val t = telemetry
                     Text(
-                        text = "Total tokens: ${telemetry?.totalTokens ?: 0} / ${telemetry?.contextWindowLimit ?: 1_000_000}",
+                        text = if (t == null) "Token usage: not measured"
+                        else "Total tokens: ${t.totalTokens} / ${t.contextWindowLimit}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Velocity: %.1f tokens/sec".format(telemetry?.generationRatePerSec ?: 0.0),
+                        text = if (t == null) "Velocity: not measured"
+                        else "Velocity: %.1f tokens/sec".format(t.generationRatePerSec),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = if (t == null) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                MetalContextRing(
-                    usagePct = telemetry?.usagePct ?: 0.01f,
-                    totalTokens = telemetry?.totalTokens ?: 0,
-                    limit = telemetry?.contextWindowLimit ?: 1_000_000,
-                    size = 56.dp
-                )
+                if (telemetry != null) {
+                    MetalContextRing(
+                        usagePct = telemetry!!.usagePct,
+                        totalTokens = telemetry!!.totalTokens,
+                        limit = telemetry!!.contextWindowLimit,
+                        size = 56.dp
+                    )
+                }
             }
         }
 

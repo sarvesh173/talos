@@ -146,24 +146,12 @@ fun AgentCanvasScreen(
             }
         }
 
-        // Fallback default node if hierarchy is initializing
-        if (list.isEmpty()) {
-            list.add(
-                CanvasAgentNode(
-                    id = "root",
-                    name = "TALOS Orchestrator",
-                    role = "Core Daemon Lead",
-                    tier = "Tier 1: Engine",
-                    cliEngine = "talos-core",
-                    model = "agy/gemini-3.8-flash-tiered",
-                    reasoningEffort = "Medium",
-                    status = AgentStatus.RUNNING,
-                    turnsUsed = 12,
-                    commandLimit = 50,
-                    parentId = null
-                )
-            )
-        }
+        // No invented node here. This used to synthesise a "TALOS Orchestrator"
+        // marked RUNNING with turnsUsed = 12 and a 50-command budget whenever
+        // the hierarchy was null — including when the fetch had simply failed.
+        // That is a false-green: it showed a live agent that does not exist and
+        // numbers that were never measured. An empty canvas is the honest
+        // render; the screen shows the failure banner above it.
         list
     }
 

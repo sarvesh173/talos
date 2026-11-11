@@ -44,38 +44,22 @@ suspend fun TalosClient.fetchAgents(): List<AgentInfo> = withContext(Dispatchers
     }
 }
 
-suspend fun TalosClient.fetchAgentContext(agentId: String): ContextTelemetry? = withContext(Dispatchers.IO) {
-    try {
-        val req = Request.Builder()
+suspend fun TalosClient.fetchAgentContext(agentId: String): HostResult<ContextTelemetry> = withContext(Dispatchers.IO) {
+    hostCall(
+        Request.Builder()
             .url("$baseUrl/api/agents/$agentId/context")
             .header("Authorization", "Bearer $apiToken")
             .build()
-        apiHttpClient.newCall(req).execute().use { resp ->
-            if (resp.isSuccessful) {
-                val body = resp.body?.string() ?: return@withContext null
-                domainJson.decodeFromString<ContextTelemetry>(body)
-            } else null
-        }
-    } catch (_: Exception) {
-        null
-    }
+    ) { body -> domainJson.decodeFromString<ContextTelemetry>(body) }
 }
 
-suspend fun TalosClient.fetchRoomBreakdown(roomId: String): RoomContextBreakdown? = withContext(Dispatchers.IO) {
-    try {
-        val req = Request.Builder()
+suspend fun TalosClient.fetchRoomBreakdown(roomId: String): HostResult<RoomContextBreakdown> = withContext(Dispatchers.IO) {
+    hostCall(
+        Request.Builder()
             .url("$baseUrl/api/rooms/$roomId/context-breakdown")
             .header("Authorization", "Bearer $apiToken")
             .build()
-        apiHttpClient.newCall(req).execute().use { resp ->
-            if (resp.isSuccessful) {
-                val body = resp.body?.string() ?: return@withContext null
-                domainJson.decodeFromString<RoomContextBreakdown>(body)
-            } else null
-        }
-    } catch (_: Exception) {
-        null
-    }
+    ) { body -> domainJson.decodeFromString<RoomContextBreakdown>(body) }
 }
 
 suspend fun TalosClient.fetchCustomProviders(): List<CustomProvider> = withContext(Dispatchers.IO) {

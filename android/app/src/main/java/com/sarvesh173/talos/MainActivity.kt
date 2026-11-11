@@ -187,10 +187,9 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handlePairingIntent(intent)
-        pendingScreen = resolveScreenFromIntent(intent)
-        resolveScreenFromIntent(intent)?.let {
-            pendingScreen = it
-        }
+        // One call: the trailing duplicate this used to make resolved the same
+        // intent a second time for no reason.
+        resolveScreenFromIntent(intent)?.let { pendingScreen = it }
     }
 
     /**
@@ -275,6 +274,12 @@ class MainActivity : FragmentActivity() {
 
         // Agent-first pairing link: talos://pair?url=<core>&token=<token>
         handlePairingIntent(intent)
+
+        // A cold start from a link (tap a notification, a talos:// URL, or a
+        // launcher shortcut) never reached this screen before: resolveScreenFromIntent
+        // was only called from onNewIntent, so the route was silently dropped and
+        // every deep link landed on main. Read it here as well.
+        pendingScreen = resolveScreenFromIntent(intent)
 
         if (client.isPaired.value) {
             client.refreshRooms()

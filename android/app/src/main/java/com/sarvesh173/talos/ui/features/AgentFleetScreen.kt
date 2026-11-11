@@ -48,14 +48,26 @@ fun AgentFleetScreen(client: TalosClient) {
     var agents by remember { mutableStateOf<List<AgentInfo>>(emptyList()) }
     var delegates by remember { mutableStateOf<List<DelegateInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    // Why the fleet could not be read, or null when the host answered.
+    var failure by remember { mutableStateOf<String?>(null) }
+    var hasLoaded by remember { mutableStateOf(false) }
     var showSummonSheet by remember { mutableStateOf(false) }
     var selectedAgentForModel by remember { mutableStateOf<AgentInfo?>(null) }
 
     suspend fun doRefresh() {
-        val fAgents = client.fetchAgents()
+        val fleet = client.fetchAgents()
         val fDelegates = client.fetchDelegates()
-        agents = fAgents
+        // An empty fleet that came back from an unreachable host is not an
+        // empty fleet. Keep whatever we had and surface the reason.
+        when (fleet) {
+            is HostResult.Ok -> {
+                agents = fleet.value
+                failure = null
+            }
+            is HostResult.Failed -> failure = fleet.reason
+        }
         delegates = fDelegates
+        hasLoaded = true
     }
 
     fun refresh() {
@@ -94,7 +106,8 @@ fun AgentFleetScreen(client: TalosClient) {
                     letterSpacing = (-0.3).sp
                 )
                 Text(
-                    text = "${delegates.size} active delegates · ${agents.size} system engines",
+                    text = if (failure != null) "Host unreachable · counts unknown"
+                else "${delegates.size} active delegates · ${agents.size} system engines",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isDark) Color.White.copy(0.60f) else Color.Black.copy(0.55f)
                 )
@@ -140,7 +153,7 @@ fun AgentFleetScreen(client: TalosClient) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (isLoading && agents.isEmpty() && delegates.isEmpty()) {
+        if (isLoading && !hasLoaded) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -208,7 +221,27 @@ fun AgentFleetScreen(client: TalosClient) {
                     )
                 }
 
-                if (agents.isEmpty()) {
+                if (failure != null) {
+                    item {
+                        MetalCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = "Couldn't read the agent fleet",
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                // A fleet we could not read is not an empty fleet.
+                                Text(
+                                    text = failure!!,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                TextButton(onClick = { refresh() }) { Text("Retry") }
+                            }
+                        }
+                    }
+                } else if (agents.isEmpty()) {
                     item {
                         MetalCard(modifier = Modifier.fillMaxWidth()) {
                             Text(

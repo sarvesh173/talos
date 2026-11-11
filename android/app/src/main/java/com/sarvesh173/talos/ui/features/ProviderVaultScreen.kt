@@ -27,12 +27,22 @@ fun ProviderVaultScreen(client: TalosClient) {
     val scope = rememberCoroutineScope()
     var providers by remember { mutableStateOf<List<CustomProvider>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    var hasLoaded by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     fun refresh() {
         scope.launch {
             isLoading = true
-            providers = client.fetchCustomProviders()
+            when (val result = client.fetchCustomProviders()) {
+                is HostResult.Ok -> {
+                    providers = result.value
+                    failure = null
+                }
+                // A vault we could not read is not an empty vault.
+                is HostResult.Failed -> failure = result.reason
+            }
+            hasLoaded = true
             isLoading = false
         }
     }
@@ -80,7 +90,39 @@ fun ProviderVaultScreen(client: TalosClient) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (providers.isEmpty() && !isLoading) {
+        if (isLoading && !hasLoaded) {
+            MetalCard(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                    Text(
+                        text = "Reading the provider vault…",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        } else if (failure != null) {
+            MetalCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Couldn't read the provider vault",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    // The vault we could not read is not an empty vault.
+                    Text(
+                        text = failure!!,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    TextButton(onClick = { refresh() }) { Text("Retry") }
+                }
+            }
+        } else if (providers.isEmpty()) {
             MetalCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "No custom providers registered. Tap '+' to vault a new LLM provider.",

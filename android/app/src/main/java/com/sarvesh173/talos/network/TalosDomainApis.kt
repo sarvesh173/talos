@@ -27,21 +27,13 @@ private val apiHttpClient = OkHttpClient.Builder()
  * Extension APIs for Agent Fleet, Telemetry, and Custom Provider Management.
  */
 
-suspend fun TalosClient.fetchAgents(): List<AgentInfo> = withContext(Dispatchers.IO) {
-    try {
-        val req = Request.Builder()
+suspend fun TalosClient.fetchAgents(): HostResult<List<AgentInfo>> = withContext(Dispatchers.IO) {
+    hostCall(
+        Request.Builder()
             .url("$baseUrl/api/agents")
             .header("Authorization", "Bearer $apiToken")
             .build()
-        apiHttpClient.newCall(req).execute().use { resp ->
-            if (resp.isSuccessful) {
-                val body = resp.body?.string() ?: "[]"
-                domainJson.decodeFromString<List<AgentInfo>>(body)
-            } else emptyList()
-        }
-    } catch (_: Exception) {
-        emptyList()
-    }
+    ) { body -> domainJson.decodeFromString<List<AgentInfo>>(body) }
 }
 
 suspend fun TalosClient.fetchAgentContext(agentId: String): HostResult<ContextTelemetry> = withContext(Dispatchers.IO) {
@@ -62,21 +54,13 @@ suspend fun TalosClient.fetchRoomBreakdown(roomId: String): HostResult<RoomConte
     ) { body -> domainJson.decodeFromString<RoomContextBreakdown>(body) }
 }
 
-suspend fun TalosClient.fetchCustomProviders(): List<CustomProvider> = withContext(Dispatchers.IO) {
-    try {
-        val req = Request.Builder()
+suspend fun TalosClient.fetchCustomProviders(): HostResult<List<CustomProvider>> = withContext(Dispatchers.IO) {
+    hostCall(
+        Request.Builder()
             .url("$baseUrl/api/providers/custom")
             .header("Authorization", "Bearer $apiToken")
             .build()
-        apiHttpClient.newCall(req).execute().use { resp ->
-            if (resp.isSuccessful) {
-                val body = resp.body?.string() ?: "[]"
-                domainJson.decodeFromString<List<CustomProvider>>(body)
-            } else emptyList()
-        }
-    } catch (_: Exception) {
-        emptyList()
-    }
+    ) { body -> domainJson.decodeFromString<List<CustomProvider>>(body) }
 }
 
 suspend fun TalosClient.addCustomProvider(

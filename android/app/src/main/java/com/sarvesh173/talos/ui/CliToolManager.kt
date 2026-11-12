@@ -39,6 +39,7 @@ fun CliToolManagerScreen(
     val hierarchyDto by client.delegationHierarchy.collectAsState()
     val hierarchyError by client.delegationError.collectAsState()
     val hierarchyLoading by client.delegationLoading.collectAsState()
+    val commandError by client.commandError.collectAsState()
     var spawningDelegateId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
@@ -69,6 +70,7 @@ fun CliToolManagerScreen(
                                 hierarchyDto == null && hierarchyLoading -> "Loading engines from core…"
                                 hierarchyDto == null && hierarchyError != null -> "Unavailable — ${hierarchyError}"
                                 hierarchyDto == null -> "No engine data yet"
+                                commandError != null -> "Last command did not take: $commandError"
                                 else -> "$totalActiveChildren subagents active across ${displayEngines.size} CLI engines"
                             },
                             style = MaterialTheme.typography.bodySmall,

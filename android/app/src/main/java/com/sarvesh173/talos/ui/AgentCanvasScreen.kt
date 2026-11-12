@@ -72,6 +72,7 @@ fun AgentCanvasScreen(
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val hierarchy by client.delegationHierarchy.collectAsState()
+    val commandError by client.commandError.collectAsState()
     var selectedNode by remember { mutableStateOf<CanvasAgentNode?>(null) }
     var selectedFilter by remember { mutableStateOf("All") }
     var selectedCli by remember { mutableStateOf("All CLI") }
@@ -81,6 +82,14 @@ fun AgentCanvasScreen(
 
     LaunchedEffect(Unit) {
         client.fetchDelegationHierarchy()
+    }
+
+    // The delegate commands on this screen used to swallow a non-2xx. When one now
+    // reports, say so the way this screen already says everything else: a toast.
+    LaunchedEffect(commandError) {
+        commandError?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
     }
 
     // Build flattened active canvas nodes from live Rust delegation hierarchy
@@ -399,7 +408,9 @@ fun AgentCanvasScreen(
                                 if (ok) {
                                     Toast.makeText(context, "Command limit saved (${commandLimit.toInt()} turns)", Toast.LENGTH_SHORT).show()
                                 } else {
-                                    Toast.makeText(context, "Limit updated locally (${commandLimit.toInt()} turns)", Toast.LENGTH_SHORT).show()
+                                    // Nothing was stored: the host rejected or never received it.
+                                    // "Updated locally" claimed a save that did not happen.
+                                    Toast.makeText(context, "Command limit was not saved (${commandLimit.toInt()} turns)", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },

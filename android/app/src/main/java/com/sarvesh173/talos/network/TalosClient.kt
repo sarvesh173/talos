@@ -181,6 +181,10 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
     private val _delegationLoading = MutableStateFlow(false)
     val delegationLoading: StateFlow<Boolean> = _delegationLoading.asStateFlow()
 
+    /** Why the last delegate command did not take, or null. Read by the two screens that issue them. */
+    private val _commandError = MutableStateFlow<String?>(null)
+    val commandError: StateFlow<String?> = _commandError.asStateFlow()
+
     private val _galleryImages = MutableStateFlow<List<GeneratedImageDto>>(emptyList())
     val galleryImages: StateFlow<List<GeneratedImageDto>> = _galleryImages.asStateFlow()
     private val _galleryLoading = MutableStateFlow(false)
@@ -268,122 +272,115 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
+    /**
+     * One place for command results.
+     *
+     * These six methods used to act only `if (resp.isSuccessful)` and otherwise
+     * write one Log line, so a delegate command that never reached the host was
+     * indistinguishable from one that worked. A non-2xx is now reported where the
+     * screen can show it: a control that cannot work must not look like one that did.
+     */
+    private suspend fun runCommand(label: String, call: () -> Response): Boolean {
+        _commandError.value = null
+        return try {
+            call().use { resp ->
+                if (resp.isSuccessful) {
+                    true
+                } else {
+                    val reason = hostReason(resp.code)
+                    _commandError.value = "$label failed: $reason"
+                    Log.w(TAG, "$label failed: HTTP ${resp.code}")
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            val reason = transportReason(e)
+            _commandError.value = "$label failed: $reason"
+            Log.w(TAG, "$label failed: ${e.message}")
+            false
+        }
+    }
+
     fun updateDelegateQuota(delegateId: String, newLimit: Int?, reasoningEffort: String?) {
         scope.launch(Dispatchers.IO) {
-            runCatching {
-                val payload = json.encodeToString(UpdateQuotaRequestDto(newLimit, reasoningEffort))
-                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
-                val req = Request.Builder()
-                    .url("$baseUrl/api/delegates/$delegateId/quota")
-                    .patch(payload.toRequestBody(mediaType))
-                    .build()
-                httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        fetchDelegationHierarchy()
-                    }
-                }
-            }.onFailure { e ->
-                Log.w(TAG, "Failed to update delegate quota: ${e.message}")
+            val payload = json.encodeToString(UpdateQuotaRequestDto(newLimit, reasoningEffort))
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+            val req = Request.Builder()
+                .url("$baseUrl/api/delegates/$delegateId/quota")
+                .patch(payload.toRequestBody(mediaType))
+                .build()
+            if (runCommand("Quota update") { httpClient.newCall(req).execute() }) {
+                fetchDelegationHierarchy()
             }
         }
     }
 
     fun toggleDelegatePause(delegateId: String, pause: Boolean) {
         scope.launch(Dispatchers.IO) {
-            runCatching {
-                val endpoint = if (pause) "pause" else "resume"
-                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
-                val req = Request.Builder()
-                    .url("$baseUrl/api/delegates/$delegateId/$endpoint")
-                    .post("{}".toRequestBody(mediaType))
-                    .build()
-                httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        fetchDelegationHierarchy()
-                    }
-                }
-            }.onFailure { e ->
-                Log.w(TAG, "Failed to toggle delegate pause: ${e.message}")
+            val endpoint = if (pause) "pause" else "resume"
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+            val req = Request.Builder()
+                .url("$baseUrl/api/delegates/$delegateId/$endpoint")
+                .post("{}".toRequestBody(mediaType))
+                .build()
+            if (runCommand("Pause") { httpClient.newCall(req).execute() }) {
+                fetchDelegationHierarchy()
             }
         }
     }
 
     fun switchDelegateModel(delegateId: String, newModel: String) {
         scope.launch(Dispatchers.IO) {
-            runCatching {
-                val payload = org.json.JSONObject().apply {
-                    put("model", newModel)
-                }.toString()
-                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
-                val req = Request.Builder()
-                    .url("$baseUrl/api/delegates/$delegateId/model")
-                    .post(payload.toRequestBody(mediaType))
-                    .build()
-                httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        fetchDelegationHierarchy()
-                    }
-                }
-            }.onFailure { e ->
-                Log.e(TAG, "switchDelegateModel error: ${e.message}")
+            val payload = org.json.JSONObject().apply {
+                put("model", newModel)
+            }.toString()
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+            val req = Request.Builder()
+                .url("$baseUrl/api/delegates/$delegateId/model")
+                .post(payload.toRequestBody(mediaType))
+                .build()
+            if (runCommand("Model switch") { httpClient.newCall(req).execute() }) {
+                fetchDelegationHierarchy()
             }
         }
     }
 
     fun spawnChildSubagent(delegateId: String, name: String, goal: String) {
         scope.launch(Dispatchers.IO) {
-            runCatching {
-                val payload = json.encodeToString(SpawnSubagentRequestDto(name, goal))
-                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
-                val req = Request.Builder()
-                    .url("$baseUrl/api/delegates/$delegateId/children")
-                    .post(payload.toRequestBody(mediaType))
-                    .build()
-                httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        fetchDelegationHierarchy()
-                    }
-                }
-            }.onFailure { e ->
-                Log.w(TAG, "Failed to spawn child subagent: ${e.message}")
+            val payload = json.encodeToString(SpawnSubagentRequestDto(name, goal))
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+            val req = Request.Builder()
+                .url("$baseUrl/api/delegates/$delegateId/children")
+                .post(payload.toRequestBody(mediaType))
+                .build()
+            if (runCommand("Spawn") { httpClient.newCall(req).execute() }) {
+                fetchDelegationHierarchy()
             }
         }
     }
 
     fun toggleChildPause(childId: String, isCurrentlyPaused: Boolean) {
         scope.launch(Dispatchers.IO) {
-            runCatching {
-                val action = if (isCurrentlyPaused) "resume" else "pause"
-                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
-                val req = Request.Builder()
-                    .url("$baseUrl/api/children/$childId/$action")
-                    .post("{}".toRequestBody(mediaType))
-                    .build()
-                httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        fetchDelegationHierarchy()
-                    }
-                }
-            }.onFailure { e ->
-                Log.w(TAG, "Failed to toggle child subagent pause: ${e.message}")
+            val action = if (isCurrentlyPaused) "resume" else "pause"
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+            val req = Request.Builder()
+                .url("$baseUrl/api/children/$childId/$action")
+                .post("{}".toRequestBody(mediaType))
+                .build()
+            if (runCommand("Child pause") { httpClient.newCall(req).execute() }) {
+                fetchDelegationHierarchy()
             }
         }
     }
 
     fun terminateChildSubagent(childId: String) {
         scope.launch(Dispatchers.IO) {
-            runCatching {
-                val req = Request.Builder()
-                    .url("$baseUrl/api/children/$childId")
-                    .delete()
-                    .build()
-                httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        fetchDelegationHierarchy()
-                    }
-                }
-            }.onFailure { e ->
-                Log.w(TAG, "Failed to terminate child subagent: ${e.message}")
+            val req = Request.Builder()
+                .url("$baseUrl/api/children/$childId")
+                .delete()
+                .build()
+            if (runCommand("Terminate") { httpClient.newCall(req).execute() }) {
+                fetchDelegationHierarchy()
             }
         }
     }

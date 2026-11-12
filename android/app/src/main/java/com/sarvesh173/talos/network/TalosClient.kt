@@ -132,9 +132,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
      * never hang the UI waiting for a silent server.
      */
     private val probeClient = OkHttpClient.Builder()
-        .connectTimeout(1500, TimeUnit.MILLISECONDS)
-        .readTimeout(1500, TimeUnit.MILLISECONDS)
-        .callTimeout(2000, TimeUnit.MILLISECONDS)
+        .connectTimeout(8000, TimeUnit.MILLISECONDS)
+        .readTimeout(8000, TimeUnit.MILLISECONDS)
+        .callTimeout(10000, TimeUnit.MILLISECONDS)
         .build()
 
     init {
@@ -1297,8 +1297,8 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
      * TALOS ports (the node may have moved ports) -> LAN auto-discovery.
      */
     suspend fun resolveCore(): MeshInfo? = withContext(Dispatchers.IO) {
-        // Fast bounded probe: a silent server must never freeze the gate or wizard.
-        withTimeoutOrNull(4_500L) {
+        // Bounded probe: allow enough time for Tailscale/VPN mesh handshake.
+        withTimeoutOrNull(15_000L) {
             resolveCoreInternal()
         }
     }

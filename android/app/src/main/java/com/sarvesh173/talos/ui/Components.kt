@@ -101,6 +101,95 @@ fun PressableSurface(
     shadowElevation: Dp = 0.dp,
     pressedScale: Float = 0.96f,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    content: @Composable BoxScope.() -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) pressedScale else 1.0f,
+        animationSpec = spring(
+            dampingRatio = 0.62f,
+            stiffness = 420f
+        ),
+        label = "PressableSurfaceScale"
+    )
+
+    // Shape morph: spatial spring, overshoot allowed (M3E press signature).
+    val morphProgress by animateFloatAsState(
+        targetValue = if (isPressed && enabled && pressedShape != null) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 420f),
+        label = "PressableSurfaceMorph"
+    )
+
+    val resolvedShape: Shape = run {
+        val from = shape as? RoundedCornerShape
+        if (from != null && pressedShape != null && morphProgress > 0.001f) {
+            MorphRoundedShape(from, pressedShape, morphProgress)
+        } else shape
+    }
+
+    // M3 state layer: content-colored overlay at 12% while pressed.
+    // Effects spring (no overshoot) — the layer must never flash past 12%.
+    val stateLayerAlpha by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 0.12f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = 3800f
+        ),
+        label = "PressableSurfaceStateLayer"
+    )
+
+    val activeBorder = if (isPressed && enabled) {
+        BorderStroke(
+            1.2.dp,
+            Brush.linearGradient(
+                listOf(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                )
+            )
+        )
+    } else border
+
+    Surface(
+        shape = resolvedShape,
+        color = color,
+        contentColor = contentColor,
+        border = activeBorder,
+        shadowElevation = shadowElevation,
+        tonalElevation = 0.dp,
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                }
+            )
+    ) {
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            // State layer sits UNDER the content so glyphs keep full contrast.
+            if (stateLayerAlpha > 0.001f) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer { alpha = stateLayerAlpha }
+                        .background(contentColor)
+                )
+            }
+            content()
+        }
+    }
+}
 
 @Composable
 fun ThreeDotTypingIndicator(

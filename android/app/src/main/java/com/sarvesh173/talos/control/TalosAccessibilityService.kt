@@ -212,3 +212,4 @@ class TalosAccessibilityService : AccessibilityService() {
     companion object {
         private const val TAG = "TalosRemote"
     }
+}

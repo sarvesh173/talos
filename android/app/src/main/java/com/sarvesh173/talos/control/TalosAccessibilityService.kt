@@ -99,7 +99,7 @@ class TalosAccessibilityService : AccessibilityService() {
                 val result = runCatching { execute(action, payload) }
                     .fold(
                         onSuccess = { it },
-                        onFailure { Result(false, "error: " + (it.message ?: it.toString())) },
+                        onFailure = { Result(false, "error: " + (it.message ?: it.toString())) },
                     )
 
                 runCatching {

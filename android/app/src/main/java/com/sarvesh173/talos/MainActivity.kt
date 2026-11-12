@@ -704,7 +704,7 @@ class MainActivity : FragmentActivity() {
                             AppleAgentChatScreen(
                                 client = client,
                                 sessionId = activeSessionId,
-                                remoteMode = activeSessionRemote,
+                                remoteSession = activeSessionRemote,
                                 sessionTitle = activeSessionTitle,
                                 agentName = activeAgentName,
                                 agentIconRes = activeAgentIcon,

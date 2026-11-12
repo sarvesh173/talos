@@ -50,6 +50,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.ui.agent.*
@@ -326,6 +327,21 @@ fun AppleAgentChatScreen(
             "ses_" + java.util.UUID.randomUUID().toString().replace("-", "").take(24)
         }
         if (client.isPaired.value) client.switchRoom(resolved)
+    }
+
+    // A remote session is driven from the host: another agent can post into it
+    // and the phone has to catch up on its own. Poll while the screen is open so
+    // a conversation started elsewhere shows up here without a restart.
+    LaunchedEffect(sessionId, remoteMode) {
+        if (!remoteMode) return@LaunchedEffect
+        while (true) {
+            delay(2_500)
+            val fresh = runCatching { fetchRemoteMessages(client, sessionId) }.getOrNull() ?: continue
+            if (fresh.size != remoteMessages.size) {
+                remoteMessages = fresh
+                remoteError = null
+            }
+        }
     }
 
     // Past sessions: the core's rooms, with the local cache count so a room
@@ -758,11 +774,18 @@ fun AppleAgentChatScreen(
                                             created_at = System.currentTimeMillis() / 1000.0,
                                         )
                                         scope.launch {
-                                            val reply = sendRemotePrompt(client, sessionId, textToSend)
+                                            // One throw here used to kill the coroutine and leave
+                                            // the composer stuck busy forever.
+                                            val reply = runCatching {
+                                                sendRemotePrompt(client, sessionId, textToSend)
+                                            }.getOrElse { error ->
+                                                "Could not send: " + (error.message ?: error::class.java.simpleName)
+                                            }
                                             remoteMessages = runCatching {
                                                 fetchRemoteMessages(client, sessionId)
                                             }.getOrElse { remoteMessages }
                                             if (reply.isBlank()) remoteError = "The agent sent nothing back."
+                                            else if (reply.startsWith("Could not send")) remoteError = reply
                                             remoteBusy = false
                                         }
                                     } else {

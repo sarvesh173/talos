@@ -357,7 +357,13 @@ fun ObscuraBrowserScreen(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "${result.duration_ms}ms • ${result.content.length} chars extracted",
+                                        text = if (result.success) {
+                                            "${result.duration_ms}ms • ${result.content.length} chars extracted"
+                                        } else {
+                                            // The fallback DTO carries the reason; showing "0ms • 0 chars"
+                                            // instead of it tells the user nothing about what failed.
+                                            result.error?.takeIf { it.isNotBlank() } ?: "Fetch failed"
+                                        },
                                         style = MaterialTheme.typography.labelSmall,
                                         color = if (result.success) StatusGreen else MaterialTheme.colorScheme.error
                                     )

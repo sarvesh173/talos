@@ -128,6 +128,18 @@ object AgentRoster {
     /** Agents that may be edited. Always-on ones are excluded by construction. */
     val configurable: List<AgentEntry> get() = agents.filterNot { it.lifecycle.isLocked }
 
+    /**
+     * The roster with [installed] taken from the host instead of from this list.
+     *
+     * The static entries carry a plausible-looking `isInstalled`, which is the
+     * problem: it reads as a fact and is not one. An engine missing from the
+     * host's answer is not installed, whatever this file says. Names, subtitles
+     * and the lifecycle policy are app policy and stay here; installation is the
+     * host's answer and comes from it.
+     */
+    fun withInstalled(installed: Set<String>): List<AgentEntry> =
+        agents.map { entry -> entry.copy(isInstalled = entry.id in installed) }
+
     /** Count that actually exists on this host, not a hardcoded marketing number. */
     fun installedCount(installedIds: Set<String>? = null): Int {
         val ids = installedIds ?: return agents.count { it.isInstalled }

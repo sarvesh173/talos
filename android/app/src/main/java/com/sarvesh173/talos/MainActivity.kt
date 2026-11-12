@@ -775,7 +775,10 @@ class MainActivity : FragmentActivity() {
                             DashboardControlScreen(onBack = { appScreen = "settings" })
                         }
                         "agent_lifecycle" -> {
-                            AgentLifecycleScreen(onBack = { appScreen = "settings" })
+                            AgentLifecycleScreen(
+                                client = client,
+                                onBack = { appScreen = "settings" }
+                            )
                         }
                         "supported_clis" -> {
                             SupportedClisScreen(

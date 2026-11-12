@@ -28,6 +28,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sarvesh173.talos.network.HostResult
+import com.sarvesh173.talos.network.TalosClient
+import com.sarvesh173.talos.network.fetchCliRoster
 import com.sarvesh173.talos.ui.AppleToggleSwitch
+import kotlinx.coroutines.launch
 import com.sarvesh173.talos.ui.LocalIsDark
 import com.sarvesh173.talos.ui.TalosIcons
 import com.sarvesh173.talos.ui.appleLiquidGlassOptics
@@ -97,10 +103,41 @@ object AgentLifecycleStore {
  * agent defaults to OnDemand with an explicit opt-in to stay warm (Pinned).
  */
 @Composable
-fun AgentLifecycleScreen(onBack: () -> Unit) {
+fun AgentLifecycleScreen(
+    client: TalosClient,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     var lifecycles by remember { mutableStateOf(AgentLifecycleStore.load(context)) }
+
+    // Installation is the host's answer, so it is asked for. Until it arrives the
+    // static list is shown, which is why the fetch keeps whatever it had rather
+    // than emptying the screen on a failed call.
+    var installed by remember { mutableStateOf<Set<String>?>(null) }
+    var hostFailure by remember { mutableStateOf<String?>(null) }
+
+    fun loadInstalled() {
+        scope.launch {
+            when (val result = client.fetchCliRoster()) {
+                is HostResult.Ok -> {
+                    installed = result.value.agents
+                        .filter { it.installed }
+                        .map { it.id }
+                        .toSet()
+                    hostFailure = null
+                }
+                is HostResult.Failed -> hostFailure = result.reason
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) { loadInstalled() }
+
+    val agents = remember(installed) {
+        installed?.let { AgentRoster.withInstalled(it) } ?: AgentRoster.agents
+    }
 
     fun toggle(agent: AgentEntry, pinned: Boolean) {
         if (agent.id in AgentRoster.ALWAYS_ON_IDS) return
@@ -174,7 +211,7 @@ fun AgentLifecycleScreen(onBack: () -> Unit) {
 
             SectionHeader(text = "Required")
             LifecycleGroup {
-                val required = AgentRoster.agents.filter { it.lifecycle.isLocked }
+                val required = agents.filter { it.lifecycle.isLocked }
                 required.forEachIndexed { index, agent ->
                     RequiredRow(agent = agent)
                     if (index < required.lastIndex) LifecycleDivider()
@@ -185,7 +222,7 @@ fun AgentLifecycleScreen(onBack: () -> Unit) {
 
             SectionHeader(text = "Start when used")
             LifecycleGroup {
-                val configurable = AgentRoster.agents.filterNot { it.lifecycle.isLocked }
+                val configurable = agents.filterNot { it.lifecycle.isLocked }
                 configurable.forEachIndexed { index, agent ->
                     val enabled = agent.isInstalled
                     val pinned = lifecycles[agent.id] == AgentLifecycle.Pinned
@@ -199,6 +236,18 @@ fun AgentLifecycleScreen(onBack: () -> Unit) {
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            if (hostFailure != null) {
+                Text(
+                    text = "Couldn't read installed agents from the host: $hostFailure. Showing the built-in list, so installed states below are not verified.",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 11.sp,
+                        letterSpacing = (-0.1).sp
+                    ),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                )
+            }
 
             Text(
                 text = "Agents kept running hold a Node process and a model context. That is real battery and memory.",

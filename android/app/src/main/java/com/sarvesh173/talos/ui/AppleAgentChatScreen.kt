@@ -384,7 +384,7 @@ fun AppleAgentChatScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 96.dp, bottom = 140.dp),
+            contentPadding = PaddingValues(top = 116.dp, bottom = 140.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(messages, key = { it.id }) { msg ->
@@ -1064,13 +1064,13 @@ private fun UserBubble(
 ) {
     if (msg.text.isBlank() || msg.text == "null") return
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-        val shape = RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
+        val shape = RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
         Surface(
             shape = shape,
             color = brandColor,
             shadowElevation = 2.dp,
             modifier = Modifier
-                .widthIn(max = 280.dp)
+                .widthIn(max = 290.dp)
                 .clip(shape)
                 .pointerInput(msg.id) {
                     detectTapGestures(onLongPress = { onLongClick() })
@@ -1081,20 +1081,24 @@ private fun UserBubble(
                     shape = shape
                 )
         ) {
-            Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
                     text = msg.text,
                     fontSize = 15.sp,
                     color = Color.White,
-                    letterSpacing = (-0.1).sp
+                    letterSpacing = (-0.1).sp,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 if (msg.timestamp.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = msg.timestamp,
                         fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.65f),
-                        modifier = Modifier.align(Alignment.End)
+                        color = Color.White.copy(alpha = 0.70f),
+                        modifier = Modifier.padding(bottom = 1.dp)
                     )
                 }
             }
@@ -1138,27 +1142,41 @@ private fun AgentBubble(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            val shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp)
+            val shape = RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
             Surface(
                 shape = shape,
                 color = if (isDark) Color(0xFF161822).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f),
                 shadowElevation = 2.dp,
                 modifier = Modifier
-                    .widthIn(max = 300.dp)
+                    .widthIn(max = 290.dp)
                     .clip(shape)
                     .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = shape)
             ) {
-                Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)) {
-                    if (bubbleText.isNotBlank() && bubbleText != "null") {
-                        Text(
-                            text = bubbleText,
-                            fontSize = 15.sp,
-                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                            letterSpacing = (-0.1).sp
-                        )
+                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (bubbleText.isNotBlank() && bubbleText != "null") {
+                            Text(
+                                text = bubbleText,
+                                fontSize = 15.sp,
+                                color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                                letterSpacing = (-0.1).sp,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                        }
+                        if (msg.timestamp.isNotBlank() && !msg.simulated && msg.stats == null) {
+                            Text(
+                                text = msg.timestamp,
+                                fontSize = 10.sp,
+                                color = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
+                                modifier = Modifier.padding(bottom = 1.dp)
+                            )
+                        }
                     }
                     if (msg.simulated) {
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
@@ -1175,14 +1193,14 @@ private fun AgentBubble(
                         }
                     }
                     msg.stats?.let { stats ->
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         MessageFooterView(
                             stats = stats,
                             isDark = isDark,
                             accent = brandColor
                         )
                     }
-                    if (msg.timestamp.isNotBlank()) {
+                    if (msg.timestamp.isNotBlank() && (msg.simulated || msg.stats != null)) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = msg.timestamp,

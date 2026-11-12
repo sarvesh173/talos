@@ -89,46 +89,48 @@ class AgentReport:
 
 
 def _opencode_sessions(limit: int = 20) -> List[AgentSessionRow]:
-    """Read OpenCode's session table, read-only.
+    """Read sessions from the OpenCode server, which is the only live source.
 
-    Timestamps in this database are epoch milliseconds. Message counts are
-    carried in the same query as a correlated sub-query: the previous version
-    issued one extra ``SELECT COUNT(*)`` per session (21 queries for 20
-    sessions, 21.5ms). Measured against the live database the correlated form
-    costs 4.2ms, and a ``LEFT JOIN ... GROUP BY`` costs 7.4ms, so the
-    correlated sub-query wins. A failure to count messages must not lose the
-    session itself, so the count column is nullable.
+    This used to read ~/.local/share/opencode/opencode.db. That database still
+    exists and still looks plausible, but the server stopped maintaining its
+    `time_updated` column: every row in both copies reads 2026-10-15, so the app
+    labelled a session updated minutes ago as "28d". Reading the server's own
+    API costs one request and cannot go stale behind a schema change.
     """
-    path = os.path.expanduser(_OPENCODE_DB)
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"no OpenCode database at {path}")
+    from server.opencode_bridge import OpenCodeClient
 
-    # mode=ro guarantees this cannot mutate the user's agent state.
-    uri = f"file:{path}?mode=ro"
-    connection = sqlite3.connect(uri, uri=True, timeout=3.0)
-    try:
-        rows = connection.execute(
-            "SELECT s.id, s.title, s.time_updated, "
-            "  (SELECT COUNT(*) FROM message m WHERE m.session_id = s.id) AS cnt "
-            "FROM session s ORDER BY s.time_updated DESC LIMIT ?",
-            (limit,),
-        ).fetchall()
-        out: List[AgentSessionRow] = []
-        for session_id, title, updated_ms, count in rows:
-            out.append(
-                AgentSessionRow(
-                    id=str(session_id),
-                    # Strip first, then fall back: a title of spaces is not a
-                    # title, and `(title or "Untitled").strip()` would leave "".
-                    title=(title or "").strip() or "Untitled session",
-                    updated_at=float(updated_ms or 0) / 1000.0,
-                    status="idle",
-                    message_count=int(count) if count is not None else None,
-                )
+    result = OpenCodeClient().list_sessions()
+    if not result.ok:
+        raise RuntimeError(result.error or "opencode did not answer")
+
+    rows = (result.data or {}).get("data") or []
+    out: List[AgentSessionRow] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        session_id = row.get("id")
+        if not session_id:
+            continue
+        # The server moved timestamps into a `time` object; older builds sent a
+        # bare number. Read whichever is present rather than assuming one.
+        stamp = row.get("time")
+        if isinstance(stamp, dict):
+            updated_ms = stamp.get("updated") or stamp.get("created") or 0
+        else:
+            updated_ms = row.get("time_updated") or row.get("updated") or 0
+        out.append(
+            AgentSessionRow(
+                id=str(session_id),
+                title=(row.get("title") or "").strip() or "Untitled session",
+                updated_at=float(updated_ms or 0) / 1000.0,
+                status="idle",
+                # The list endpoint does not carry a count; a per-session call
+                # would cost one request each. None renders as "no count",
+                # which is honest, where a stale number is not.
+                message_count=None,
             )
-        return out
-    finally:
-        connection.close()
+        )
+    return out[:limit]
 
 
 #: Engines whose sessions this module knows how to read.

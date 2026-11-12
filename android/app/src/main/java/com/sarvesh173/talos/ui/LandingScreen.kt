@@ -260,8 +260,10 @@ fun LandingScreen(
         selectedAgentId = null
     }
 
-    fun openChat(agent: RealAgent, title: String) {
-        onOpenAgentChat?.invoke(sessionRoomId(agent.id), title, agent.name, iconForAgent(agent.id), accent)
+    // A specific session passes its own id; the agent row has none, so it
+    // falls back to the agent's room.
+    fun openChat(agent: RealAgent, title: String, sessionId: String = sessionRoomId(agent.id)) {
+        onOpenAgentChat?.invoke(sessionId, title, agent.name, iconForAgent(agent.id), accent)
     }
 
     Box(
@@ -613,7 +615,7 @@ fun LandingScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable { openChat(agent, session.title) }
+                                        .clickable { openChat(agent, session.title, session.id) }
                                         .padding(horizontal = 16.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {

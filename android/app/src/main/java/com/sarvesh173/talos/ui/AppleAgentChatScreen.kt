@@ -1,6 +1,10 @@
 package com.sarvesh173.talos.ui
 
 import com.sarvesh173.talos.network.*
+import com.sarvesh173.talos.data.Message
+import com.sarvesh173.talos.ui.chat.fetchRemoteMessages
+import com.sarvesh173.talos.ui.chat.isRemoteSessionId
+import com.sarvesh173.talos.ui.chat.sendRemotePrompt
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
@@ -154,6 +158,14 @@ fun AppleAgentChatScreen(
     // Live room stream. The screen renders whatever the core actually sent;
     // it never fabricates an agent reply.
     val liveMessages by client.messages.collectAsState()
+
+    // An OpenCode session is not a room: its history is fetched, not streamed.
+    // `sessionId` used to be only a room key, which is why opening a session
+    // showed that agent's generic room and none of its conversation.
+    val remoteMode = isRemoteSessionId(sessionId)
+    var remoteMessages by remember(sessionId) { mutableStateOf<List<Message>>(emptyList()) }
+    var remoteBusy by remember(sessionId) { mutableStateOf(false) }
+    var remoteError by remember(sessionId) { mutableStateOf<String?>(null) }
     val isThinking by client.isAgentTyping.collectAsState()
     val pendingApproval by client.pendingApproval.collectAsState()
     val pendingQuestion by client.pendingQuestion.collectAsState()
@@ -228,8 +240,9 @@ fun AppleAgentChatScreen(
         onBack()
     }
 
-    val messages = remember(liveMessages) {
-        liveMessages.map { msg ->
+    val sourceMessages = if (remoteMode) remoteMessages else liveMessages
+    val messages = remember(sourceMessages) {
+        sourceMessages.map { msg ->
             val stats = msg.metrics?.let { met ->
                 MessageStats(
                     latencyMs = met.latency_ms,
@@ -293,6 +306,16 @@ fun AppleAgentChatScreen(
         !isThinking -> OrbState.SOLVING
         liveThought.contains("search", true) -> OrbState.SEARCHING
         else -> OrbState.WORKING
+    }
+
+    // A remote session's history is fetched once on open. Failures are shown
+    // rather than swallowed: an empty list here looks identical to a real
+    // conversation with nothing in it.
+    LaunchedEffect(sessionId, remoteMode) {
+        if (!remoteMode) return@LaunchedEffect
+        remoteError = null
+        remoteMessages = runCatching { fetchRemoteMessages(client, sessionId) }
+            .fold({ it }, { error -> emptyList<Message>().also { remoteError = error.message ?: "Could not load this session." } })
     }
 
     LaunchedEffect(sessionId) {
@@ -717,10 +740,34 @@ fun AppleAgentChatScreen(
                             .clip(CircleShape)
                             .background(if (hasText) brandColor else (if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)))
                             .applePressable(0.90f, pressHaptic = true) {
-                                if (hasText && !isThinking) {
+                                if (hasText && !(if (remoteMode) remoteBusy else isThinking)) {
                                     val textToSend = inputText.trim()
                                     inputText = ""
-                                    client.sendMessage(textToSend)
+                                    if (remoteMode) {
+                                        // Optimistic: the turn appears at once,
+                                        // then the reply lands when it lands.
+                                        remoteBusy = true
+                                        remoteError = null
+                                        remoteMessages = remoteMessages + Message(
+                                            id = "local-" + System.currentTimeMillis(),
+                                            room_id = sessionId,
+                                            sender_id = "user",
+                                            sender_name = "You",
+                                            sender_role = Role.human,
+                                            content = textToSend,
+                                            created_at = System.currentTimeMillis() / 1000.0,
+                                        )
+                                        scope.launch {
+                                            val reply = sendRemotePrompt(client, sessionId, textToSend)
+                                            remoteMessages = runCatching {
+                                                fetchRemoteMessages(client, sessionId)
+                                            }.getOrElse { remoteMessages }
+                                            if (reply.isBlank()) remoteError = "The agent sent nothing back."
+                                            remoteBusy = false
+                                        }
+                                    } else {
+                                        client.sendMessage(textToSend)
+                                    }
                                 }
                             },
                         contentAlignment = Alignment.Center

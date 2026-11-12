@@ -12,7 +12,7 @@ import time
 from typing import Any, Dict, List, Optional
 import uuid
 
-from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect, status
+from fastapi import Body, Depends, FastAPI, File, Header, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -794,6 +794,80 @@ async def opencode_sessions(token: str = Depends(require_auth)):
             }
         )
     return {"ok": True, "sessions": sessions, "count": len(sessions)}
+
+
+@app.get("/api/opencode/sessions/{session_id}/messages")
+async def opencode_session_messages(
+    session_id: str, limit: int = 50, token: str = Depends(require_auth)
+):
+    """One session's messages, so the app can show a conversation.
+
+    Three shapes come back and the caller has to cope with all of them: the
+    message list puts user text in `text`, the prompt response in
+    `payload.text`, and assistant turns use `content[].text`.
+    """
+    from server.opencode_bridge import OpenCodeClient
+
+    limit = max(1, min(int(limit), 200))
+    result = OpenCodeClient().session_messages(session_id, limit)
+    if not result.ok:
+        return {"ok": False, "error": result.error, "messages": []}
+
+    rows = (result.data or {}).get("data") or []
+    messages = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        info = row.get("info") if isinstance(row.get("info"), dict) else {}
+        role = info.get("type") or row.get("type") or "unknown"
+        content = row.get("content")
+        text = ""
+        if isinstance(content, list):
+            text = "\n".join(
+                part.get("text") or ""
+                for part in content
+                if isinstance(part, dict) and part.get("type") == "text"
+            ).strip()
+        if not text:
+            text = (row.get("text") or "").strip()
+        if not text:
+            payload = row.get("payload")
+            if isinstance(payload, dict):
+                text = (payload.get("text") or "").strip()
+        error = row.get("error") or info.get("error") or {}
+        messages.append(
+            {
+                "id": row.get("id"),
+                "role": role,
+                "text": text,
+                "error": (error or {}).get("message") if isinstance(error, dict) else None,
+                "created_ms": (row.get("time") or {}).get("created")
+                if isinstance(row.get("time"), dict)
+                else None,
+            }
+        )
+    return {"ok": True, "messages": messages, "count": len(messages)}
+
+
+@app.post("/api/opencode/sessions/{session_id}/prompt")
+async def opencode_session_prompt(
+    session_id: str, body: Dict[str, Any] = Body(...), token: str = Depends(require_auth)
+):
+    """Send a message to an OpenCode session.
+
+    Accepted at once and answered later: the reply is read back through the
+    messages endpoint once the assistant turn completes.
+    """
+    text = (body or {}).get("text")
+    if not isinstance(text, str) or not text.strip():
+        raise HTTPException(status_code=422, detail="text is required")
+
+    from server.opencode_bridge import OpenCodeClient
+
+    result = OpenCodeClient().send_prompt(session_id, text)
+    if not result.ok:
+        return {"ok": False, "error": result.error}
+    return {"ok": True, "sent": text, "message": result.data}
 
 
 # ---------------------------------------------------------------------------

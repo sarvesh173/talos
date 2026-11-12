@@ -245,6 +245,12 @@ class OpenCodeClient:
     def list_agents(self) -> OpenCodeResult:
         return self._get("/api/agent")
 
+    def session_messages(self, session_id: str, limit: int = 50) -> OpenCodeResult:
+        return self._get(f"/api/session/{session_id}/message?limit={limit}")
+
+    def send_prompt(self, session_id: str, text: str) -> OpenCodeResult:
+        return self._post(f"/api/session/{session_id}/prompt", {"text": text})
+
     # --- async wrappers (contract: async health/list_models/create_session) ---
     async def ahealth(self) -> OpenCodeResult:
         import asyncio

@@ -24,15 +24,14 @@ Biggest files first, because that is where a change is hardest to make safely.
 | Lines | File |
 |---|---|
 | 2,286 | `network/TalosClient.kt` |
-| 2,270 | `MainActivity.kt` |
-| 1,663 | `ui/OnboardingWizard.kt` |
-| 1,454 | `ui/Components.kt` |
+| 2,273 | `MainActivity.kt` |
 | 1,297 | `ui/features/LookAndFeelScreen.kt` |
 | 1,267 | `ui/bot/AgentLogoCloud.kt` |
 | 1,174 | `ui/features/SettingsScreen.kt` |
 | 1,145 | `ui/AppleAgentChatScreen.kt` |
 | 1,130 | `ui/TalosIcons.kt` |
 | 1,025 | `ui/AgentCanvasScreen.kt` |
+| 1,005 | `ui/MessageBubbles.kt` |
 | 847 | `ui/LandingScreen.kt` |
 | 812 | `ui/Theme.kt` |
 | 719 | `ui/chat/DirectiveHost.kt` |
@@ -49,19 +48,20 @@ Biggest files first, because that is where a change is hardest to make safely.
 
 | Lines | Files | Directory |
 |---|---|---|
-| 18,290 | 39 | `ui` |
+| 17,385 | 41 | `ui` |
 | 6,347 | 12 | `ui/features` |
 | 4,397 | 11 | `ui/bot` |
 | 2,948 | 8 | `ui/agent` |
 | 2,941 | 9 | `ui/avatar` |
 | 2,686 | 5 | `network` |
-| 2,270 | 1 | `.` |
+| 2,273 | 1 | `.` |
 | 2,066 | 6 | `ui/orb` |
+| 1,691 | 5 | `ui/onboarding` |
 | 1,313 | 3 | `ui/chat` |
 | 1,085 | 4 | `ui/settings` |
 | 935 | 3 | `ui/kanban` |
 | 903 | 5 | `ui/entry` |
-| 675 | 3 | `ui/agents` |
+| 736 | 3 | `ui/agents` |
 | 659 | 1 | `ui/cron` |
 | 577 | 1 | `ui/review` |
 | 479 | 2 | `notify` |

@@ -53,11 +53,30 @@ fun ObscuraBrowserScreen(
     var isLoading by remember { mutableStateOf(false) }
     var currentResult by remember { mutableStateOf<BrowserFetchResultDto?>(null) }
     var browserStatus by remember { mutableStateOf<BrowserStatusDto?>(null) }
+    // Without this, a host that could not be reached rendered the same subtitle as a
+    // browser with no version: "Rust Headless V8 Engine • Anti-Fingerprint".
+    var browserError by remember { mutableStateOf<String?>(null) }
+
+    fun refreshStatus(announce: Boolean) {
+        client.checkBrowserStatus(
+            onResult = { status ->
+                browserStatus = status
+                browserError = null
+                if (announce) {
+                    Toast.makeText(context, "Obscura status refreshed", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onError = { reason ->
+                browserError = reason
+                if (announce) {
+                    Toast.makeText(context, "Could not reach the host: $reason", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
 
     LaunchedEffect(Unit) {
-        client.checkBrowserStatus { status ->
-            browserStatus = status
-        }
+        refreshStatus(announce = false)
     }
 
     val quickBookmarks = listOf(
@@ -108,10 +127,15 @@ fun ObscuraBrowserScreen(
                             }
                         }
                         Text(
-                            text = browserStatus?.let { "${it.version} • CDP Port ${it.cdp_port} • 28MB RSS" }
+                            text = browserError
+                                ?: browserStatus?.let { "${it.version} • CDP Port ${it.cdp_port} • 28MB RSS" }
                                 ?: "Rust Headless V8 Engine • Anti-Fingerprint",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (browserError != null) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
                         )
                     }
                 },
@@ -129,12 +153,7 @@ fun ObscuraBrowserScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = {
-                            client.checkBrowserStatus { status ->
-                                browserStatus = status
-                                Toast.makeText(context, "Obscura status refreshed", Toast.LENGTH_SHORT).show()
-                            }
-                        },
+                        onClick = { refreshStatus(announce = true) },
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(

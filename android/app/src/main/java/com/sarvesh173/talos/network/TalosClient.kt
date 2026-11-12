@@ -521,7 +521,10 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
-    fun checkBrowserStatus(onResult: (BrowserStatusDto?) -> Unit) {
+    fun checkBrowserStatus(
+        onResult: (BrowserStatusDto?) -> Unit,
+        onError: (String) -> Unit = {}
+    ) {
         scope.launch(Dispatchers.IO) {
             runCatching {
                 val req = Request.Builder()
@@ -529,16 +532,22 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                     .get()
                     .build()
                 httpClient.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        val body = resp.body?.string() ?: return@use
-                        val parsed = json.decodeFromString<BrowserStatusDto>(body)
-                        withContext(Dispatchers.Main) { onResult(parsed) }
-                    } else {
-                        withContext(Dispatchers.Main) { onResult(null) }
+                    when {
+                        !resp.isSuccessful -> withContext(Dispatchers.Main) { onError(hostReason(resp.code)) }
+                        else -> {
+                            val body = resp.body?.string()
+                            if (body.isNullOrBlank()) {
+                                // An empty body is not a status; reporting null here would read as "no browser".
+                                withContext(Dispatchers.Main) { onError("Host returned an empty status") }
+                            } else {
+                                val parsed = json.decodeFromString<BrowserStatusDto>(body)
+                                withContext(Dispatchers.Main) { onResult(parsed) }
+                            }
+                        }
                     }
                 }
-            }.onFailure {
-                withContext(Dispatchers.Main) { onResult(null) }
+            }.onFailure { e ->
+                withContext(Dispatchers.Main) { onError(transportReason(e)) }
             }
         }
     }

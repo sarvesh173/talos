@@ -159,13 +159,16 @@ def init_auth_db() -> None:
         """, (master_token, uuid.uuid4().hex[:16], "Sarvesh Master (Phone)", ROLE_ADMIN, time.time()))
         conn.commit()
 
-        # Write to secure local file
-        try:
-            _TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
-            _TOKEN_FILE.write_text(master_token.strip() + "\n")
-            _TOKEN_FILE.chmod(0o600)
-        except Exception:
-            pass
+        # Write to secure local file. An existing file wins: it holds the
+        # token the running service and the phone already use, and replacing
+        # it would lock them out of the token table.
+        if not _TOKEN_FILE.exists():
+            try:
+                _TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+                _TOKEN_FILE.write_text(master_token.strip() + "\n")
+                _TOKEN_FILE.chmod(0o600)
+            except Exception:
+                pass
 
     conn.close()
 

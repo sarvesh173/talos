@@ -98,6 +98,9 @@ data class CliRosterEntry(
     val id: String,
     val name: String,
     val installed: Boolean = false,
+    /** True when TALOS holds a control manifest, i.e. it can drive this engine. */
+    val connected: Boolean = false,
+    val description: String = "",
     val binary: String? = null,
     @SerialName("binary_name") val binaryName: String = "",
     @SerialName("session_count") val sessionCount: Int = 0,
@@ -109,5 +112,6 @@ data class CliRosterEntry(
 data class CliRoster(
     val agents: List<CliRosterEntry> = emptyList(),
     @SerialName("installed_count") val installedCount: Int = 0,
+    @SerialName("connected_count") val connectedCount: Int = 0,
     @SerialName("total_count") val totalCount: Int = 0
 )

@@ -236,7 +236,9 @@ fun LandingScreen(
         loading = true
         failed = false
         try {
-            agents = fetchRoster(client)
+            // The host is the only source of truth: an engine it does not report is
+            // not on this machine, and listing it invites a setting that cannot apply.
+            agents = fetchRoster(client).filter { it.installed }
         } catch (_: Exception) {
             agents = emptyList()
             failed = true
@@ -298,7 +300,7 @@ fun LandingScreen(
                             )
                             if (!loading && !failed) {
                                 Text(
-                                    text = "${agents.count { it.installed }} of ${agents.size} installed",
+                                    text = "${agents.size} connected",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = secondaryText,
@@ -381,7 +383,7 @@ fun LandingScreen(
                     } else if (agents.isEmpty()) {
                         item {
                             Text(
-                                text = "No agents reported by the host.",
+                                text = "No CLI tool connected",
                                 fontSize = 14.sp,
                                 color = secondaryText,
                                 modifier = Modifier.padding(vertical = 16.dp),

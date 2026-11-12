@@ -85,12 +85,31 @@ jobs:
 
       - name: Rename APK for Release Artifact
         run: |
+          set -euo pipefail
           mkdir -p build-artifacts
-          cp android/app/build/outputs/apk/release/app-release.apk build-artifacts/talos-latest.apk
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            TAG_NAME="${GITHUB_REF#refs/tags/}"
-            cp android/app/build/outputs/apk/release/app-release.apk "build-artifacts/talos-${TAG_NAME}.apk"
+          # Two product flavors (prod, dev) each produce their own release APK,
+          # so there is no single app-release.apk. Collect whatever exists and
+          # keep the names a sideload needs to tell them apart.
+          shopt -s nullglob
+          apks=(android/app/build/outputs/apk/release/*.apk)
+          if [ ${#apks[@]} -eq 0 ]; then
+            echo "::error::No APK produced — assembleRelease wrote nothing."
+            exit 1
           fi
+          for apk in "${apks[@]}"; do
+            base=$(basename "$apk")
+            cp "$apk" "build-artifacts/$base"
+            echo "collected $base"
+          done
+          # talos-latest.apk is the rolling download link: the real (prod) build.
+          if [ -f android/app/build/outputs/apk/release/app-prod-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-prod-release.apk build-artifacts/talos-latest.apk
+            cp android/app/build/outputs/apk/release/app-prod-release.apk build-artifacts/talos-prod-latest.apk
+          fi
+          if [ -f android/app/build/outputs/apk/release/app-dev-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-dev-release.apk build-artifacts/talos-dev-latest.apk
+          fi
+          ls -la build-artifacts/
 
       - name: Upload APK Artifact (every run)
         uses: actions/upload-artifact@v4

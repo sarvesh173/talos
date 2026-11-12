@@ -62,20 +62,13 @@ data class AgentEntry(
 object AgentRoster {
 
     /** Everything that keeps TALOS reachable. Not user-configurable. */
-    val ALWAYS_ON_IDS = setOf("hermes", "openclaw")
+    val ALWAYS_ON_IDS = setOf("hermes")
 
     val agents: List<AgentEntry> = listOf(
         AgentEntry(
             id = "hermes",
             name = "Hermes Agent",
             subtitle = "Gateway, messaging, memory",
-            lifecycle = AgentLifecycle.AlwaysOn,
-            isInstalled = true,
-        ),
-        AgentEntry(
-            id = "openclaw",
-            name = "OpenClaw",
-            subtitle = "Automation backbone",
             lifecycle = AgentLifecycle.AlwaysOn,
             isInstalled = true,
         ),
@@ -129,16 +122,15 @@ object AgentRoster {
     val configurable: List<AgentEntry> get() = agents.filterNot { it.lifecycle.isLocked }
 
     /**
-     * The roster with [installed] taken from the host instead of from this list.
+     * The roster limited to engines the host actually reports as installed.
      *
-     * The static entries carry a plausible-looking `isInstalled`, which is the
-     * problem: it reads as a fact and is not one. An engine missing from the
-     * host's answer is not installed, whatever this file says. Names, subtitles
-     * and the lifecycle policy are app policy and stay here; installation is the
-     * host's answer and comes from it.
+     * An engine missing from the host's answer is not on this machine, so it does
+     * not belong in a list the user reads as "what is on my laptop". Showing it as
+     * unavailable is still a claim about the machine, and it invites a policy
+     * setting that can never apply.
      */
     fun withInstalled(installed: Set<String>): List<AgentEntry> =
-        agents.map { entry -> entry.copy(isInstalled = entry.id in installed) }
+        agents.filter { it.id in installed }
 
     /** Count that actually exists on this host, not a hardcoded marketing number. */
     fun installedCount(installedIds: Set<String>? = null): Int {

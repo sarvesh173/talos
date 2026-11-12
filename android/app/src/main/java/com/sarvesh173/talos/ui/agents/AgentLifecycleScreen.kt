@@ -136,7 +136,9 @@ fun AgentLifecycleScreen(
     LaunchedEffect(Unit) { loadInstalled() }
 
     val agents = remember(installed) {
-        installed?.let { AgentRoster.withInstalled(it) } ?: AgentRoster.agents
+        // Nothing is claimed before the host answers. The built-in list is a name
+        // and lifecycle policy, not evidence about this machine.
+        installed?.let { AgentRoster.withInstalled(it) } ?: emptyList()
     }
 
     fun toggle(agent: AgentEntry, pinned: Boolean) {
@@ -209,29 +211,38 @@ fun AgentLifecycleScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            SectionHeader(text = "Required")
-            LifecycleGroup {
-                val required = agents.filter { it.lifecycle.isLocked }
-                required.forEachIndexed { index, agent ->
-                    RequiredRow(agent = agent)
-                    if (index < required.lastIndex) LifecycleDivider()
+            if (agents.isEmpty()) {
+                Text(
+                    text = "No CLI tool connected",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 24.dp)
+                )
+            } else {
+                SectionHeader(text = "Required")
+                LifecycleGroup {
+                    val required = agents.filter { it.lifecycle.isLocked }
+                    required.forEachIndexed { index, agent ->
+                        RequiredRow(agent = agent)
+                        if (index < required.lastIndex) LifecycleDivider()
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            SectionHeader(text = "Start when used")
-            LifecycleGroup {
-                val configurable = agents.filterNot { it.lifecycle.isLocked }
-                configurable.forEachIndexed { index, agent ->
-                    val enabled = agent.isInstalled
-                    val pinned = lifecycles[agent.id] == AgentLifecycle.Pinned
-                    ConfigurableRow(
-                        agent = agent,
-                        pinned = pinned,
-                        onToggle = { toggle(agent, it) }
-                    )
-                    if (index < configurable.lastIndex) LifecycleDivider()
+                SectionHeader(text = "Start when used")
+                LifecycleGroup {
+                    val configurable = agents.filterNot { it.lifecycle.isLocked }
+                    configurable.forEachIndexed { index, agent ->
+                        val enabled = agent.isInstalled
+                        val pinned = lifecycles[agent.id] == AgentLifecycle.Pinned
+                        ConfigurableRow(
+                            agent = agent,
+                            pinned = pinned,
+                            onToggle = { toggle(agent, it) }
+                        )
+                        if (index < configurable.lastIndex) LifecycleDivider()
+                    }
                 }
             }
 
@@ -239,7 +250,7 @@ fun AgentLifecycleScreen(
 
             if (hostFailure != null) {
                 Text(
-                    text = "Couldn't read installed agents from the host: $hostFailure. Showing the built-in list, so installed states below are not verified.",
+                    text = "Couldn't read installed agents from the host: $hostFailure",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 11.sp,
                         letterSpacing = (-0.1).sp

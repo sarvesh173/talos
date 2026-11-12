@@ -124,6 +124,7 @@ fun SupportedClisScreen(
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
+                    // ai-design-check-ignore-next-line sentence-case -- CLIs is an abbreviation, which this rule allows but does not recognise
                     Text(
                         text = "Supported CLIs",
                         style = MaterialTheme.typography.titleLarge.copy(
@@ -180,7 +181,7 @@ fun SupportedClisScreen(
 
                 else -> visible.forEach { entry ->
                     CliRow(entry = entry, isDark = isDark)
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
 

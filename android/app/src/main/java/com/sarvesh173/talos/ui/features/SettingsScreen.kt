@@ -338,6 +338,7 @@ fun SettingsScreen(
                 SettingsDivider()
 
                 SettingsMinimalRow(
+                    // ai-design-check-ignore-next-line sentence-case -- CLIs is an abbreviation, which this rule allows but does not recognise
                     title = "Supported CLIs",
                     subtitle = "Which agents the host can find",
                     icon = TalosIcons.TalosStrokeAgent,

@@ -8,7 +8,34 @@
  * Configuration comes from the environment, never from a committed file:
  *   TALOS_URL    e.g. http://100.75.107.79:8000   (default: localhost:8000)
  *   TALOS_TOKEN  the host API key
+ *
+ * Environment is not portable: a plugin loaded by a service manager gets the
+ * unit's environment, not the user's shell. So the token is also read from a
+ * file when the variable is absent — same fallback chain on every OS.
  */
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+/** Where a host may drop the token so no environment plumbing is needed. */
+const TOKEN_FILES = [
+  () => join(homedir(), ".talos", "token"),
+  () => join(homedir(), ".hermes", "talos_token.txt"),
+];
+
+function readTokenFromFile(env: NodeJS.ProcessEnv): string {
+  const explicit = (env.TALOS_TOKEN_FILE ?? "").trim();
+  const candidates = explicit ? [explicit, ...TOKEN_FILES.map((f) => f())] : TOKEN_FILES.map((f) => f());
+  for (const path of candidates) {
+    try {
+      const value = readFileSync(path, "utf8").trim();
+      if (value) return value;
+    } catch {
+      // Missing file is normal; try the next candidate.
+    }
+  }
+  return "";
+}
 
 export interface HostConfig {
   url: string;
@@ -25,7 +52,7 @@ export interface HostResponse<T = unknown> {
 }
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): HostConfig {
-  const token = (env.TALOS_TOKEN ?? "").trim();
+  const token = (env.TALOS_TOKEN ?? "").trim() || readTokenFromFile(env);
   const url = (env.TALOS_URL ?? "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
   const disabled = (env.TALOS_DISABLED ?? "").trim() === "1";
   return {

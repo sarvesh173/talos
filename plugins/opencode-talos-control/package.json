@@ -21,7 +21,7 @@
   ],
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "build": "tsc -b && bun build --bundle --platform=node --format=esm --external @opencode/plugin --outfile dist/plugin.js src/index.ts",
+    "build": "tsc -b && bun build --bundle --target=node --platform=node --format=esm --external @opencode/plugin --external node:fs --external node:os --external node:path --outfile dist/plugin.js src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.ts"
   },

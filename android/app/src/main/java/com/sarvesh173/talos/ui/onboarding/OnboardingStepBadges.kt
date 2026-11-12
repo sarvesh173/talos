@@ -2,6 +2,8 @@
 
 package com.sarvesh173.talos.ui.onboarding
 
+import com.sarvesh173.talos.ui.*
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -124,7 +126,6 @@ private val CyberOrange: Color @Composable get() = MaterialTheme.colorScheme.ter
 
 @OptIn(ExperimentalLayoutApi::class)
 
-import com.sarvesh173.talos.ui.*
 
 @Composable
 internal fun ShieldLanBadge(tint: Color) {

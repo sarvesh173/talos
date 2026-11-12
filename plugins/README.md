@@ -5,10 +5,16 @@ Plugins that connect external CLI agents to TALOS telemetry.
 Each plugin lives in its own directory with its own toolchain, tests and README,
 so adding one never touches another's dependencies.
 
+The split between what is shared and what belongs to one CLI is in
+[PLUGIN_ARCHITECTURE.md](./PLUGIN_ARCHITECTURE.md). Read it before adding an
+adapter.
+
 | Plugin | Target | Purpose |
 |---|---|---|
 | [`opencode-talos-bridge`](./opencode-talos-bridge) | OpenCode 2.x | Streams tool calls, results and permission prompts to the Kanban board |
 | [`opencode-talos-control`](./opencode-talos-control) | OpenCode 2.x | Read tools so the agent can query the host's agents, processes, diff and mesh |
+| [`claude-talos-control`](./claude-talos-control) | Claude Code | MCP server: the host's agents, Kanban board, diff and health |
+| [`shared`](./shared) | — | `talos-plugin-core`: host config, timed calls, error mapping, the tool shape |
 
 ## Adding a plugin
 

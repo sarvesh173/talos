@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "talos": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/dist/server.js"
+      ],
+      "env": {
+        "TALOS_URL": "${TALOS_URL:-http://127.0.0.1:8000}",
+        "TALOS_TOKEN": "${TALOS_TOKEN}"
+      }
+    }
+  }
+}

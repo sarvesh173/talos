@@ -1,0 +1,14 @@
+{
+  "name": "talos-control",
+  "displayName": "TALOS Control",
+  "version": "0.1.0",
+  "description": "Read the TALOS host: discovered agents, the Kanban board, uncommitted changes, and whether the host is up.",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "talos",
+    "agents",
+    "kanban",
+    "mcp"
+  ],
+  "mcpServers": "./.mcp.json"
+}

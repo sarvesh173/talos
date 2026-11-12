@@ -84,8 +84,6 @@ import com.sarvesh173.talos.data.ToolCall
  * - Physical haptic feedback on actuation
  */
 @Composable
-
-@Composable
 fun CollapsibleThoughtBlock(thoughtText: String) {
     var isExpanded by remember { mutableStateOf(false) }
 

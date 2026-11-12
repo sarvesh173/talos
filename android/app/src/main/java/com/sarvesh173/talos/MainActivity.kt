@@ -335,6 +335,7 @@ class MainActivity : FragmentActivity() {
             // "not chosen yet" and the client mints one on first send.
             var activeSessionId by remember { mutableStateOf("") }
             var activeSessionTitle by remember { mutableStateOf("Interactive Session") }
+            var activeSessionRemote by remember { mutableStateOf(false) }
             var activeAgentName by remember { mutableStateOf("OpenCode") }
             var activeAgentIcon by remember { mutableIntStateOf(R.drawable.ic_opencode) }
             var activeAgentColor by remember { mutableStateOf(Color(0xFF2563EB)) }
@@ -688,12 +689,13 @@ class MainActivity : FragmentActivity() {
                                 onOpenSettings = {
                                     appScreen = "settings"
                                 },
-                                onOpenAgentChat = { sId, sTitle, aName, aIcon, aColor ->
+                                onOpenAgentChat = { sId, sTitle, aName, aIcon, aColor, isRemote ->
                                     activeSessionId = sId
                                     activeSessionTitle = sTitle
                                     activeAgentName = aName
                                     activeAgentIcon = aIcon
                                     activeAgentColor = aColor
+                                    activeSessionRemote = isRemote
                                     appScreen = "agent_chat"
                                 }
                             )
@@ -702,6 +704,7 @@ class MainActivity : FragmentActivity() {
                             AppleAgentChatScreen(
                                 client = client,
                                 sessionId = activeSessionId,
+                                remoteMode = activeSessionRemote,
                                 sessionTitle = activeSessionTitle,
                                 agentName = activeAgentName,
                                 agentIconRes = activeAgentIcon,

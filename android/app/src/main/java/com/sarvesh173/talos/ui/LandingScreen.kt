@@ -208,7 +208,7 @@ fun LandingScreen(
     onConnect: ((String, String) -> Unit)? = null,
     onOpenWizard: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
-    onOpenAgentChat: ((String, String, String, Int, Color) -> Unit)? = null,
+    onOpenAgentChat: ((String, String, String, Int, Color, Boolean) -> Unit)? = null,
 ) {
     val accent = if (isDark) AccentDark else AccentLight
     val canvas = if (isDark) CanvasDark else CanvasLight
@@ -262,8 +262,10 @@ fun LandingScreen(
 
     // A specific session passes its own id; the agent row has none, so it
     // falls back to the agent's room.
-    fun openChat(agent: RealAgent, title: String, sessionId: String = sessionRoomId(agent.id)) {
-        onOpenAgentChat?.invoke(sessionId, title, agent.name, iconForAgent(agent.id), accent)
+    // A session from the roster is remote; an agent's own room is not. The id alone
+    // cannot tell them apart, and guessing it left the chat with no history.
+    fun openChat(agent: RealAgent, title: String, sessionId: String = sessionRoomId(agent.id), remote: Boolean = false) {
+        onOpenAgentChat?.invoke(sessionId, title, agent.name, iconForAgent(agent.id), accent, remote)
     }
 
     Box(
@@ -422,7 +424,8 @@ fun LandingScreen(
                                             hit.room_name.ifBlank { "Search Result" },
                                             hit.sender_name.ifBlank { "Agent" },
                                             iconForAgent(hit.room_id),
-                                            accent
+                                            accent,
+                                            false
                                         )
                                     }
                             ) {
@@ -615,7 +618,7 @@ fun LandingScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable { openChat(agent, session.title, session.id) }
+                                        .clickable { openChat(agent, session.title, session.id, remote = true) }
                                         .padding(horizontal = 16.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {

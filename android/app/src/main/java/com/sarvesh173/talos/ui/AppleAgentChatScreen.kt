@@ -132,6 +132,7 @@ private fun simulatedLabel(reason: String?): String {
 fun AppleAgentChatScreen(
     client: TalosClient,
     sessionId: String,
+    remoteSession: Boolean = false,
     sessionTitle: String,
     agentName: String,
     agentIconRes: Int,
@@ -163,7 +164,7 @@ fun AppleAgentChatScreen(
     // An OpenCode session is not a room: its history is fetched, not streamed.
     // `sessionId` used to be only a room key, which is why opening a session
     // showed that agent's generic room and none of its conversation.
-    val remoteMode = isRemoteSessionId(sessionId)
+    val remoteMode = remoteSession || isRemoteSessionId(sessionId)
     var remoteMessages by remember(sessionId) { mutableStateOf<List<Message>>(emptyList()) }
     var remoteBusy by remember(sessionId) { mutableStateOf(false) }
     var remoteError by remember(sessionId) { mutableStateOf<String?>(null) }

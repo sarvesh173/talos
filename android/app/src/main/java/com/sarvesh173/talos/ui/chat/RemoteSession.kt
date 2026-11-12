@@ -52,6 +52,8 @@ private fun Request.Builder.auth(token: String): Request.Builder {
 suspend fun fetchRemoteMessages(client: TalosClient, sessionId: String): List<Message> =
     withContext(Dispatchers.IO) {
         val http = client()
+        // A silent failure here is indistinguishable from an empty conversation.
+        android.util.Log.i("TalosChat", "fetch url=${client.baseUrl} session=$sessionId tokenLen=${client.apiToken.length}")
         val builder = Request.Builder()
             .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions/$sessionId/messages?limit=50")
             .get()

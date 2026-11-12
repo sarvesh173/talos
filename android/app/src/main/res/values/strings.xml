@@ -9,4 +9,5 @@
     <string name="shortcut_tools_desc">Live operations Kanban board</string>
     <string name="shortcut_review">Review work</string>
     <string name="shortcut_review_desc">Inspect agent diffs and changed files</string>
+    <string name="accessibility_remote_description">Lets TALOS run commands sent from your own host: tap, type, go back, scroll and open apps, so an agent can drive this phone without a screen in front of you. Nothing leaves your network.</string>
 </resources>

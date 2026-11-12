@@ -38,6 +38,7 @@ from core.room_bus import bus
 from core.consensus import deliberate_proposal, list_room_proposals
 from server.agent_orchestrator import orchestrator
 from server.cli_engines import build_hierarchy
+import server.remote_control as remote_control
 from server.auth import (
     create_new_token,
     get_active_tokens,
@@ -1187,6 +1188,67 @@ async def websocket_endpoint(
     except Exception as e:
         logger.error("WebSocket error for %s in room %s: %s", client_id, room_id, e)
         await bus.unsubscribe(room_id, websocket)
+
+
+# ---- Remote control: any agent that can reach the host can drive the phone ----
+# The queue is file-backed on purpose: no new daemon, and the host's existing
+# auth is the only door in.
+
+@app.get("/api/remote/status")
+async def remote_status(token: str = Depends(require_auth)):
+    return remote_control.status()
+
+
+@app.post("/api/remote/command")
+async def remote_command(body: Dict[str, Any] = Body(...), token: str = Depends(require_auth)):
+    device = str(body.get("device") or "phone").strip()
+    action = str(body.get("action") or "").strip()
+    payload = body.get("payload") or {}
+    if not action:
+        raise HTTPException(status_code=400, detail="action is required")
+    return remote_control.enqueue(device, action, payload)
+
+
+@app.get("/api/remote/next")
+async def remote_next(device: str = Query("phone"), token: str = Depends(require_auth)):
+    cmd = remote_control.next_command(device)
+    return {"command": cmd}
+
+
+@app.post("/api/remote/ack/{command_id}")
+async def remote_ack(command_id: str, token: str = Depends(require_auth)):
+    remote_control.ack(command_id)
+    return {"ok": True}
+
+
+@app.post("/api/remote/result/{command_id}")
+async def remote_result(
+    command_id: str, body: Dict[str, Any] = Body(...), token: str = Depends(require_auth)
+):
+    return remote_control.finish(
+        command_id,
+        bool(body.get("ok")),
+        str(body.get("output") or ""),
+        body.get("screenshot"),
+    )
+
+
+@app.get("/api/remote/result")
+async def remote_result_get(command_id: str = Query(...), token: str = Depends(require_auth)):
+    found = remote_control.result(command_id)
+    if not found:
+        raise HTTPException(status_code=404, detail="no result yet")
+    return found
+
+
+@app.get("/api/remote/artifact/{command_id}")
+async def remote_artifact(command_id: str, token: str = Depends(require_auth)):
+    from fastapi.responses import FileResponse
+
+    path = remote_control.ARTIFACTS / f"{command_id}.png"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="no screenshot")
+    return FileResponse(str(path), media_type="image/png")
 
 
 if __name__ == "__main__":

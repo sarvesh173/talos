@@ -107,6 +107,21 @@
             </intent-filter>
         </activity>
 
+        <!-- Remote control. The user grants this once, in Settings; after that
+             any agent that can reach the host can drive the phone. -->
+        <service
+            android:name=".control.TalosAccessibilityService"
+            android:exported="false"
+            android:label="@string/accessibility_remote_description"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_config" />
+        </service>
+
         <!-- Notification replies and approval decisions arrive here, including
              when the process is cold-started by the action itself. -->
         <receiver

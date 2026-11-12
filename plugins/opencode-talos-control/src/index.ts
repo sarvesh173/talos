@@ -15,15 +15,9 @@
  */
 
 import { Plugin } from "@opencode/plugin";
-import { readConfig } from "./host.js";
-import {
-  gitDiff,
-  hostHealth,
-  json,
-  listAgents,
-  listProcesses,
-  meshStatus,
-} from "./tools.js";
+import { readConfig } from "talos-plugin-core";
+
+import { tools } from "./tools.js";
 
 const PLUGIN_ID = "talos.control";
 
@@ -50,56 +44,18 @@ export default Plugin.define({
         description: "Read TALOS host state: agents, processes, diff, mesh",
       });
 
-      editor.add({
-        name: "agents",
-        description:
-          "List the agent engines the TALOS host has discovered, with their real session counts. Engines that are not installed are included with the reason.",
-        input: { type: "object", properties: {}, additionalProperties: false },
-        options: { namespace: "talos" },
-        execute: async () => ({ content: (await listAgents(config)).content }),
-      });
-
-      editor.add({
-        name: "processes",
-        description:
-          "List the long-running processes the TALOS host is supervising, with their status.",
-        input: { type: "object", properties: {}, additionalProperties: false },
-        options: { namespace: "talos" },
-        execute: async () => ({ content: (await listProcesses(config)).content }),
-      });
-
-      editor.add({
-        name: "diff",
-        description:
-          "Show the uncommitted changes in the repository the TALOS host runs in, grouped by file with additions and deletions.",
-        input: { type: "object", properties: {}, additionalProperties: false },
-        options: { namespace: "talos" },
-        execute: async () => {
-          const result = await gitDiff(config);
-          return { content: result.content, isError: result.isError };
-        },
-      });
-
-      editor.add({
-        name: "mesh",
-        description:
-          "Show the Tailscale mesh as the TALOS host sees it: peers, their addresses, and whether they are online.",
-        input: { type: "object", properties: {}, additionalProperties: false },
-        options: { namespace: "talos" },
-        execute: async () => ({ content: (await meshStatus(config)).content }),
-      });
-
-      editor.add({
-        name: "health",
-        description:
-          "Check that the TALOS host is answering. Use this first when another talos tool fails, to tell a host problem apart from a bad request.",
-        input: { type: "object", properties: {}, additionalProperties: false },
-        options: { namespace: "talos" },
-        execute: async () => {
-          const result = await hostHealth(config);
-          return { content: result.content, isError: result.isError };
-        },
-      });
+      for (const tool of tools) {
+        editor.add({
+          name: tool.name,
+          description: tool.description,
+          input: { type: "object", properties: {}, additionalProperties: false },
+          options: { namespace: "talos" },
+          execute: async () => {
+            const result = await tool.run(config);
+            return { content: result.content, isError: result.isError };
+          },
+        });
+      }
     });
 
     return () => {
@@ -107,5 +63,3 @@ export default Plugin.define({
     };
   },
 });
-
-export { json };

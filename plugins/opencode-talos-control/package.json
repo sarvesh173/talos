@@ -21,12 +21,13 @@
   ],
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.ts"
   },
   "dependencies": {
-    "@opencode/plugin": "^2.2.5"
+    "@opencode/plugin": "^2.2.5",
+    "talos-plugin-core": "file:../shared"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

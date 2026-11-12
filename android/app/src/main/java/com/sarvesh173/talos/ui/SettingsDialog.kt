@@ -1,7 +1,5 @@
 package com.sarvesh173.talos
 
-package com.sarvesh173.talos
-
 import android.app.Activity
 import android.Manifest
 import android.content.Intent

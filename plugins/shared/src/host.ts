@@ -98,3 +98,20 @@ export async function callHost<T>(
     clearTimeout(timer);
   }
 }
+
+/**
+ * Turns a failed host call into something the model can act on.
+ *
+ * The two cases worth naming are a rejected key and a missing endpoint: the
+ * first is the user's credential, the second means the host is older than the
+ * plugin expects. Both are otherwise just numbers.
+ */
+export function describeFailure(path: string, status: number, error?: string): string {
+  if (status === 401) {
+    return `TALOS rejected the API key (401 from ${path}). The key in TALOS_TOKEN is wrong or revoked.`;
+  }
+  if (status === 404) {
+    return `The host has no ${path} endpoint (404). It is running an older build than this plugin expects.`;
+  }
+  return `${path} failed: ${error ?? "unknown error"}${status ? ` (HTTP ${status})` : ""}`;
+}

@@ -36,16 +36,30 @@ What the host does serve, for contrast: `/api/agents/delegates` (list),
 
 ## Which of these fail loudly
 
-Most of them do not. Six delegate methods wrap the call in `runCatching`, act only
-`if (resp.isSuccessful)`, and otherwise write one `Log.w` line. Nothing reaches the UI, so a control
-that cannot work looks exactly like one that worked.
+Most of them did not. Six delegate methods wrapped the call in `runCatching`, acted only
+`if (resp.isSuccessful)`, and otherwise wrote one `Log.w` line. Nothing reached the UI, so a control
+that could not work looked exactly like one that worked.
 
-`checkBrowserStatus` is worse than silent: it maps a failed request to `onResult(null)`, which is
+`checkBrowserStatus` was worse than silent: it mapped a failed request to `onResult(null)`, which is
 the same value it passes when the host answers and there is no browser. "Could not ask" and "nothing
-to report" are indistinguishable.
+to report" were indistinguishable.
 
 The image gallery does the right thing and is the pattern to copy: it sets a `_galleryError` the
 screen renders, and its comment already says why — *an unreadable gallery is not an empty gallery*.
+
+## Fixed since this was written
+
+- **The six delegate methods.** They share `runCommand` now, which puts the reason in a
+  `commandError` flow. `CliToolManager` shows it in the subtitle it already used for the hierarchy
+  error and the canvas raises a toast, which is how that screen says everything else. The controls
+  still cannot reach the host; they just stop pretending they did.
+- **The command-limit toast.** It said "Limit updated locally" when the host had rejected the write.
+- **`checkBrowserStatus`.** It takes an `onError` callback, the screen keeps the reason in
+  `browserError` and shows it in the error colour, and the refresh toast only claims a refresh when
+  one happened. An empty body is now reported too: the old `?: return@use` left the callback uncalled,
+  so the screen sat on its placeholder forever.
+
+The route table above is unchanged — none of these added an endpoint.
 
 ## Deliberately not changed
 

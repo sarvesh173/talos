@@ -61,6 +61,12 @@ screen renders, and its comment already says why — *an unreadable gallery is n
 
 ## Also found, unrelated to routes
 
+- `LookAndFeelScreen` reads `animateCharacters`, `appIcon`, `loadingIndicatorStyle` and `reduceMotion`
+  and renders their current state, but never writes them: the only `client.set*` calls in that screen
+  are `setAccentColor`, `setThemeMode`, `setThemePreset` and `setDarkBackground`. So four appearance
+  settings are displayed as if they were controls and cannot be changed. The setters exist and are
+  never called, which is the same shape as the route gap — a client that offers something the other
+  side does not accept.
 - `AttachmentSheet.kt` and `AttachmentBottomSheet.kt` are two live attachment pickers with different
   tiles, one used by `AppleAgentChatScreen` and one by `MainActivity`. Two pickers for one job.
 - Eleven `TalosClient` methods have no caller anywhere in the app; four of them are one-line aliases

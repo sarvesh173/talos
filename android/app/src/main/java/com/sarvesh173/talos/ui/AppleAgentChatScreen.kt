@@ -3,6 +3,7 @@ package com.sarvesh173.talos.ui
 import com.sarvesh173.talos.network.*
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.ui.chat.fetchRemoteMessages
+import com.sarvesh173.talos.ui.chat.fetchRemoteSessions
 import com.sarvesh173.talos.ui.chat.isRemoteSessionId
 import com.sarvesh173.talos.ui.chat.sendRemotePrompt
 
@@ -109,10 +110,12 @@ data class ChatMessage(
     val simulatedReason: String? = null
 )
 
-/** Clock label for a core timestamp (epoch seconds). */
-private fun formatClock(epochSeconds: Double): String =
-    SimpleDateFormat("HH:mm", Locale.getDefault())
+/** Clock label for a core timestamp (epoch seconds) in 12-hour format with AM/PM. */
+private fun formatClock(epochSeconds: Double): String {
+    if (epochSeconds <= 0.0) return ""
+    return SimpleDateFormat("h:mm a", Locale.getDefault())
         .format(Date((epochSeconds * 1000).toLong()))
+}
 
 /**
  * The label for a reply the core produced without a model.
@@ -164,10 +167,13 @@ fun AppleAgentChatScreen(
     // An OpenCode session is not a room: its history is fetched, not streamed.
     // `sessionId` used to be only a room key, which is why opening a session
     // showed that agent's generic room and none of its conversation.
-    val remoteMode = remoteSession || isRemoteSessionId(sessionId)
-    var remoteMessages by remember(sessionId) { mutableStateOf<List<Message>>(emptyList()) }
-    var remoteBusy by remember(sessionId) { mutableStateOf(false) }
-    var remoteError by remember(sessionId) { mutableStateOf<String?>(null) }
+    var activeSessionId by remember(sessionId) { mutableStateOf(sessionId) }
+    var activeSessionTitle by remember(sessionTitle) { mutableStateOf(sessionTitle) }
+    val remoteMode = remoteSession || isRemoteSessionId(activeSessionId)
+    var remoteMessages by remember(activeSessionId) { mutableStateOf<List<Message>>(emptyList()) }
+    var remoteSessions by remember(remoteMode) { mutableStateOf<List<SessionSummary>>(emptyList()) }
+    var remoteBusy by remember(activeSessionId) { mutableStateOf(false) }
+    var remoteError by remember(activeSessionId) { mutableStateOf<String?>(null) }
     val isThinking by client.isAgentTyping.collectAsState()
     val pendingApproval by client.pendingApproval.collectAsState()
     val pendingQuestion by client.pendingQuestion.collectAsState()
@@ -283,7 +289,7 @@ fun AppleAgentChatScreen(
                 codeBlock = null,
                 stats = stats,
                 agentId = msg.sender_id,
-                simulated = msg.simulated,
+                simulated = if (remoteMode) false else msg.simulated,
                 simulatedReason = msg.simulatedReason
             )
         }
@@ -313,31 +319,37 @@ fun AppleAgentChatScreen(
     // A remote session's history is fetched once on open. Failures are shown
     // rather than swallowed: an empty list here looks identical to a real
     // conversation with nothing in it.
-    LaunchedEffect(sessionId, remoteMode) {
+    LaunchedEffect(activeSessionId, remoteMode) {
         if (!remoteMode) return@LaunchedEffect
         remoteError = null
-        remoteMessages = runCatching { fetchRemoteMessages(client, sessionId) }
+        remoteMessages = runCatching { fetchRemoteMessages(client, activeSessionId) }
             .fold({ it }, { error -> emptyList<Message>().also { remoteError = error.message ?: "Could not load this session." } })
     }
 
-    LaunchedEffect(sessionId) {
+    LaunchedEffect(remoteMode) {
+        if (remoteMode) {
+            remoteSessions = fetchRemoteSessions(client)
+        }
+    }
+
+    LaunchedEffect(activeSessionId) {
         // An empty id means "no session chosen yet". Mint a real one locally
         // rather than inventing a plausible-looking constant that never existed
         // on the host — the server would treat it as a live session.
-        val resolved = sessionId.ifBlank {
+        val resolved = activeSessionId.ifBlank {
             "ses_" + java.util.UUID.randomUUID().toString().replace("-", "").take(24)
         }
-        if (client.isPaired.value) client.switchRoom(resolved)
+        if (!remoteMode && client.isPaired.value) client.switchRoom(resolved)
     }
 
     // A remote session is driven from the host: another agent can post into it
     // and the phone has to catch up on its own. Poll while the screen is open so
     // a conversation started elsewhere shows up here without a restart.
-    LaunchedEffect(sessionId, remoteMode) {
+    LaunchedEffect(activeSessionId, remoteMode) {
         if (!remoteMode) return@LaunchedEffect
         while (true) {
             delay(2_500)
-            val fresh = runCatching { fetchRemoteMessages(client, sessionId) }.getOrNull() ?: continue
+            val fresh = runCatching { fetchRemoteMessages(client, activeSessionId) }.getOrNull() ?: continue
             if (fresh.size != remoteMessages.size) {
                 remoteMessages = fresh
                 remoteError = null
@@ -345,16 +357,19 @@ fun AppleAgentChatScreen(
         }
     }
 
-    // Past sessions: the core's rooms, with the local cache count so a room
-    // that exists but has no history says so instead of looking empty.
-    val sessionSummaries = remember(rooms) {
-        rooms.map { room ->
-            SessionSummary(
-                id = room.id,
-                title = room.name.ifBlank { room.id },
-                relativeTime = "Room",
-                messageCount = 0
-            )
+    // Past sessions: OpenCode sessions when remote, or TALOS rooms when local.
+    val sessionSummaries = remember(remoteMode, remoteSessions, rooms) {
+        if (remoteMode && remoteSessions.isNotEmpty()) {
+            remoteSessions
+        } else {
+            rooms.map { room ->
+                SessionSummary(
+                    id = room.id,
+                    title = room.name.ifBlank { room.id },
+                    relativeTime = "Room",
+                    messageCount = 0
+                )
+            }
         }
     }
 
@@ -368,9 +383,9 @@ fun AppleAgentChatScreen(
         // ---------------- message stream ----------------
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 104.dp, bottom = 150.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxSize().padding(horizontal = 14.dp),
+            contentPadding = PaddingValues(top = 96.dp, bottom = 140.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(messages, key = { it.id }) { msg ->
                 if (msg.sender == "user") {
@@ -533,7 +548,7 @@ fun AppleAgentChatScreen(
                         )
                     }
                     Text(
-                        text = sessionTitle,
+                        text = activeSessionTitle,
                         fontSize = 11.sp,
                         color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f),
                         maxLines = 1,
@@ -767,7 +782,7 @@ fun AppleAgentChatScreen(
                                         remoteError = null
                                         remoteMessages = remoteMessages + Message(
                                             id = "local-" + System.currentTimeMillis(),
-                                            room_id = sessionId,
+                                            room_id = activeSessionId,
                                             sender_id = "user",
                                             sender_name = "You",
                                             sender_role = Role.human,
@@ -778,12 +793,12 @@ fun AppleAgentChatScreen(
                                             // One throw here used to kill the coroutine and leave
                                             // the composer stuck busy forever.
                                             val reply = runCatching {
-                                                sendRemotePrompt(client, sessionId, textToSend)
+                                                sendRemotePrompt(client, activeSessionId, textToSend)
                                             }.getOrElse { error ->
                                                 "Could not send: " + (error.message ?: error::class.java.simpleName)
                                             }
                                             remoteMessages = runCatching {
-                                                fetchRemoteMessages(client, sessionId)
+                                                fetchRemoteMessages(client, activeSessionId)
                                             }.getOrElse { remoteMessages }
                                             if (reply.isBlank()) remoteError = "The agent sent nothing back."
                                             else if (reply.startsWith("Could not send")) remoteError = reply
@@ -820,10 +835,12 @@ fun AppleAgentChatScreen(
                     sessions = sessionSummaries,
                     isDark = isDark,
                     brandColor = brandColor,
-                    currentId = sessionId,
+                    currentId = activeSessionId,
                     onOpen = { s ->
                         showHistory = false
-                        if (client.isPaired.value) client.switchRoom(s.id)
+                        activeSessionId = s.id
+                        activeSessionTitle = s.title
+                        if (!remoteMode && client.isPaired.value) client.switchRoom(s.id)
                     },
                     onDismiss = { showHistory = false }
                 )
@@ -1045,12 +1062,13 @@ private fun UserBubble(
     brandColor: Color,
     onLongClick: () -> Unit = {}
 ) {
+    if (msg.text.isBlank() || msg.text == "null") return
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         val shape = RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
         Surface(
             shape = shape,
             color = brandColor,
-            shadowElevation = 3.dp,
+            shadowElevation = 2.dp,
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .clip(shape)
@@ -1063,20 +1081,22 @@ private fun UserBubble(
                     shape = shape
                 )
         ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)) {
                 Text(
                     text = msg.text,
                     fontSize = 15.sp,
                     color = Color.White,
                     letterSpacing = (-0.1).sp
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = msg.timestamp,
-                    fontSize = 11.sp,
-                    color = Color.White.copy(alpha = 0.65f),
-                    modifier = Modifier.align(Alignment.End)
-                )
+                if (msg.timestamp.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = msg.timestamp,
+                        fontSize = 10.sp,
+                        color = Color.White.copy(alpha = 0.65f),
+                        modifier = Modifier.align(Alignment.End)
+                    )
+                }
             }
         }
     }
@@ -1092,109 +1112,104 @@ private fun AgentBubble(
     onDirectiveReply: (String) -> Unit = {},
     onLongClick: () -> Unit = {}
 ) {
-    // SYSTEM.md rich directives: prose stays in the bubble, :::talos blocks
-    // render as full-width interactive cards below it. Interactive answers
-    // go back as the next user turn via onDirectiveReply.
     val parsed = remember(msg.id, msg.text) { TalosDirectiveParser.parse(msg.text) }
     val hasDirectives = parsed.directives.isNotEmpty()
+    val bubbleText = if (hasDirectives) parsed.prose else msg.text
+    if (bubbleText.isBlank() && !hasDirectives) return
+    if (bubbleText == "null" && !hasDirectives) return
+
     Column(modifier = Modifier.fillMaxWidth()) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-        val avatarEngine = remember(msg.agentId) {
-            AgentAvatarEngine(AvatarIdentity.of(msg.agentId.ifBlank { "agent" }, agentName))
-        }
-        // The avatar is the agent's identity mark, not a spinner: it settles into
-        // a finished/settled expression once the turn has landed, and speeds up
-        // its breathing when the turn was produced fast.
-        LaunchedEffect(msg.id, msg.stats) {
-            avatarEngine.setState(
-                when {
-                    msg.stats == null -> AvatarState.Idle
-                    else -> AvatarState.Happy
-                }
-            )
-            msg.stats?.tokensPerSecond?.let { avatarEngine.setTempoFromRate(it) }
-        }
-        AgentAvatar(
-            engine = avatarEngine,
-            size = 32.dp,
-            isDark = isDark
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        val shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp)
-        Surface(
-            shape = shape,
-            color = if (isDark) Color(0xFF161822).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f),
-            shadowElevation = 3.dp,
-            modifier = Modifier
-                .widthIn(max = 300.dp)
-                .clip(shape)
-                .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = shape)
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                val bubbleText = if (hasDirectives) parsed.prose else msg.text
-                if (bubbleText.isNotBlank()) {
-                Text(
-                    text = bubbleText,
-                    fontSize = 15.sp,
-                    color = if (isDark) Color.White else Color(0xFF1D1D1F),
-                    letterSpacing = (-0.1).sp
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+            // Crisp agent SVG icon in Apple rounded squircle container
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(brandColor.copy(alpha = if (isDark) 0.20f else 0.12f))
+                    .border(BorderStroke(0.8.dp, brandColor.copy(alpha = 0.35f)), RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = agentIconRes),
+                    contentDescription = agentName,
+                    modifier = Modifier.size(16.dp)
                 )
-                }
-                // A canned template reply is not the model's answer. Say so
-                // under the bubble instead of letting it pass as one.
-                if (msg.simulated) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(5.dp)
-                                .clip(CircleShape)
-                                .background(StatusAmber)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            val shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp)
+            Surface(
+                shape = shape,
+                color = if (isDark) Color(0xFF161822).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f),
+                shadowElevation = 2.dp,
+                modifier = Modifier
+                    .widthIn(max = 300.dp)
+                    .clip(shape)
+                    .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = shape)
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)) {
+                    if (bubbleText.isNotBlank() && bubbleText != "null") {
                         Text(
-                            text = simulatedLabel(msg.simulatedReason),
-                            fontSize = 11.sp,
-                            color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f)
+                            text = bubbleText,
+                            fontSize = 15.sp,
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            letterSpacing = (-0.1).sp
+                        )
+                    }
+                    if (msg.simulated) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(StatusAmber)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = simulatedLabel(msg.simulatedReason),
+                                fontSize = 11.sp,
+                                color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.50f)
+                            )
+                        }
+                    }
+                    msg.stats?.let { stats ->
+                        Spacer(modifier = Modifier.height(6.dp))
+                        MessageFooterView(
+                            stats = stats,
+                            isDark = isDark,
+                            accent = brandColor
+                        )
+                    }
+                    if (msg.timestamp.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = msg.timestamp,
+                            fontSize = 10.sp,
+                            color = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
+                            modifier = Modifier.align(Alignment.End)
                         )
                     }
                 }
-                msg.stats?.let { stats ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    MessageFooterView(
-                        stats = stats,
+            }
+        }
+        if (hasDirectives) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(start = 36.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                parsed.directives.forEach { directive ->
+                    TalosDirectiveHost(
+                        directive = directive,
                         isDark = isDark,
-                        accent = brandColor
+                        brandColor = brandColor,
+                        onReply = onDirectiveReply
                     )
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = msg.timestamp,
-                    fontSize = 11.sp,
-                    color = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f),
-                    modifier = Modifier.align(Alignment.End)
-                )
             }
         }
-    }
-    if (hasDirectives) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(start = 40.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            parsed.directives.forEach { directive ->
-                TalosDirectiveHost(
-                    directive = directive,
-                    isDark = isDark,
-                    brandColor = brandColor,
-                    onReply = onDirectiveReply
-                )
-            }
-        }
-    }
     }
 }
 

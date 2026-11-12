@@ -25,6 +25,7 @@ import org.json.JSONObject
 import com.sarvesh173.talos.data.Message
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.network.TalosClient
+import com.sarvesh173.talos.ui.SessionSummary
 import java.util.concurrent.TimeUnit
 
 /** A session id the host recognises as one of OpenCode's own. */
@@ -66,21 +67,65 @@ suspend fun fetchRemoteMessages(client: TalosClient, sessionId: String): List<Me
         val out = ArrayList<Message>(rows.length())
         for (i in 0 until rows.length()) {
             val row = rows.optJSONObject(i) ?: continue
-            val text = row.optString("text")
-            val error = row.optString("error")
-            val role = if (row.optString("role") == "user") Role.human else Role.agent
+            val roleStr = row.optString("role", "").lowercase()
+            if (roleStr == "idle" || roleStr == "system") continue
+
+            val rawText = if (row.isNull("text")) "" else row.optString("text", "")
+            val rawError = if (row.isNull("error")) "" else row.optString("error", "")
+            val text = if (rawText == "null") "" else rawText.trim()
+            val error = if (rawError == "null") "" else rawError.trim()
+
+            if (text.isBlank() && error.isBlank()) continue
+
+            val role = if (roleStr == "user") Role.human else Role.agent
             out.add(
                 Message(
                     id = row.optString("id").ifBlank { "remote-$i" },
                     room_id = sessionId,
-                    sender_id = if (role == Role.human) "user" else "agent",
-                    sender_name = if (role == Role.human) "You" else "Agent",
+                    sender_id = if (role == Role.human) "user" else "opencode",
+                    sender_name = if (role == Role.human) "You" else "OpenCode",
                     sender_role = role,
-                    // A refused turn has no text. Showing nothing would read as
-                    // the agent staying silent, so the refusal is the message.
-                    content = text.ifBlank { error.ifBlank { "" } },
+                    content = text.ifBlank { error },
                     created_at = row.optDouble("created_ms", 0.0) / 1000.0,
-                    simulated = error.isNotBlank(),
+                    simulated = false,
+                )
+            )
+        }
+        out
+    }
+
+/**
+ * All OpenCode sessions from the host, for the session switcher.
+ */
+suspend fun fetchRemoteSessions(client: TalosClient): List<SessionSummary> =
+    withContext(Dispatchers.IO) {
+        val http = client()
+        val builder = Request.Builder()
+            .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions")
+            .get()
+            .auth(client.apiToken)
+        val body = runCatching {
+            http.newCall(builder.build()).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                resp.body?.string()
+            }
+        }.getOrNull() ?: return@withContext emptyList()
+        val arr = JSONObject(body).optJSONArray("sessions") ?: return@withContext emptyList()
+        val out = ArrayList<SessionSummary>(arr.length())
+        for (i in 0 until arr.length()) {
+            val s = arr.optJSONObject(i) ?: continue
+            val sid = s.optString("id", "")
+            if (sid.isBlank()) continue
+            val rawTitle = if (s.isNull("title")) "" else s.optString("title", "")
+            val title = if (rawTitle.isBlank() || rawTitle == "null") "Untitled session" else rawTitle
+            val rawModel = if (s.isNull("model")) "" else s.optString("model", "")
+            val model = if (rawModel.isBlank() || rawModel == "null") "OpenCode" else rawModel
+            out.add(
+                SessionSummary(
+                    id = sid,
+                    title = title,
+                    relativeTime = model,
+                    messageCount = 0
                 )
             )
         }

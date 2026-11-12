@@ -393,3 +393,27 @@ def _delegate_payload(delegate: Dict) -> Dict:
         "remaining_seconds": int(delegate.get("remaining_seconds", 0) or 0),
         "children": children,
     }
+
+
+#: Where operators declare which engines TALOS can actually *drive*.
+#: One JSON file per connected engine, named <id>.json. A file's presence is
+#: the whole signal: installed means the binary exists, connected means TALOS
+#: has a control path for it. The app renders only connected engines, so adding
+#: a CLI is a file here — never an app release.
+CONTROL_DIR = os.path.expanduser("~/.talos/control")
+
+
+def connected_ids(control_dir: Optional[str] = None) -> set:
+    """Engine ids TALOS holds a control manifest for.
+
+    Unreadable directory is an empty set, not an error: a machine that has
+    never connected an agent simply has no connected agents.
+    """
+    directory = control_dir or CONTROL_DIR
+    if not os.path.isdir(directory):
+        return set()
+    found = set()
+    for name in os.listdir(directory):
+        if name.endswith(".json"):
+            found.add(name[: -len(".json")])
+    return found

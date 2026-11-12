@@ -64,7 +64,6 @@ import androidx.compose.ui.unit.sp
 import com.sarvesh173.talos.R
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.network.SearchHitDto
-import com.sarvesh173.talos.ui.agents.AgentRoster
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -111,6 +110,10 @@ private data class RealAgent(
     val id: String,
     val name: String,
     val installed: Boolean,
+    /** True when TALOS can actually drive this engine. Not the same as installed. */
+    val connected: Boolean,
+    /** Host's own one-line description. Shown instead of an app-side subtitle. */
+    val description: String,
     val sessionCount: Int,
     val sessions: List<RealSession>,
     val sessionsError: String?,
@@ -171,6 +174,8 @@ private fun parseRoster(body: String): List<RealAgent> {
                 id = a.optString("id", ""),
                 name = a.optString("name", a.optString("id", "Agent")).ifBlank { a.optString("id", "Agent") },
                 installed = a.optBoolean("installed", false),
+                connected = a.optBoolean("connected", false),
+                description = a.optString("description", "").ifBlank { a.optString("id", "Agent") },
                 sessionCount = a.optInt("session_count", sessions.size),
                 sessions = sessions,
                 sessionsError = if (a.has("sessions_error") && !a.isNull("sessions_error")) a.optString("sessions_error") else null,
@@ -236,9 +241,10 @@ fun LandingScreen(
         loading = true
         failed = false
         try {
-            // The host is the only source of truth: an engine it does not report is
-            // not on this machine, and listing it invites a setting that cannot apply.
-            agents = fetchRoster(client).filter { it.installed }
+            // The host is the only source of truth. Only *connected* engines are
+            // shown: installed means the binary exists, connected means TALOS can
+            // drive it, and a row you cannot use is worse than no row.
+            agents = fetchRoster(client).filter { it.connected }
         } catch (_: Exception) {
             agents = emptyList()
             failed = true
@@ -454,14 +460,13 @@ fun LandingScreen(
                     }
                     } else {
                         val visible = if (searchQuery.isBlank()) agents else agents.filter {
-                            val rosterEntry = AgentRoster.byId(it.id)
                             it.name.contains(searchQuery, ignoreCase = true) ||
-                                (rosterEntry?.subtitle?.contains(searchQuery, ignoreCase = true) == true)
+                                it.description.contains(searchQuery, ignoreCase = true)
                         }
                         items(visible, key = { it.id }) { realAgent ->
-                            val rosterEntry = AgentRoster.byId(realAgent.id)
-                            val subtitle = rosterEntry?.subtitle ?: "CLI agent"
-                            val lifecycleText = rosterEntry?.lifecycle?.label
+                            // Host owns the wording: an app-side subtitle drifts the
+                            // moment the host renames or re-describes an engine.
+                            val subtitle = realAgent.description
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
                                 color = card,
@@ -471,7 +476,7 @@ fun LandingScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable(enabled = realAgent.installed) { selectedAgentId = realAgent.id }
+                                        .clickable(enabled = realAgent.connected) { selectedAgentId = realAgent.id }
                                         .padding(horizontal = 16.dp, vertical = 12.dp)
                                         .padding(end = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -486,7 +491,7 @@ fun LandingScreen(
                                         Icon(
                                             painter = painterResource(id = iconForAgent(realAgent.id)),
                                             contentDescription = realAgent.name,
-                                            tint = if (realAgent.installed) primaryText else tertiaryText,
+                                            tint = if (realAgent.connected) primaryText else tertiaryText,
                                             modifier = Modifier.size(22.dp),
                                         )
                                     }
@@ -496,18 +501,14 @@ fun LandingScreen(
                                             text = realAgent.name,
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = if (realAgent.installed) primaryText else tertiaryText,
+                                            color = if (realAgent.connected) primaryText else tertiaryText,
                                             letterSpacing = (-0.15).sp,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = if (realAgent.installed) {
-                                                if (lifecycleText != null) "$subtitle · $lifecycleText" else subtitle
-                                            } else {
-                                                "Not installed on this host"
-                                            },
+                                            text = subtitle,
                                             fontSize = 12.sp,
                                             color = secondaryText,
                                             maxLines = 1,

@@ -25,7 +25,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from server.cli_engines import discover_engines
+from server.cli_engines import connected_ids, discover_engines
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,10 @@ class AgentReport:
     #: the command that was run instead of keeping its own id -> command map,
     #: which would drift from the host the moment an engine is renamed.
     binary_name: str = ""
+    #: True when TALOS holds a control manifest for this engine, i.e. it can be
+    #: driven — not merely present on disk. The app renders this, never a
+    #: built-in list.
+    connected: bool = False
     sessions: List[AgentSessionRow] = field(default_factory=list)
     #: Why sessions could not be listed, when they could not be.
     sessions_error: str = ""
@@ -77,6 +81,7 @@ class AgentReport:
             "installed": self.installed,
             "binary": self.binary,
             "binary_name": self.binary_name,
+            "connected": self.connected,
             "session_count": len(self.sessions),
             "sessions": [s.to_payload() for s in self.sessions],
             "sessions_error": self.sessions_error,
@@ -135,6 +140,7 @@ _SESSION_READERS = {
 def discover_agent_sessions(limit_per_agent: int = 20) -> Dict[str, Any]:
     """Every discovered engine plus whatever real sessions are readable."""
     reports: List[AgentReport] = []
+    connected = connected_ids()
     for engine in discover_engines():
         report = AgentReport(
             id=engine.id,
@@ -142,6 +148,7 @@ def discover_agent_sessions(limit_per_agent: int = 20) -> Dict[str, Any]:
             installed=engine.is_available,
             binary=engine.resolved_path,
             binary_name=engine.binary,
+            connected=engine.is_available and engine.id in connected,
         )
         reader = _SESSION_READERS.get(engine.id)
         if reader is None:
@@ -162,9 +169,11 @@ def discover_agent_sessions(limit_per_agent: int = 20) -> Dict[str, Any]:
         reports.append(report)
 
     total_installed = sum(1 for r in reports if r.installed)
+    total_connected = sum(1 for r in reports if r.connected)
     return {
         "agents": [r.to_payload() for r in reports],
         "installed_count": total_installed,
+        "connected_count": total_connected,
         "total_count": len(reports),
         "server_time": time.time(),
     }

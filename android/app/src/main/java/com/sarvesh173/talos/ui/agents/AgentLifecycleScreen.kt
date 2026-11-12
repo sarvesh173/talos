@@ -122,8 +122,10 @@ fun AgentLifecycleScreen(
         scope.launch {
             when (val result = client.fetchCliRoster()) {
                 is HostResult.Ok -> {
+                    // Connected, not merely installed: a policy row for an engine
+                    // TALOS cannot drive is a switch that does nothing.
                     installed = result.value.agents
-                        .filter { it.installed }
+                        .filter { it.connected }
                         .map { it.id }
                         .toSet()
                     hostFailure = null

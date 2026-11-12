@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.sarvesh173.talos.ui.onboarding
 
 import androidx.activity.compose.BackHandler
@@ -121,7 +123,8 @@ private val CyberOrange: Color @Composable get() = MaterialTheme.colorScheme.ter
 // ==========================================
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable
+
+import com.sarvesh173.talos.ui.*
 
 @Composable
 internal fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
@@ -334,10 +337,3 @@ internal fun WelcomeStep(onEnterChamber: () -> Unit = {}) {
         }
     }
 }
-
-// ==========================================
-// ILLUSTRATION BADGES (Canvas + Vector only, no emoji)
-// ==========================================
-
-/** Step 1 badge 1 — shield over a LAN link. */
-@Composable

@@ -2,6 +2,7 @@
 """
 
 import json
+import os
 from pathlib import Path
 import sqlite3
 import threading
@@ -10,7 +11,9 @@ from typing import Any, Dict, List, Optional
 from core.models import AgentProfile, Message, Role, Room, RoomMode, ToolCall
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
-_DB_PATH = _DATA_DIR / "talos.db"
+# TALOS_DB_PATH points the store at a different file without editing code.
+# The Rust core already reads the same variable (crates/talos-core/src/main.rs).
+_DB_PATH = Path(os.environ.get("TALOS_DB_PATH", str(_DATA_DIR / "talos.db")))
 
 # Single process-wide connection, guarded by a re-entrant lock.
 # Previously every helper opened and closed a fresh sqlite3 connection, which

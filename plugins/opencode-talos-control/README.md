@@ -13,7 +13,10 @@ Read tools that let OpenCode see the TALOS host it runs against.
 ## Install
 
 ```bash
-opencode plugin add ./plugins/opencode-talos-control
+cd plugins/opencode-talos-control
+npm install
+npm run build     # tsc for the tests, then bun bundles dist/plugin.js
+opencode plugin add .
 ```
 
 Or point it at the checkout:
@@ -22,6 +25,10 @@ Or point it at the checkout:
 // ~/.config/opencode/opencode.jsonc
 { "plugins": [ "/home/kira/talos/plugins/opencode-talos-control" ] }
 ```
+
+The bundle step is not optional. OpenCode's plugin loader does not see
+`node_modules` (see below), so a workspace import like `talos-plugin-core` cannot
+resolve from source — it has to already be inlined.
 
 ## Configure
 
@@ -60,6 +67,13 @@ Worth knowing before editing the layout, because the failure is silent:
   file inside it.
 - Listing the same directory in both `opencode.jsonc` and
   `.opencode/plugins/` loads it twice and reports both as failed.
+- **The loader does not resolve `node_modules`.** A plugin that imports a sibling
+  workspace package by name fails with `Cannot find package '<name>'`, even when
+  `node_modules/<name>` exists both in the package and one directory up, and even
+  when plain `node` resolves it fine from the same file. Symlinking it into the
+  plugin's own `node_modules` does not help. This is why `dist/plugin.js` is a
+  bundle: the shared code is inlined at build time, so there is nothing left to
+  resolve except `@opencode/plugin`, which the host provides.
 - `@opencode/plugin` belongs in `dependencies`, not `devDependencies`: the
   published package imports it at runtime, so a dev-only entry installs cleanly
   and then fails to import on the user's machine. Every published plugin checked

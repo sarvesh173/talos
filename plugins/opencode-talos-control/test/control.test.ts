@@ -98,18 +98,22 @@ const tool = (name: string) => {
 };
 
 describe("readConfig", () => {
+  // The token is also read from a file, so an empty env still finds the real
+  // one on a machine that has it. Point HOME at nothing to test the absence.
+  const emptyEnv = { HOME: "/nonexistent-talos-test", TALOS_TOKEN_FILE: "/nonexistent-talos-test/token" };
+
   it("stays disabled without a token", () => {
-    assert.equal(readConfig({}).enabled, false);
+    assert.equal(readConfig(emptyEnv).enabled, false);
   });
 
   it("enables when a token is present and strips trailing slashes", () => {
-    const cfg = readConfig({ TALOS_TOKEN: "abc", TALOS_URL: "http://x:1///" });
+    const cfg = readConfig({ ...emptyEnv, TALOS_TOKEN: "abc", TALOS_URL: "http://x:1///" });
     assert.equal(cfg.enabled, true);
     assert.equal(cfg.url, "http://x:1");
   });
 
   it("TALOS_DISABLED wins over a token", () => {
-    assert.equal(readConfig({ TALOS_TOKEN: "abc", TALOS_DISABLED: "1" }).enabled, false);
+    assert.equal(readConfig({ ...emptyEnv, TALOS_TOKEN: "abc", TALOS_DISABLED: "1" }).enabled, false);
   });
 });
 

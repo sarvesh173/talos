@@ -12,12 +12,17 @@
  *     TALOS_URL    default http://127.0.0.1:8000
  *     TALOS_TOKEN  host API key — without this every tool reports it is unset
  *     TALOS_DISABLED=1 to keep the plugin installed but register nothing
+ *
+ * The session tools (sessions, prompt, messages) use the OpenCode server's own
+ * OPENCODE_SERVER_PASSWORD, which the server already has in its environment.
  */
 
 import { Plugin } from "@opencode/plugin";
 import { readConfig } from "talos-plugin-core";
 
 import { tools } from "./tools.js";
+import { chatTools } from "./chat.js";
+import { readOcConfig } from "./opencode.js";
 
 const PLUGIN_ID = "talos.control";
 
@@ -44,14 +49,25 @@ export default Plugin.define({
         description: "Read TALOS host state: agents, processes, diff, mesh",
       });
 
-      for (const tool of tools) {
+      // Host reads and session tools share one namespace: the model picks a
+      // tool by what it does, not by which server answers.
+      const all = [...tools, ...chatTools(readOcConfig())];
+      for (const tool of all) {
         editor.add({
           name: tool.name,
           description: tool.description,
-          input: { type: "object", properties: {}, additionalProperties: false },
+          input: tool.input ?? {
+            type: "object",
+            properties: {},
+            additionalProperties: false,
+          },
           options: { namespace: "talos" },
-          execute: async () => {
-            const result = await tool.run(config);
+          execute: async (args: unknown) => {
+            // The host tools take nothing; the session tools take arguments.
+            const result = await tool.run(
+              config,
+              (args ?? {}) as Record<string, unknown>,
+            );
             return { content: result.content, isError: result.isError };
           },
         });

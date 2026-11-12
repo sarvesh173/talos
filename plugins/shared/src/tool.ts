@@ -59,8 +59,13 @@ export interface Tool {
   name: string;
   /** Model-facing description of what the tool answers. */
   description: string;
+  /**
+   * JSON Schema for the arguments, when the tool takes any. A tool without one
+   * is registered as taking nothing, which is what most host reads need.
+   */
+  input?: Record<string, unknown>;
   /** Reads the host and returns text for the model. */
-  run: (config: HostConfig) => Promise<ToolResult>;
+  run: (config: HostConfig, args?: Record<string, unknown>) => Promise<ToolResult>;
 }
 
 /**

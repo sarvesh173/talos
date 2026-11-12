@@ -1,6 +1,9 @@
 # opencode-talos-control
 
-Read tools that let OpenCode see the TALOS host it runs against.
+Tools that let OpenCode see the TALOS host it runs against, and hold a
+conversation in one of its sessions.
+
+**Host state** — the machine it is running on:
 
 | Tool | Endpoint | Answers |
 |---|---|---|
@@ -9,6 +12,19 @@ Read tools that let OpenCode see the TALOS host it runs against.
 | `talos_processes` | `GET /api/processes` | what the host is supervising |
 | `talos_diff` | `GET /api/git/diff` | what changed in the host's repo |
 | `talos_mesh` | `GET /api/mesh/status` | peers, addresses, online state |
+
+**Sessions** — the conversation, through the OpenCode server itself:
+
+| Tool | Arguments | Answers |
+|---|---|---|
+| `talos_sessions` | — | the sessions on this server, newest first, with id and title |
+| `talos_prompt` | `session_id`, `text` | sends a message and returns the agent's reply |
+| `talos_messages` | `session_id`, `limit` | the recent messages of one session |
+
+The session tools use `OPENCODE_SERVER_PASSWORD`, which `opencode serve`
+already has; nothing extra needs provisioning. A prompt is accepted at once and
+answered later, so the tool polls until the assistant turn completes or the
+provider returns an error — a quota refusal surfaces as text, not a hang.
 
 ## Install
 

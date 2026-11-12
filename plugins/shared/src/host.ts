@@ -25,7 +25,9 @@ const TOKEN_FILES = [
 
 function readTokenFromFile(env: NodeJS.ProcessEnv): string {
   const explicit = (env.TALOS_TOKEN_FILE ?? "").trim();
-  const candidates = explicit ? [explicit, ...TOKEN_FILES.map((f) => f())] : TOKEN_FILES.map((f) => f());
+  // An explicit path is the whole answer: falling back to the defaults when the
+  // named file is missing would silently read a different token than asked for.
+  const candidates = explicit ? [explicit] : TOKEN_FILES.map((f) => f());
   for (const path of candidates) {
     try {
       const value = readFileSync(path, "utf8").trim();

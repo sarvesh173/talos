@@ -88,12 +88,13 @@ jobs:
           set -euo pipefail
           mkdir -p build-artifacts
           # Two product flavors (prod, dev) each produce their own release APK,
-          # so there is no single app-release.apk. Collect whatever exists and
-          # keep the names a sideload needs to tell them apart.
+          # and a flavor adds a path level: apk/<flavor>/release/*.apk — there is
+          # no apk/release/ directory at all.
           shopt -s nullglob
-          apks=(android/app/build/outputs/apk/release/*.apk)
+          apks=(android/app/build/outputs/apk/*/release/*.apk)
           if [ ${#apks[@]} -eq 0 ]; then
             echo "::error::No APK produced — assembleRelease wrote nothing."
+            find android/app/build/outputs/apk -type f 2>/dev/null || true
             exit 1
           fi
           for apk in "${apks[@]}"; do
@@ -102,12 +103,12 @@ jobs:
             echo "collected $base"
           done
           # talos-latest.apk is the rolling download link: the real (prod) build.
-          if [ -f android/app/build/outputs/apk/release/app-prod-release.apk ]; then
-            cp android/app/build/outputs/apk/release/app-prod-release.apk build-artifacts/talos-latest.apk
-            cp android/app/build/outputs/apk/release/app-prod-release.apk build-artifacts/talos-prod-latest.apk
+          if [ -f android/app/build/outputs/apk/prod/release/app-prod-release.apk ]; then
+            cp android/app/build/outputs/apk/prod/release/app-prod-release.apk build-artifacts/talos-latest.apk
+            cp android/app/build/outputs/apk/prod/release/app-prod-release.apk build-artifacts/talos-prod-latest.apk
           fi
-          if [ -f android/app/build/outputs/apk/release/app-dev-release.apk ]; then
-            cp android/app/build/outputs/apk/release/app-dev-release.apk build-artifacts/talos-dev-latest.apk
+          if [ -f android/app/build/outputs/apk/dev/release/app-dev-release.apk ]; then
+            cp android/app/build/outputs/apk/dev/release/app-dev-release.apk build-artifacts/talos-dev-latest.apk
           fi
           ls -la build-artifacts/
 

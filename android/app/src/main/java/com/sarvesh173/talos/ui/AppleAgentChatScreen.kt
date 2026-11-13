@@ -808,14 +808,24 @@ fun AppleAgentChatScreen(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
+                    // No trailing button while the draft is blank and nothing is
+                    // generating. Telegram, iMessage and WhatsApp all render
+                    // nothing here — a permanently greyed-out send key costs
+                    // 48dp on a 360dp phone and advertises a disabled state.
                     val hasText = inputText.isNotBlank()
+                    val busy = if (remoteMode) remoteBusy else isThinking
+                    AnimatedVisibility(
+                        visible = hasText || busy,
+                        enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                        exit = fadeOut() + scaleOut(targetScale = 0.8f)
+                    ) {
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(if (hasText) brandColor else (if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)))
+                            .background(if (hasText && !busy) brandColor else (if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)))
                             .applePressable(0.90f, pressHaptic = true) {
-                                if (hasText && !(if (remoteMode) remoteBusy else isThinking)) {
+                                if (hasText && !busy) {
                                     val textToSend = inputText.trim()
                                     inputText = ""
                                     if (remoteMode) {
@@ -857,9 +867,10 @@ fun AppleAgentChatScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send message",
-                            tint = if (hasText) Color.White else (if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)),
+                            tint = if (hasText) onAccent(brandColor) else (if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)),
                             modifier = Modifier.size(18.dp)
                         )
+                    }
                     }
                 }
             }

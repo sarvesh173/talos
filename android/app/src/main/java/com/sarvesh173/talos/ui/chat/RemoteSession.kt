@@ -374,3 +374,112 @@ suspend fun stopRemotePrompt(client: TalosClient, sessionId: String): Boolean =
             }
         }.getOrDefault(false)
     }
+
+/** One model the harness can run. */
+data class HarnessModel(
+    val id: String,
+    val providerId: String,
+    val name: String,
+    val vision: Boolean,
+    val reasoning: Boolean,
+    val context: Int?
+)
+
+/** Models the picker can offer. */
+suspend fun fetchHarnessModels(client: TalosClient): List<HarnessModel> =
+    withContext(Dispatchers.IO) {
+        val builder = Request.Builder()
+            .url(client.baseUrl.trimEnd('/') + "/api/opencode/models")
+            .get()
+            .auth(client.apiToken)
+        val body = runCatching {
+            client().newCall(builder.build()).execute().use { it.body?.string() }
+        }.getOrNull() ?: return@withContext emptyList()
+        val root = runCatching { JSONObject(body) }.getOrNull() ?: return@withContext emptyList()
+        if (!root.optBoolean("ok", false)) return@withContext emptyList()
+        val arr = root.optJSONArray("models") ?: return@withContext emptyList()
+        buildList {
+            for (i in 0 until arr.length()) {
+                val row = arr.optJSONObject(i) ?: continue
+                val id = row.optString("id")
+                if (id.isBlank()) continue
+                add(
+                    HarnessModel(
+                        id = id,
+                        providerId = row.optString("provider_id"),
+                        name = row.optString("name").ifBlank { id },
+                        vision = row.optBoolean("vision", false),
+                        reasoning = row.optBoolean("reasoning", false),
+                        context = if (row.isNull("context")) null else row.optInt("context")
+                    )
+                )
+            }
+        }
+    }
+
+/** Pin the session to a model. False means the host refused or could not reach the harness. */
+suspend fun setSessionModel(
+    client: TalosClient,
+    sessionId: String,
+    modelId: String,
+    providerId: String = "opencode"
+): Boolean = withContext(Dispatchers.IO) {
+    val payload = JSONObject()
+        .put("providerID", providerId)
+        .put("modelID", modelId)
+        .toString()
+        .toRequestBody(jsonMedia)
+    val builder = Request.Builder()
+        .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions/$sessionId/model")
+        .post(payload)
+        .auth(client.apiToken)
+    runCatching {
+        client().newCall(builder.build()).execute().use { resp ->
+            if (!resp.isSuccessful) return@use false
+            val body = resp.body?.string() ?: return@use false
+            JSONObject(body).optBoolean("ok", false)
+        }
+    }.getOrDefault(false)
+}
+
+/** Point the session at a different harness agent. */
+suspend fun setSessionAgent(
+    client: TalosClient,
+    sessionId: String,
+    agentId: String
+): Boolean = withContext(Dispatchers.IO) {
+    val payload = JSONObject().put("agent", agentId).toString().toRequestBody(jsonMedia)
+    val builder = Request.Builder()
+        .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions/$sessionId/agent")
+        .post(payload)
+        .auth(client.apiToken)
+    runCatching {
+        client().newCall(builder.build()).execute().use { resp ->
+            if (!resp.isSuccessful) return@use false
+            val body = resp.body?.string() ?: return@use false
+            JSONObject(body).optBoolean("ok", false)
+        }
+    }.getOrDefault(false)
+}
+
+/** What the session is currently set to: its agent and model. */
+data class SessionConfig(val agent: String?, val model: String?, val providerId: String?)
+
+suspend fun fetchSessionConfig(client: TalosClient, sessionId: String): SessionConfig =
+    withContext(Dispatchers.IO) {
+        val empty = SessionConfig(agent = null, model = null, providerId = null)
+        val builder = Request.Builder()
+            .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions/$sessionId/config")
+            .get()
+            .auth(client.apiToken)
+        val body = runCatching {
+            client().newCall(builder.build()).execute().use { it.body?.string() }
+        }.getOrNull() ?: return@withContext empty
+        val root = runCatching { JSONObject(body) }.getOrNull() ?: return@withContext empty
+        if (!root.optBoolean("ok", false)) return@withContext empty
+        SessionConfig(
+            agent = root.optString("agent").takeIf { it.isNotBlank() },
+            model = root.optString("model").takeIf { it.isNotBlank() },
+            providerId = root.optString("provider_id").takeIf { it.isNotBlank() }
+        )
+    }

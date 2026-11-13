@@ -929,6 +929,28 @@ async def opencode_session_subagents(
     return {"ok": True, "subagents": out, "count": len(out)}
 
 
+@app.get("/api/opencode/sessions/{session_id}/config")
+async def opencode_session_config(
+    session_id: str,
+    token: str = Depends(require_auth),
+):
+    """This session's agent and model, for the picker's current selection."""
+    from server.opencode_bridge import OpenCodeClient
+
+    result = OpenCodeClient().get_session(session_id)
+    if not result.ok:
+        return {"ok": False, "error": result.error, "agent": None, "model": None}
+
+    row = (result.data or {}).get("data") or {}
+    model = row.get("model") if isinstance(row.get("model"), dict) else {}
+    return {
+        "ok": True,
+        "agent": row.get("agent"),
+        "model": model.get("id"),
+        "provider_id": model.get("providerID"),
+    }
+
+
 @app.get("/api/opencode/sessions/{session_id}/messages")
 async def opencode_session_messages(
     session_id: str, limit: int = 50, token: str = Depends(require_auth)

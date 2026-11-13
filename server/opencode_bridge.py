@@ -250,6 +250,14 @@ class OpenCodeClient:
     def list_agents(self) -> OpenCodeResult:
         return self._get("/api/agent")
 
+    def get_session(self, session_id: str) -> OpenCodeResult:
+        """One session's own record: its agent, model and token counters.
+
+        Needed because the session list reports `model` as a bare id, while the
+        picker has to show which agent and provider it is running under.
+        """
+        return self._get(f"/api/session/{session_id}")
+
     def session_messages(self, session_id: str, limit: int = 50) -> OpenCodeResult:
         return self._get(f"/api/session/{session_id}/message?limit={limit}")
 

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Mic
@@ -200,6 +201,7 @@ fun AppleAgentChatScreen(
     var showTelemetry by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
     var showSubagents by remember { mutableStateOf(false) }
+    var showConfig by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
 
     // Voice notes. The recorder is format-aware and falls back to M4A when the
@@ -717,6 +719,24 @@ fun AppleAgentChatScreen(
                             DropdownMenuItem(
                                 text = {
                                     Text(
+                                        "Model and agent",
+                                        fontSize = 14.sp,
+                                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.Tune,
+                                        contentDescription = null,
+                                        tint = if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                                onClick = { menuOpen = false; showConfig = true }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
                                         "Summoned agents",
                                         fontSize = 14.sp,
                                         color = if (isDark) Color.White else Color(0xFF1D1D1F)
@@ -1204,6 +1224,31 @@ fun AppleAgentChatScreen(
             onBack = { showSubagents = false }
         )
         return
+    }
+
+    if (showConfig && remoteMode) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f)),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Box(modifier = Modifier.navigationBarsPadding().padding(12.dp)) {
+                SessionConfigSheet(
+                    sessionId = activeSessionId,
+                    client = client,
+                    isDark = isDark,
+                    brandColor = brandColor,
+                    currentModel = null,
+                    currentAgent = null,
+                    onApply = {
+                        showConfig = false
+                        // The next poll picks up the new model on the turn itself.
+                    },
+                    onDismiss = { showConfig = false }
+                )
+            }
+        }
     }
 
     if (showHistory) {

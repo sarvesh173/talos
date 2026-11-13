@@ -1,7 +1,6 @@
 package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -57,12 +56,6 @@ fun ToolCallRow(
     if (calls.isEmpty()) return
 
     var expanded by remember(calls.size) { mutableStateOf(false) }
-    val chevron by animateFloatAsState(
-        targetValue = if (expanded) 1f else 0f,
-        animationSpec = tween(200),
-        label = "tool-chevron"
-    )
-
     val secondary = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.45f)
     val running = calls.count { it.status == "running" }
     val failed = calls.count { it.status == "failed" }
@@ -81,18 +74,25 @@ fun ToolCallRow(
                 .padding(horizontal = 2.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // 24dp lead column — the same column the thinking glyph sits in,
+            // so a turn's reasoning and its tools read as one list.
             Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(
-                        when {
-                            failed > 0 -> Color(0xFFFF3B30)
-                            running > 0 -> Color(0xFFFF9500)
-                            else -> secondary.copy(alpha = 0.5f)
-                        }
-                    )
-            )
+                modifier = Modifier.size(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(
+                            when {
+                                failed > 0 -> Color(0xFFFF3B30)
+                                running > 0 -> Color(0xFFFF9500)
+                                else -> secondary.copy(alpha = 0.5f)
+                            }
+                        )
+                )
+            }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
@@ -104,7 +104,7 @@ fun ToolCallRow(
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = if (chevron > 0.5f) "⌃" else "⌄",
+                text = if (expanded) "⌃" else "⌄",
                 fontSize = 13.sp,
                 color = secondary
             )

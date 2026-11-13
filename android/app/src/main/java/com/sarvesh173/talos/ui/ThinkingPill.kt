@@ -1,8 +1,6 @@
 package com.sarvesh173.talos.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,12 +59,6 @@ fun ThinkingPill(
     if (thought.isBlank()) return
 
     var expanded by remember(thought.isEmpty()) { mutableStateOf(false) }
-    val chevron by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        animationSpec = tween(220),
-        label = "thinking-chevron"
-    )
-
     // While streaming, show the tail: that is where the model is now.
     val preview = remember(thought, streaming) {
         if (streaming) thought.trim().takeLast(160).trim()
@@ -88,13 +79,18 @@ fun ThinkingPill(
                 .padding(horizontal = 2.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // A slow-breathing dot reads as "alive" without being a spinner.
+            // 24dp lead column, same as the tool rows: the glyph, the tool
+            // icon and a status dot all sit in one vertical line.
             Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(accent.copy(alpha = if (streaming) 0.95f else 0.5f))
-            )
+                modifier = Modifier.size(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                ThinkGlyph(
+                    size = 15.dp,
+                    color = accent,
+                    active = streaming
+                )
+            }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
@@ -118,10 +114,9 @@ fun ThinkingPill(
             }
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = if (chevron == 0f) "⌄" else "⌃",
+                text = if (expanded) "⌃" else "⌄",
                 fontSize = 13.sp,
-                color = secondary,
-                modifier = Modifier.rotate(0f)
+                color = secondary
             )
         }
 

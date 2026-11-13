@@ -130,8 +130,25 @@ data class ChatMessage(
      * Kept out of `text` so the prose stays readable; the bubble folds it into
      * a thinking pill above the answer.
      */
-    val thought: String? = null
+    val thought: String? = null,
+    /** Raw epoch seconds, for measuring how long a turn took. */
+    val epochSeconds: Double = 0.0
 )
+
+/** "3m 4s" / "48s" / "1h 12m" — a turn's wall time, coarse on purpose. */
+private fun formatWorked(totalSeconds: Int): String = when {
+    totalSeconds < 60 -> "${totalSeconds}s"
+    totalSeconds < 3600 -> {
+        val m = totalSeconds / 60
+        val s = totalSeconds % 60
+        if (s == 0) "${m}m" else "${m}m ${s}s"
+    }
+    else -> {
+        val h = totalSeconds / 3600
+        val m = (totalSeconds % 3600) / 60
+        if (m == 0) "${h}h" else "${h}h ${m}m"
+    }
+}
 
 /** Clock label for a core timestamp (epoch seconds) in 12-hour format with AM/PM. */
 private fun formatClock(epochSeconds: Double): String {
@@ -289,16 +306,22 @@ fun AppleAgentChatScreen(
     val sourceMessages = if (remoteMode) remoteMessages else liveMessages
     val messages = remember(sourceMessages) {
         sourceMessages.map { msg ->
-            val stats = msg.metrics?.let { met ->
+            // Metrics and tool records arrive independently: a turn that only
+            // ran tools has records and no metrics. Building stats off metrics
+            // alone made every tool-only turn render with no trace at all.
+            val met = msg.metrics
+            val stats = if (met == null && msg.tool_records.isEmpty() && msg.files_touched.isEmpty()) {
+                null
+            } else {
                 MessageStats(
-                    latencyMs = met.latency_ms,
-                    ttftMs = met.ttft_ms,
-                    promptTokens = met.prompt_tokens,
-                    completionTokens = met.completion_tokens,
-                    tokensPerSecond = met.tokens_per_second,
-                    model = met.model,
-                    reasoningTokens = met.reasoning_tokens,
-                    costUsd = met.cost_usd,
+                    latencyMs = met?.latency_ms,
+                    ttftMs = met?.ttft_ms,
+                    promptTokens = met?.prompt_tokens,
+                    completionTokens = met?.completion_tokens,
+                    tokensPerSecond = met?.tokens_per_second,
+                    model = met?.model,
+                    reasoningTokens = met?.reasoning_tokens,
+                    costUsd = met?.cost_usd,
                     toolCalls = msg.tool_records.map { tr ->
                         ToolCallSummary(
                             name = tr.name,
@@ -330,9 +353,23 @@ fun AppleAgentChatScreen(
                 agentId = msg.sender_id,
                 simulated = if (remoteMode) false else msg.simulated,
                 simulatedReason = msg.simulatedReason,
-                thought = msg.thought
+                thought = msg.thought,
+                epochSeconds = msg.created_at
             )
         }
+    }
+
+    // How long the turn took, in the header: "Worked for 3m 4s".
+    //
+    // Only once the turn has finished. A clock ticking on a thinking bubble is
+    // noise — the answer is not there yet, so duration says nothing.
+    val turnWorkLabel = remember(messages, isThinking) {
+        if (isThinking || messages.size < 2) return@remember null
+        val lastUser = messages.lastOrNull { it.sender == "user" } ?: return@remember null
+        val answered = messages.lastOrNull { it.sender == "agent" } ?: return@remember null
+        if (answered.epochSeconds <= lastUser.epochSeconds) return@remember null
+        val seconds = (answered.epochSeconds - lastUser.epochSeconds).toInt()
+        if (seconds < 5) null else formatWorked(seconds)
     }
 
     // The agent's internal reasoning for the turn in flight. The core streams it
@@ -607,7 +644,13 @@ fun AppleAgentChatScreen(
                         )
                     }
                     Text(
-                        text = activeSessionTitle,
+                        text = buildString {
+                            append(activeSessionTitle)
+                            if (turnWorkLabel != null) {
+                                append(" · worked for ")
+                                append(turnWorkLabel)
+                            }
+                        },
                         fontSize = 11.sp,
                         color = if (isDark) Color.White.copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.45f),
                         maxLines = 1,

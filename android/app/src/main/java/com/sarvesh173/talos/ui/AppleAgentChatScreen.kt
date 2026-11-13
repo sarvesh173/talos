@@ -623,7 +623,7 @@ fun AppleAgentChatScreen(
                             },
                             leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Default.Insights,
+                                    imageVector = Icons.Default.Info,
                                     contentDescription = null,
                                     tint = if (showTelemetry) brandColor
                                            else if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),

@@ -122,6 +122,7 @@ import com.sarvesh173.talos.ui.features.CachingScreen
 import com.sarvesh173.talos.ui.features.NotificationsScreen
 import com.sarvesh173.talos.ui.features.ThinkingOrbSettingsScreen
 import com.sarvesh173.talos.ui.features.SupportedClisScreen
+import com.sarvesh173.talos.ui.logs.LogsScreen
 import com.sarvesh173.talos.ui.*
 import com.sarvesh173.talos.ui.TalosHaptics
 import kotlinx.coroutines.Dispatchers
@@ -546,7 +547,7 @@ class MainActivity : FragmentActivity() {
                     when (appScreen) {
                         "look_and_feel", "chat_preferences", "security", "caching", "notifications",
                         "dashboard_control", "agent_lifecycle", "kanban", "logo_customize",
-                        "review_work", "jobs" -> {
+                        "review_work", "jobs", "supported_clis", "processes", "logs" -> {
                             appScreen = "settings"
                         }
                         "settings", "canvas", "diff", "hub", "gallery", "cli_manager", "chat",
@@ -573,7 +574,7 @@ class MainActivity : FragmentActivity() {
                         val fadeSpec = M3EMotion.defaultEffects<Float>()
                         val appleSpringSpatial = spring<IntOffset>(dampingRatio = 0.85f, stiffness = 400f)
                         val appleSpringFloat = spring<Float>(dampingRatio = 0.85f, stiffness = 400f)
-                        val settingsSubs = listOf("look_and_feel", "chat_preferences", "security", "caching", "notifications", "dashboard_control", "agent_lifecycle", "kanban", "logo_customize", "review_work", "jobs")
+                        val settingsSubs = listOf("look_and_feel", "chat_preferences", "security", "caching", "notifications", "dashboard_control", "agent_lifecycle", "kanban", "logo_customize", "review_work", "jobs", "supported_clis", "processes", "logs")
                         val isSettingsSub = targetState in settingsSubs
                         val fromSettingsSub = initialState in settingsSubs
                         if ((initialState == "main" && (targetState == "settings" || isSettingsSub)) ||
@@ -768,7 +769,8 @@ class MainActivity : FragmentActivity() {
                                 onNavigateToReviewWork = { appScreen = "review_work" },
                                 onNavigateToJobs = { appScreen = "jobs" },
                                 onNavigateToProcesses = { appScreen = "processes" },
-                                onNavigateToSupportedClis = { appScreen = "supported_clis" }
+                                onNavigateToSupportedClis = { appScreen = "supported_clis" },
+                                onNavigateToLogs = { appScreen = "logs" }
                             )
                         }
                         // Service control was previously reachable only from a
@@ -783,6 +785,9 @@ class MainActivity : FragmentActivity() {
                                 client = client,
                                 onBack = { appScreen = "settings" }
                             )
+                        }
+                        "logs" -> {
+                            LogsScreen(onBack = { appScreen = "settings" })
                         }
                         "supported_clis" -> {
                             SupportedClisScreen(

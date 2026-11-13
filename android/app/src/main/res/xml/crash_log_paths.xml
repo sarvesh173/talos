@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Crash logs are handed to other apps (share sheet, mail, chat) without ever
+     leaving the app's private directory, which needs a content:// grant. -->
+<paths>
+    <files-path name="crash_logs" path="crash-logs/" />
+</paths>

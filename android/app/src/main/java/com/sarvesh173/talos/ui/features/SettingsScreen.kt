@@ -60,6 +60,7 @@ fun SettingsScreen(
     onNavigateToJobs: () -> Unit = {},
     onNavigateToProcesses: () -> Unit = {},
     onNavigateToSupportedClis: () -> Unit = {},
+    onNavigateToLogs: () -> Unit = {},
     nodeEncryptionFingerprint: String? = null,
     borderTint: Color = Color.White.copy(alpha = 0.08f)
 ) {
@@ -379,6 +380,15 @@ fun SettingsScreen(
                     subtitle = "Live agent rounds, with Stop",
                     icon = TalosIcons.TalosStrokeOrb,
                     onClick = onNavigateToProcesses
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Logs",
+                    subtitle = "Crash reports you can send",
+                    icon = TalosIcons.TalosStrokeDoc,
+                    onClick = onNavigateToLogs
                 )
             }
 

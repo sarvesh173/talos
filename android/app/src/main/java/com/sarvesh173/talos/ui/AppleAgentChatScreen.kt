@@ -621,15 +621,6 @@ fun AppleAgentChatScreen(
                                     color = if (isDark) Color.White else Color(0xFF1D1D1F)
                                 )
                             },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null,
-                                    tint = if (showTelemetry) brandColor
-                                           else if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
                             onClick = { menuOpen = false; showTelemetry = !showTelemetry }
                         )
                     }

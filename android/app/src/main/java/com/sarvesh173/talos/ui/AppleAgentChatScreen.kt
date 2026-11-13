@@ -497,7 +497,8 @@ fun AppleAgentChatScreen(
                     shape = RoundedCornerShape(22.dp),
                     backgroundColor = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.55f)
                                       else Color.White.copy(alpha = 0.70f),
-                    blurRadius = 28.dp
+                    blurRadius = 28.dp,
+                    isDark = isDark
                 )
         ) {
             Row(
@@ -726,7 +727,8 @@ fun AppleAgentChatScreen(
                         shape = RoundedCornerShape(26.dp),
                         backgroundColor = if (isDark) Color(0xFF161820).copy(alpha = 0.62f)
                                           else Color.White.copy(alpha = 0.78f),
-                        blurRadius = 30.dp
+                        blurRadius = 30.dp,
+                        isDark = isDark
                     )
             ) {
                 Row(
@@ -742,7 +744,7 @@ fun AppleAgentChatScreen(
                     // 56dp on a 360dp-wide phone. It returns the moment the
                     // draft is cleared.
                     AnimatedVisibility(
-                        visible = !slashActive,
+                        visible = inputText.isBlank() && !slashActive,
                         enter = fadeIn() + expandHorizontally(),
                         exit = fadeOut() + shrinkHorizontally()
                     ) {
@@ -1220,6 +1222,12 @@ private fun AgentBubble(
                 shape = shape,
                 color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
                 shadowElevation = 0.dp,
+                // #1C1C1E on a #000 page is 1.23:1 — a 28/255 delta. Without a
+                // rim the bubble has no edge at all in the dark theme.
+                border = BorderStroke(
+                    0.8.dp,
+                    if (isDark) Color.White.copy(alpha = 0.07f) else Color.Black.copy(alpha = 0.05f)
+                ),
                 modifier = Modifier.widthIn(max = 290.dp)
             ) {
                 Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {

@@ -136,7 +136,8 @@ fun Modifier.talosGlassSurface(
     hazeState: HazeState,
     shape: Shape = RoundedCornerShape(20.dp),
     backgroundColor: Color,
-    blurRadius: Dp = 24.dp
+    blurRadius: Dp = 24.dp,
+    isDark: Boolean = true
 ): Modifier = this
     .clip(shape)
     .hazeChild(
@@ -146,6 +147,14 @@ fun Modifier.talosGlassSurface(
             backgroundColor = backgroundColor,
             blurRadius = blurRadius
         )
+    )
+    // Below API 31 Haze draws no blur — only a flat scrim. In light theme that
+    // scrim is White over a White page (contrast 1.000:1), so without a rim the
+    // bars are invisible. A hairline gives the surface an edge on every API.
+    .border(
+        width = 0.8.dp,
+        color = if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.07f),
+        shape = shape
     )
 
 /**

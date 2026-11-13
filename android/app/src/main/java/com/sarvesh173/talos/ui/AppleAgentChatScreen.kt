@@ -224,7 +224,12 @@ fun AppleAgentChatScreen(
     // showed that agent's generic room and none of its conversation.
     var activeSessionId by remember(sessionId) { mutableStateOf(sessionId) }
     var activeSessionTitle by remember(sessionTitle) { mutableStateOf(sessionTitle) }
-    val remoteMode = remoteSession || isRemoteSessionId(activeSessionId)
+    // State, not a derived Boolean: the composer reads this on every recomposition,
+    // and a plain val never invalidated after the session was picked — the send
+    // button kept taking the local branch and the message went nowhere.
+    val remoteMode by remember(remoteSession, activeSessionId) {
+        mutableStateOf(remoteSession || isRemoteSessionId(activeSessionId))
+    }
     var remoteMessages by remember(activeSessionId) { mutableStateOf<List<Message>>(emptyList()) }
     var remoteSessions by remember(remoteMode) { mutableStateOf<List<SessionSummary>>(emptyList()) }
     var remoteBusy by remember(activeSessionId) { mutableStateOf(false) }
@@ -1073,19 +1078,22 @@ fun AppleAgentChatScreen(
                                             created_at = System.currentTimeMillis() / 1000.0,
                                         )
                                         scope.launch {
-                                            // One throw here used to kill the coroutine and leave
-                                            // the composer stuck busy forever.
-                                            val reply = runCatching {
-                                                sendRemotePrompt(client, activeSessionId, textToSend)
-                                            }.getOrElse { error ->
-                                                "Could not send: " + (error.message ?: error::class.java.simpleName)
+                                            // try/finally: any throw used to leave the
+                                            // composer stuck busy with no way back.
+                                            try {
+                                                val reply = runCatching {
+                                                    sendRemotePrompt(client, activeSessionId, textToSend)
+                                                }.getOrElse { error ->
+                                                    "Could not send: " + (error.message ?: error::class.java.simpleName)
+                                                }
+                                                remoteMessages = runCatching {
+                                                    fetchRemoteMessages(client, activeSessionId)
+                                                }.getOrElse { remoteMessages }
+                                                if (reply.isBlank()) remoteError = "The agent sent nothing back."
+                                                else if (reply.startsWith("Could not send")) remoteError = reply
+                                            } finally {
+                                                remoteBusy = false
                                             }
-                                            remoteMessages = runCatching {
-                                                fetchRemoteMessages(client, activeSessionId)
-                                            }.getOrElse { remoteMessages }
-                                            if (reply.isBlank()) remoteError = "The agent sent nothing back."
-                                            else if (reply.startsWith("Could not send")) remoteError = reply
-                                            remoteBusy = false
                                         }
                                     } else {
                                         client.sendMessage(textToSend)

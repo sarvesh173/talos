@@ -797,6 +797,51 @@ async def opencode_sessions(token: str = Depends(require_auth)):
     return {"ok": True, "sessions": sessions, "count": len(sessions)}
 
 
+@app.get("/api/opencode/agents")
+async def opencode_agents(token: str = Depends(require_auth)):
+    """The harness's own agents: the primary one you talk to, and the
+    subagents it can summon.
+
+    Needed because a subagent's run is invisible from the transcript alone: the
+    parent records a `task` tool call, but the child's own messages live in a
+    separate session, so the app could not show who was summoned or what it did.
+    """
+    from server.opencode_bridge import OpenCodeClient
+
+    result = OpenCodeClient().list_agents()
+    if not result.ok:
+        return {"ok": False, "error": result.error, "agents": []}
+
+    rows = (result.data or {}).get("data") or []
+    agents = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        agents.append(
+            {
+                "id": row.get("id"),
+                "name": row.get("name") or row.get("id"),
+                "description": row.get("description") or "",
+                # "primary" is the one you address; "subagent" can be summoned
+                # through the task tool. Hidden ones are harness internals
+                # (title generation, compaction) and are not user-facing.
+                "mode": row.get("mode") or "primary",
+                "hidden": bool(row.get("hidden")),
+                "model": (row.get("model") or {}).get("modelID")
+                if isinstance(row.get("model"), dict)
+                else row.get("model"),
+                "prompt": ((row.get("prompt") or "")[:400] or None),
+            }
+        )
+    return {
+        "ok": True,
+        "agents": agents,
+        "count": len(agents),
+        "primary": [a for a in agents if a["mode"] == "primary" and not a["hidden"]],
+        "subagents": [a for a in agents if a["mode"] == "subagent" and not a["hidden"]],
+    }
+
+
 @app.post("/api/opencode/sessions")
 async def create_opencode_session(token: str = Depends(require_auth)):
     """Create a new fresh OpenCode session."""
@@ -819,6 +864,69 @@ async def create_opencode_session(token: str = Depends(require_auth)):
             "project_id": row.get("projectID"),
         },
     }
+
+
+@app.get("/api/opencode/sessions/{session_id}/subagents")
+async def opencode_session_subagents(
+    session_id: str,
+    token: str = Depends(require_auth),
+):
+    """The subagents this session summoned, with their own transcripts.
+
+    OpenCode runs each summoned subagent in a *child session* linked by
+    `parentID`. The parent transcript only records a `task` tool call, so the
+    child's reasoning and tool work are invisible unless you join on parentID —
+    which is what this does.
+    """
+    from server.opencode_bridge import OpenCodeClient
+
+    client = OpenCodeClient()
+    result = client.list_sessions()
+    if not result.ok:
+        return {"ok": False, "error": result.error, "subagents": []}
+
+    rows = (result.data or {}).get("data") or []
+    children = [r for r in rows if isinstance(r, dict) and r.get("parentID") == session_id]
+
+    # A child created but never prompted has no content; still listed, flagged.
+    out = []
+    for row in children:
+        msgs = client.session_messages(row["id"], limit=50)
+        tools: List[str] = []
+        reasoning = 0
+        text = ""
+        if msgs.ok:
+            for m in (msgs.data or {}).get("data") or []:
+                if not isinstance(m, dict):
+                    continue
+                for part in m.get("content") or []:
+                    if not isinstance(part, dict):
+                        continue
+                    if part.get("type") == "tool":
+                        tools.append(part.get("name") or "")
+                    elif part.get("type") == "reasoning":
+                        reasoning += len(part.get("text") or "")
+                    elif part.get("type") == "text" and m.get("type") == "assistant":
+                        text += (part.get("text") or "") + "\n"
+
+        out.append(
+            {
+                "id": row["id"],
+                "title": (row.get("title") or "").strip() or "Subagent",
+                "agent": row.get("agent"),
+                "model": (row.get("model") or {}).get("id")
+                if isinstance(row.get("model"), dict)
+                else None,
+                "created_ms": (row.get("time") or {}).get("created"),
+                "tool_calls": len(tools),
+                "tools": tools[:20],
+                "reasoning_chars": reasoning,
+                "text": text.strip()[:2000],
+            }
+        )
+
+    out.sort(key=lambda r: r.get("created_ms") or 0)
+    return {"ok": True, "subagents": out, "count": len(out)}
 
 
 @app.get("/api/opencode/sessions/{session_id}/messages")

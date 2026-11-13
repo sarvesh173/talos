@@ -1,0 +1,97 @@
+TALOS API — CONNECTION DETAILS
+Generated: 2026-11-14 01:57 IST
+Server: talos-api.service (uvicorn :8000)
+
+============================================================
+BASE URL
+============================================================
+LAN:        http://192.168.31.209:8000
+Tailscale:  http://100.75.107.79:8000
+
+============================================================
+TOKEN
+============================================================
+talos_«redacted:sk_…»
+
+============================================================
+QUICK TEST
+============================================================
+curl -H "Authorization: Bearer ***" \
+  http://192.168.31.209:8000/api/auth/verify
+
+# expected: {"valid":true,"app":"TALOS"}
+
+============================================================
+USE IN SHELL
+============================================================
+export TALOS_TOKEN='talos_«redacted:sk_…»'
+
+curl -H "Authorization: Bearer ***" \
+  http://192.168.31.209:8000/api/opencode/health
+
+============================================================
+OPENCODE CHAT — 3 CALLS
+============================================================
+# 1. create session
+curl -X POST http://192.168.31.209:8000/api/opencode/sessions \
+  -H "Authorization: Bearer ***" \
+  -H "Content-Type: application/json" -d '{}'
+
+# 2. send a message  (replace SID with the id from step 1)
+curl -X POST "http://192.168.31.209:8000/api/opencode/sessions/SID/prompt" \
+  -H "Authorization: Bearer ***" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Reply with exactly: OK-123"}'
+
+# 3. read the reply  (poll every 5s until an assistant turn has text)
+curl "http://192.168.31.209:8000/api/opencode/sessions/SID/messages?limit=10" \
+  -H "Authorization: Bearer ***"
+
+============================================================
+PYTHON
+============================================================
+import time, requests
+
+BASE = "http://192.168.31.209:8000"
+H = {"Authorization": "Bearer talos_«redacted:sk_…»"}
+
+r = requests.post(f"{BASE}/api/opencode/sessions", headers=H, json={})
+sid = r.json()["session"]["id"]
+
+requests.post(
+    f"{BASE}/api/opencode/sessions/{sid}/prompt",
+    headers=H, json={"text": "Say only: PONG"}, timeout=30,
+)
+
+deadline = time.time() + 120
+while time.time() < deadline:
+    time.sleep(5)
+    msgs = requests.get(
+        f"{BASE}/api/opencode/sessions/{sid}/messages",
+        headers=H, params={"limit": 50}, timeout=20,
+    ).json()["messages"]
+    for m in msgs:
+        if m["role"] == "assistant" and m["text"].strip():
+            print(m["text"])
+            raise SystemExit
+print("timeout")
+
+============================================================
+FULL DOCS
+============================================================
+/home/kira/talos/docs/api-reference.md
+
+============================================================
+NOTES
+============================================================
+- Every POST /api/auth/pair mints a NEW token and does not revoke
+  old ones. Revoke explicitly:
+    curl -X POST http://192.168.31.209:8000/api/auth/tokens/revoke \
+      -H "Authorization: Bearer ***" \
+      -H "Content-Type: application/json" -d '{"token":"..."}'
+
+- Health can return 503 "plugins did not finish activating" on the
+  first call after an OpenCode restart. Call again in a few seconds.
+
+- Messages come back oldest-first. Assistant turns carry thought,
+  tool_records and metrics; user turns have those null.

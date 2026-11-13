@@ -797,6 +797,30 @@ async def opencode_sessions(token: str = Depends(require_auth)):
     return {"ok": True, "sessions": sessions, "count": len(sessions)}
 
 
+@app.post("/api/opencode/sessions")
+async def create_opencode_session(token: str = Depends(require_auth)):
+    """Create a new fresh OpenCode session."""
+    from server.opencode_bridge import OpenCodeClient
+
+    result = OpenCodeClient().create_session("New Session")
+    if not result.ok:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=result.error or "Could not create OpenCode session",
+        )
+    row = (result.data or {}).get("data") or {}
+    return {
+        "ok": True,
+        "session": {
+            "id": row.get("id"),
+            "title": row.get("title") or "New Session",
+            "agent": row.get("agent"),
+            "model": None,
+            "project_id": row.get("projectID"),
+        },
+    }
+
+
 @app.get("/api/opencode/sessions/{session_id}/messages")
 async def opencode_session_messages(
     session_id: str, limit: int = 50, token: str = Depends(require_auth)

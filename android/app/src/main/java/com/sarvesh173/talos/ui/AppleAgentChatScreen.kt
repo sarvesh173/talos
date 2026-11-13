@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -379,7 +380,32 @@ fun AppleAgentChatScreen(
 
     val backgroundColor = if (isDark) Color(0xFF000000) else Color(0xFFFFFFFF)
 
-    Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
+    // Glass only reads as glass when there is something behind it. A flat fill
+    // makes translucency invisible, so the backdrop carries a very soft brand
+    // wash — this is the surface the bubbles and bars refract, not decoration.
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        brandColor.copy(alpha = if (isDark) 0.16f else 0.10f),
+                        Color.Transparent
+                    ),
+                    center = Offset(0.85f, 0.12f),
+                    radius = 900f
+                )
+            )
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        brandColor.copy(alpha = if (isDark) 0.06f else 0.04f)
+                    )
+                )
+            )
+    ) {
         // ---------------- message stream ----------------
         LazyColumn(
             state = listState,
@@ -464,24 +490,16 @@ fun AppleAgentChatScreen(
             )
         }
 
-        // ---------------- top glass bar ----------------
+        // ---------------- top bar ----------------
         Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.95f),
-            border = BorderStroke(
-                1.dp,
-                Brush.verticalGradient(
-                    listOf(
-                        if (isDark) Color.White.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.85f),
-                        if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f)
-                    )
-                )
-            ),
-            shadowElevation = 4.dp,
+            shape = RoundedCornerShape(22.dp),
+            color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.62f) else Color.White.copy(alpha = 0.72f),
+            shadowElevation = 0.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
+                .appleLiquidGlassOptics(isDark = isDark, cornerRadius = 22.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -671,19 +689,12 @@ fun AppleAgentChatScreen(
             }
 
             Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = if (isDark) Color(0xFF161820).copy(alpha = 0.94f) else Color.White.copy(alpha = 0.96f),
-                border = BorderStroke(
-                    1.dp,
-                    Brush.verticalGradient(
-                        listOf(
-                            if (isDark) Color.White.copy(alpha = 0.32f) else Color.White.copy(alpha = 0.85f),
-                            if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.04f)
-                        )
-                    )
-                ),
-                shadowElevation = 6.dp,
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(26.dp),
+                color = if (isDark) Color(0xFF161820).copy(alpha = 0.66f) else Color.White.copy(alpha = 0.78f),
+                shadowElevation = 0.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .appleLiquidGlassOptics(isDark = isDark, cornerRadius = 26.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -1067,19 +1078,17 @@ private fun UserBubble(
         val shape = RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
         Surface(
             shape = shape,
-            color = brandColor,
-            shadowElevation = 2.dp,
+            color = brandColor.copy(alpha = if (isDark) 0.82f else 0.88f),
+            shadowElevation = 0.dp,
             modifier = Modifier
                 .widthIn(max = 290.dp)
-                .clip(shape)
+                .appleLiquidGlassOptics(
+                    isDark = isDark,
+                    shape = shape
+                )
                 .pointerInput(msg.id) {
                     detectTapGestures(onLongPress = { onLongClick() })
                 }
-                .appleLiquidGlassOptics(
-                    isDark = isDark,
-                    chromaticGlow = Color.White.copy(alpha = 0.5f),
-                    shape = shape
-                )
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
@@ -1145,12 +1154,11 @@ private fun AgentBubble(
             val shape = RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
             Surface(
                 shape = shape,
-                color = if (isDark) Color(0xFF161822).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f),
-                shadowElevation = 2.dp,
+                color = if (isDark) Color(0xFF2C2C2E).copy(alpha = 0.70f) else Color.White.copy(alpha = 0.80f),
+                shadowElevation = 0.dp,
                 modifier = Modifier
                     .widthIn(max = 290.dp)
-                    .clip(shape)
-                    .appleLiquidGlassOptics(isDark = isDark, chromaticGlow = brandColor, shape = shape)
+                    .appleLiquidGlassOptics(isDark = isDark, shape = shape)
             ) {
                 Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {
                     Row(

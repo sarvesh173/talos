@@ -249,7 +249,7 @@ class OpenCodeClient:
         return self._get(f"/api/session/{session_id}/message?limit={limit}")
 
     def send_prompt(self, session_id: str, text: str) -> OpenCodeResult:
-        return self._post(f"/api/session/{session_id}/prompt", {"text": text})
+        return self._post(f"/api/session/{session_id}/prompt", {"text": text, "delivery": "queue"})
 
     # --- async wrappers (contract: async health/list_models/create_session) ---
     async def ahealth(self) -> OpenCodeResult:

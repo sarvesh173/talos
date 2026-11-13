@@ -133,6 +133,33 @@ suspend fun fetchRemoteSessions(client: TalosClient): List<SessionSummary> =
     }
 
 /**
+ * Create a new clean session on the host.
+ */
+suspend fun createRemoteSession(client: TalosClient, title: String = "New Session"): SessionSummary? =
+    withContext(Dispatchers.IO) {
+        val http = client()
+        val builder = Request.Builder()
+            .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions")
+            .post("{}".toRequestBody(jsonMedia))
+            .auth(client.apiToken)
+        val body = runCatching {
+            http.newCall(builder.build()).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                resp.body?.string()
+            }
+        }.getOrNull() ?: return@withContext null
+        val sess = JSONObject(body).optJSONObject("session") ?: return@withContext null
+        val sid = sess.optString("id", "")
+        if (sid.isBlank()) return@withContext null
+        SessionSummary(
+            id = sid,
+            title = sess.optString("title", title).ifBlank { title },
+            relativeTime = "Now",
+            messageCount = 0
+        )
+    }
+
+/**
  * Send a message and wait for the reply.
  *
  * The host accepts a prompt immediately and the answer arrives later, so this

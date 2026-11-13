@@ -4,6 +4,10 @@ import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Base64
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.isActive
 import com.sarvesh173.talos.ui.settings.AudioFormat
 import com.sarvesh173.talos.ui.settings.VoiceNotePreferences
 import java.io.File
@@ -106,6 +110,22 @@ class AudioRecordManager(private val context: Context) {
             currentFile?.delete()
             currentFile = null
         }
+    }
+
+    /**
+     * Mic amplitude 0..32767 polled from MediaRecorder.getMaxAmplitude every 50 ms
+     * while this recorder instance is active.
+     *
+     * The loop ends when the recorder is replaced (stop or cancel), which closes
+     * the channel — so the collector finishes instead of hanging forever.
+     */
+    suspend fun amplitudeFlow(): Flow<Int> = callbackFlow {
+        val mr = recorder ?: return@callbackFlow
+        while (isActive && recorder === mr) {
+            trySend(mr.maxAmplitude.coerceIn(0, 32767))
+            delay(50)
+        }
+        close()
     }
 
     private fun containerFor(format: AudioFormat): Int = when (format.container) {

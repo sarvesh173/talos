@@ -12,6 +12,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -47,7 +48,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -115,7 +118,12 @@ data class ChatMessage(
      */
     val simulated: Boolean = false,
     /** Why the fallback happened, when it did ("model unreachable", ...). */
-    val simulatedReason: String? = null
+    val simulatedReason: String? = null,
+    /**
+     * Set when this message is a voice note. The bubble then draws a player
+     * instead of the raw base64 text.
+     */
+    val voiceNote: VoiceNote? = null
 )
 
 /** Clock label for a core timestamp (epoch seconds) in 12-hour format with AM/PM. */
@@ -174,6 +182,7 @@ fun AppleAgentChatScreen(
     var recordingLocked by rememberSaveable { mutableStateOf(false) }
     var recordingSeconds by rememberSaveable { mutableStateOf(0) }
     var recordedFormat by rememberSaveable { mutableStateOf(AudioFormat.M4A) }
+    var liveWave by remember { mutableStateOf(emptyList<Float>()) }
 
     // Cancel any in-flight recording if the screen leaves composition
     DisposableEffect(Unit) {
@@ -308,6 +317,7 @@ fun AppleAgentChatScreen(
                 sender = if (msg.sender_role == Role.human) "user" else "agent",
                 text = msg.content,
                 timestamp = formatClock(msg.created_at),
+                voiceNote = VoiceNote.parse(msg.content),
                 codeBlock = null,
                 stats = stats,
                 agentId = msg.sender_id,
@@ -853,7 +863,9 @@ fun AppleAgentChatScreen(
                     // all cross-fade in the same slot rather than showing both.
                     val hasText = inputText.isNotBlank()
                     val busy = if (remoteMode) remoteBusy else isThinking
-                    val limitSeconds = remember { VoiceNotePreferences.getLimitSeconds(context) }
+                    // Read at the start of each take so a Settings change applies
+                    // without recomposing the whole screen.
+                    var limitSeconds by remember { mutableStateOf(VoiceNotePreferences.getLimitSeconds(context)) }
 
                     // Recording ticker — stops itself at the configured cap.
                     LaunchedEffect(recordingActive) {
@@ -869,6 +881,21 @@ fun AppleAgentChatScreen(
                                 recordingSeconds = 0
                             }
                             kotlinx.coroutines.delay(1000)
+                        }
+                    }
+
+                    // Live mic amplitude while recording: drives the scrolling
+                    // waveform. Completes when stopRecording/cancelRecording
+                    // replaces the recorder, so nothing leaks between takes.
+                    LaunchedEffect(recordingActive) {
+                        if (!recordingActive) return@LaunchedEffect
+                        var ceiling = 2500f
+                        audioRecorder.amplitudeFlow().collect { amp ->
+                            // Decay the ceiling so a loud burst doesn't permanently
+                            // squash quieter passages into flat bars.
+                            ceiling = if (amp.toFloat() > ceiling) amp.toFloat() else ceiling * 0.995f
+                            ceiling = ceiling.coerceAtLeast(2500f)
+                            liveWave = (liveWave + amp.toFloat().coerceAtMost(ceiling) / ceiling).takeLast(WAVE_BUCKETS)
                         }
                     }
 
@@ -909,17 +936,20 @@ fun AppleAgentChatScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
+                            LiveWaveform(
+                                peaks = liveWave,
+                                activeColor = MaterialTheme.colorScheme.error,
+                                inactiveColor = MaterialTheme.colorScheme.error.copy(alpha = 0.35f),
+                                modifier = Modifier.weight(1f)
+                            )
+                            // The waveform already took weight(1f); the hint is
+                            // fixed-width so it does not fight it for space.
                             Text(
-                                text = if (recordingLocked) {
-                                    "Tap send to keep, or trash to discard"
-                                } else {
-                                    "Slide up to lock · slide left to cancel"
-                                },
-                                fontSize = 12.sp,
+                                text = if (recordingLocked) "Send or trash" else "Swipe up to lock",
+                                fontSize = 11.sp,
                                 color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.45f),
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
+                                overflow = TextOverflow.Ellipsis
                             )
                             // Trash — the only way out without sending.
                             Box(
@@ -1027,12 +1057,16 @@ fun AppleAgentChatScreen(
                             brandColor = brandColor,
                             isDark = isDark,
                             onStart = {
-                                recordedFormat = audioRecorder.startRecording()
-                                    ?: AudioFormat.M4A
-                                recordingSeconds = 0
-                                recordingActive = true
-                                recordingLocked = false
-                                TalosHaptics.sendHaptic(context)
+                                val started = audioRecorder.startRecording()
+                                if (started != null) {
+                                    limitSeconds = VoiceNotePreferences.getLimitSeconds(context)
+                                    recordedFormat = started
+                                    recordingSeconds = 0
+                                    liveWave = emptyList()
+                                    recordingActive = true
+                                    recordingLocked = false
+                                    TalosHaptics.sendHaptic(context)
+                                }
                             },
                             onLock = { recordingLocked = true },
                             onCancel = {
@@ -1040,6 +1074,7 @@ fun AppleAgentChatScreen(
                                 recordingActive = false
                                 recordingLocked = false
                                 recordingSeconds = 0
+                                liveWave = emptyList()
                             },
                             onFinish = {
                                 finishVoiceNote(audioRecorder, recordedFormat) { body ->
@@ -1295,7 +1330,8 @@ private fun UserBubble(
     brandColor: Color,
     onLongClick: () -> Unit = {}
 ) {
-    if (msg.text.isBlank() || msg.text == "null") return
+    // A voice note is not blank just because its prose is: the player is the content.
+    if ((msg.text.isBlank() || msg.text == "null") && msg.voiceNote == null) return
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         val shape = RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
         // A bubble is content, not chrome: it sits on a flat backdrop with
@@ -1317,16 +1353,28 @@ private fun UserBubble(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = msg.text,
-                    fontSize = 15.sp,
-                    // The accent is user-chosen and can be any colour, including
-                    // bright yellow (1.43:1) or cyan (1.30:1) against white.
-                    // Pick the ink by measured luminance, not by habit.
-                    color = onAccent(brandColor),
-                    letterSpacing = (-0.1).sp,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
+                if (msg.voiceNote != null) {
+                    // A user bubble is a solid accent fill, so the player's own
+                    // accent-on-accent would vanish. Give it the bubble ink.
+                    VoiceNotePlayer(
+                        note = msg.voiceNote,
+                        messageId = msg.id,
+                        isDark = isDark,
+                        brandColor = if (isDark) Color(0xFF1D1D1F) else Color.White,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                } else {
+                    Text(
+                        text = msg.text,
+                        fontSize = 15.sp,
+                        // The accent is user-chosen and can be any colour, including
+                        // bright yellow (1.43:1) or cyan (1.30:1) against white.
+                        // Pick the ink by measured luminance, not by habit.
+                        color = onAccent(brandColor),
+                        letterSpacing = (-0.1).sp,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                }
                 if (msg.timestamp.isNotBlank()) {
                     Text(
                         text = msg.timestamp,
@@ -1352,8 +1400,13 @@ private fun AgentBubble(
 ) {
     val parsed = remember(msg.id, msg.text) { TalosDirectiveParser.parse(msg.text) }
     val hasDirectives = parsed.directives.isNotEmpty()
-    val bubbleText = if (hasDirectives) parsed.prose else msg.text
-    if (bubbleText.isBlank() && !hasDirectives) return
+    // A voice note is never prose: the player replaces the text entirely.
+    val bubbleText = when {
+        msg.voiceNote != null -> ""
+        hasDirectives -> parsed.prose
+        else -> msg.text
+    }
+    if (bubbleText.isBlank() && !hasDirectives && msg.voiceNote == null) return
     if (bubbleText == "null" && !hasDirectives) return
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -1397,7 +1450,15 @@ private fun AgentBubble(
                         verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (bubbleText.isNotBlank() && bubbleText != "null") {
+                        if (msg.voiceNote != null) {
+                            VoiceNotePlayer(
+                                note = msg.voiceNote,
+                                messageId = msg.id,
+                                isDark = isDark,
+                                brandColor = brandColor,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                        } else if (bubbleText.isNotBlank() && bubbleText != "null") {
                             Text(
                                 text = bubbleText,
                                 fontSize = 15.sp,
@@ -1497,6 +1558,40 @@ private fun formatClock(totalSeconds: Int): String {
     val m = totalSeconds / 60
     val s = totalSeconds % 60
     return "%d:%02d".format(m, s)
+}
+
+/**
+ * Live scrolling waveform drawn in the recording row. Mirrors the playback
+ * waveform's geometry (2dp stroke, 3dp pitch, 7dp half-height, 14dp tall) but
+ * scrolls: newest smoothed amplitude appends on the right, oldest drops off.
+ * Paints a flat 1dp line while empty so the row height never collapses.
+ */
+@Composable
+private fun LiveWaveform(
+    peaks: List<Float>,
+    activeColor: Color,
+    inactiveColor: Color,
+    modifier: Modifier = Modifier
+) {
+    if (peaks.isEmpty()) {
+        Canvas(modifier = modifier.height(14.dp)) {
+            drawLine(
+                color = activeColor,
+                start = Offset(0f, size.height / 2f),
+                end = Offset(size.width, size.height / 2f),
+                strokeWidth = 1.dp.toPx(),
+                cap = StrokeCap.Round
+            )
+        }
+    } else {
+        WaveformBar(
+            peaks = peaks.toFloatArray(),
+            progress = 1f,
+            activeColor = activeColor,
+            inactiveColor = inactiveColor,
+            modifier = modifier.height(14.dp)
+        )
+    }
 }
 
 /**

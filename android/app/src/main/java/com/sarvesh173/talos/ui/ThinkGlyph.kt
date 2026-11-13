@@ -12,10 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -74,33 +72,34 @@ private val orbitB = "M10.2854 10.2851C7.6036 12.9669 4.40644 14.1179 3.14441 12
  * to avoid it.
  */
 private fun DrawScope.drawThinkGlyph(color: Color, strokeWidth: Float) {
-    // The path is authored on a 16x16 grid.
-    scale(size.width / 16f, size.height / 16f) {
-        val path = Path().apply {
-            addPath(parseOrbit(orbitA), Offset.Zero)
-            addPath(parseOrbit(orbitB), Offset.Zero)
-        }
-        drawPath(
-            path = path,
-            color = color,
-            style = Stroke(width = strokeWidth)
-        )
-        // Centre point.
-        drawCircle(
-            color = color,
-            radius = 1.15f,
-            center = Offset(8f, 8f)
-        )
+    // The paths are authored on a 16x16 grid. Parse them scaled rather than
+    // transforming the canvas: DrawScope has no scale(), and building the path
+    // at final size keeps the stroke width in real pixels.
+    val k = size.minDimension / 16f
+    val path = Path().apply {
+        addPath(parseOrbit(orbitA, k), Offset.Zero)
+        addPath(parseOrbit(orbitB, k), Offset.Zero)
     }
+    drawPath(
+        path = path,
+        color = color,
+        style = Stroke(width = strokeWidth * k)
+    )
+    // Centre point.
+    drawCircle(
+        color = color,
+        radius = 1.15f * k,
+        center = Offset(8f * k, 8f * k)
+    )
 }
 
 /** Minimal M/C/Z parser — these two paths use nothing else. */
-private fun parseOrbit(d: String): Path {
+private fun parseOrbit(d: String, k: Float = 1f): Path {
     val path = Path()
     val tokens = Regex("[MCZ]|-?\\d*\\.?\\d+").findAll(d).map { it.value }.iterator()
     fun next(): Float {
         tokens.next()
-        return tokens.next().toFloat()
+        return tokens.next().toFloat() * k
     }
     while (tokens.hasNext()) {
         when (val cmd = tokens.next()) {

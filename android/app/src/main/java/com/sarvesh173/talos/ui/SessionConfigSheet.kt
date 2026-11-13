@@ -37,6 +37,7 @@ import com.sarvesh173.talos.ui.chat.HarnessAgent
 import com.sarvesh173.talos.ui.chat.HarnessModel
 import com.sarvesh173.talos.ui.chat.fetchHarnessAgents
 import com.sarvesh173.talos.ui.chat.fetchHarnessModels
+import com.sarvesh173.talos.ui.chat.fetchSessionConfig
 import com.sarvesh173.talos.ui.chat.setSessionAgent
 import com.sarvesh173.talos.ui.chat.setSessionModel
 import kotlinx.coroutines.launch

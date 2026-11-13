@@ -840,7 +840,17 @@ async def opencode_session_messages(
 
     rows = (result.data or {}).get("data") or []
     messages = []
-    for row in rows:
+
+    # OpenCode returns newest-first. Both the chat order and the reply poll
+    # assume oldest-first, so sort once here rather than making every caller
+    # reverse it. Unsorted, `lastOrNull()` is the *oldest* message in the
+    # session: the poll either answers with a stale turn or never sees the
+    # new one at all.
+    def _created(row: dict) -> float:
+        t = row.get("time")
+        return float(t.get("created") or 0) if isinstance(t, dict) else 0.0
+
+    for row in sorted(rows, key=_created):
         if not isinstance(row, dict):
             continue
         info = row.get("info") if isinstance(row.get("info"), dict) else {}

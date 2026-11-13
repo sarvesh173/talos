@@ -819,16 +819,13 @@ fun ThemeSelectionDialog(
  * luminance instead of assuming the accent is dark.
  */
 fun onAccent(accent: Color): Color {
-    fun channel(c: Float): Float {
+    fun channel(c: Float): Double {
         val v = c.toDouble()
-        return if (v <= 0.03928) (v / 12.92).toFloat()
-        else (((v + 0.055) / 1.055).pow(2.4)).toFloat()
+        return if (v <= 0.03928) v / 12.92 else Math.pow((v + 0.055) / 1.055, 2.4)
     }
     val lum = 0.2126 * channel(accent.red) +
               0.7152 * channel(accent.green) +
               0.0722 * channel(accent.blue)
     // Crossover where white and black give equal contrast: L = 0.1791.
-    return if (lum > 0.1791f) Color(0xFF1D1D1F) else Color.White
+    return if (lum > 0.1791) Color(0xFF1D1D1F) else Color.White
 }
-
-private fun Float.pow(n: Double): Double = Math.pow(toDouble(), n)

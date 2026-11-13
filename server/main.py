@@ -855,26 +855,70 @@ async def opencode_session_messages(
             continue
         info = row.get("info") if isinstance(row.get("info"), dict) else {}
         role = info.get("type") or row.get("type") or "unknown"
+
+        # An assistant turn's prose and its reasoning live side by side in
+        # `content[]`. Split them: the chat renders the text, the thinking pill
+        # renders the reasoning. Dropping reasoning here is what made every
+        # OpenCode turn look like it answered with no thought at all.
         content = row.get("content")
         text = ""
+        reasoning = ""
+        tool_records: List[Dict[str, Any]] = []
         if isinstance(content, list):
-            text = "\n".join(
-                part.get("text") or ""
-                for part in content
-                if isinstance(part, dict) and part.get("type") == "text"
-            ).strip()
+            for part in content:
+                if not isinstance(part, dict):
+                    continue
+                part_type = part.get("type")
+                if part_type == "text":
+                    text += (part.get("text") or "") + "\n"
+                elif part_type == "reasoning":
+                    reasoning += (part.get("text") or "") + "\n"
+                elif part_type == "tool":
+                    tool_records.append(_tool_record(part))
+            text = text.strip()
+            reasoning = reasoning.strip()
+
         if not text:
             text = (row.get("text") or "").strip()
         if not text:
             payload = row.get("payload")
             if isinstance(payload, dict):
                 text = (payload.get("text") or "").strip()
+
+        # Telemetry the engine already reports; the app had it on the wire and
+        # threw it away, so the chat could not show cost, tokens or how long the
+        # turn actually took.
+        tokens = row.get("tokens") if isinstance(row.get("tokens"), dict) else {}
+        time_info = row.get("time") if isinstance(row.get("time"), dict) else {}
+        metrics = None
+        if role == "assistant" and (tokens or time_info.get("completed")):
+            streamed = time_info.get("streamed")
+            completed = time_info.get("completed")
+            latency = None
+            if isinstance(completed, (int, float)) and isinstance(streamed, (int, float)):
+                latency = int(completed - streamed)
+            cache = tokens.get("cache") if isinstance(tokens.get("cache"), dict) else {}
+            metrics = {
+                "latency_ms": latency,
+                "prompt_tokens": tokens.get("input"),
+                "completion_tokens": tokens.get("output"),
+                "reasoning_tokens": tokens.get("reasoning"),
+                "cost_usd": row.get("cost"),
+                "model": (row.get("model") or {}).get("id")
+                if isinstance(row.get("model"), dict)
+                else None,
+                "cache_read_tokens": cache.get("read"),
+            }
+
         error = row.get("error") or info.get("error") or {}
         messages.append(
             {
                 "id": row.get("id"),
                 "role": role,
                 "text": text,
+                "thought": reasoning or None,
+                "tool_records": tool_records,
+                "metrics": metrics,
                 "error": (error or {}).get("message") if isinstance(error, dict) else None,
                 "created_ms": (row.get("time") or {}).get("created")
                 if isinstance(row.get("time"), dict)
@@ -882,6 +926,42 @@ async def opencode_session_messages(
             }
         )
     return {"ok": True, "messages": messages, "count": len(messages)}
+
+
+def _tool_record(part: Dict[str, Any]) -> Dict[str, Any]:
+    """One tool part, in the shape the app's ToolCallRecordDto already reads.
+
+    OpenCode nests the useful fields under `state` and only fills them as the
+    call progresses, so a running call has no content yet.
+    """
+    state = part.get("state") if isinstance(part.get("state"), dict) else {}
+    status = state.get("status")
+    output = state.get("content")
+    if isinstance(output, list):
+        # webfetch/read return content parts; flatten to the text.
+        output = "\n".join(
+            (piece.get("text") or "")
+            for piece in output
+            if isinstance(piece, dict)
+        ).strip()
+    elif not isinstance(output, str):
+        output = ""
+    error = state.get("error")
+    return {
+        "id": part.get("id") or "",
+        "name": part.get("name") or "",
+        "summary": state.get("title") or part.get("name") or "",
+        "arguments": json.dumps(state.get("input") or {}, ensure_ascii=False),
+        "status": "succeeded" if status == "completed" else (status or "running"),
+        "started_at": (part.get("time") or {}).get("start") or 0.0
+        if isinstance(part.get("time"), dict)
+        else 0.0,
+        "ended_at": (part.get("time") or {}).get("end")
+        if isinstance(part.get("time"), dict)
+        else None,
+        "output_preview": output[:2000],
+        "error": (error.get("message") if isinstance(error, dict) else error) or None,
+    }
 
 
 @app.post("/api/opencode/sessions/{session_id}/prompt")

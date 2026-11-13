@@ -123,7 +123,14 @@ data class ChatMessage(
      * Set when this message is a voice note. The bubble then draws a player
      * instead of the raw base64 text.
      */
-    val voiceNote: VoiceNote? = null
+    val voiceNote: VoiceNote? = null,
+    /**
+     * The model's reasoning for this turn, when the provider streams it.
+     *
+     * Kept out of `text` so the prose stays readable; the bubble folds it into
+     * a thinking pill above the answer.
+     */
+    val thought: String? = null
 )
 
 /** Clock label for a core timestamp (epoch seconds) in 12-hour format with AM/PM. */
@@ -322,7 +329,8 @@ fun AppleAgentChatScreen(
                 stats = stats,
                 agentId = msg.sender_id,
                 simulated = if (remoteMode) false else msg.simulated,
-                simulatedReason = msg.simulatedReason
+                simulatedReason = msg.simulatedReason,
+                thought = msg.thought
             )
         }
     }
@@ -1429,6 +1437,17 @@ private fun AgentBubble(
 
             Spacer(modifier = Modifier.width(8.dp))
 
+            // Reasoning sits above the answer, folded to one row. It is the
+            // agent's scratchpad: full text would bury the reply.
+            if (!msg.thought.isNullOrBlank()) {
+                ThinkingPill(
+                    thought = msg.thought,
+                    isDark = isDark,
+                    brandColor = brandColor,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+            }
+
             val shape = RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
             // Same reasoning as the user bubble: content sits on a flat
             // backdrop, so it gets a solid tonal fill. The agent's identity is
@@ -1512,6 +1531,16 @@ private fun AgentBubble(
                     }
                 }
             }
+        }
+        // Tool calls: one collapsed row per turn, detail behind a tap. Kept
+        // outside the bubble so a long run does not stretch it to full width.
+        msg.stats?.toolCalls?.takeIf { it.isNotEmpty() }?.let { calls ->
+            Spacer(modifier = Modifier.height(4.dp))
+            ToolCallRow(
+                calls = calls,
+                isDark = isDark,
+                modifier = Modifier.padding(start = 36.dp, end = 8.dp)
+            )
         }
         if (hasDirectives) {
             Spacer(modifier = Modifier.height(6.dp))

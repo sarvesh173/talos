@@ -23,6 +23,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import com.sarvesh173.talos.data.Message
+import com.sarvesh173.talos.data.MessageMetricsDto
+import com.sarvesh173.talos.data.ToolCallRecordDto
 import com.sarvesh173.talos.data.Role
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.SessionSummary
@@ -86,6 +88,9 @@ suspend fun fetchRemoteMessages(client: TalosClient, sessionId: String): List<Me
                     sender_name = if (role == Role.human) "You" else "OpenCode",
                     sender_role = role,
                     content = text.ifBlank { error },
+                    thought = row.optString("thought").takeIf { it.isNotBlank() },
+                    metrics = parseMetrics(row.optJSONObject("metrics")),
+                    tool_records = parseToolRecords(row.optJSONArray("tool_records")),
                     created_at = row.optDouble("created_ms", 0.0) / 1000.0,
                     simulated = false,
                 )
@@ -198,4 +203,49 @@ suspend fun sendRemotePrompt(
         if (last.sender_role == Role.agent && last.content.isNotBlank()) return@withContext last.content
     }
     lastError
+}
+/** Bridge telemetry, already in the DTO the rest of the app reads. */
+private fun parseMetrics(row: JSONObject?): MessageMetricsDto? {
+    if (row == null) return null
+    fun num(key: String): Int? = if (row.isNull(key)) null else row.optInt(key)
+    fun dbl(key: String): Double? = if (row.isNull(key)) null else row.optDouble(key)
+    val latency = num("latency_ms")
+    val prompt = num("prompt_tokens")
+    val completion = num("completion_tokens")
+    val reasoning = num("reasoning_tokens")
+    val model = row.optString("model").takeIf { it.isNotBlank() }
+    val cost = dbl("cost_usd")
+    // All-null is the bridge saying "nothing to show", not a zero-latency turn.
+    if (latency == null && prompt == null && completion == null && model == null && cost == null) return null
+    return MessageMetricsDto(
+        latency_ms = latency,
+        prompt_tokens = prompt,
+        completion_tokens = completion,
+        reasoning_tokens = reasoning,
+        cost_usd = cost,
+        model = model
+    )
+}
+
+private fun parseToolRecords(arr: JSONArray?): List<ToolCallRecordDto> {
+    if (arr == null) return emptyList()
+    val out = ArrayList<ToolCallRecordDto>(arr.length())
+    for (i in 0 until arr.length()) {
+        val row = arr.optJSONObject(i) ?: continue
+        val name = row.optString("name").ifBlank { row.optString("summary") }
+        if (name.isBlank()) continue
+        out.add(
+            ToolCallRecordDto(
+                id = row.optString("id").ifBlank { "tool-$i" },
+                name = name,
+                summary = row.optString("summary").ifBlank { name },
+                arguments = row.optString("arguments"),
+                status = row.optString("status").ifBlank { "running" },
+                started_at = row.optDouble("started_at", 0.0),
+                ended_at = if (row.isNull("ended_at")) null else row.optDouble("ended_at"),
+                output_preview = row.optString("output_preview")
+            )
+        )
+    }
+    return out
 }

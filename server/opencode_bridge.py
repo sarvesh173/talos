@@ -251,6 +251,15 @@ class OpenCodeClient:
     def send_prompt(self, session_id: str, text: str) -> OpenCodeResult:
         return self._post(f"/api/session/{session_id}/prompt", {"text": text, "delivery": "queue"})
 
+    def interrupt(self, session_id: str) -> OpenCodeResult:
+        """Stop the turn in flight.
+
+        `delivery: "queue"` above is the other half of this: a prompt sent while
+        a turn is running is queued by the harness rather than rejected, so the
+        composer can stay live and the user never has to wait out a turn.
+        """
+        return self._post(f"/api/session/{session_id}/interrupt", {})
+
     # --- async wrappers (contract: async health/list_models/create_session) ---
     async def ahealth(self) -> OpenCodeResult:
         import asyncio

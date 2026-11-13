@@ -1072,6 +1072,25 @@ def _tool_record(part: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+@app.post("/api/opencode/sessions/{session_id}/interrupt")
+async def opencode_interrupt_session(
+    session_id: str,
+    token: str = Depends(require_auth),
+):
+    """Stop the turn in flight.
+
+    The composer shows a stop control while a turn runs, so this has to be a
+    first-class call rather than a UI trick: the harness owns the turn, and only
+    it can end one.
+    """
+    from server.opencode_bridge import OpenCodeClient
+
+    result = OpenCodeClient().interrupt(session_id)
+    if not result.ok:
+        return {"ok": False, "error": result.error}
+    return {"ok": True, "interrupted": session_id}
+
+
 @app.post("/api/opencode/sessions/{session_id}/prompt")
 async def opencode_session_prompt(
     session_id: str, body: Dict[str, Any] = Body(...), token: str = Depends(require_auth)

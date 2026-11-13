@@ -249,3 +249,128 @@ private fun parseToolRecords(arr: JSONArray?): List<ToolCallRecordDto> {
     }
     return out
 }
+
+/** One agent the harness exposes — the one you address, or one it can summon. */
+data class HarnessAgent(
+    val id: String,
+    val name: String,
+    val description: String,
+    val mode: String,
+    val hidden: Boolean,
+    val model: String?
+)
+
+/** A subagent this session summoned, with its own run. */
+data class SubagentRun(
+    val id: String,
+    val title: String,
+    val agent: String?,
+    val model: String?,
+    val toolCalls: Int,
+    val tools: List<String>,
+    val reasoningChars: Int,
+    val text: String
+)
+
+/**
+ * The harness's agents. Primary ones are addressable; subagents are summonable.
+ *
+ * The chat could not show who a turn delegated to: OpenCode runs each summoned
+ * subagent in its own child session, so its work never appeared in the parent
+ * transcript.
+ */
+suspend fun fetchHarnessAgents(client: TalosClient): List<HarnessAgent> =
+    withContext(Dispatchers.IO) {
+        val builder = Request.Builder()
+            .url(client.baseUrl.trimEnd('/') + "/api/opencode/agents")
+            .get()
+            .auth(client.apiToken)
+        val body = runCatching {
+            client().newCall(builder.build()).execute().use { it.body?.string() }
+        }.getOrNull() ?: return@withContext emptyList()
+        val root = runCatching { JSONObject(body) }.getOrNull() ?: return@withContext emptyList()
+        if (!root.optBoolean("ok", false)) return@withContext emptyList()
+        val arr = root.optJSONArray("agents") ?: return@withContext emptyList()
+        buildList {
+            for (i in 0 until arr.length()) {
+                val row = arr.optJSONObject(i) ?: continue
+                val id = row.optString("id")
+                if (id.isBlank()) continue
+                add(
+                    HarnessAgent(
+                        id = id,
+                        name = row.optString("name").ifBlank { id },
+                        description = row.optString("description"),
+                        mode = row.optString("mode").ifBlank { "primary" },
+                        hidden = row.optBoolean("hidden", false),
+                        model = row.optString("model").takeIf { it.isNotBlank() }
+                    )
+                )
+            }
+        }
+    }
+
+/** The subagents this session summoned, oldest first. */
+suspend fun fetchSubagents(client: TalosClient, sessionId: String): List<SubagentRun> =
+    withContext(Dispatchers.IO) {
+        val builder = Request.Builder()
+            .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions/$sessionId/subagents")
+            .get()
+            .auth(client.apiToken)
+        val body = runCatching {
+            client().newCall(builder.build()).execute().use { it.body?.string() }
+        }.getOrNull() ?: return@withContext emptyList()
+        val root = runCatching { JSONObject(body) }.getOrNull() ?: return@withContext emptyList()
+        if (!root.optBoolean("ok", false)) return@withContext emptyList()
+        val arr = root.optJSONArray("subagents") ?: return@withContext emptyList()
+        buildList {
+            for (i in 0 until arr.length()) {
+                val row = arr.optJSONObject(i) ?: continue
+                val id = row.optString("id")
+                if (id.isBlank()) continue
+                val tools = row.optJSONArray("tools").let { a ->
+                    buildList {
+                        if (a != null) {
+                            for (j in 0 until a.length()) {
+                                a.optString(j).takeIf { it.isNotBlank() }?.let { add(it) }
+                            }
+                        }
+                    }
+                }
+                add(
+                    SubagentRun(
+                        id = id,
+                        title = row.optString("title").ifBlank { "Subagent" },
+                        agent = row.optString("agent").takeIf { it.isNotBlank() },
+                        model = row.optString("model").takeIf { it.isNotBlank() },
+                        toolCalls = row.optInt("tool_calls", 0),
+                        tools = tools,
+                        reasoningChars = row.optInt("reasoning_chars", 0),
+                        text = row.optString("text")
+                    )
+                )
+            }
+        }
+    }
+
+/**
+ * End the turn in flight.
+ *
+ * The harness queues a prompt sent mid-turn (`delivery: "queue"`) rather than
+ * refusing it, which is what lets the composer stay live: typing swaps the stop
+ * square for a send arrow, and the message lands as soon as the turn ends.
+ */
+suspend fun stopRemotePrompt(client: TalosClient, sessionId: String): Boolean =
+    withContext(Dispatchers.IO) {
+        val builder = Request.Builder()
+            .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions/$sessionId/interrupt")
+            .post("".toRequestBody(jsonMedia))
+            .auth(client.apiToken)
+        runCatching {
+            client().newCall(builder.build()).execute().use { resp ->
+                if (!resp.isSuccessful) return@use false
+                val body = resp.body?.string() ?: return@use false
+                JSONObject(body).optBoolean("ok", false)
+            }
+        }.getOrDefault(false)
+    }

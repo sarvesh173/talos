@@ -6,6 +6,7 @@ import com.sarvesh173.talos.ui.chat.fetchRemoteMessages
 import com.sarvesh173.talos.ui.chat.fetchRemoteSessions
 import com.sarvesh173.talos.ui.chat.isRemoteSessionId
 import com.sarvesh173.talos.ui.chat.sendRemotePrompt
+import com.sarvesh173.talos.ui.chat.stopRemotePrompt
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
@@ -26,6 +27,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Mic
@@ -197,6 +199,7 @@ fun AppleAgentChatScreen(
     var pendingImage by remember { mutableStateOf<PendingImage?>(null) }
     var showTelemetry by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
+    var showSubagents by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
 
     // Voice notes. The recorder is format-aware and falls back to M4A when the
@@ -710,6 +713,26 @@ fun AppleAgentChatScreen(
                             },
                             onClick = { menuOpen = false; showHistory = true }
                         )
+                        if (remoteMode) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Summoned agents",
+                                        fontSize = 14.sp,
+                                        color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.Person,
+                                        contentDescription = null,
+                                        tint = if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                                onClick = { menuOpen = false; showSubagents = true }
+                            )
+                        }
                         DropdownMenuItem(
                             text = {
                                 Text(
@@ -1054,7 +1077,29 @@ fun AppleAgentChatScreen(
                                 }
                             }
                         }
-                    } else if (hasText && !busy) {
+                    } else if (busy && !hasText && remoteMode) {
+                        // A running turn with nothing drafted: a square stop,
+                        // filled with the agent's colour, no label — the glyph
+                        // is the whole affordance.
+                        //
+                        // Remote only: the harness owns the turn and exposes an
+                        // interrupt call. A local TALOS room has no such
+                        // endpoint, so there the mic stays and is simply
+                        // disabled while the agent talks.
+                        StopButton(
+                            color = if (isDark) Color.White else Color(0xFF1D1D1F),
+                            surface = if (isDark) Color.Black else Color.White,
+                            onClick = {
+                                scope.launch {
+                                    runCatching { stopRemotePrompt(client, activeSessionId) }
+                                    remoteBusy = false
+                                }
+                            }
+                        )
+                    } else if (hasText) {
+                        // Typing wins over busy: the harness queues a prompt sent
+                        // mid-turn rather than dropping it, so the arrow appears
+                        // on the first character and the draft is never trapped.
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
@@ -1148,6 +1193,17 @@ fun AppleAgentChatScreen(
                 }
             }
         }
+    }
+
+    if (showSubagents && remoteMode) {
+        SubagentSheet(
+            sessionId = activeSessionId,
+            client = client,
+            isDark = isDark,
+            brandColor = brandColor,
+            onBack = { showSubagents = false }
+        )
+        return
     }
 
     if (showHistory) {

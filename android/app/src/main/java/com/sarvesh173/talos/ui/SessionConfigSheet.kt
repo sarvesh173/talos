@@ -141,7 +141,7 @@ fun SessionConfigSheet(
                 error != null -> Text(text = error!!, fontSize = 13.sp, color = muted)
                 else -> {
                     // Agents: primary and subagent, hidden harness internals dropped.
-                    val shown = agents!!.filter { !it.hidden }
+                    val shown = agents?.filter { !it.hidden } ?: emptyList()
                     if (shown.isNotEmpty()) {
                         SectionLabel("Agent", muted)
                         LazyColumn(
@@ -198,7 +198,7 @@ fun SessionConfigSheet(
                         modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(models!!, key = { it.providerId + "/" + it.id }) { model ->
+                        items(models ?: emptyList(), key = { it.providerId + "/" + it.id }) { model ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

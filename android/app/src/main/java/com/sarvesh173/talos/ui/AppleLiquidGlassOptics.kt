@@ -21,30 +21,24 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
 /**
- * Real glass. The translucency comes from the fill colour's alpha at the call
- * site — this modifier only adds the one thing a fill cannot: a hairline that
- * catches the light along the top edge.
+ * Surfaces are flat by default now.
  *
- * What it deliberately does NOT do, because that is what made the old version
- * look like dirty plastic:
- *  - no chromatic colour wash painted over the content (up to 0.30 alpha),
- *  - no white meniscus sheen across the upper half (up to 0.40 alpha),
- *  - no 0.75-alpha white rim stroke running around the whole shape.
+ * This used to draw a hairline gradient rim around every card, which on an
+ * opaque `surfaceContainer` fill read as plastic rather than glass — the exact
+ * complaint. The rim is gone; the modifier stays so the ~26 call sites keep
+ * compiling, and so a surface can opt back in deliberately if one is ever
+ * wanted.
  *
- * Overdraw stays at one stroke per surface, which matters on this device.
+ * `chromaticGlow` is accepted and ignored: it was never read, and wiring it up
+ * would put a colour wash over content, which is what made the old version
+ * look dirty.
  */
 fun Modifier.appleLiquidGlassOptics(
     isDark: Boolean = true,
     chromaticGlow: Color = Color.Unspecified,
     cornerRadius: Dp = 20.dp,
     shape: Shape? = null
-): Modifier {
-    val resolved = shape ?: RoundedCornerShape(cornerRadius)
-    return this.drawWithContent {
-        drawContent()
-        drawGlassRim(isDark = isDark, shape = resolved)
-    }
-}
+): Modifier = this
 
 // ---------------------------------------------------------------------------
 // Internals

@@ -93,12 +93,16 @@ fun SubagentSheet(
                     fontWeight = FontWeight.SemiBold,
                     color = if (isDark) Color.White else Color(0xFF1D1D1F)
                 )
+                // `loaded` is the only thing that makes `runs` safe to read: the
+                // header used to assert runs!! here, so a failed fetch crashed the
+                // screen before the error branch could render.
+                val loaded = runs
                 val sub = when {
-                    runs == null && error == null -> "Loading…"
-                    error != null -> error!!
-                    runs!!.isEmpty() -> "No subagents summoned in this session"
-                    else -> "${runs!!.size} run${if (runs!!.size == 1) "" else "s"}"
-                }
+                    error != null -> error
+                    loaded == null -> "Loading…"
+                    loaded.isEmpty() -> "No subagents summoned in this session"
+                    else -> "${loaded.size} run${if (loaded.size == 1) "" else "s"}"
+                } ?: "Loading…"
                 Text(text = sub, fontSize = 11.5.sp, color = secondary, maxLines = 1)
             }
         }
@@ -113,7 +117,7 @@ fun SubagentSheet(
                     )
                 }
             }
-            runs!!.isEmpty() -> {
+            runs?.isEmpty() == true -> {
                 Box(
                     modifier = Modifier.fillMaxSize().padding(24.dp),
                     contentAlignment = Alignment.Center
@@ -134,7 +138,7 @@ fun SubagentSheet(
                     ),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(runs!!, key = { it.id }) { run ->
+                    items(runs ?: emptyList(), key = { it.id }) { run ->
                         SubagentCard(run, isDark, tint, secondary)
                     }
                 }

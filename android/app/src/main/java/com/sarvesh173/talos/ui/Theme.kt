@@ -70,76 +70,80 @@ object MdSpacing {
 // Apple tertiary elevated chrome (#2C2C2E), and Apple Action Blue (#0071E3 / #2997FF).
 // -----------------------------------------------------------------------------
 val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF2997FF),            // Apple Action Blue (Luminous on Dark)
-    onPrimary = Color(0xFF000000),
-    primaryContainer = Color(0xFF0040DD),   // Deep Apple Blue container
-    onPrimaryContainer = Color(0xFFD0E2FF),
+    // TALOS palette. Not Apple's blue: a desaturated cyan-teal, which reads as
+    // instrumentation rather than as a consumer app, and stays legible on both
+    // the lifted charcoal and pure black.
+    primary = Color(0xFF5AC8D8),            // TALOS Signal Cyan
+    onPrimary = Color(0xFF00363D),
+    primaryContainer = Color(0xFF14505A),
+    onPrimaryContainer = Color(0xFFA8EDF7),
     secondary = Color(0xFF8E8E93),          // Apple System Gray (Clean Muted)
     onSecondary = Color(0xFFFFFFFF),
     secondaryContainer = Color(0xFF2C2C2E), // Apple Tertiary System Background
     onSecondaryContainer = Color(0xFFFFFFFF),
-    tertiary = Color(0xFF30D158),           // Apple System Green (Live Node status)
-    onTertiary = Color(0xFF000000),
-    tertiaryContainer = Color(0xFF0D3E1A),
-    onTertiaryContainer = Color(0xFFA3F3B8),
-    error = Color(0xFFFF453A),              // Apple System Red
-    onError = Color(0xFF000000),
+    tertiary = Color(0xFFB8E986),           // TALOS Live (running)
+    onTertiary = Color(0xFF1A2E00),
+    tertiaryContainer = Color(0xFF2A4214),
+    onTertiaryContainer = Color(0xFFD6F5B0),
+    error = Color(0xFFFF6B5E),              // TALOS Alert
+    onError = Color(0xFF3D0A05),
     errorContainer = Color(0xFF491210),
     onErrorContainer = Color(0xFFFFB4AB),
-    background = Color(0xFF000000),         // Pure Apple OLED Black Canvas
-    onBackground = Color(0xFFFFFFFF),       // Pure White Text
-    surface = Color(0xFF000000),            // True OLED Surface
-    onSurface = Color(0xFFFFFFFF),
-    onSurfaceVariant = Color(0xFF8E8E93),   // Apple Secondary Text Gray
-    surfaceContainerLowest = Color(0xFF000000),
-    surfaceContainerLow = Color(0xFF141416),
-    surfaceContainer = Color(0xFF1C1C1E),   // Apple Secondary System Background (Cards)
-    surfaceContainerHigh = Color(0xFF2C2C2E), // Apple Tertiary System Background (Floating headers)
-    surfaceContainerHighest = Color(0xFF3A3A3C), // Apple Elevated controls / Separators
-    surfaceDim = Color(0xFF000000),
-    surfaceBright = Color(0xFF2C2C2E),
-    outline = Color(0xFF38383A),            // Apple Hairline Border
-    outlineVariant = Color(0xFF2C2C2E),
+    background = Color(0xFF0E1113),         // TALOS Void (lifted off pure black)
+    onBackground = Color(0xFFF2F5F6),
+    surface = Color(0xFF0E1113),
+    onSurface = Color(0xFFF2F5F6),
+    onSurfaceVariant = Color(0xFF9BA6AA),   // TALOS Muted
+    surfaceContainerLowest = Color(0xFF0A0C0E),
+    surfaceContainerLow = Color(0xFF151A1D),
+    surfaceContainer = Color(0xFF1B2124),   // Cards
+    surfaceContainerHigh = Color(0xFF232B2F), // Floating headers
+    surfaceContainerHighest = Color(0xFF2E373B), // Controls
+    surfaceDim = Color(0xFF0E1113),
+    surfaceBright = Color(0xFF2E373B),
+    outline = Color(0xFF333D41),            // Hairline
+    outlineVariant = Color(0xFF232B2F),
     inverseSurface = Color(0xFFF2F2F7),
     inverseOnSurface = Color(0xFF1C1C1E),
-    inversePrimary = Color(0xFF0071E3)
+    inversePrimary = Color(0xFF5AC8D8)
 )
 
 // -----------------------------------------------------------------------------
 // LIGHT APPLE CUPERTINO PALETTE
 // -----------------------------------------------------------------------------
 val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF0071E3),            // Apple Action Blue (Signature Light)
+    // Same family as the dark scheme, deepened to stay AA on white.
+    primary = Color(0xFF0F6E7C),            // TALOS Signal Cyan (ink-safe)
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFE5F1FF),
-    onPrimaryContainer = Color(0xFF001F52),
-    secondary = Color(0xFF8E8E93),
+    primaryContainer = Color(0xFFC8EDF4),
+    onPrimaryContainer = Color(0xFF00363D),
+    secondary = Color(0xFF5B6B70),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFF2F2F7),
-    onSecondaryContainer = Color(0xFF1C1C1E),
-    tertiary = Color(0xFF34C759),
+    secondaryContainer = Color(0xFFE4EBED),
+    onSecondaryContainer = Color(0xFF1B2124),
+    tertiary = Color(0xFF3F6B12),           // TALOS Live, darkened for white
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFD6F5DE),
-    onTertiaryContainer = Color(0xFF053913),
-    error = Color(0xFFFF3B30),
+    tertiaryContainer = Color(0xFFD6F5B0),
+    onTertiaryContainer = Color(0xFF1A2E00),
+    error = Color(0xFFC4301F),              // TALOS Alert, darkened
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
-    background = Color(0xFFF2F2F7),         // Pale Apple Gray (#F2F2F7)
-    onBackground = Color(0xFF1D1D1F),       // Apple Near-Black Ink (#1D1D1F)
-    surface = Color(0xFFFFFFFF),            // Pure White Card Canvas
-    onSurface = Color(0xFF1D1D1F),
-    onSurfaceVariant = Color(0xFF6E6E73),   // Apple Secondary Text
+    background = Color(0xFFF4F6F7),         // TALOS Paper (warm-neutral, not blue-gray)
+    onBackground = Color(0xFF14191B),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF14191B),
+    onSurfaceVariant = Color(0xFF5B6B70),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFFBFBFD),
-    surfaceContainer = Color(0xFFF5F5F7),   // Pale Apple Gray Card
-    surfaceContainerHigh = Color(0xFFE5E5EA),
-    surfaceContainerHighest = Color(0xFFD1D1D6),
-    surfaceDim = Color(0xFFE5E5EA),
+    surfaceContainerLow = Color(0xFFFAFBFB),
+    surfaceContainer = Color(0xFFEFF2F3),
+    surfaceContainerHigh = Color(0xFFE4E9EA),
+    surfaceContainerHighest = Color(0xFFD5DCDE),
+    surfaceDim = Color(0xFFE4E9EA),
     surfaceBright = Color(0xFFFFFFFF),
-    outline = Color(0xFFC7C7CC),
-    outlineVariant = Color(0xFFE5E5EA),
-    inverseSurface = Color(0xFF1C1C1E),
+    outline = Color(0xFFBCC6C9),
+    outlineVariant = Color(0xFFDCE2E4),
+    inverseSurface = Color(0xFF1B2124),
     inverseOnSurface = Color(0xFFFFFFFF),
     inversePrimary = Color(0xFF2997FF)
 )

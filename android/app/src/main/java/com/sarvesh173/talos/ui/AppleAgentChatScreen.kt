@@ -464,7 +464,7 @@ fun AppleAgentChatScreen(
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
     }
 
-    val backgroundColor = if (isDark) Color(0xFF000000) else Color(0xFFFFFFFF)
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     // Real glass for the chrome only: the backdrop is the scrolling list, so
     // the bars sample what is actually behind them. On API 31+ this is a true

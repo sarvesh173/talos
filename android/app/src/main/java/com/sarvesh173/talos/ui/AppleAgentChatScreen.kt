@@ -39,7 +39,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -157,9 +156,8 @@ fun AppleAgentChatScreen(
     var showPromptLibrary by remember { mutableStateOf(false) }
     var pendingImage by remember { mutableStateOf<PendingImage?>(null) }
     var showTelemetry by remember { mutableStateOf(false) }
-    var composerFocused by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
-    var approvalMode by remember { mutableStateOf(AgentApprovalMode.AskOnce) }
+    var menuOpen by remember { mutableStateOf(false) }
 
     // Live room stream. The screen renders whatever the core actually sent;
     // it never fabricates an agent reply.
@@ -568,36 +566,73 @@ fun AppleAgentChatScreen(
                     )
                 }
 
-                // Past sessions.
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .applePressable(0.92f, pressHaptic = true) { showHistory = true },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = TalosIcons.TalosStorage,
-                        contentDescription = "Past sessions",
-                        tint = if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Telemetry toggle: context, tools, and diff for this agent.
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .applePressable(0.92f, pressHaptic = true) { showTelemetry = !showTelemetry },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreHoriz,
-                        contentDescription = if (showTelemetry) "Hide agent status" else "Show agent status",
-                        tint = if (showTelemetry) brandColor else if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
-                        modifier = Modifier.size(20.dp)
-                    )
+                // One menu holds everything that used to be three separate buttons.
+                // On a 360dp phone the top bar is the most expensive row on the
+                // screen: every 48dp key here is 13% of the width. Sessions and
+                // telemetry are both "sometimes" actions, so they live behind
+                // one affordance instead of two.
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .applePressable(0.92f, pressHaptic = true) { menuOpen = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreHoriz,
+                            contentDescription = "More",
+                            tint = if (menuOpen || showTelemetry) brandColor
+                                   else if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuOpen,
+                        onDismissRequest = { menuOpen = false },
+                        modifier = Modifier.background(
+                            if (isDark) Color(0xFF1C1C1E) else Color.White,
+                            RoundedCornerShape(14.dp)
+                        )
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "Past sessions",
+                                    fontSize = 14.sp,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = TalosIcons.TalosStorage,
+                                    contentDescription = null,
+                                    tint = if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            onClick = { menuOpen = false; showHistory = true }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    if (showTelemetry) "Hide agent status" else "Agent status",
+                                    fontSize = 14.sp,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Insights,
+                                    contentDescription = null,
+                                    tint = if (showTelemetry) brandColor
+                                           else if (isDark) Color.White.copy(alpha = 0.80f) else Color(0xFF1D1D1F),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            onClick = { menuOpen = false; showTelemetry = !showTelemetry }
+                        )
+                    }
                 }
             }
         }
@@ -770,7 +805,6 @@ fun AppleAgentChatScreen(
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = 44.dp)
-                            .onFocusChanged { composerFocused = it.isFocused }
                             .padding(vertical = 12.dp)
                     )
 

@@ -399,7 +399,14 @@ fun AppleAgentChatScreen(
             contentPadding = PaddingValues(top = 116.dp, bottom = 140.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(messages, key = { it.id }) { msg ->
+            items(
+                items = messages,
+                key = { it.id },
+                // Without contentType Compose cannot reuse composition slots
+                // per message type, so every scroll allocates fresh bubble
+                // nodes. jetpack-compose-performance §3 makes both mandatory.
+                contentType = { it.sender }
+            ) { msg ->
                 if (msg.sender == "user") {
                     UserBubble(msg, isDark, brandColor, onLongClick = { selectedMessageForAction = msg })
                 } else {
@@ -1123,7 +1130,10 @@ private fun UserBubble(
                 Text(
                     text = msg.text,
                     fontSize = 15.sp,
-                    color = Color.White,
+                    // The accent is user-chosen and can be any colour, including
+                    // bright yellow (1.43:1) or cyan (1.30:1) against white.
+                    // Pick the ink by measured luminance, not by habit.
+                    color = onAccent(brandColor),
                     letterSpacing = (-0.1).sp,
                     modifier = Modifier.weight(1f, fill = false)
                 )
@@ -1131,7 +1141,7 @@ private fun UserBubble(
                     Text(
                         text = msg.timestamp,
                         fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.70f),
+                        color = onAccent(brandColor).copy(alpha = 0.70f),
                         modifier = Modifier.padding(bottom = 1.dp)
                     )
                 }

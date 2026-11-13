@@ -737,6 +737,15 @@ fun AppleAgentChatScreen(
                     verticalAlignment = Alignment.Bottom
                 ) {
                     // Plus: camera, photos, files, drawing, stickers.
+                    // It vacates while you type, like Telegram's paperclip: once
+                    // there is text the row is field + send, which buys back
+                    // 56dp on a 360dp-wide phone. It returns the moment the
+                    // draft is cleared.
+                    AnimatedVisibility(
+                        visible = !slashActive,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally()
+                    ) {
                     Box(
                         modifier = Modifier
                             .size(48.dp)
@@ -751,6 +760,7 @@ fun AppleAgentChatScreen(
                             tint = if (isDark) Color.White else Color(0xFF1D1D1F),
                             modifier = Modifier.size(20.dp)
                         )
+                    }
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -791,15 +801,20 @@ fun AppleAgentChatScreen(
                         cursorBrush = SolidColor(brandColor),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                         decorationBox = { inner ->
-                            if (inputText.isEmpty()) {
-                                Text(
-                                    text = "Message $agentName",
-                                    fontSize = 15.sp,
-                                    color = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)
-                                )
-                            }
-                            inner()
-                        },
+                                                        if (inputText.isEmpty()) {
+                                                            // The slash list is the only way to reach
+                                                            // models and commands, and hidden
+                                                            // affordances go undiscovered — GitHub
+                                                            // nearly killed Ctrl+K for exactly that.
+                                                            // Advertise it in the placeholder.
+                                                            Text(
+                                                                text = "Message $agentName  ·  / for commands",
+                                                                fontSize = 15.sp,
+                                                                color = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)
+                                                            )
+                                                        }
+                                                        inner()
+                                                    },
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = 44.dp)

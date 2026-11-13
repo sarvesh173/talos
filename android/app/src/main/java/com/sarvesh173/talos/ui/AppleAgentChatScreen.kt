@@ -40,8 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +50,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.sarvesh173.talos.data.Role
@@ -380,36 +380,24 @@ fun AppleAgentChatScreen(
 
     val backgroundColor = if (isDark) Color(0xFF000000) else Color(0xFFFFFFFF)
 
-    // Glass only reads as glass when there is something behind it. A flat fill
-    // makes translucency invisible, so the backdrop carries a very soft brand
-    // wash — this is the surface the bubbles and bars refract, not decoration.
+    // Real glass for the chrome only: the backdrop is the scrolling list, so
+    // the bars sample what is actually behind them. On API 31+ this is a true
+    // blur; below that Haze degrades to a tint, which is exactly what a bar
+    // should do anyway. Bubbles never opt in — they are content, not chrome.
+    val hazeState = remember { HazeState() }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        brandColor.copy(alpha = if (isDark) 0.16f else 0.10f),
-                        Color.Transparent
-                    ),
-                    center = Offset(0.85f, 0.12f),
-                    radius = 900f
-                )
-            )
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        brandColor.copy(alpha = if (isDark) 0.06f else 0.04f)
-                    )
-                )
-            )
     ) {
         // ---------------- message stream ----------------
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().padding(horizontal = 14.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .haze(hazeState)
+                .padding(horizontal = 14.dp),
             contentPadding = PaddingValues(top = 116.dp, bottom = 140.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -490,16 +478,22 @@ fun AppleAgentChatScreen(
             )
         }
 
-        // ---------------- top bar ----------------
+        // ---------------- top bar (real glass: samples the list under it) ----------------
         Surface(
             shape = RoundedCornerShape(22.dp),
-            color = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.62f) else Color.White.copy(alpha = 0.72f),
+            color = Color.Transparent,
             shadowElevation = 0.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .appleLiquidGlassOptics(isDark = isDark, cornerRadius = 22.dp)
+                .padding(horizontal = 14.dp, vertical = 8.dp)
+                .talosGlassSurface(
+                    hazeState = hazeState,
+                    shape = RoundedCornerShape(22.dp),
+                    backgroundColor = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.55f)
+                                      else Color.White.copy(alpha = 0.70f),
+                    blurRadius = 28.dp
+                )
         ) {
             Row(
                 modifier = Modifier
@@ -690,11 +684,17 @@ fun AppleAgentChatScreen(
 
             Surface(
                 shape = RoundedCornerShape(26.dp),
-                color = if (isDark) Color(0xFF161820).copy(alpha = 0.66f) else Color.White.copy(alpha = 0.78f),
+                color = Color.Transparent,
                 shadowElevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .appleLiquidGlassOptics(isDark = isDark, cornerRadius = 26.dp)
+                    .talosGlassSurface(
+                        hazeState = hazeState,
+                        shape = RoundedCornerShape(26.dp),
+                        backgroundColor = if (isDark) Color(0xFF161820).copy(alpha = 0.62f)
+                                          else Color.White.copy(alpha = 0.78f),
+                        blurRadius = 30.dp
+                    )
             ) {
                 Row(
                     modifier = Modifier
@@ -1076,16 +1076,16 @@ private fun UserBubble(
     if (msg.text.isBlank() || msg.text == "null") return
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         val shape = RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
+        // A bubble is content, not chrome: it sits on a flat backdrop with
+        // nothing to refract, so translucency is decoration — and on API 30
+        // (no backdrop blur) it just lets the list behind bleed through.
+        // Solid fill, no rim, no sheen.
         Surface(
             shape = shape,
-            color = brandColor.copy(alpha = if (isDark) 0.82f else 0.88f),
+            color = brandColor,
             shadowElevation = 0.dp,
             modifier = Modifier
                 .widthIn(max = 290.dp)
-                .appleLiquidGlassOptics(
-                    isDark = isDark,
-                    shape = shape
-                )
                 .pointerInput(msg.id) {
                     detectTapGestures(onLongPress = { onLongClick() })
                 }
@@ -1152,13 +1152,14 @@ private fun AgentBubble(
             Spacer(modifier = Modifier.width(8.dp))
 
             val shape = RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
+            // Same reasoning as the user bubble: content sits on a flat
+            // backdrop, so it gets a solid tonal fill. The agent's identity is
+            // carried by the avatar mark beside it, not by a glass treatment.
             Surface(
                 shape = shape,
-                color = if (isDark) Color(0xFF2C2C2E).copy(alpha = 0.70f) else Color.White.copy(alpha = 0.80f),
+                color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
                 shadowElevation = 0.dp,
-                modifier = Modifier
-                    .widthIn(max = 290.dp)
-                    .appleLiquidGlassOptics(isDark = isDark, shape = shape)
+                modifier = Modifier.widthIn(max = 290.dp)
             ) {
                 Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {
                     Row(

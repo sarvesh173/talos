@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
@@ -47,28 +46,6 @@ fun Modifier.appleLiquidGlassOptics(
     }
 }
 
-/**
- * Interactive variant: the same hairline, brightened while pressed. Alpha-only,
- * so it never shifts layout and stays safe under reduced motion.
- */
-fun Modifier.appleInteractiveGlass(
-    interactionSource: MutableInteractionSource,
-    isDark: Boolean = true,
-    chromaticGlow: Color = Color.Unspecified,
-    shape: Shape = RoundedCornerShape(20.dp),
-    pressBoost: Float = 0f
-): Modifier {
-    val pressed by interactionSource.collectIsPressedAsState()
-    val boost by animateFloatAsState(
-        targetValue = if (pressed) pressBoost else 0f,
-        label = "glass_press_boost"
-    )
-    return this.drawWithContent {
-        drawContent()
-        drawGlassRim(isDark = isDark, shape = shape, intensity = 1f + boost)
-    }
-}
-
 // ---------------------------------------------------------------------------
 // Internals
 // ---------------------------------------------------------------------------
@@ -100,8 +77,8 @@ private fun DrawScope.drawGlassRim(
         path = glassPath(shape),
         brush = Brush.verticalGradient(
             colors = listOf(top, bottom),
-            start = Offset(0f, 0f),
-            end = Offset(0f, size.height)
+            startY = 0f,
+            endY = size.height
         ),
         style = Stroke(width = 0.8.dp.toPx())
     )

@@ -205,8 +205,13 @@ class OpenCodeClient:
         request = urllib.request.Request(f"{self.base_url}{path}", data=payload, headers=headers, method="POST")
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                raw = response.read()
+                # 204/empty is success, not a decode failure: interrupt, model
+                # and agent all answer with no body at all.
+                if not raw.strip():
+                    return OpenCodeResult(ok=True, data={}, status=response.status)
                 try:
-                    return OpenCodeResult(ok=True, data=json.loads(response.read()), status=response.status)
+                    return OpenCodeResult(ok=True, data=json.loads(raw), status=response.status)
                 except json.JSONDecodeError:
                     return OpenCodeResult(ok=False, error="response was not JSON", status=response.status)
         except urllib.error.HTTPError as exc:
@@ -259,6 +264,20 @@ class OpenCodeClient:
         composer can stay live and the user never has to wait out a turn.
         """
         return self._post(f"/api/session/{session_id}/interrupt", {})
+
+    def set_session_model(self, session_id: str, provider_id: str, model_id: str) -> OpenCodeResult:
+        """Pin the model this session runs on.
+
+        Body shape is nested (`{"model": {"id", "providerID"}}`); a flat
+        providerID/modelID pair is rejected with a payload error.
+        """
+        return self._post(
+            f"/api/session/{session_id}/model",
+            {"model": {"id": model_id, "providerID": provider_id}},
+        )
+
+    def set_session_agent(self, session_id: str, agent: str) -> OpenCodeResult:
+        return self._post(f"/api/session/{session_id}/agent", {"agent": agent})
 
     # --- async wrappers (contract: async health/list_models/create_session) ---
     async def ahealth(self) -> OpenCodeResult:

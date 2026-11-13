@@ -1072,6 +1072,85 @@ def _tool_record(part: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+@app.post("/api/opencode/sessions/{session_id}/model")
+async def opencode_set_model(
+    session_id: str,
+    body: Dict[str, Any] = Body(...),
+    token: str = Depends(require_auth),
+):
+    """Pin the model this session runs on.
+
+    Lets the app switch a session's model (and, separately, its agent) without
+    the user going near a config file.
+    """
+    from server.opencode_bridge import OpenCodeClient
+
+    provider = body.get("providerID") or body.get("provider_id") or ""
+    model = body.get("modelID") or body.get("model_id") or ""
+    if not provider or not model:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="providerID and modelID are both required",
+        )
+
+    result = OpenCodeClient().set_session_model(session_id, provider, model)
+    if not result.ok:
+        return {"ok": False, "error": result.error}
+    return {"ok": True, "model": {"id": model, "providerID": provider}}
+
+
+@app.post("/api/opencode/sessions/{session_id}/agent")
+async def opencode_set_agent(
+    session_id: str,
+    body: Dict[str, Any] = Body(...),
+    token: str = Depends(require_auth),
+):
+    """Point the session at a different harness agent (build, plan, general…)."""
+    from server.opencode_bridge import OpenCodeClient
+
+    agent = (body.get("agent") or "").strip()
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="agent is required",
+        )
+
+    result = OpenCodeClient().set_session_agent(session_id, agent)
+    if not result.ok:
+        return {"ok": False, "error": result.error}
+    return {"ok": True, "agent": agent}
+
+
+@app.get("/api/opencode/models")
+async def opencode_models(token: str = Depends(require_auth)):
+    """Models the harness can run, as the picker needs them."""
+    from server.opencode_bridge import OpenCodeClient
+
+    result = OpenCodeClient().list_models()
+    if not result.ok:
+        return {"ok": False, "error": result.error, "models": []}
+
+    rows = (result.data or {}).get("data") or []
+    models = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        caps = row.get("capabilities") or {}
+        inputs = caps.get("input") or []
+        models.append(
+            {
+                "id": row.get("id"),
+                "provider_id": row.get("providerID"),
+                "name": row.get("name") or row.get("id"),
+                "vision": "image" in inputs,
+                "tools": bool(caps.get("tools")),
+                "context": (row.get("limit") or {}).get("context"),
+                "reasoning": bool(row.get("reasoning")),
+            }
+        )
+    return {"ok": True, "models": models, "count": len(models)}
+
+
 @app.post("/api/opencode/sessions/{session_id}/interrupt")
 async def opencode_interrupt_session(
     session_id: str,

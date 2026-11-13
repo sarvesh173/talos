@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -56,6 +57,7 @@ import kotlinx.coroutines.launch
  * and the model list is what it is. A tab per list would hide one of them
  * behind a tap for no gain.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionConfigSheet(
     sessionId: String,

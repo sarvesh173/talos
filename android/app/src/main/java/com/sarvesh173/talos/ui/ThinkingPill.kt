@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.minimumInteractiveComponentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -78,7 +78,7 @@ fun ThinkingPill(
                 .clip(RoundedCornerShape(10.dp))
                 .clickable { expanded = !expanded }
                 .heightIn(min = 32.dp)
-                .minimumInteractiveComponentSize()
+                .defaultMinSize(minHeight = 48.dp)
                 .padding(horizontal = 2.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

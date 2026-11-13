@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -281,19 +283,22 @@ private fun LogDetailSheet(file: File, onClose: () -> Unit, onDeleted: () -> Uni
                     shape = RoundedCornerShape(12.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHighest
                 ) {
-                    Box(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-                        androidx.compose.foundation.verticalScroll(
-                            state = androidx.compose.foundation.rememberScrollState()
-                        ) {
-                            Text(
-                                text = text ?: "Reading…",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 10.5.sp,
-                                    fontFamily = FontFamily.Monospace
-                                ),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                    // verticalScroll (not a nested LazyColumn): this sits inside an
+                    // AlertDialog, which is not a lazy layout.
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            text = text ?: "Reading…",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 10.5.sp,
+                                fontFamily = FontFamily.Monospace
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }

@@ -108,6 +108,7 @@ import com.sarvesh173.talos.ui.entry.isBiometricAvailable
 import com.sarvesh173.talos.ui.entry.shouldLock
 import com.sarvesh173.talos.ui.features.SettingsScreen
 import com.sarvesh173.talos.ui.settings.DashboardControlScreen
+import com.sarvesh173.talos.ui.settings.VoiceNotePreferences
 import com.sarvesh173.talos.ui.agents.AgentLifecycleScreen
 import com.sarvesh173.talos.ui.kanban.KanbanScreen
 import com.sarvesh173.talos.ui.review.ReviewWorkScreen
@@ -2014,7 +2015,10 @@ fun MainScreen(
                                                     val (duration, b64) = audioRecordManager.stopRecording()
                                                     if (b64 != null && duration >= 1) {
                                                         sendHaptic(context)
-                                                        client.sendMessage("[Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
+                                                        // The recorder falls back to M4A on older devices, so the
+                                                        // mime must come from what was actually recorded.
+                                                        val mime = VoiceNotePreferences.mimeTypeFor(audioRecordManager.activeFormat)
+                                                        client.sendMessage("[Voice Note: ${duration}s]\ndata:$mime;base64,$b64")
                                                         Toast.makeText(context, "Voice note sent", Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
@@ -2055,6 +2059,8 @@ fun MainScreen(
                                                         isSendPressed = false
                                                     } else {
                                                         isRecordingActive = true
+                                                        // Records in the format chosen in settings, falling back
+                                                        // to M4A when the device cannot do Ogg natively.
                                                         audioRecordManager.startRecording()
                                                         var locked = false
                                                         var cancelled = false
@@ -2102,7 +2108,8 @@ fun MainScreen(
                                                                 val (duration, b64) = audioRecordManager.stopRecording()
                                                                 if (b64 != null && duration >= 1) {
                                                                     sendHaptic(context)
-                                                                    client.sendMessage("[Voice Note: ${duration}s]\ndata:audio/mp4;base64,$b64")
+                                                                    val mime = VoiceNotePreferences.mimeTypeFor(audioRecordManager.activeFormat)
+                                                                    client.sendMessage("[Voice Note: ${duration}s]\ndata:$mime;base64,$b64")
                                                                     Toast.makeText(context, "Voice note sent", Toast.LENGTH_SHORT).show()
                                                                 }
                                                             }

@@ -26,9 +26,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.sarvesh173.talos.network.AudioRecordManager
+import com.sarvesh173.talos.ui.settings.AudioFormat
+import com.sarvesh173.talos.ui.settings.VoiceNotePreferences
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material.icons.filled.ContentCopy
@@ -158,6 +166,21 @@ fun AppleAgentChatScreen(
     var showTelemetry by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
+
+    // Voice notes. The recorder is format-aware and falls back to M4A when the
+    // device cannot record Ogg natively (Ogg needs API 29).
+    val audioRecorder = remember { AudioRecordManager(context) }
+    var recordingActive by rememberSaveable { mutableStateOf(false) }
+    var recordingLocked by rememberSaveable { mutableStateOf(false) }
+    var recordingSeconds by rememberSaveable { mutableStateOf(0) }
+    var recordedFormat by rememberSaveable { mutableStateOf(AudioFormat.M4A) }
+
+    // Cancel any in-flight recording if the screen leaves composition
+    DisposableEffect(Unit) {
+        onDispose {
+            if (recordingActive) audioRecorder.cancelRecording()
+        }
+    }
 
     // Live room stream. The screen renders whatever the core actually sent;
     // it never fabricates an agent reply.
@@ -825,24 +848,133 @@ fun AppleAgentChatScreen(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // No trailing button while the draft is blank and nothing is
-                    // generating. Telegram, iMessage and WhatsApp all render
-                    // nothing here — a permanently greyed-out send key costs
-                    // 48dp on a 360dp phone and advertises a disabled state.
+                    // One trailing slot, two states. A blank draft shows a mic;
+                    // typing swaps it for send. Telegram, iMessage and WhatsApp
+                    // all cross-fade in the same slot rather than showing both.
                     val hasText = inputText.isNotBlank()
                     val busy = if (remoteMode) remoteBusy else isThinking
-                    AnimatedVisibility(
-                        visible = hasText || busy,
-                        enter = fadeIn() + scaleIn(initialScale = 0.8f),
-                        exit = fadeOut() + scaleOut(targetScale = 0.8f)
-                    ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(if (hasText && !busy) brandColor else (if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)))
-                            .applePressable(0.90f, pressHaptic = true) {
-                                if (hasText && !busy) {
+                    val limitSeconds = remember { VoiceNotePreferences.getLimitSeconds(context) }
+
+                    // Recording ticker — stops itself at the configured cap.
+                    LaunchedEffect(recordingActive) {
+                        if (!recordingActive) return@LaunchedEffect
+                        while (recordingActive) {
+                            recordingSeconds++
+                            if (recordingSeconds >= limitSeconds) {
+                                finishVoiceNote(audioRecorder, recordedFormat) { body ->
+                                    client.sendMessage(body)
+                                }
+                                recordingActive = false
+                                recordingLocked = false
+                                recordingSeconds = 0
+                            }
+                            kotlinx.coroutines.delay(1000)
+                        }
+                    }
+
+                    // The trailing slot is always occupied: mic when the draft is
+                    // empty, send while there is text, recording UI while recording.
+                    if (recordingActive) {
+                        // Recording state: red dot, elapsed, lock/cancel hint.
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .padding(horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.error)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = formatClock(recordingSeconds),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isDark) Color.White else Color(0xFF1D1D1F)
+                                )
+                                Text(
+                                    text = when (recordedFormat) {
+                                        AudioFormat.OGG -> "Ogg/Opus"
+                                        AudioFormat.WEBM -> "WebM/Opus"
+                                        AudioFormat.MP3 -> "MP3 (Opus)"
+                                        else -> "M4A (fallback)"
+                                    },
+                                    fontSize = 10.sp,
+                                    color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (recordingLocked) {
+                                    "Tap send to keep, or trash to discard"
+                                } else {
+                                    "Slide up to lock · slide left to cancel"
+                                },
+                                fontSize = 12.sp,
+                                color = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.45f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                            // Trash — the only way out without sending.
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .applePressable(0.90f, pressHaptic = true) {
+                                        audioRecorder.cancelRecording()
+                                        recordingActive = false
+                                        recordingLocked = false
+                                        recordingSeconds = 0
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "Discard recording",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            // Send button when locked — commits the take.
+                            if (recordingLocked) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(brandColor)
+                                        .applePressable(0.90f, pressHaptic = true) {
+                                            finishVoiceNote(audioRecorder, recordedFormat) { body ->
+                                                client.sendMessage(body)
+                                            }
+                                            recordingActive = false
+                                            recordingLocked = false
+                                            recordingSeconds = 0
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Send,
+                                        contentDescription = "Send voice note",
+                                        tint = onAccent(brandColor),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else if (hasText && !busy) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(brandColor)
+                                .applePressable(0.90f, pressHaptic = true) {
                                     val textToSend = inputText.trim()
                                     inputText = ""
                                     if (remoteMode) {
@@ -877,17 +1009,47 @@ fun AppleAgentChatScreen(
                                     } else {
                                         client.sendMessage(textToSend)
                                     }
-                                }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "Send message",
+                                tint = onAccent(brandColor),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    } else {
+                        // Empty draft, nothing generating: a mic that records while
+                        // held. Swipe up to lock hands-free, swipe left to cancel.
+                        MicRecordButton(
+                            enabled = !busy,
+                            brandColor = brandColor,
+                            isDark = isDark,
+                            onStart = {
+                                recordedFormat = audioRecorder.startRecording()
+                                    ?: AudioFormat.M4A
+                                recordingSeconds = 0
+                                recordingActive = true
+                                recordingLocked = false
+                                TalosHaptics.sendHaptic(context)
                             },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send message",
-                            tint = if (hasText) onAccent(brandColor) else (if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)),
-                            modifier = Modifier.size(18.dp)
+                            onLock = { recordingLocked = true },
+                            onCancel = {
+                                audioRecorder.cancelRecording()
+                                recordingActive = false
+                                recordingLocked = false
+                                recordingSeconds = 0
+                            },
+                            onFinish = {
+                                finishVoiceNote(audioRecorder, recordedFormat) { body ->
+                                    client.sendMessage(body)
+                                }
+                                recordingActive = false
+                                recordingLocked = false
+                                recordingSeconds = 0
+                            }
                         )
-                    }
                     }
                 }
             }
@@ -1324,4 +1486,119 @@ data class PendingImage(
     // the byte array must never be compared structurally in a snapshot check.
     override fun equals(other: Any?): Boolean = this === other
     override fun hashCode(): Int = System.identityHashCode(this)
+}
+
+// ---------------------------------------------------------------------------
+// Voice notes
+// ---------------------------------------------------------------------------
+
+/** m:ss, the only clock a voice note needs. */
+private fun formatClock(totalSeconds: Int): String {
+    val m = totalSeconds / 60
+    val s = totalSeconds % 60
+    return "%d:%02d".format(m, s)
+}
+
+/**
+ * Turns a finished recording into the message body and sends it.
+ *
+ * The mime comes from the format the recorder actually used, not from what the
+ * user asked for: on API 26-28 an Ogg request silently records M4A, and a
+ * hardcoded audio/mp4 would then describe the wrong file.
+ */
+private fun finishVoiceNote(
+    recorder: AudioRecordManager,
+    requested: AudioFormat,
+    send: (String) -> Unit
+) {
+    val (duration, b64) = recorder.stopRecording()
+    if (b64 == null || duration < 1) return
+    val mime = VoiceNotePreferences.mimeTypeFor(requested)
+    send("[Voice Note: ${duration}s]\ndata:$mime;base64,$b64")
+}
+
+/**
+ * Press-to-record mic.
+ *
+ * Hold to record, swipe up past 80dp to lock hands-free, swipe left past 96dp
+ * to cancel. Tap (press < 200ms, drag < 8dp) starts locked recording hands-free.
+ * Same thresholds as MainActivity's composer so the two screens feel identical.
+ */
+@Composable
+private fun MicRecordButton(
+    enabled: Boolean,
+    brandColor: Color,
+    isDark: Boolean,
+    onStart: () -> Unit,
+    onLock: () -> Unit,
+    onCancel: () -> Unit,
+    onFinish: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val downTime = System.currentTimeMillis()
+                    onStart()
+                    val lockThresholdPx = 80.dp.toPx()
+                    val cancelThresholdPx = 96.dp.toPx()
+                    val tapMoveThresholdPx = 8.dp.toPx()
+                    val tapTimeThresholdMs = 200L
+                    var cancelled = false
+                    var didLock = false
+                    var didCancel = false
+                    var movedEnoughForTap = false
+
+                    try {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id }
+                            if (change == null || !change.pressed) break
+
+                            val dragY = change.position.y - down.position.y
+                            val dragX = change.position.x - down.position.x
+                            val dragDist = Math.hypot(dragX.toDouble(), dragY.toDouble())
+                            if (dragDist > tapMoveThresholdPx.toDouble()) movedEnoughForTap = true
+
+                            // Swipe up while held locks hands-free recording.
+                            if (-dragY >= lockThresholdPx && !didLock) {
+                                didLock = true
+                                onLock()
+                            }
+
+                            // Swipe left cancels the take.
+                            if (-dragX >= cancelThresholdPx && !didCancel) {
+                                didCancel = true
+                                cancelled = true
+                                change.consume()
+                            }
+                        }
+                    } finally {
+                        // Tap (quick release without much movement) -> keep recording locked.
+                        val pressDuration = System.currentTimeMillis() - downTime
+                        val isTap = pressDuration < tapTimeThresholdMs && !movedEnoughForTap
+                        if (isTap && !cancelled) {
+                            onLock()
+                        } else if (cancelled) {
+                            onCancel()
+                        } else {
+                            onFinish()
+                        }
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Mic,
+            contentDescription = "Record voice note",
+            tint = if (isDark) Color.White else Color(0xFF1D1D1F),
+            modifier = Modifier.size(20.dp)
+        )
+    }
 }

@@ -20,11 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.os.Build
 import com.sarvesh173.talos.network.TalosClient
 import com.sarvesh173.talos.ui.*
+import com.sarvesh173.talos.ui.settings.AudioFormat
+import com.sarvesh173.talos.ui.settings.VoiceNotePreferences
 
 /**
  * Dedicated Apple HIG "Chat Preferences" Screen matching official Nous Mobile specifications.
@@ -44,6 +49,10 @@ fun ChatPreferencesScreen(
     val isLinkPreviews by client.isLinkPreviewsEnabled.collectAsState()
     val isOpenLinksInApp by client.isOpenLinksInApp.collectAsState()
     val isMemoryUpdates by client.isMemoryUpdatesEnabled.collectAsState()
+
+    val context = LocalContext.current
+    var currentFormat by remember { mutableStateOf(VoiceNotePreferences.getFormat(context)) }
+    var currentLimit by remember { mutableStateOf(VoiceNotePreferences.getLimitSeconds(context)) }
 
     // Apple Vibrant Palette
     val applePurple = Color(0xFF5856D6)
@@ -237,6 +246,67 @@ fun ChatPreferencesScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // -----------------------------------------------------------------
+            // 3. VOICE NOTES (Format, Max length)
+            // -----------------------------------------------------------------
+            Text(
+                text = "Voice notes",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.15).sp,
+                color = talosTextMuted,
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            )
+
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                border = BorderStroke(
+                    0.6.dp,
+                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .appleLiquidGlassOptics(
+                        isDark = isDark,
+                        chromaticGlow = MaterialTheme.colorScheme.primary,
+                        cornerRadius = 20.dp
+                    )
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    VoiceNoteFormatPickerRow(
+                        currentFormat = currentFormat,
+                        onFormatChange = { format ->
+                            currentFormat = format
+                            VoiceNotePreferences.setFormat(context, format)
+                        },
+                        isDark = isDark
+                    )
+
+                    VoiceNoteFormatBlurbRow(format = currentFormat, isDark = isDark)
+
+                    if (currentFormat == AudioFormat.MP3) {
+                        VoiceNoteMp3HonestyRow(isDark = isDark)
+                    }
+
+                    VoiceNoteDurationRow(
+                        currentLimit = currentLimit,
+                        onLimitChange = { seconds ->
+                            currentLimit = seconds
+                            VoiceNotePreferences.setLimitSeconds(context, seconds)
+                        },
+                        isDark = isDark
+                    )
+
+                    if (Build.VERSION.SDK_INT < 29) {
+                        VoiceNoteCapabilityRow(isDark = isDark)
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
@@ -312,5 +382,201 @@ private fun ChatPreferenceToggleRow(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
+    }
+}
+
+@Composable
+private fun VoiceNoteFormatPickerRow(
+    currentFormat: AudioFormat,
+    onFormatChange: (AudioFormat) -> Unit,
+    isDark: Boolean
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val formats = listOf(AudioFormat.M4A, AudioFormat.WEBM, AudioFormat.OGG, AudioFormat.MP3)
+
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            formats.forEach { format ->
+                val selected = currentFormat == format
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (selected)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                            else
+                                Color.Transparent
+                        )
+                        .border(
+                            if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                            else BorderStroke(0.dp, Color.Transparent)
+                        )
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            TalosHaptics.sendHaptic(context)
+                            onFormatChange(format)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = format.label,
+                        fontSize = 11.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        letterSpacing = (-0.1).sp,
+                        color = if (selected) MaterialTheme.colorScheme.primary else talosTextMuted,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VoiceNoteFormatBlurbRow(format: AudioFormat, isDark: Boolean) {
+    Text(
+        text = format.blurb,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = (-0.1).sp,
+        color = talosTextMuted,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun VoiceNoteMp3HonestyRow(isDark: Boolean) {
+    Text(
+        text = "Not real MP3 — records Ogg/Opus with an .mp3 name. Some players will refuse it.",
+        fontSize = 11.sp,
+        lineHeight = 14.sp,
+        letterSpacing = (-0.1).sp,
+        color = Color(0xFFFF9500),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun VoiceNoteDurationRow(
+    currentLimit: Int,
+    onLimitChange: (Int) -> Unit,
+    isDark: Boolean
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val minLimit = VoiceNotePreferences.MIN_LIMIT_SECONDS
+    val maxLimit = VoiceNotePreferences.MAX_LIMIT_SECONDS
+    val step = 15
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Max length",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-0.2).sp,
+            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Text(
+            text = formatDuration(currentLimit),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = (-0.2).sp,
+            color = if (isDark) Color.White else Color(0xFF1D1D1F)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(
+                    if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    TalosHaptics.sendHaptic(context)
+                    onLimitChange((currentLimit - step).coerceIn(minLimit, maxLimit))
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Remove,
+                contentDescription = "Decrease",
+                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(
+                    if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    TalosHaptics.sendHaptic(context)
+                    onLimitChange((currentLimit + step).coerceIn(minLimit, maxLimit))
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Increase",
+                tint = if (isDark) Color.White.copy(alpha = 0.85f) else Color(0xFF1D1D1F),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun VoiceNoteCapabilityRow(isDark: Boolean) {
+    Text(
+        text = "Ogg and MP3 fall back to M4A on this device — Android 10+ needed.",
+        fontSize = 11.sp,
+        lineHeight = 14.sp,
+        letterSpacing = (-0.1).sp,
+        color = talosTextMuted,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
+    )
+}
+
+private fun formatDuration(seconds: Int): String {
+    val minutes = seconds / 60
+    val remainingSeconds = seconds % 60
+    return when {
+        minutes > 0 && remainingSeconds > 0 -> "$minutes min ${remainingSeconds}s"
+        minutes > 0 -> "$minutes min"
+        else -> "${remainingSeconds}s"
     }
 }

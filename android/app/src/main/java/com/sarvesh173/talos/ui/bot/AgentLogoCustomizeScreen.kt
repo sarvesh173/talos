@@ -46,7 +46,6 @@ import kotlin.math.roundToInt
 // Monochrome instrument panel: #000000 canvas, #1C1C1E cards, white / #8E8E93
 // text, ONE accent (white) reserved for the active slider thumb. No gradients,
 // no glow, no emoji, sentence case, 4dp grid throughout.
-private val CanvasBlack = Color(0xFF000000)
 private val CardSurface = Color(0xFF1C1C1E)
 private val PrimaryText = Color(0xFFFFFFFF)
 private val SecondaryText = Color(0xFF8E8E93)
@@ -115,7 +114,7 @@ fun AgentLogoCustomizeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CanvasBlack)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -150,7 +149,7 @@ fun AgentLogoCustomizeScreen(
                 .fillMaxWidth()
                 .height(220.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(CanvasBlack)
+                .background(MaterialTheme.colorScheme.background)
                 .border(1.dp, borderTint, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {

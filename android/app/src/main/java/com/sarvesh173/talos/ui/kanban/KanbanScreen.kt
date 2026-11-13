@@ -70,7 +70,6 @@ object KanbanApi {
         baseUrl.trimEnd('/') + BOARD_PATH + "?room_id=" + java.net.URLEncoder.encode(roomId, "UTF-8")
 }
 
-private val CanvasBlack = Color(0xFF000000)
 private val CardFill = Color(0xFF1C1C1E)
 private val Accent = Color(0xFF0A84FF)
 private val OkGreen = Color(0xFF30D158)
@@ -141,7 +140,7 @@ fun KanbanScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(CanvasBlack),
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
             modifier = Modifier
@@ -510,7 +509,7 @@ private fun ToolCallCard(row: ToolCallDto, serverTime: Double) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(CardShape)
-            .background(CanvasBlack)
+            .background(MaterialTheme.colorScheme.background)
             .border(1.dp, borderColor, CardShape)
             .padding(PageMargin),
         verticalArrangement = Arrangement.spacedBy(GridUnit),

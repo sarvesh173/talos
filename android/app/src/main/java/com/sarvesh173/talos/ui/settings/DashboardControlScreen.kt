@@ -58,7 +58,6 @@ import java.net.NetworkInterface
 // Monochrome palette (per user rejection of colour-heavy design).
 // Only exceptions: the iOS green for an on-toggle and red for errors.
 // ---------------------------------------------------------------------------
-private val CanvasBlack = Color(0xFF000000)
 private val RowSurface = Color(0xFF1C1C1E)
 private val PrimaryText = Color(0xFFFFFFFF)
 private val SecondaryText = Color(0xFF8E8E93)
@@ -242,7 +241,7 @@ fun DashboardControlScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .background(CanvasBlack)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {

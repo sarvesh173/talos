@@ -1215,6 +1215,10 @@ fun AppleAgentChatScreen(
         }
     }
 
+    // These replace the chat rather than overlay it, but they must not `return`
+    // out of the composable: a conditional early return makes Compose skip the
+    // rest of the composition's group structure, which is what crashed the
+    // screen. Wrap the chat in the else instead.
     if (showSubagents && remoteMode) {
         SubagentSheet(
             sessionId = activeSessionId,
@@ -1223,10 +1227,7 @@ fun AppleAgentChatScreen(
             brandColor = brandColor,
             onBack = { showSubagents = false }
         )
-        return
-    }
-
-    if (showConfig && remoteMode) {
+    } else if (showConfig && remoteMode) {
         SessionConfigSheet(
             sessionId = activeSessionId,
             client = client,

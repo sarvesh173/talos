@@ -1227,28 +1227,17 @@ fun AppleAgentChatScreen(
     }
 
     if (showConfig && remoteMode) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.35f)),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Box(modifier = Modifier.navigationBarsPadding().padding(12.dp)) {
-                SessionConfigSheet(
-                    sessionId = activeSessionId,
-                    client = client,
-                    isDark = isDark,
-                    brandColor = brandColor,
-                    currentModel = null,
-                    currentAgent = null,
-                    onApply = {
-                        showConfig = false
-                        // The next poll picks up the new model on the turn itself.
-                    },
-                    onDismiss = { showConfig = false }
-                )
-            }
-        }
+        SessionConfigSheet(
+            sessionId = activeSessionId,
+            client = client,
+            isDark = isDark,
+            brandColor = brandColor,
+            onApply = {
+                showConfig = false
+                // The next poll picks up the new model on the turn itself.
+            },
+            onDismiss = { showConfig = false }
+        )
     }
 
     if (showHistory) {

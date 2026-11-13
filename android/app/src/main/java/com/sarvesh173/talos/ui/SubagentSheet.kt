@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.minimumInteractiveComponentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -224,6 +225,7 @@ private fun SubagentCard(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
                         .clickable { expanded = !expanded }
+                        .minimumInteractiveComponentSize()
                         .padding(vertical = 2.dp)
                 )
             }

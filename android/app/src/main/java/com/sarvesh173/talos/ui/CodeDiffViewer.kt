@@ -173,10 +173,10 @@ fun CodeDiffViewer(
                         .padding(innerPadding)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        MetallicCircularLoader(
-                            size = 44.dp,
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(44.dp),
                             strokeWidth = 3.5.dp,
-                            accentColor = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(

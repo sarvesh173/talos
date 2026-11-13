@@ -744,17 +744,16 @@ private fun AgentNodeCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Metallic Progress Indicator for Command Limit Quota
+            // Command limit quota
             val progress = (agent.turnsUsed.toFloat() / agent.commandLimit.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                MetallicLoadingBar(
-                    progress = progress,
-                    height = 8.dp,
-                    accentColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.weight(1f).height(8.dp),
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(

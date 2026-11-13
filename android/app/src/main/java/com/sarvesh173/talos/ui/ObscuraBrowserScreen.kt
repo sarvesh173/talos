@@ -232,10 +232,10 @@ fun ObscuraBrowserScreen(
                         modifier = Modifier.size(48.dp)
                     ) {
                         if (isLoading) {
-                            MetallicCircularLoader(
-                                size = 18.dp,
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                accentColor = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         } else {
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Go", tint = MaterialTheme.colorScheme.primary)
@@ -326,10 +326,10 @@ fun ObscuraBrowserScreen(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                MetallicCircularLoader(
-                                    size = 44.dp,
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(44.dp),
                                     strokeWidth = 3.5.dp,
-                                    accentColor = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(

@@ -141,10 +141,10 @@ fun ImageGalleryScreen(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize().padding(innerPadding)
             ) {
-                MetallicCircularLoader(
-                    size = 40.dp,
+                CircularProgressIndicator(
+                    modifier = Modifier.size(40.dp),
                     strokeWidth = 3.dp,
-                    accentColor = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         } else if (galleryImages.isEmpty()) {
@@ -390,9 +390,9 @@ fun ImageGalleryScreen(
                     }
 
                     if (isGenerating) {
-                        MetallicLoadingBar(
+                        LinearProgressIndicator(
                             modifier = Modifier.fillMaxWidth(),
-                            accentColor = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

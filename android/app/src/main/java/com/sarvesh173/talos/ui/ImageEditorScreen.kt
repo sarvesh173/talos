@@ -13,6 +13,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -51,6 +53,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 
 import androidx.compose.ui.platform.LocalDensity
@@ -60,6 +63,7 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.size
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -325,7 +329,7 @@ fun ImageEditorScreen(
                         strokeJoin = Paint.Join.ROUND
                     }
                     strokes.forEach { s ->
-                        sp.color = Color.argb((s.color.alpha * 255).toInt(), s.color.red, s.color.green, s.color.blue)
+                        sp.color = Color.argb((s.color.alpha * 255).toInt(), s.color.red.toInt(), s.color.green.toInt(), s.color.blue.toInt())
                         sp.strokeWidth = s.strokeWidth
                         val path = Path().apply {
                             moveTo(s.points.first().x, s.points.first().y)
@@ -336,7 +340,7 @@ fun ImageEditorScreen(
                     }
                     if (currentPoints.size >= 2) {
                         sp.color = Color.argb(
-                            (strokeColor.alpha * 255).toInt(), strokeColor.red, strokeColor.green, strokeColor.blue
+                            (strokeColor.alpha * 255).toInt(), strokeColor.red.toInt(), strokeColor.green.toInt(), strokeColor.blue.toInt()
                         )
                         sp.strokeWidth = strokeWidthPx
                         val path = Path().apply {
@@ -349,8 +353,8 @@ fun ImageEditorScreen(
 
                     if (tool == EditTool.CROP) {
                         val frame = Paint().apply {
-                            color = if (isDark) Color.White else Color.Black
-                            alpha = 0.18f
+                            color = if (isDark) ComposeColor.White else ComposeColor.Black
+                            alpha = 46
                             style = Paint.Style.STROKE
                             strokeWidth = 2f
                         }
@@ -555,8 +559,8 @@ private fun EditIcon(tool: EditTool, active: Boolean) {
                 val r = 0.32f * s
                 drawArc(
                     color = tint,
-                    startDegrees = -135f,
-                    sweepDegrees = 270f,
+                    startAngle = -135f,
+                    sweepAngle = 270f,
                     useCenter = false,
                     style = Stroke(width = 2.2f),
                     topLeft = Offset(c - r, c - r),
@@ -586,7 +590,7 @@ private fun EditIcon(tool: EditTool, active: Boolean) {
             }
             EditTool.ADJUST -> {
                 val r = 0.22f * s
-                drawCircle(color = tint, offset = Offset(c, c), radius = r, style = Stroke(width = 2.2f))
+                drawCircle(color = tint, center = Offset(c, c), radius = r, style = Stroke(width = 2.2f))
                 val ray = 0.26f * s
                 val shortRay = 0.16f * s
                 repeat(8) { i ->

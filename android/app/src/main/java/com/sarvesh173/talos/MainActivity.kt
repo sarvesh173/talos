@@ -76,6 +76,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -980,6 +981,15 @@ fun MainScreen(
     var showAttachmentSheet by remember { mutableStateOf(false) }
     var activeSlotId by remember { mutableStateOf("chambers") }
 
+    // The four screens that had no entry point: MainScreen took these callbacks
+    // and never called them, so canvas, diff, hub and gallery were unreachable.
+    val sideScreens: List<Triple<String, ImageVector, () -> Unit>> = listOf(
+        Triple("Gallery", Icons.Default.PhotoCamera, onOpenGallery),
+        Triple("Canvas", Icons.Default.Dashboard, onOpenCanvas),
+        Triple("Diff review", Icons.Default.Code, onOpenDiff),
+        Triple("Module hub", Icons.Default.Hub, onOpenHub),
+    )
+
     val context = LocalContext.current
     val takePhotoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
@@ -1250,6 +1260,43 @@ fun MainScreen(
                                     maxLines = 1
                                 )
                             }
+                        }
+                    }
+
+                    // These four screens had branches and back-navigation but no
+                    // way in: MainScreen declared onOpenCanvas/onOpenDiff/onOpenHub/
+                    // onOpenGallery and never called them. This is the way in.
+                    items(
+                        items = sideScreens,
+                        key = { it.first },
+                        contentType = { "side_item" }
+                    ) { (label, icon, open) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .animateItem()
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    scope.launch { drawerState.close() }
+                                    open()
+                                }
+                                .padding(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = label,
+                                tint = talosTextPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = label,
+                                color = talosTextPrimary,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp
+                            )
                         }
                     }
 

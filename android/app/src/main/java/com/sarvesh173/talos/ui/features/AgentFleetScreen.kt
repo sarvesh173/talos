@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -418,8 +419,9 @@ private val DELEGATE_MODEL_CHOICES = listOf(
     "minimax/minimax-m3.1-flash"
 )
 
+// Literal, not MaterialTheme: a top-level val has no composition to read.
 private val DELEGATE_ACCENTS = listOf(
-    MaterialTheme.colorScheme.primary, Color(0xFF5856D6), Color(0xFF34C759), Color(0xFFFF9500),
+    Color(0xFF5AC8D8), Color(0xFF5856D6), Color(0xFF34C759), Color(0xFFFF9500),
     Color(0xFFAF52DE), Color(0xFFFF375F), Color(0xFF32ADE6)
 )
 

@@ -72,7 +72,8 @@ object KanbanApi {
 }
 
 private val CardFill = Color(0xFF1C1C1E)
-private val Accent = MaterialTheme.colorScheme.primary
+// Read inside composables; a top-level val cannot read a @Composable theme.
+private val Accent: Color get() = MaterialTheme.colorScheme.primary
 private val OkGreen = Color(0xFF30D158)
 private val ErrorRed = Color(0xFFFF453A)
 private val RunningAmber = Color(0xFFFF9F0A)

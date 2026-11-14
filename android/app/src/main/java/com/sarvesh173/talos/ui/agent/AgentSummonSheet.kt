@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,7 +44,7 @@ enum class AgentRolePreset(
     GENERAL(
         title = "Generalist",
         description = "Execute multi-step tasks, file operations, and orchestration",
-        color = MaterialTheme.colorScheme.primary,
+        color = Color(0xFF5AC8D8),   // enum constants cannot read a @Composable theme
         defaultPrompt = "You are a senior generalist agent. Analyze the goal, break it into thin verifiable slices, and execute each step cleanly."
     ),
     ARCHITECT(

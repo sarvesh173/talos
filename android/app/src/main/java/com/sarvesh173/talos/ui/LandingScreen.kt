@@ -89,8 +89,8 @@ private val CardDark = Color(0xFF1C1C1E)
 private val CardLight = Color(0xFFFFFFFF)
 private val ElevatedDark = Color(0xFF2C2C2E)
 private val ElevatedLight = Color(0xFFE5E5EA)
-private val AccentDark = Color(0xFF0A84FF)
-private val AccentLight = Color(0xFF0071E3)
+private val AccentDark = MaterialTheme.colorScheme.primary
+private val AccentLight = MaterialTheme.colorScheme.primary
 private val LandingStatusGreen = Color(0xFF30D158)
 private val MutedDark = Color(0xFF98989D)
 

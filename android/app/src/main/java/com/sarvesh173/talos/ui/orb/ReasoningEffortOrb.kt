@@ -336,7 +336,7 @@ fun ReasoningOrb(
     orbSize: Dp,
     modifier: Modifier = Modifier,
     animatorDurationScale: Float = systemAnimatorDurationScale(LocalContext.current),
-    accent: Color = Color(0xFF0A84FF),
+    accent: Color = MaterialTheme.colorScheme.primary,
     /**
      * When false the dot layer is skipped. A caller that already draws the
      * agent's own mark (AgentLogoMark) should pass false and read only the
@@ -501,7 +501,7 @@ fun ReasoningEffortPicker(
                         .clip(CircleShape)
                         .background(
                             if (isSelected) {
-                                Color(0xFF0A84FF)
+                                MaterialTheme.colorScheme.primary
                             } else {
                                 Color.White.copy(alpha = 0.25f)
                             }

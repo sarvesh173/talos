@@ -43,7 +43,7 @@ enum class AgentRolePreset(
     GENERAL(
         title = "Generalist",
         description = "Execute multi-step tasks, file operations, and orchestration",
-        color = Color(0xFF007AFF),
+        color = MaterialTheme.colorScheme.primary,
         defaultPrompt = "You are a senior generalist agent. Analyze the goal, break it into thin verifiable slices, and execute each step cleanly."
     ),
     ARCHITECT(

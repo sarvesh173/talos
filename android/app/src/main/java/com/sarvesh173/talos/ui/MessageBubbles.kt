@@ -812,13 +812,13 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                         modifier = Modifier
                             .size(36.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF0071E3).copy(alpha = 0.16f))
-                            .border(0.8.dp, Color(0xFF2997FF).copy(alpha = 0.40f), RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f))
+                            .border(0.8.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f), RoundedCornerShape(12.dp))
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = Color(0xFF2997FF),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -903,7 +903,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(Icons.Default.Map, contentDescription = null, tint = Color(0xFF2997FF), modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Map, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Open maps", fontSize = 12.sp, color = if (isDark) Color.White else Color(0xFF1D1D1F), fontWeight = FontWeight.SemiBold)
                         }
@@ -916,7 +916,7 @@ fun LocationPinBubble(content: String, isHuman: Boolean) {
                         },
                         shape = RoundedCornerShape(16.dp),
                         pressedShape = RoundedCornerShape(12.dp),
-                        color = Color(0xFF0071E3),
+                        color = MaterialTheme.colorScheme.primary,
                         contentColor = Color.White,
                         border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.30f)),
                         modifier = Modifier.weight(1f).height(42.dp)

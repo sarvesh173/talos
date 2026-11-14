@@ -373,7 +373,7 @@ fun FurOrbRenderer(
     paused: Boolean = false,
     orbSize: Dp = 96.dp,
     ink: Color = Color.White,
-    accent: Color = Color(0xFF0A84FF),
+    accent: Color = MaterialTheme.colorScheme.primary,
 ) {
     val flow = ReasoningEffortFur.flowForTier(effort)
     val agitation = rememberFurAgitation(agitationTarget, animatorDurationScale)

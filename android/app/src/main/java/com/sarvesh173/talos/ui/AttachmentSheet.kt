@@ -320,7 +320,7 @@ fun ImageConfirmSheet(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
                         Color(0xFFFF3B30), Color(0xFFFF9500), Color(0xFFFFCC00),
-                        Color(0xFF34C759), Color(0xFF007AFF), Color(0xFFAF52DE)
+                        Color(0xFF34C759), MaterialTheme.colorScheme.primary, Color(0xFFAF52DE)
                     ).forEach { c ->
                         Box(
                             modifier = Modifier

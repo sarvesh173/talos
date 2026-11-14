@@ -65,7 +65,7 @@ data class AgentQuestion(
     val timeoutSeconds: Int? = null,
     /** What an expiry means. Permissions default to deny. */
     val onTimeout: TimeoutBehaviour = TimeoutBehaviour.Deny,
-    val brandColor: Color = Color(0xFF007AFF)
+    val brandColor: Color = MaterialTheme.colorScheme.primary
 )
 
 enum class QuestionKind { Permission, Question }

@@ -120,7 +120,7 @@ fun AgentFleetScreen(client: TalosClient) {
                     modifier = Modifier
                         .heightIn(min = 44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF007AFF))
+                        .background(MaterialTheme.colorScheme.primary)
                         .applePressable(0.96f, pressHaptic = true) {
                             showSummonSheet = true
                         }
@@ -419,7 +419,7 @@ private val DELEGATE_MODEL_CHOICES = listOf(
 )
 
 private val DELEGATE_ACCENTS = listOf(
-    Color(0xFF007AFF), Color(0xFF5856D6), Color(0xFF34C759), Color(0xFFFF9500),
+    MaterialTheme.colorScheme.primary, Color(0xFF5856D6), Color(0xFF34C759), Color(0xFFFF9500),
     Color(0xFFAF52DE), Color(0xFFFF375F), Color(0xFF32ADE6)
 )
 

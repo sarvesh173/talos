@@ -64,7 +64,7 @@ data class BubbleNotice(
     val command: String = "",
     val needsApproval: Boolean = false,
     val timestamp: Long = System.currentTimeMillis(),
-    val brandColor: Color = Color(0xFF007AFF)
+    val brandColor: Color = MaterialTheme.colorScheme.primary
 )
 
 /**

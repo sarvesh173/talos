@@ -81,7 +81,7 @@ fun DirectiveReplyBar(
                 fontSize = 15.sp,
                 color = Color.White
             ),
-            cursorBrush = SolidColor(Color(0xFF0A84FF)),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onSend = { send() }),
             decorationBox = { inner ->
@@ -106,7 +106,7 @@ fun DirectiveReplyBar(
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(
-                    if (hasText) Color(0xFF0A84FF) else Color(0xFF1C1C1E)
+                    if (hasText) MaterialTheme.colorScheme.primary else Color(0xFF1C1C1E)
                 )
                 .applePressable(0.97f, pressHaptic = true) { send() },
             contentAlignment = Alignment.Center

@@ -68,7 +68,7 @@ fun NotificationsScreen(
     val appleGreen = Color(0xFF34C759)
     val appleOrange = Color(0xFFFF9500)
     val applePurple = Color(0xFFAF52DE)
-    val appleBlue = Color(0xFF007AFF)
+    val appleBlue = MaterialTheme.colorScheme.primary
     val appleIndigo = Color(0xFF5856D6)
     val appleGray = Color(0xFF8E8E93)
 
@@ -237,7 +237,7 @@ fun NotificationsScreen(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = (-0.15).sp,
-                                color = Color(0xFF0071E3)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                         Icon(

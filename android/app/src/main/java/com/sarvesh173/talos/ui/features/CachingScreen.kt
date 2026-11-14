@@ -51,7 +51,7 @@ fun CachingScreen(
     val cacheChatList by client.cacheChatList.collectAsState()
     val cacheMessages by client.cacheMessages.collectAsState()
 
-    val appleBlue = Color(0xFF007AFF)
+    val appleBlue = MaterialTheme.colorScheme.primary
     val applePurple = Color(0xFFAF52DE)
     val appleRed = Color(0xFFFF3B30)
 

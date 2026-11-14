@@ -58,7 +58,7 @@ data class CuratedSwatch(
 
 val officialCuratedSwatches = listOf(
     CuratedSwatch("DEEP_BLUE", "Deep Blue", "#0022FF", Color(0xFF0022FF)),
-    CuratedSwatch("ROYAL_BLUE", "Royal Blue", "#007AFF", Color(0xFF007AFF)),
+    CuratedSwatch("ROYAL_BLUE", "Royal Blue", "#007AFF", MaterialTheme.colorScheme.primary),
     CuratedSwatch("COBALT", "Cobalt", "#5856D6", Color(0xFF5856D6)),
     CuratedSwatch("TEAL", "Teal", "#00A8A8", Color(0xFF00A8A8)),
     CuratedSwatch("GREEN", "Green", "#00A344", Color(0xFF00A344)),

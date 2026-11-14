@@ -441,7 +441,7 @@ fun AppleColorPickerDialog(
                 RgbChannelRow(
                     label = "B",
                     value = blue,
-                    tint = Color(0xFF007AFF),
+                    tint = MaterialTheme.colorScheme.primary,
                     onValueChange = { newB ->
                         val hsv = FloatArray(3)
                         android.graphics.Color.RGBToHSV(red, green, newB, hsv)

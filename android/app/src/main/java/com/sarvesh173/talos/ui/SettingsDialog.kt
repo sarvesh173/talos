@@ -301,7 +301,7 @@ fun SettingsDialog(
                         Icon(
                             imageVector = TalosSparkle,
                             contentDescription = null,
-                            tint = Color(0xFF2997FF),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                     }

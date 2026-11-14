@@ -83,7 +83,7 @@ fun CustomAgentLogoSheet(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val accent = Color(0xFF0A84FF)
+    val accent = MaterialTheme.colorScheme.primary
     val hairline = Color.White.copy(alpha = 0.08f)
 
     val title = remember(agentId) { AgentRoster.byId(agentId)?.name ?: agentId }
@@ -394,7 +394,7 @@ private fun SwatchChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .border(
                 BorderStroke(
                     if (selected) 2.dp else 0.6.dp,
-                    if (selected) Color(0xFF0A84FF) else Color.White.copy(alpha = 0.08f)
+                    if (selected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.08f)
                 ),
                 RoundedCornerShape(16.dp)
             )

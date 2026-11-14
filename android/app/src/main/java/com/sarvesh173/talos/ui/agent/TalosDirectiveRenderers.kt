@@ -46,11 +46,11 @@ import kotlin.math.roundToInt
  */
 
 private val SeriesPalette = listOf(
-    Color(0xFF007AFF), Color(0xFF34C759), Color(0xFFFF9F0A), Color(0xFFAF52DE)
+    MaterialTheme.colorScheme.primary, Color(0xFF34C759), Color(0xFFFF9F0A), Color(0xFFAF52DE)
 )
 
 private fun accentColor(name: String): Color = when (name) {
-    "blue" -> Color(0xFF007AFF)
+    "blue" -> MaterialTheme.colorScheme.primary
     "green" -> Color(0xFF34C759)
     "orange" -> Color(0xFFFF9F0A)
     "red" -> Color(0xFFFF453A)

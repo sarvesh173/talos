@@ -57,7 +57,7 @@ fun ChatPreferencesScreen(
     // Apple Vibrant Palette
     val applePurple = Color(0xFF5856D6)
     val appleGreen = Color(0xFF34C759)
-    val appleBlue = Color(0xFF007AFF)
+    val appleBlue = MaterialTheme.colorScheme.primary
     val appleOrange = Color(0xFFFF9500)
     val applePink = Color(0xFFAF52DE)
 

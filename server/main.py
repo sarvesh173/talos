@@ -1666,6 +1666,21 @@ async def image_gallery_delete(image_id: str, token: str = Depends(require_auth)
     return {"deleted": True}
 
 
+@app.post("/api/image/generate")
+async def image_generate(request: Request, token: str = Depends(require_auth)):
+    """Generate an image. The pipeline lives on the core; the API forwards."""
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="expected a JSON body")
+    if not isinstance(payload, dict) or not str(payload.get("prompt", "")).strip():
+        raise HTTPException(status_code=400, detail="prompt is required")
+    try:
+        return await images.generate_image(payload, token)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)

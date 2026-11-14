@@ -59,6 +59,26 @@ def list_images(limit: int = 100) -> List[Dict[str, Any]]:
     ]
 
 
+async def generate_image(payload: Dict[str, Any], token: str) -> Dict[str, Any]:
+    """Generate through the core, which owns the image pipeline.
+
+    shortcut: the core must be reachable at TALOS_CORE_URL; if the core is down
+    the caller gets its error, never a fabricated image.
+    """
+    import httpx
+
+    core = os.environ.get("TALOS_CORE_URL", "http://127.0.0.1:8010").rstrip("/")
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        res = await client.post(
+            f"{core}/api/image/generate",
+            json=payload,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    if res.status_code >= 400:
+        raise RuntimeError(res.text[:300] or f"core answered {res.status_code}")
+    return res.json()
+
+
 def delete_image(image_id: str) -> bool:
     path = gallery_db_path()
     if not path.exists() or not image_id:

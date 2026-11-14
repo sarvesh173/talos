@@ -722,7 +722,8 @@ class MainActivity : FragmentActivity() {
                                 isDark = isCurrentlyDark,
                                 onBack = {
                                     appScreen = "main"
-                                }
+                                },
+                                onOpenWhiteboard = { appScreen = "whiteboard" }
                             )
                         }
                         "disabled_chat" -> {
@@ -778,7 +779,8 @@ class MainActivity : FragmentActivity() {
                                 onNavigateToJobs = { appScreen = "jobs" },
                                 onNavigateToProcesses = { appScreen = "processes" },
                                 onNavigateToSupportedClis = { appScreen = "supported_clis" },
-                                onNavigateToLogs = { appScreen = "logs" }
+                                onNavigateToLogs = { appScreen = "logs" },
+                                onOpenScreen = { target -> appScreen = target }
                             )
                         }
                         // Service control was previously reachable only from a

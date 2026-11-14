@@ -221,12 +221,16 @@ fun AgentLifecycleScreen(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 24.dp)
                 )
             } else {
-                SectionHeader(text = "Required")
-                LifecycleGroup {
-                    val required = agents.filter { it.lifecycle.isLocked }
-                    required.forEachIndexed { index, agent ->
-                        RequiredRow(agent = agent)
-                        if (index < required.lastIndex) LifecycleDivider()
+                // An empty "Required" section is not information: it reads as a
+                // broken feature. Only show it when there is something in it.
+                val required = agents.filter { it.lifecycle.isLocked }
+                if (required.isNotEmpty()) {
+                    SectionHeader(text = "Required")
+                    LifecycleGroup {
+                        required.forEachIndexed { index, agent ->
+                            RequiredRow(agent = agent)
+                            if (index < required.lastIndex) LifecycleDivider()
+                        }
                     }
                 }
 

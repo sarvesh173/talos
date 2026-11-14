@@ -61,6 +61,7 @@ fun SettingsScreen(
     onNavigateToProcesses: () -> Unit = {},
     onNavigateToSupportedClis: () -> Unit = {},
     onNavigateToLogs: () -> Unit = {},
+    onOpenScreen: (String) -> Unit = {},
     nodeEncryptionFingerprint: String? = null,
     borderTint: Color = Color.White.copy(alpha = 0.08f)
 ) {
@@ -394,6 +395,73 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // These screens existed but had no entry point at all: the drawer
+            // that listed them was only mounted on a screen nothing could reach.
+            SettingsGroup(borderTint = borderTint) {
+                SettingsMinimalRow(
+                    title = "Gallery",
+                    subtitle = "Generated images",
+                    icon = TalosIcons.TalosStrokePalette,
+                    onClick = { onOpenScreen("gallery") }
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Canvas",
+                    subtitle = "Agent activity map",
+                    icon = TalosIcons.TalosStrokePulse,
+                    onClick = { onOpenScreen("canvas") }
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Diff review",
+                    subtitle = "Line-by-line file changes",
+                    icon = TalosIcons.TalosStrokeDoc,
+                    onClick = { onOpenScreen("diff") }
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Whiteboard",
+                    subtitle = "Sketch for the agent",
+                    icon = TalosIcons.TalosStrokeOrb,
+                    onClick = { onOpenScreen("whiteboard") }
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Browser",
+                    subtitle = "Read pages from the host",
+                    icon = TalosIcons.TalosStrokeTransport,
+                    onClick = { onOpenScreen("browser") }
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "Module hub",
+                    subtitle = "Every module in one place",
+                    icon = TalosIcons.TalosStrokeAgent,
+                    onClick = { onOpenScreen("hub") }
+                )
+
+                SettingsDivider()
+
+                SettingsMinimalRow(
+                    title = "CLI manager",
+                    subtitle = "Install and inspect agent CLIs",
+                    icon = TalosIcons.TalosStrokeAgent,
+                    onClick = { onOpenScreen("cli_manager") }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             SettingsGroup(borderTint = borderTint) {
                 SettingsToggleRow(
                     title = "Notifications",
@@ -408,7 +476,7 @@ fun SettingsScreen(
 
                 SettingsMinimalRow(
                     title = "Contact",
-                    subtitle = "7 active council agents",
+                    subtitle = "Council agents",
                     icon = TalosIcons.TalosStrokeAgent,
                     onClick = {
                         Toast.makeText(

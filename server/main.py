@@ -247,7 +247,7 @@ async def pair_device_and_link_agent():
         sender_name="Hermes",
         sender_role=Role.agent,
         content=f"Tailscale mesh link verified with {peer_name}. Chamber channel active.",
-        thought=f"Verified Tailscale mesh status ({mesh['peers_count']} connected peer(s)). Issued authenticated link token {token[:12]}...",
+        thought=f"Verified Tailscale mesh status ({mesh['peers_count']} connected peer(s)). Authenticated link token issued for {peer_name}.",
         created_at=time.time(),
     )
     save_message(welcome)
@@ -878,11 +878,25 @@ async def opencode_agents(token: str = Depends(require_auth)):
 
 
 @app.post("/api/opencode/sessions")
-async def create_opencode_session(token: str = Depends(require_auth)):
-    """Create a new fresh OpenCode session."""
+async def create_opencode_session(request: Request, token: str = Depends(require_auth)):
+    """Create a new fresh OpenCode session.
+
+    The caller's title is honoured: a hardcoded "New Session" made every
+    session in the list indistinguishable.
+    """
     from server.opencode_bridge import OpenCodeClient
 
-    result = await asyncio.to_thread(OpenCodeClient().create_session, "New Session")
+    title = "New Session"
+    try:
+        body = await request.json()
+    except Exception:
+        body = None
+    if isinstance(body, dict):
+        asked = body.get("title")
+        if isinstance(asked, str) and asked.strip():
+            title = asked.strip()[:120]
+
+    result = await asyncio.to_thread(OpenCodeClient().create_session, title)
     if not result.ok:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -893,7 +907,7 @@ async def create_opencode_session(token: str = Depends(require_auth)):
         "ok": True,
         "session": {
             "id": row.get("id"),
-            "title": row.get("title") or "New Session",
+            "title": row.get("title") or title,
             "agent": row.get("agent"),
             "model": None,
             "project_id": row.get("projectID"),

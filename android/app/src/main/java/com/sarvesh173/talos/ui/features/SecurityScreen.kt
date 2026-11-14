@@ -7,6 +7,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.sarvesh173.talos.ui.entry.AppLockStore
 import com.sarvesh173.talos.ui.entry.PinHasher
+import com.sarvesh173.talos.ui.entry.isBiometricAvailable
+import androidx.compose.foundation.clickable
+import android.widget.Toast
 import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.foundation.BorderStroke
@@ -169,7 +172,21 @@ fun SecurityScreen(
                         }
                         AppleToggleSwitch(
                             checked = requireBiometrics,
-                            onCheckedChange = { client.setRequireBiometrics(it) }
+                            onCheckedChange = { enable ->
+                                // Turning this on with no enrolled biometric only
+                                // surfaces at the lock screen, where it can lock
+                                // the user out of their own credentials.
+                                val activity = context as? androidx.fragment.app.FragmentActivity
+                                if (enable && (activity == null || !isBiometricAvailable(activity))) {
+                                    Toast.makeText(
+                                        context,
+                                        "No biometric enrolled — add a fingerprint or face in system settings first",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                } else {
+                                    client.setRequireBiometrics(enable)
+                                }
+                            }
                         )
                     }
 
@@ -184,6 +201,7 @@ fun SecurityScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clickable { showPinDialog = true }
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween

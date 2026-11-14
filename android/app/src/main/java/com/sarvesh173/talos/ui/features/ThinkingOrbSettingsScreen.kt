@@ -77,14 +77,14 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp)
     ) {
-        // ---- header ----
+        // ---- header (pinned: inside the scroll it vanished on scroll) ----
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -110,6 +110,12 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
             )
         }
 
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
         // ---- live preview ----
         Surface(
             shape = RoundedCornerShape(24.dp),
@@ -265,11 +271,14 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
         SectionHeader("Nested shape", strong)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            item {
-                PresetChip("None", isSelected = innerShell == null, ink = ink) { innerShell = null }
-            }
+            // OrbShell.None is the "no inner shell" state, so the list is the
+            // single source of the chips — a separate "None" chip duplicated it.
             items(OrbShell.entries.toList()) { s ->
-                PresetChip(s.label, isSelected = innerShell == s, ink = ink) { innerShell = s }
+                PresetChip(
+                    s.label,
+                    isSelected = (if (s == OrbShell.None) null else s) == innerShell,
+                    ink = ink
+                ) { innerShell = if (s == OrbShell.None) null else s }
             }
         }
 
@@ -353,6 +362,7 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(40.dp))
+        }
     }
 }
 

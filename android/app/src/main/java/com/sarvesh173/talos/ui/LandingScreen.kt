@@ -405,74 +405,20 @@ fun LandingScreen(
                                 modifier = Modifier.padding(vertical = 16.dp),
                             )
                         }
-
-                    if (searchHits.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "Conversation hits",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = secondaryText,
-                                modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-                            )
-                        }
-                        items(searchHits, key = { it.message_id }) { hit ->
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = card,
-                                border = BorderStroke(0.5.dp, hairline),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        client.switchRoom(hit.room_id)
-                                        onOpenAgentChat?.invoke(
-                                            hit.room_id,
-                                            hit.room_name.ifBlank { "Search Result" },
-                                            hit.sender_name.ifBlank { "Agent" },
-                                            iconForAgent(hit.room_id),
-                                            accent,
-                                            false
-                                        )
-                                    }
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = hit.room_name.ifBlank { hit.room_id },
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = accent,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                        Text(
-                                            text = hit.sender_name,
-                                            fontSize = 12.sp,
-                                            color = tertiaryText,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = hit.snippet,
-                                        fontSize = 14.sp,
-                                        color = primaryText,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    }
                     } else {
                         val visible = if (searchQuery.isBlank()) agents else agents.filter {
                             it.name.contains(searchQuery, ignoreCase = true) ||
                                 it.description.contains(searchQuery, ignoreCase = true)
+                        }
+                        if (visible.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "No agents match that search",
+                                    fontSize = 14.sp,
+                                    color = secondaryText,
+                                    modifier = Modifier.padding(vertical = 16.dp),
+                                )
+                            }
                         }
                         items(visible, key = { it.id }) { realAgent ->
                             // Host owns the wording: an app-side subtitle drifts the
@@ -536,6 +482,72 @@ fun LandingScreen(
                                             style = Tnum,
                                         )
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    // Conversation hits render for any query, not only when the
+                    // roster is empty — this used to sit inside the isEmpty branch.
+                    if (searchHits.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Conversation hits",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = secondaryText,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                            )
+                        }
+                        items(searchHits, key = { it.message_id }) { hit ->
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = card,
+                                border = BorderStroke(0.5.dp, hairline),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        client.switchRoom(hit.room_id)
+                                        onOpenAgentChat?.invoke(
+                                            hit.room_id,
+                                            hit.room_name.ifBlank { "Search Result" },
+                                            hit.sender_name.ifBlank { "Agent" },
+                                            iconForAgent(hit.room_id),
+                                            accent,
+                                            false
+                                        )
+                                    }
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = hit.room_name.ifBlank { hit.room_id },
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = accent,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Text(
+                                            text = hit.sender_name,
+                                            fontSize = 12.sp,
+                                            color = tertiaryText,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = hit.snippet,
+                                        fontSize = 14.sp,
+                                        color = primaryText,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
                         }
@@ -685,56 +697,36 @@ fun LandingScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = card,
-                border = BorderStroke(0.5.dp, hairline),
-            ) {
-                Row(
-                    modifier = Modifier.padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            // The pill is a Back control once an agent is open. On the root
+            // there is nothing to go back to, so it is not rendered at all —
+            // it used to sit there as a dead "Chat" button.
+            if (selectedAgentId != null) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = card,
+                    border = BorderStroke(0.5.dp, hairline),
                 ) {
-                    if (selectedAgentId != null) {
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { selectedAgentId = null }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = primaryText,
-                                modifier = Modifier.size(14.dp),
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Back",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = primaryText,
-                                letterSpacing = (-0.15).sp,
-                            )
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    selectedAgent?.let { openChat(it, "Active conversation") }
-                                }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = "Chat",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = primaryText,
-                                letterSpacing = (-0.15).sp,
-                            )
-                        }
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { selectedAgentId = null }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = null,
+                            tint = primaryText,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Back",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primaryText,
+                            letterSpacing = (-0.15).sp,
+                        )
                     }
                 }
             }
@@ -838,22 +830,25 @@ fun LandingScreen(
                 }
             }
 
-            Surface(
-                shape = CircleShape,
-                color = accent,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clickable(enabled = selectedAgent != null) {
-                        selectedAgent?.let { openChat(it, "New ${it.name} session") }
-                    },
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "New session",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp),
-                    )
+            // No agent selected means there is no session to start: the FAB
+            // used to render at full accent and ignore the tap.
+            val target = selectedAgent
+            if (target != null) {
+                Surface(
+                    shape = CircleShape,
+                    color = accent,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable { openChat(target, "New ${target.name} session") },
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "New session",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
             }
         }

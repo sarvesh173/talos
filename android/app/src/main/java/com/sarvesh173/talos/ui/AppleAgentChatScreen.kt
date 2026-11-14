@@ -184,7 +184,8 @@ fun AppleAgentChatScreen(
     agentIconRes: Int,
     brandColor: Color,
     isDark: Boolean = true,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenWhiteboard: (() -> Unit)? = null
 ) {
     // The dot was green whenever the agent was not mid-thought, with no regard
     // for whether the socket was up: a false "all good" on a dead connection.
@@ -420,13 +421,13 @@ fun AppleAgentChatScreen(
     }
 
     LaunchedEffect(activeSessionId) {
-        // An empty id means "no session chosen yet". Mint a real one locally
-        // rather than inventing a plausible-looking constant that never existed
-        // on the host — the server would treat it as a live session.
-        val resolved = activeSessionId.ifBlank {
-            "ses_" + java.util.UUID.randomUUID().toString().replace("-", "").take(24)
+        // A blank id means "no session chosen yet" — stay on the room the client
+        // is already in. Minting a random id here abandoned `the-council` and
+        // left an orphan room on the host.
+        val resolved = activeSessionId.ifBlank { client.currentRoomId.value }
+        if (!remoteMode && client.isPaired.value && resolved != client.currentRoomId.value) {
+            client.switchRoom(resolved)
         }
-        if (!remoteMode && client.isPaired.value) client.switchRoom(resolved)
     }
 
     // A remote session is driven from the host: another agent can post into it
@@ -1278,7 +1279,8 @@ fun AppleAgentChatScreen(
             onDismiss = { showAttachSheet = false },
             onPickImage = { pendingImage = it; showAttachSheet = false },
             onSendText = { text -> client.sendMessage(text); showAttachSheet = false },
-            onOpenPrompts = { showPromptLibrary = true }
+            onOpenPrompts = { showPromptLibrary = true },
+            onOpenWhiteboard = onOpenWhiteboard
         )
     }
 

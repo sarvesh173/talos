@@ -91,6 +91,8 @@ fun AgentFleetScreen(client: TalosClient) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .padding(16.dp)
     ) {
         // Top Action Bar

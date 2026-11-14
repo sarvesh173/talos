@@ -145,7 +145,9 @@ suspend fun createRemoteSession(client: TalosClient, title: String = "New Sessio
         val http = client()
         val builder = Request.Builder()
             .url(client.baseUrl.trimEnd('/') + "/api/opencode/sessions")
-            .post("{}".toRequestBody(jsonMedia))
+            // The host names the session; an empty body made every one of them
+            // "New Session".
+            .post(JSONObject().put("title", title).toString().toRequestBody(jsonMedia))
             .auth(client.apiToken)
         val body = runCatching {
             http.newCall(builder.build()).execute().use { resp ->

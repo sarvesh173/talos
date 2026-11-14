@@ -16,6 +16,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -68,11 +69,13 @@ fun AttachmentSheet(
     onDismiss: () -> Unit,
     onPickImage: (PendingImage) -> Unit,
     onSendText: (String) -> Unit,
-    onOpenPrompts: (() -> Unit)? = null
+    onOpenPrompts: (() -> Unit)? = null,
+    onOpenWhiteboard: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showStickers by remember { mutableStateOf(false) }
 
     // Photo library (Android Photo Picker — no storage permission needed).
     val pickImage = rememberLauncherForActivityResult(
@@ -168,16 +171,50 @@ fun AttachmentSheet(
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AttachTile("Draw", Icons.Default.Brush, isDark) {
-                    onSendText("[Whiteboard sketch attached — open the canvas to annotate]")
-                    onDismiss()
+                    val open = onOpenWhiteboard
+                    if (open != null) {
+                        onDismiss()
+                        open()
+                    } else {
+                        Toast.makeText(context, "Whiteboard is not available here", Toast.LENGTH_SHORT).show()
+                    }
                 }
                 AttachTile("Sticker", Icons.Default.Mood, isDark) {
-                    onSendText(StickerCatalog.randomPick())
-                    onDismiss()
+                    // A tap used to send a random emoji instantly; show the set
+                    // so the user picks one.
+                    showStickers = true
                 }
                 AttachTile("Prompts", Icons.Default.Bookmark, isDark) {
                     onDismiss()
                     onOpenPrompts?.invoke()
+                }
+            }
+
+            if (showStickers) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Pick a sticker",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isDark) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(StickerCatalog.all()) { sticker ->
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(if (isDark) Color.White.copy(alpha = 0.07f) else Color.Black.copy(alpha = 0.04f))
+                                .clickable {
+                                    onSendText(sticker)
+                                    onDismiss()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = sticker, fontSize = 22.sp)
+                        }
+                    }
                 }
             }
 

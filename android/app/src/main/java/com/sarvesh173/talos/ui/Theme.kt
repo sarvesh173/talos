@@ -141,8 +141,11 @@ val LightColorScheme = lightColorScheme(
     surfaceContainerHighest = Color(0xFFD5DCDE),
     surfaceDim = Color(0xFFE4E9EA),
     surfaceBright = Color(0xFFFFFFFF),
-    outline = Color(0xFFBCC6C9),
-    outlineVariant = Color(0xFFDCE2E4),
+    // Hairlines are drawn straight on `background` (near-white), so they need
+    // real contrast: 0xFFDCE2E4 on 0xFFF4F6F7 is ~1.1:1 and reads as no border
+    // at all — that is the "white line on white" report.
+    outline = Color(0xFF7C888C),            // ~3.5:1 on paper
+    outlineVariant = Color(0xFFB9C4C7),     // ~1.9:1, visible but quiet
     inverseSurface = Color(0xFF1B2124),
     inverseOnSurface = Color(0xFFFFFFFF),
     inversePrimary = Color(0xFF2997FF)

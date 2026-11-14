@@ -88,7 +88,11 @@ suspend fun fetchRemoteMessages(client: TalosClient, sessionId: String): List<Me
                     sender_name = if (role == Role.human) "You" else "OpenCode",
                     sender_role = role,
                     content = text.ifBlank { error },
-                    thought = row.optString("thought").takeIf { it.isNotBlank() },
+                    // optString answers "null" for a JSON null, and ThinkingPill
+                    // only filters blanks, so a missing thought rendered the
+                    // literal word "null" next to "Thought for a moment".
+                    thought = if (row.isNull("thought")) null
+                        else row.optString("thought").trim().takeIf { it.isNotBlank() && it != "null" },
                     metrics = parseMetrics(row.optJSONObject("metrics")),
                     tool_records = parseToolRecords(row.optJSONArray("tool_records")),
                     created_at = row.optDouble("created_ms", 0.0) / 1000.0,

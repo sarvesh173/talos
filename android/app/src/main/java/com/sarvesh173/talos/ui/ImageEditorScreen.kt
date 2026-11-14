@@ -11,11 +11,12 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.RectF
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -46,6 +47,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.semantics
@@ -293,7 +296,7 @@ fun ImageEditorScreen(
                 )
             }
         } else {
-            Canvas(
+            ComposeCanvas(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(previewBg)
@@ -306,7 +309,8 @@ fun ImageEditorScreen(
                         )
                     }
             ) {
-                drawIntoCanvas { g ->
+                drawIntoCanvas { canvas ->
+                    val g = canvas.nativeCanvas
                     g.concat(placement)
 
                     val imgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -522,7 +526,7 @@ private fun EditToolButton(tool: EditTool, label: String, active: Boolean, isDar
 @Composable
 private fun EditIcon(tool: EditTool, active: Boolean) {
     val tint = if (active) MaterialTheme.colorScheme.primary else ComposeColor(0xFF1D1D1F)
-    Canvas(Modifier.size(20.dp)) {
+    ComposeCanvas(Modifier.size(20.dp)) {
         val w = size.width
         val h = size.height
         val s = minOf(w, h)

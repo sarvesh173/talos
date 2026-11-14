@@ -15,7 +15,9 @@ data class AgentInfo(
     @SerialName("cli_type") val cliType: String = "general",
     @SerialName("command_limit") val commandLimit: Int = 25,
     @SerialName("parent_agent_id") val parentAgentId: String? = null,
-    @SerialName("child_agent_ids") val childAgentIds: List<String> = emptyList()
+    @SerialName("child_agent_ids") val childAgentIds: List<String> = emptyList(),
+    @SerialName("system_prompt") val systemPrompt: String? = null,
+    @SerialName("role_description") val roleDescription: String? = null
 )
 
 @Serializable

@@ -13,18 +13,75 @@ path. The key is never returned by the API — only whether one is set.
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import re
+import socket
 import time
 import uuid
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 
+from server.auth import verify_token
+
 router = APIRouter()
+
+
+async def require_auth(authorization: Optional[str] = Header(None)) -> str:
+    """Verify the Bearer token. Mirrors ``server.main.require_auth``."""
+    if not authorization or not verify_token(authorization):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing TALOS API Token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return authorization.replace("Bearer ", "").strip()
+
+
+def _public_base_url_or_400(base: str) -> str:
+    """Reject base_urls that resolve to an address no model endpoint uses.
+
+    A provider's base_url is fetched server-side, so a link-local address would
+    turn /fetch-models into a proxy for the cloud metadata service. Loopback and
+    RFC1918 stay allowed — they are where local model gateways actually live, and
+    reaching these routes already requires a bearer token.
+    """
+    parsed = urlparse(base)
+    host = parsed.hostname
+    if not host:
+        raise HTTPException(status_code=400, detail="base_url has no host")
+
+    candidates = [host]
+    try:
+        candidates.extend(
+            str(info[4][0]) for info in socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+        )
+    except OSError:
+        # Unresolvable here means unreachable, not hostile. /fetch-models will
+        # say so; refusing to save would break adding a provider while offline.
+        return base
+
+    for candidate in candidates:
+        try:
+            addr = ipaddress.ip_address(candidate)
+        except ValueError:
+            continue
+        # Loopback and RFC1918 are allowed: the vault is where local model
+        # gateways live, and every route here now needs a bearer token, so the
+        # caller is an authorised device rather than an anonymous prober.
+        # What is never a model endpoint is the cloud metadata service.
+        if addr.is_link_local or addr.is_multicast or addr.is_unspecified:
+            raise HTTPException(
+                status_code=400,
+                detail="base_url points at an address that is not a usable endpoint "
+                       "(link-local, multicast or unspecified)",
+            )
+    return base
 
 #: Where custom providers live. Next to the app's own DB so one workspace.
 STORE_PATH = Path(__file__).resolve().parent / "data" / "custom_providers.json"
@@ -126,20 +183,20 @@ def _view(row: Dict[str, Any]) -> CustomProviderView:
 
 
 @router.get("/api/providers/custom")
-async def list_custom_providers() -> List[CustomProviderView]:
+async def list_custom_providers(token: str = Depends(require_auth)) -> List[CustomProviderView]:
     """Every provider added through the app. Keys are masked, never returned."""
     return [_view(row) for row in _load()]
 
 
 @router.post("/api/providers/custom", status_code=201)
-async def create_custom_provider(req: CreateProviderRequest) -> CustomProviderView:
+async def create_custom_provider(req: CreateProviderRequest, token: str = Depends(require_auth)) -> CustomProviderView:
     """Register an OpenAI-compatible provider and store its key.
 
     The key goes into ~/.hermes/.env, which is where the prober looks, so the
     provider shows real health on /api/providers instead of sitting inert in a
     side file that nothing reads.
     """
-    base = req.base_url.strip().rstrip("/")
+    base = _public_base_url_or_400(req.base_url.strip().rstrip("/"))
     if not base.startswith(("http://", "https://")):
         raise HTTPException(status_code=400, detail="base_url must start with http:// or https://")
 
@@ -167,7 +224,7 @@ async def create_custom_provider(req: CreateProviderRequest) -> CustomProviderVi
 
 
 @router.post("/api/providers/custom/{provider_id}/fetch-models")
-async def fetch_custom_provider_models(provider_id: str) -> List[Dict[str, Any]]:
+async def fetch_custom_provider_models(provider_id: str, token: str = Depends(require_auth)) -> List[Dict[str, Any]]:
     """Ask the provider for its model list. Honest empty list when unreachable."""
     rows = _load()
     row = next((r for r in rows if r["id"] == provider_id), None)
@@ -205,7 +262,7 @@ async def fetch_custom_provider_models(provider_id: str) -> List[Dict[str, Any]]
 
 
 @router.delete("/api/providers/custom/{provider_id}")
-async def delete_custom_provider(provider_id: str) -> Dict[str, Any]:
+async def delete_custom_provider(provider_id: str, token: str = Depends(require_auth)) -> Dict[str, Any]:
     """Remove a provider. Reports whether it actually existed."""
     rows = _load()
     remaining = [r for r in rows if r["id"] != provider_id]

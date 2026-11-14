@@ -3,6 +3,7 @@ Includes Bot Token Authentication & Tailscale Mesh Access Security.
 """
 
 from contextlib import asynccontextmanager
+import ipaddress
 import json
 import logging
 import os
@@ -12,7 +13,7 @@ import time
 from typing import Any, Dict, List, Optional
 import uuid
 
-from fastapi import Body, Depends, FastAPI, File, Header, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect, status
+from fastapi import Body, Depends, FastAPI, File, Header, HTTPException, Query, Request, UploadFile, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -103,11 +104,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Enable CORS for local network and Tailscale mesh
+# CORS: no credentials. The web client authenticates with a Bearer token, not
+# cookies, so `allow_credentials` bought nothing and only meant any page on the
+# network could ride a session. Starlette also rejects wildcard+credentials.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -262,9 +265,40 @@ async def verify_auth_token(token: str = Depends(require_auth)):
     return {"valid": True, "app": BRAND.get("name", "TALOS")}
 
 
+def _is_local_client(host: str | None) -> bool:
+    """True for loopback, RFC1918, link-local and Tailscale CGNAT peers.
+
+    `generate-quick` is the bootstrap: a client with no token yet has nothing to
+    authenticate with, so it cannot require one. What it can require is that the
+    caller is on this machine or this mesh — the only places the app is meant to
+    pair from.
+    """
+    if not host:
+        return False
+    try:
+        addr = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    if addr.is_loopback or addr.is_link_local or addr.is_private:
+        return True
+    # 100.64.0.0/10 — Tailscale's CGNAT range, not "private" to ipaddress.
+    return addr.version == 4 and addr in ipaddress.ip_network("100.64.0.0/10")
+
+
 @app.post("/api/auth/generate-quick")
-async def generate_quick_token():
-    """Direct button action: generate and register an authentic API token."""
+async def generate_quick_token(request: Request):
+    """Direct button action: generate and register an authentic API token.
+
+    Bootstrapping has to be open to a client that has no token yet, so the guard
+    is on where the request came from, not on who it is. Off-mesh callers get a
+    403 instead of a token.
+    """
+    client_host = request.client.host if request.client else None
+    if not _is_local_client(client_host):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Token bootstrap is only available on the local network or mesh.",
+        )
     label = f"Auto-Paired Client ({time.strftime('%b %d %H:%M')})"
     token = create_new_token(label)
     return {"token": token, "label": label, "status": "created"}

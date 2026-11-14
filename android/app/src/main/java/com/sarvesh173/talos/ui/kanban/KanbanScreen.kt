@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -71,7 +72,9 @@ object KanbanApi {
         baseUrl.trimEnd('/') + BOARD_PATH + "?room_id=" + java.net.URLEncoder.encode(roomId, "UTF-8")
 }
 
-private val CardFill = Color(0xFF1C1C1E)
+// A top-level literal cannot read the theme; this went near-black in light mode.
+private val CardFill: Color
+    @Composable get() = MaterialTheme.colorScheme.surfaceContainer
 // Read inside composables; a top-level val cannot read a @Composable theme.
 private val Accent: Color
     @Composable get() = MaterialTheme.colorScheme.primary
@@ -445,7 +448,10 @@ private fun Lane(
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(GridUnit),
             ) {
-                items(rows, key = { it.id.ifBlank { it.tool + it.started_at.toString() } }) { row ->
+                itemsIndexed(
+                    items = rows,
+                    key = { index, row -> row.id.ifBlank { "$index-${row.tool}-${row.started_at}" } }
+                ) { _, row ->
                     ToolCallCard(row = row, serverTime = serverTime)
                 }
             }

@@ -145,6 +145,7 @@ private fun ChartBlock(d: ChartDirective, strong: Color, muted: Color, brand: Co
                 when (d.kind) {
                     "bar" -> {
                         val n = d.x.size
+                        if (n == 0) return@Canvas
                         val groupW = w / n
                         val barW = (groupW * 0.62f / d.series.size).coerceAtLeast(3.dp.toPx())
                         series.values.forEachIndexed { i, v ->

@@ -211,7 +211,7 @@ fun AgentBubble(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 340.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(notices, key = { it.id }) { n ->
+                    itemsIndexed(notices, key = { index, _ -> index.toString() }) { _, n ->
                         BubbleNoticeRow(
                             notice = n,
                             isDark = isDark,
@@ -223,13 +223,6 @@ fun AgentBubble(
                     }
                 }
 
-                if (notices.isEmpty()) {
-                    Text(
-                        text = "No recent bubbles",
-                        fontSize = 11.sp,
-                        color = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.40f)
-                    )
-                }
             }
         }
     }

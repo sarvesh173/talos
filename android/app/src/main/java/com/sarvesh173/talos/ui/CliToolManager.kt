@@ -174,8 +174,10 @@ fun CliToolManagerScreen(
 
     // Spawn Subagent Dialog
     spawningDelegateId?.let { delegateId ->
-        var subagentName by remember { mutableStateOf("") }
-        var subagentGoal by remember { mutableStateOf("") }
+        // Keyed on the delegate: unkeyed, the text typed for one delegate
+        // showed up in the next one's dialog.
+        var subagentName by remember(delegateId) { mutableStateOf("") }
+        var subagentGoal by remember(delegateId) { mutableStateOf("") }
 
         AlertDialog(
             onDismissRequest = { spawningDelegateId = null },

@@ -56,7 +56,7 @@ fun ToolCallRow(
 ) {
     if (calls.isEmpty()) return
 
-    var expanded by remember(calls.size) { mutableStateOf(false) }
+    var expanded by remember(calls) { mutableStateOf(false) }
     val secondary = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.45f)
     val running = calls.count { it.status == "running" }
     val failed = calls.count { it.status == "failed" }

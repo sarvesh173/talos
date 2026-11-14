@@ -59,7 +59,7 @@ fun ThinkingPill(
 ) {
     if (thought.isBlank()) return
 
-    var expanded by remember(thought.isEmpty()) { mutableStateOf(false) }
+    var expanded by remember(thought) { mutableStateOf(false) }
     val clean = remember(thought) { thought.trim().replace(Regex("\\*\\*"), "").replace(Regex("`"), "") }
     // Collapsed: the first line. Streaming: the tail, where the model is now.
     val preview = remember(clean, streaming) {

@@ -68,7 +68,7 @@ fun appleLiquidGlassIridescentBorder(
             Color.White.copy(alpha = 0.48f),
             Color(0xFFFF2D55).copy(alpha = 0.35f), // Apple Rose Pink
             Color(0xFFAF52DE).copy(alpha = 0.40f), // Apple Violet
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.38f), // Apple Azure
+            Color(0xFF5AC8D8).copy(alpha = 0.38f),
             Color(0xFF34C759).copy(alpha = 0.28f), // Apple Green
             Color.White.copy(alpha = 0.12f),
             Color.White.copy(alpha = 0.04f)
@@ -78,7 +78,7 @@ fun appleLiquidGlassIridescentBorder(
             Color.White.copy(alpha = 0.85f),
             Color(0xFFFF2D55).copy(alpha = 0.45f),
             Color(0xFFAF52DE).copy(alpha = 0.50f),
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+            Color(0xFF5AC8D8).copy(alpha = 0.45f),
             Color(0xFF34C759).copy(alpha = 0.35f),
             Color.White.copy(alpha = 0.35f),
             Color.Black.copy(alpha = 0.06f)

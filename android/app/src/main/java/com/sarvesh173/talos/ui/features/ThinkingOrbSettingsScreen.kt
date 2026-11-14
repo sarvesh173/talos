@@ -581,10 +581,10 @@ internal fun hslToColor(hue: Float, s: Float, l: Float): Color {
 
 /** A curated 24-swatch grid: Apple system colours plus accent families. */
 private val orbSwatches = listOf(
-    MaterialTheme.colorScheme.primary, Color(0xFF5AC8FA), Color(0xFF34C759), Color(0xFF30D158),
+    Color(0xFF5AC8D8), Color(0xFF5AC8FA), Color(0xFF34C759), Color(0xFF30D158),
     Color(0xFFFFCC00), Color(0xFFFF9500), Color(0xFFFF3B30), Color(0xFFFF2D55),
     Color(0xFFAF52DE), Color(0xFF5856D6), Color(0xFFBF5AF2), Color(0xFFFF375F),
-    Color(0xFF64D2FF), MaterialTheme.colorScheme.primary, Color(0xFF32D74B), Color(0xFFFFD60A),
+    Color(0xFF64D2FF), Color(0xFF5AC8D8), Color(0xFF32D74B), Color(0xFFFFD60A),
     Color(0xFFFF9F0A), Color(0xFFFF453A), Color(0xFF5E5CE6), Color(0xFFA0A0A8),
     Color(0xFF1D1D1F), Color(0xFFF2F2F7), Color(0xFF00C7BE), Color(0xFFD97757)
 )

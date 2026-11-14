@@ -71,7 +71,8 @@ import kotlin.math.ceil
 
 private val CanvasColor = Color(0xFF000000)
 private val SheetColor = Color(0xFF1C1C1E)
-private val AccentColor = MaterialTheme.colorScheme.primary
+// Literal, not a theme read: a top-level val has no composition.
+private val AccentColor = Color(0xFF5AC8D8)
 private val DestructiveColor = Color(0xFFFF453A)
 private val StrongColor = Color.White
 private val MutedColor = Color.White.copy(alpha = 0.60f)

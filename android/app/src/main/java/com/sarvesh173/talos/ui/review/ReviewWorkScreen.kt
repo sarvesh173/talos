@@ -153,7 +153,8 @@ data class DiffLineDto(
 
 private val CanvasBlack = Color(0xFF000000)
 private val CardFill = Color(0xFF1C1C1E)
-private val AccentBlue = MaterialTheme.colorScheme.primary
+// Literal, not a theme read: a top-level val has no composition.
+private val AccentBlue = Color(0xFF5AC8D8)
 private val AddedGreen = Color(0xFF30D158)
 private val RemovedRed = Color(0xFFFF453A)
 private val PrimaryText = Color(0xFFFFFFFF)

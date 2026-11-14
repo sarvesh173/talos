@@ -65,7 +65,8 @@ data class BubbleNotice(
     val command: String = "",
     val needsApproval: Boolean = false,
     val timestamp: Long = System.currentTimeMillis(),
-    val brandColor: Color = MaterialTheme.colorScheme.primary
+    // Literal, not a theme read: a data-class default has no composition.
+    val brandColor: Color = Color(0xFF5AC8D8)
 )
 
 /**

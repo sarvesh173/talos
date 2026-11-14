@@ -96,7 +96,7 @@ val IdentityPalettes: List<IdentityPalette> = listOf(
     IdentityPalette("violet", "Violet", Color(0xFFBF5AF2)),
     IdentityPalette("mint", "Mint", Color(0xFF30D158)),
     IdentityPalette("rose", "Rose", Color(0xFFFF375F)),
-    IdentityPalette("sky", "Sky", MaterialTheme.colorScheme.primary),
+    IdentityPalette("sky", "Sky", Color(0xFF5AC8D8)),
     IdentityPalette("slate", "Slate", Color(0xFF8E8E93))
 )
 

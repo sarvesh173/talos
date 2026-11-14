@@ -18,7 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -487,14 +487,19 @@ fun AppleAgentChatScreen(
             contentPadding = PaddingValues(top = 116.dp, bottom = 140.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(
+            itemsIndexed(
                 items = messages,
-                key = { it.id },
+                // Keys must be unique: the remote fetch falls back to a
+                // positional id when a row has none, and a poll can return the
+                // same rows twice. A duplicate throws during composition, which
+                // crashes the screen the moment a session opens. The position
+                // makes the key unique without a lookup per item.
+                key = { index, _ -> index.toString() },
                 // Without contentType Compose cannot reuse composition slots
                 // per message type, so every scroll allocates fresh bubble
                 // nodes. jetpack-compose-performance §3 makes both mandatory.
-                contentType = { it.sender }
-            ) { msg ->
+                contentType = { _, msg -> msg.sender }
+            ) { _, msg ->
                 if (msg.sender == "user") {
                     UserBubble(msg, isDark, brandColor, onLongClick = { selectedMessageForAction = msg })
                 } else {

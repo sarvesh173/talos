@@ -39,7 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.width
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -199,7 +200,7 @@ fun ImageEditorScreen(
                 currentPoints.clear()
                 currentPoints.add(p)
             }
-            EditTool.DRAW -> currentPoints.clear(); currentPoints.add(p)
+            EditTool.DRAW -> { currentPoints.clear(); currentPoints.add(p) }
             else -> Unit
         }
     }
@@ -264,7 +265,7 @@ fun ImageEditorScreen(
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isDark) ComposeColor.White else ComposeColor(0xFF1D1D1F),
-                textAlign = androidx.compose.ui.text.TextAlign.Center,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.width(110.dp)
             )
             Spacer(modifier = Modifier.weight(1f))

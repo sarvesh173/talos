@@ -11,7 +11,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.RectF
-import androidx.activity.compose.rememberCoroutineScope
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.onSizeChanged
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -40,6 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.width
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -129,7 +130,9 @@ fun ImageEditorScreen(
     val invMatrix = Matrix().also { layout.matrix.invert(it) }
     val full = RectF(0f, 0f, sw.coerceAtLeast(1).toFloat(), sh.coerceAtLeast(1).toFloat())
     val changed = source != null && (
-        rotation != 0 || flipX || flipY || cropRect != full ||
+        rotation != 0 || flipX || flipY ||
+        cropRect.left != full.left || cropRect.top != full.top ||
+        cropRect.right != full.right || cropRect.bottom != full.bottom ||
         brightness != 1f || contrast != 1f || saturation != 1f || strokes.isNotEmpty()
     )
 
@@ -173,7 +176,7 @@ fun ImageEditorScreen(
     }
 
     /** View (preview) pixel -> source bitmap pixel, clamped into source bounds. */
-    fun viewToSource(pos: Offset): PointF {
+    fun viewToSource(pos: Offset): Offset {
         val scale = placementScale(viewSize.width, viewSize.height, outW, outH)
         val dx = (viewSize.width - outW * scale) / 2f
         val dy = (viewSize.height - outH * scale) / 2f
@@ -181,7 +184,7 @@ fun ImageEditorScreen(
         val oy = (pos.y - dy) / scale
         val dst = FloatArray(2)
         invMatrix.mapPoints(floatArrayOf(ox, oy), dst)
-        return PointF(
+        return Offset(
             dst[0].coerceIn(0f, sw.coerceAtLeast(1).toFloat()),
             dst[1].coerceIn(0f, sh.coerceAtLeast(1).toFloat())
         )
@@ -191,7 +194,7 @@ fun ImageEditorScreen(
         val p = viewToSource(pos)
         when (tool) {
             EditTool.CROP -> {
-                dragStart = p
+                dragStart = PointF(p.x, p.y)
                 dragTemp = RectF(p.x, p.y, p.x, p.y)
                 currentPoints.clear()
                 currentPoints.add(p)
@@ -205,8 +208,13 @@ fun ImageEditorScreen(
         val p = viewToSource(pos)
         when (tool) {
             EditTool.CROP -> {
-                val start = dragStart ?: p
-                val free = if (aspect != null) constrainedRect(start, p, aspect) else rectBetween(start, p)
+                val start = dragStart ?: PointF(p.x, p.y)
+                val ratio = aspect
+                val free = if (ratio != null) {
+                    constrainedRect(start, PointF(p.x, p.y), ratio)
+                } else {
+                    rectBetween(start, PointF(p.x, p.y))
+                }
                 dragTemp = clampRect(free, sw, sh)
             }
             EditTool.DRAW -> currentPoints.add(p)
@@ -274,7 +282,7 @@ fun ImageEditorScreen(
 
         if (source == null) {
             Box(
-                modifier = Modifier.weight(1f).background(previewBg),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -286,7 +294,7 @@ fun ImageEditorScreen(
         } else {
             Canvas(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxSize()
                     .background(previewBg)
                     .onSizeChanged { viewSize = it.size }
                     .pointerInput(placement) {

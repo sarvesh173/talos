@@ -142,9 +142,10 @@ fun AttachmentSheet(
                 .navigationBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
-            if (editingImage != null) {
+            val edit = editingImage
+            if (edit != null) {
                 ImageEditorScreen(
-                    image = editingImage,
+                    image = edit,
                     isDark = isDark,
                     onDone = { edited ->
                         editingImage = null

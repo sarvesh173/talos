@@ -5,17 +5,15 @@ turn counts. These tests pin the replacement contract: report what exists, say
 why when it cannot be read, and never invent a session.
 """
 
-import os
-import sqlite3
 import sys
-import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from server import agent_sessions
+from server.opencode_bridge import OpenCodeResult
 
 
 class RosterShapeTest(unittest.TestCase):
@@ -52,72 +50,65 @@ class RosterShapeTest(unittest.TestCase):
 
 
 class OpencodeSessionTest(unittest.TestCase):
-    """Reads a real-shaped SQLite database, not the user's live one."""
+    """The reader asks the OpenCode server, so the server is what gets stubbed.
 
-    def _make_db(self, rows):
-        directory = tempfile.mkdtemp()
-        path = os.path.join(directory, "opencode.db")
-        connection = sqlite3.connect(path)
-        connection.execute(
-            "CREATE TABLE session (id TEXT PRIMARY KEY, title TEXT, time_updated INTEGER)"
+    These tests used to write a temporary SQLite file and patch ``_OPENCODE_DB``.
+    The reader stopped reading that file when it moved to the server API, so the
+    patches did nothing and the tests quietly queried the live host.
+    """
+
+    @staticmethod
+    def _stub(rows, ok=True, error=None):
+        client = MagicMock()
+        client.list_sessions.return_value = OpenCodeResult(
+            ok=ok, data={"data": rows} if ok else None, error=error
         )
-        connection.execute(
-            "CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT)"
-        )
-        for session_id, title, updated in rows:
-            connection.execute(
-                "INSERT INTO session VALUES (?,?,?)", (session_id, title, updated)
-            )
-            for i in range(3):
-                connection.execute(
-                    "INSERT INTO message VALUES (?,?)", (f"{session_id}_m{i}", session_id)
-                )
-        connection.commit()
-        connection.close()
-        return path
+        return patch("server.opencode_bridge.OpenCodeClient", return_value=client)
 
     def test_reads_sessions_newest_first(self):
-        path = self._make_db([
-            ("ses_old", "Older work", 1_000_000_000_000),
-            ("ses_new", "Newer work", 1_700_000_000_000),
-        ])
-        with patch.object(agent_sessions, "_OPENCODE_DB", path):
-            rows = agent_sessions._opencode_sessions()
-        self.assertEqual([r.id for r in rows], ["ses_new", "ses_old"])
-        self.assertEqual(rows[0].title, "Newer work")
+        rows = [
+            {"id": "ses_old", "title": "Older work", "time": {"updated": 1_000_000_000_000}},
+            {"id": "ses_new", "title": "Newer work", "time": {"updated": 1_700_000_000_000}},
+        ]
+        with self._stub(rows):
+            out = agent_sessions._opencode_sessions()
+        self.assertEqual([r.id for r in out], ["ses_new", "ses_old"])
+        self.assertEqual(out[0].title, "Newer work")
 
     def test_milliseconds_become_seconds(self):
-        path = self._make_db([("ses_a", "A", 1_700_000_000_000)])
-        with patch.object(agent_sessions, "_OPENCODE_DB", path):
-            rows = agent_sessions._opencode_sessions()
+        rows = [{"id": "ses_a", "title": "A", "time": {"updated": 1_700_000_000_000}}]
+        with self._stub(rows):
+            out = agent_sessions._opencode_sessions()
         # 1.7e12 ms is 1.7e9 s, a 2023 timestamp — not a year 55000 one.
-        self.assertLess(rows[0].updated_at, 2_000_000_000)
-        self.assertGreater(rows[0].updated_at, 1_000_000_000)
+        self.assertLess(out[0].updated_at, 2_000_000_000)
+        self.assertGreater(out[0].updated_at, 1_000_000_000)
 
-    def test_message_count_is_read(self):
-        path = self._make_db([("ses_a", "A", 1_700_000_000_000)])
-        with patch.object(agent_sessions, "_OPENCODE_DB", path):
-            rows = agent_sessions._opencode_sessions()
-        self.assertEqual(rows[0].message_count, 3)
+    def test_list_endpoint_has_no_message_count(self):
+        rows = [{"id": "ses_a", "title": "A", "time": {"updated": 1_700_000_000_000}}]
+        with self._stub(rows):
+            out = agent_sessions._opencode_sessions()
+        # The list endpoint does not carry a count; None is the honest value.
+        self.assertIsNone(out[0].message_count)
 
     def test_blank_title_gets_a_placeholder_not_an_empty_row(self):
-        path = self._make_db([("ses_a", "   ", 1_700_000_000_000)])
-        with patch.object(agent_sessions, "_OPENCODE_DB", path):
-            rows = agent_sessions._opencode_sessions()
-        self.assertEqual(rows[0].title, "Untitled session")
+        rows = [{"id": "ses_a", "title": "   ", "time": {"updated": 1_700_000_000_000}}]
+        with self._stub(rows):
+            out = agent_sessions._opencode_sessions()
+        self.assertEqual(out[0].title, "Untitled session")
 
-    def test_missing_database_raises_a_clear_error(self):
-        with patch.object(agent_sessions, "_OPENCODE_DB", "/nonexistent/opencode.db"):
-            with self.assertRaises(FileNotFoundError):
+    def test_server_failure_raises_a_clear_error(self):
+        with self._stub([], ok=False, error="opencode unreachable"):
+            with self.assertRaises(RuntimeError):
                 agent_sessions._opencode_sessions()
 
-    def test_read_is_read_only(self):
-        """The reader must never be able to mutate the user's agent state."""
-        path = self._make_db([("ses_a", "A", 1_700_000_000_000)])
-        before = os.path.getmtime(path)
-        with patch.object(agent_sessions, "_OPENCODE_DB", path):
-            agent_sessions._opencode_sessions()
-        self.assertEqual(os.path.getmtime(path), before)
+    def test_rows_without_an_id_are_skipped(self):
+        rows = [
+            {"id": "", "title": "Ghost"},
+            {"id": "ses_a", "title": "A", "time": {"updated": 1_700_000_000_000}},
+        ]
+        with self._stub(rows):
+            out = agent_sessions._opencode_sessions()
+        self.assertEqual([r.id for r in out], ["ses_a"])
 
 
 class FreshnessTest(unittest.TestCase):

@@ -130,6 +130,9 @@ def _opencode_sessions(limit: int = 20) -> List[AgentSessionRow]:
                 message_count=None,
             )
         )
+    # The server owns the order it sends, and it is not guaranteed to be newest
+    # first. Sort before truncating, or `[:limit]` can keep the oldest twenty.
+    out.sort(key=lambda row: row.updated_at, reverse=True)
     return out[:limit]
 
 

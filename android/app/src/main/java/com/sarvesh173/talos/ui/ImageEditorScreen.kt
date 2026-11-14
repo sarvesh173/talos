@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.onSizeChanged
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,17 +42,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.semantics
 
 import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 
@@ -106,8 +110,8 @@ fun ImageEditorScreen(
     var brightness by remember(image) { mutableFloatStateOf(1f) }
     var contrast by remember(image) { mutableFloatStateOf(1f) }
     var saturation by remember(image) { mutableFloatStateOf(1f) }
-    var strokes by remember(image) { mutableStateListOf<StrokePath>() }
-    var currentPoints by remember { mutableStateListOf<Offset>() }
+    var strokes = remember(image) { mutableStateListOf<StrokePath>() }
+    var currentPoints = remember { mutableStateListOf<Offset>() }
     var dragTemp by remember { mutableStateOf<RectF?>(null) }
     var dragStart by remember { mutableStateOf<PointF?>(null) }
     var strokeColor by remember { mutableStateOf(brandColor) }
@@ -190,8 +194,9 @@ fun ImageEditorScreen(
                 dragStart = p
                 dragTemp = RectF(p.x, p.y, p.x, p.y)
                 currentPoints.clear()
+                currentPoints.add(p)
             }
-            EditTool.DRAW -> currentPoints = mutableStateListOf(p)
+            EditTool.DRAW -> currentPoints.clear(); currentPoints.add(p)
             else -> Unit
         }
     }
@@ -512,29 +517,26 @@ private fun EditIcon(tool: EditTool, active: Boolean) {
         val w = size.width
         val h = size.height
         val s = minOf(w, h)
-        val paint = Paint().apply {
-            color = android.graphics.Color.argb(
-                (tint.alpha * 255).toInt(), tint.red, tint.green, tint.blue
-            )
-            style = Paint.Style.STROKE
-            strokeCap = Paint.Cap.ROUND
-            strokeJoin = Paint.Join.ROUND
-            strokeWidth = 2.2f
-        }
         val pad = 0.25f * s
         val c = s / 2f
+        fun line(x1: Float, y1: Float, x2: Float, y2: Float, sw: Float = 2.2f) {
+            drawLine(
+                color = tint, start = Offset(x1, y1), end = Offset(x2, y2),
+                strokeWidth = sw, cap = StrokeCap.Round
+            )
+        }
         when (tool) {
             EditTool.CROP -> {
                 val seg = 0.30f * s
                 // four corner brackets
-                drawLine(pad, pad, pad + seg, pad, paint)
-                drawLine(pad, pad, pad, pad + seg, paint)
-                drawLine(w - pad, pad, w - pad - seg, pad, paint)
-                drawLine(w - pad, pad, w - pad, pad + seg, paint)
-                drawLine(pad, h - pad, pad + seg, h - pad, paint)
-                drawLine(pad, h - pad, pad, h - pad - seg, paint)
-                drawLine(w - pad, h - pad, w - pad - seg, h - pad, paint)
-                drawLine(w - pad, h - pad, w - pad, h - pad - seg, paint)
+                line(pad, pad, pad + seg, pad)
+                line(pad, pad, pad, pad + seg)
+                line(w - pad, pad, w - pad - seg, pad)
+                line(w - pad, pad, w - pad, pad + seg)
+                line(pad, h - pad, pad + seg, h - pad)
+                line(pad, h - pad, pad, h - pad - seg)
+                line(w - pad, h - pad, w - pad - seg, h - pad)
+                line(w - pad, h - pad, w - pad, h - pad - seg)
             }
             EditTool.ROTATE -> {
                 val r = 0.32f * s
@@ -543,18 +545,17 @@ private fun EditIcon(tool: EditTool, active: Boolean) {
                     startDegrees = -135f,
                     sweepDegrees = 270f,
                     useCenter = false,
-                    style = Paint.Style.STROKE,
-                    strokeWidth = 2.2f,
+                    style = Stroke(width = 2.2f),
                     topLeft = Offset(c - r, c - r),
-                    size = androidx.compose.ui.geometry.Size(2 * r, 2 * r)
+                    size = Size(2 * r, 2 * r)
                 )
-                // arrowhead at end of the arc (angle -135+270 = 135 deg)
-                val a = Math.toRadians(135.0).toFloat()
+                // arrowhead at end of the arc (angle -135 + 270 = 135 deg)
+                val a = 135f * Math.PI.toFloat() / 180f
                 val ex = c + r * cos(a)
                 val ey = c + r * sin(a)
                 val l = 0.18f * s
-                drawLine(ex, ey, ex - l * cos(a - 0.5f), ey - l * sin(a - 0.5f), paint)
-                drawLine(ex, ey, ex - l * cos(a + 0.5f), ey - l * sin(a + 0.5f), paint)
+                line(ex, ey, ex - l * cos(a - 0.5f), ey - l * sin(a - 0.5f))
+                line(ex, ey, ex - l * cos(a + 0.5f), ey - l * sin(a + 0.5f))
             }
             EditTool.FLIP -> {
                 val y1 = 0.40f * h
@@ -563,32 +564,29 @@ private fun EditIcon(tool: EditTool, active: Boolean) {
                 val x2 = 0.50f * w
                 val x3 = 0.78f * w
                 val head = 0.10f * s
-                drawLine(x1, y1, x2 - head, y1, paint)
-                drawLine(x2, y1, x2 - head, y1 - head * 0.6f, paint)
-                drawLine(x2, y1, x2 - head, y1 + head * 0.6f, paint)
-                drawLine(x3, y2, x2 + head, y2, paint)
-                drawLine(x2, y2, x2 + head, y2 - head * 0.6f, paint)
-                drawLine(x2, y2, x2 + head, y2 + head * 0.6f, paint)
+                line(x1, y1, x2 - head, y1)
+                line(x2, y1, x2 - head, y1 - head * 0.6f)
+                line(x2, y1, x2 - head, y1 + head * 0.6f)
+                line(x3, y2, x2 + head, y2)
+                line(x2, y2, x2 + head, y2 - head * 0.6f)
+                line(x2, y2, x2 + head, y2 + head * 0.6f)
             }
             EditTool.ADJUST -> {
                 val r = 0.22f * s
-                drawCircle(center = Offset(c, c), radius = r, paint = paint)
+                drawCircle(color = tint, offset = Offset(c, c), radius = r, style = Stroke(width = 2.2f))
                 val ray = 0.26f * s
                 val shortRay = 0.16f * s
                 repeat(8) { i ->
-                    val a = i * Math.PI / 4
+                    val a = i * Math.PI.toFloat() / 4f
                     val (rOut, rIn) = if (i % 2 == 0) Pair(ray, shortRay) else Pair(shortRay, ray)
-                    drawLine(
-                        c + rIn * cos(a).toFloat(), c + rIn * sin(a).toFloat(),
-                        c + rOut * cos(a).toFloat(), c + rOut * sin(a).toFloat(),
-                        paint
+                    line(
+                        c + rIn * cos(a), c + rIn * sin(a),
+                        c + rOut * cos(a), c + rOut * sin(a)
                     )
                 }
             }
             EditTool.DRAW -> {
-                paint.strokeWidth = 3.4f
-                drawLine(pad, h - pad, w - pad, pad, paint)
-                paint.strokeWidth = 2.2f
+                line(pad, h - pad, w - pad, pad, sw = 3.4f)
             }
         }
     }

@@ -987,6 +987,7 @@ fun MainScreen(
     var inputText by remember { mutableStateOf("") }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAttachmentSheet by remember { mutableStateOf(false) }
+    var pendingImage by remember { mutableStateOf<PendingImage?>(null) }
     var activeSlotId by remember { mutableStateOf("chambers") }
 
     // The four screens that had no entry point: MainScreen took these callbacks
@@ -2314,12 +2315,34 @@ fun MainScreen(
     }
 
     if (showAttachmentSheet) {
-        AttachmentBottomSheet(
+        AttachmentSheet(
             client = client,
+            isDark = isDark,
             onDismiss = { showAttachmentSheet = false },
+            onPickImage = { pendingImage = it; showAttachmentSheet = false },
             onSendText = {
                 sendHaptic(context)
                 client.sendMessage(it)
+                showAttachmentSheet = false
+            },
+            onOpenPrompts = { showAttachmentSheet = false }
+        )
+    }
+
+    // Nothing leaves the device until Send: the sheet shows the real pixels and
+    // takes the caption, same as the chat composer.
+    pendingImage?.let { image ->
+        ImageConfirmSheet(
+            image = image,
+            client = client,
+            isDark = isDark,
+            brandColor = MaterialTheme.colorScheme.primary,
+            caption = inputText,
+            onDismiss = { pendingImage = null },
+            onSend = { caption, bytes ->
+                pendingImage = null
+                inputText = ""
+                client.sendMediaMessage(bytes, caption)
             }
         )
     }

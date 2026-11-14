@@ -977,8 +977,8 @@ fun AppleAgentChatScreen(
                         while (recordingActive) {
                             recordingSeconds++
                             if (recordingSeconds >= limitSeconds) {
-                                finishVoiceNote(audioRecorder, recordedFormat) { body ->
-                                    client.sendMessage(body)
+                                finishVoiceNote(audioRecorder, recordedFormat, client) { body, attachments ->
+                                    client.sendMessage(body, attachments)
                                 }
                                 recordingActive = false
                                 recordingLocked = false
@@ -1084,9 +1084,9 @@ fun AppleAgentChatScreen(
                                         .clip(CircleShape)
                                         .background(brandColor)
                                         .applePressable(0.90f, pressHaptic = true) {
-                                            finishVoiceNote(audioRecorder, recordedFormat) { body ->
-                                                client.sendMessage(body)
-                                            }
+                                            finishVoiceNote(audioRecorder, recordedFormat, client) { body, attachments ->
+                                                                            client.sendMessage(body, attachments)
+                                                                        }
                                             recordingActive = false
                                             recordingLocked = false
                                             recordingSeconds = 0
@@ -1206,8 +1206,8 @@ fun AppleAgentChatScreen(
                                 liveWave = emptyList()
                             },
                             onFinish = {
-                                finishVoiceNote(audioRecorder, recordedFormat) { body ->
-                                    client.sendMessage(body)
+                                finishVoiceNote(audioRecorder, recordedFormat, client) { body, attachments ->
+                                    client.sendMessage(body, attachments)
                                 }
                                 recordingActive = false
                                 recordingLocked = false
@@ -1783,12 +1783,46 @@ private fun LiveWaveform(
 private fun finishVoiceNote(
     recorder: AudioRecordManager,
     requested: AudioFormat,
-    send: (String) -> Unit
+    client: TalosClient,
+    send: (String, List<String>) -> Unit
 ) {
     val (duration, b64) = recorder.stopRecording()
     if (b64 == null || duration < 1) return
-    val mime = VoiceNotePreferences.mimeTypeFor(requested)
-    send("[Voice Note: ${duration}s]\ndata:$mime;base64,$b64")
+
+    // Uploading the real bytes and attaching the URL is what the core and the
+    // agent both read. The base64 form was a text blob: stored, shown, and
+    // never playable — the agent saw a wall of characters instead of audio.
+    val file = recorder.recordedFile
+    val bytes = file?.let { runCatching { it.readBytes() }.getOrNull() }
+    if (bytes != null) {
+        val name = file.name
+        client.uploadAndSend(bytes, name, "[Voice Note: ${duration}s]", send) {
+            send("[Voice Note: ${duration}s]", emptyList())
+        }
+        file.delete()
+    } else {
+        send("[Voice Note: ${duration}s]", emptyList())
+    }
+}
+
+/**
+ * Upload [bytes] and send the message with the served URL attached.
+ *
+ * Falls back to [onUploadFailed] when the core cannot be reached, so the user
+ * still gets their message instead of silence.
+ */
+private fun TalosClient.uploadAndSend(
+    bytes: ByteArray,
+    filename: String,
+    text: String,
+    send: (String, List<String>) -> Unit,
+    onUploadFailed: () -> Unit
+) {
+    val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
+    scope.launch {
+        val url = uploadMedia(bytes, filename)
+        if (url != null) send(text, listOf(url)) else onUploadFailed()
+    }
 }
 
 /**

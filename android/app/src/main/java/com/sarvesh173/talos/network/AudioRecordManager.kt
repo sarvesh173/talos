@@ -113,6 +113,15 @@ class AudioRecordManager(private val context: Context) {
     }
 
     /**
+     * The file the last recording wrote.
+     *
+     * `stopRecording` returns base64, which a caller that uploads the audio
+     * cannot use. The file survives the stop, so an uploader can read the real
+     * bytes and delete them itself.
+     */
+    val recordedFile: File? get() = currentFile
+
+    /**
      * Mic amplitude 0..32767 polled from MediaRecorder.getMaxAmplitude every 50 ms
      * while this recorder instance is active.
      *

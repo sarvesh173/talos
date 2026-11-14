@@ -1774,7 +1774,11 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
      * connected yet, and a reply typed in the shade must not be dropped because
      * the app happened to be backgrounded.
      */
-    suspend fun sendMessageTo(roomId: String, text: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun sendMessageTo(
+        roomId: String,
+        text: String,
+        attachments: List<String> = emptyList()
+    ): Boolean = withContext(Dispatchers.IO) {
         if (text.isBlank() || roomId.isBlank()) return@withContext false
         runCatching {
             val payload = buildJsonObject {
@@ -1782,6 +1786,9 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
                 put("sender_id", "sarvesh")
                 put("sender_name", "Sarvesh")
                 put("content", text)
+                if (attachments.isNotEmpty()) {
+                    put("attachments", buildJsonArray { attachments.forEach { add(it) } })
+                }
             }
             val req = Request.Builder()
                 .url("$baseUrl/api/messages")
@@ -1839,16 +1846,21 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
             }.getOrDefault(false)
         }
 
-    fun sendMessage(text: String) {
+    fun sendMessage(text: String, attachments: List<String> = emptyList()) {
         if (text.isBlank()) return
         val currentRoom = _currentRoomId.value
         val escaped = json.encodeToString(text)
+        // The payload is assembled by hand, so the attachment list needs the same
+        // escaping treatment as the content or a quote in a filename breaks the JSON.
+        val attachmentField = if (attachments.isEmpty()) "" else
+            """,
+                "attachments": ${json.encodeToString(attachments)}"""
         val payload = """
             {
                 "type": "message",
                 "room_id": "$currentRoom",
                 "sender_name": "Sarvesh",
-                "content": $escaped
+                "content": $escaped$attachmentField
             }
         """.trimIndent()
         val sent = activeWebSocket?.send(payload) == true

@@ -724,6 +724,14 @@ class AgentOrchestrator:
             parts.append(content)
         if message.thought:
             parts.append(f"(sender note: {message.thought})")
+        # Attachments were stored and returned to clients but never reached the
+        # model: an image or a voice note existed as a row nobody read. The
+        # agent can only act on a URL it has been told about.
+        if message.attachments:
+            parts.append(
+                "Attachments (fetch these URLs to read the media):\n"
+                + "\n".join(message.attachments)
+            )
         return "\n".join(parts) if parts else "(empty message)"
 
     # -- turn scheduling ---------------------------------------------------

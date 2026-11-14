@@ -100,7 +100,7 @@ fun MessageFooterView(
     var expanded by remember { mutableStateOf(false) }
     val strong = if (isDark) Color.White.copy(alpha = 0.92f) else Color(0xFF1D1D1F)
     val muted = if (isDark) Color.White.copy(alpha = 0.42f) else Color.Black.copy(alpha = 0.38f)
-    val hairline = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+    val hairline = if (isDark) Color.White.copy(alpha = 0.08f) else Color(0xFFB9C4C7)
 
     Column(modifier = modifier.fillMaxWidth()) {
         // ---- the one-line summary ----

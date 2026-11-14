@@ -498,7 +498,28 @@ class DelegateChildRequest(BaseModel):
 
 @app.get("/api/agents")
 async def get_agents(token: str = Depends(require_auth)):
-    return list_agents()
+    """The council roster, each agent with the prompt it actually runs.
+
+    Every seeded agent had a NULL system_prompt, so the app had nothing to
+    show and the user could not read what an agent is told. The stored prompt
+    wins; when it is empty the persona the orchestrator would really use is
+    returned instead.
+    """
+    from server.agent_orchestrator import AgentSpec
+
+    out = []
+    for profile in list_agents():
+        prompt = (profile.system_prompt or "").strip()
+        if not prompt:
+            spec = AgentSpec(
+                id=profile.id,
+                name=profile.name,
+                model=profile.model or "mock/simulated",
+                role_description=profile.role_description or "",
+            )
+            prompt = spec.system_prompt()
+        out.append(profile.model_copy(update={"system_prompt": prompt}))
+    return out
 
 
 @app.post("/api/agents")

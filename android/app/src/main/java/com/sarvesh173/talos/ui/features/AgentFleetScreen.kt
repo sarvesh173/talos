@@ -9,11 +9,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Subject
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.*
@@ -21,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -47,6 +51,7 @@ import kotlinx.coroutines.launch
 fun AgentFleetScreen(client: TalosClient) {
     val isDark = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var agents by remember { mutableStateOf<List<AgentInfo>>(emptyList()) }
     var delegates by remember { mutableStateOf<List<DelegateInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -55,6 +60,9 @@ fun AgentFleetScreen(client: TalosClient) {
     var hasLoaded by remember { mutableStateOf(false) }
     var showSummonSheet by remember { mutableStateOf(false) }
     var selectedAgentForModel by remember { mutableStateOf<AgentInfo?>(null) }
+    // The prompt an agent actually runs. It was never visible anywhere: the
+    // fleet showed the model and the status, not the instructions.
+    var promptForAgent by remember { mutableStateOf<AgentInfo?>(null) }
 
     suspend fun doRefresh() {
         val fleet = client.fetchAgents()
@@ -334,6 +342,12 @@ fun AgentFleetScreen(client: TalosClient) {
                                 }
 
                                 MetalIconButton(
+                                    icon = Icons.Default.Subject,
+                                    onClick = { promptForAgent = agent },
+                                    contentDescription = "View agent prompt"
+                                )
+
+                                MetalIconButton(
                                     icon = Icons.Default.Tune,
                                     onClick = { selectedAgentForModel = agent },
                                     contentDescription = "Configure agent"
@@ -368,6 +382,60 @@ fun AgentFleetScreen(client: TalosClient) {
                     }
                 }
             }
+        )
+    }
+
+    promptForAgent?.let { agent ->
+        val prompt = agent.systemPrompt?.takeIf { it.isNotBlank() }
+        AlertDialog(
+            onDismissRequest = { promptForAgent = null },
+            title = {
+                Text(text = "Prompt for ${agent.name}", color = MaterialTheme.colorScheme.onSurface)
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (prompt == null) {
+                        Text(
+                            text = "This agent has no prompt set.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Text(
+                            text = prompt,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val text = prompt ?: return@TextButton
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                            as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("prompt", text))
+                        promptForAgent = null
+                    },
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
+                    Text("Copy", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { promptForAgent = null },
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
+                    Text("Close", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 

@@ -75,7 +75,7 @@ fun PromptLibrarySheet(
     }
 
     val categories = listOf("All", "Coding", "Review", "System", "Writing")
-    val hairline = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
+    val hairline = if (isDark) Color.White.copy(alpha = 0.08f) else Color(0xFFB9C4C7)
     val cardBg = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7)
     val primaryText = if (isDark) Color.White else Color(0xFF1D1D1F)
 

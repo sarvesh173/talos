@@ -76,6 +76,7 @@ fun AttachmentSheet(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showStickers by remember { mutableStateOf(false) }
+    var editingImage by remember { mutableStateOf<PendingImage?>(null) }
 
     // Photo library (Android Photo Picker — no storage permission needed).
     val pickImage = rememberLauncherForActivityResult(
@@ -83,7 +84,7 @@ fun AttachmentSheet(
     ) { uri ->
         if (uri != null) {
             scope.launch {
-                decodeToPending(context, uri)?.let { onPickImage(it) }
+                decodeToPending(context, uri)?.let { editingImage = it }
             }
         }
     }
@@ -101,13 +102,11 @@ fun AttachmentSheet(
                         out.toByteArray()
                     }
                 }
-                onPickImage(
-                    PendingImage(
-                        bytes = bytes,
-                        label = "Camera",
-                        width = bitmap.width,
-                        height = bitmap.height
-                    )
+                editingImage = PendingImage(
+                    bytes = bytes,
+                    label = "Camera",
+                    width = bitmap.width,
+                    height = bitmap.height
                 )
             }
         }
@@ -143,8 +142,19 @@ fun AttachmentSheet(
                 .navigationBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
-            Text(
-                text = "Attach",
+            if (editingImage != null) {
+                ImageEditorScreen(
+                    image = editingImage,
+                    isDark = isDark,
+                    onDone = { edited ->
+                        editingImage = null
+                        onPickImage(edited)
+                    },
+                    onCancel = { editingImage = null }
+                )
+            } else {
+                Text(
+                    text = "Attach",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isDark) Color.White else Color(0xFF1D1D1F)
@@ -219,6 +229,7 @@ fun AttachmentSheet(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }

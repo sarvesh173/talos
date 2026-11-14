@@ -76,8 +76,12 @@ suspend fun fetchRemoteMessages(client: TalosClient, sessionId: String): List<Me
             val rawError = if (row.isNull("error")) "" else row.optString("error", "")
             val text = if (rawText == "null") "" else rawText.trim()
             val error = if (rawError == "null") "" else rawError.trim()
-
-            if (text.isBlank() && error.isBlank()) continue
+            // A tool-only turn has no prose: its tool chips and thought pill
+            // are the content, so an empty body must not drop the row.
+            val thought = if (row.isNull("thought")) null
+                else row.optString("thought").trim().takeIf { it.isNotBlank() && it != "null" }
+            val toolRecords = parseToolRecords(row.optJSONArray("tool_records"))
+            if (text.isBlank() && error.isBlank() && thought == null && toolRecords.isEmpty()) continue
 
             val role = if (roleStr == "user") Role.human else Role.agent
             out.add(
@@ -88,13 +92,9 @@ suspend fun fetchRemoteMessages(client: TalosClient, sessionId: String): List<Me
                     sender_name = if (role == Role.human) "You" else "OpenCode",
                     sender_role = role,
                     content = text.ifBlank { error },
-                    // optString answers "null" for a JSON null, and ThinkingPill
-                    // only filters blanks, so a missing thought rendered the
-                    // literal word "null" next to "Thought for a moment".
-                    thought = if (row.isNull("thought")) null
-                        else row.optString("thought").trim().takeIf { it.isNotBlank() && it != "null" },
+                    thought = thought,
                     metrics = parseMetrics(row.optJSONObject("metrics")),
-                    tool_records = parseToolRecords(row.optJSONArray("tool_records")),
+                    tool_records = toolRecords,
                     created_at = row.optDouble("created_ms", 0.0) / 1000.0,
                     simulated = false,
                 )

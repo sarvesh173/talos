@@ -220,7 +220,9 @@ fun LandingScreen(
     val canvas = if (isDark) CanvasDark else CanvasLight
     val card = if (isDark) CardDark else CardLight
     val elevated = if (isDark) ElevatedDark else ElevatedLight
-    val hairline = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
+    // 8% black on a white card was a 1.17:1 line: the border read as white
+    // on white and every card looked like it had no edge at all.
+    val hairline = if (isDark) Color.White.copy(alpha = 0.08f) else Color(0xFFB9C4C7)
     val primaryText = if (isDark) Color.White else Color(0xFF1D1D1F)
     val secondaryText = if (isDark) Color.White.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.60f)
     val tertiaryText = if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.40f)

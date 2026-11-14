@@ -1563,8 +1563,11 @@ private fun AgentBubble(
         hasDirectives -> parsed.prose
         else -> msg.text
     }
-    if (bubbleText.isBlank() && !hasDirectives && msg.voiceNote == null) return
-    if (bubbleText == "null" && !hasDirectives) return
+    // A tool-only or thinking-only turn has no prose: its tool chips and
+    // thought pill are the content, so an empty body must not hide the row.
+    val hasWork = !msg.thought.isNullOrBlank() || msg.stats?.toolCalls?.isNotEmpty() == true
+    if (bubbleText.isBlank() && !hasDirectives && msg.voiceNote == null && !hasWork) return
+    if (bubbleText == "null" && !hasDirectives && !hasWork) return
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {

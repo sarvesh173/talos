@@ -3,6 +3,7 @@ Includes Bot Token Authentication & Tailscale Mesh Access Security.
 """
 
 from contextlib import asynccontextmanager
+import asyncio
 import ipaddress
 import json
 import logging
@@ -796,7 +797,7 @@ async def opencode_health(token: str = Depends(require_auth)):
     from server.opencode_bridge import OpenCodeClient
 
     client = OpenCodeClient()
-    result = client.health()
+    result = await asyncio.to_thread(client.health)
     return {
         "ok": result.ok,
         "status": result.status,
@@ -810,7 +811,7 @@ async def opencode_sessions(token: str = Depends(require_auth)):
     """Real sessions from the live OpenCode server, newest first."""
     from server.opencode_bridge import OpenCodeClient
 
-    result = OpenCodeClient().list_sessions()
+    result = await asyncio.to_thread(OpenCodeClient().list_sessions)
     if not result.ok:
         return {"ok": False, "error": result.error, "sessions": []}
     rows = (result.data or {}).get("data") or []
@@ -842,7 +843,7 @@ async def opencode_agents(token: str = Depends(require_auth)):
     """
     from server.opencode_bridge import OpenCodeClient
 
-    result = OpenCodeClient().list_agents()
+    result = await asyncio.to_thread(OpenCodeClient().list_agents)
     if not result.ok:
         return {"ok": False, "error": result.error, "agents": []}
 
@@ -881,7 +882,7 @@ async def create_opencode_session(token: str = Depends(require_auth)):
     """Create a new fresh OpenCode session."""
     from server.opencode_bridge import OpenCodeClient
 
-    result = OpenCodeClient().create_session("New Session")
+    result = await asyncio.to_thread(OpenCodeClient().create_session, "New Session")
     if not result.ok:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -915,7 +916,7 @@ async def opencode_session_subagents(
     from server.opencode_bridge import OpenCodeClient
 
     client = OpenCodeClient()
-    result = client.list_sessions()
+    result = await asyncio.to_thread(client.list_sessions)
     if not result.ok:
         return {"ok": False, "error": result.error, "subagents": []}
 
@@ -925,7 +926,7 @@ async def opencode_session_subagents(
     # A child created but never prompted has no content; still listed, flagged.
     out = []
     for row in children:
-        msgs = client.session_messages(row["id"], limit=50)
+        msgs = await asyncio.to_thread(client.session_messages, row["id"], limit=50)
         tools: List[str] = []
         reasoning = 0
         text = ""
@@ -971,7 +972,7 @@ async def opencode_session_config(
     """This session's agent and model, for the picker's current selection."""
     from server.opencode_bridge import OpenCodeClient
 
-    result = OpenCodeClient().get_session(session_id)
+    result = await asyncio.to_thread(OpenCodeClient().get_session, session_id)
     if not result.ok:
         return {"ok": False, "error": result.error, "agent": None, "model": None}
 
@@ -998,7 +999,7 @@ async def opencode_session_messages(
     from server.opencode_bridge import OpenCodeClient
 
     limit = max(1, min(int(limit), 200))
-    result = OpenCodeClient().session_messages(session_id, limit)
+    result = await asyncio.to_thread(OpenCodeClient().session_messages, session_id, limit)
     if not result.ok:
         return {"ok": False, "error": result.error, "messages": []}
 
@@ -1149,7 +1150,7 @@ async def opencode_set_model(
             detail="providerID and modelID are both required",
         )
 
-    result = OpenCodeClient().set_session_model(session_id, provider, model)
+    result = await asyncio.to_thread(OpenCodeClient().set_session_model, session_id, provider, model)
     if not result.ok:
         return {"ok": False, "error": result.error}
     return {"ok": True, "model": {"id": model, "providerID": provider}}
@@ -1171,7 +1172,7 @@ async def opencode_set_agent(
             detail="agent is required",
         )
 
-    result = OpenCodeClient().set_session_agent(session_id, agent)
+    result = await asyncio.to_thread(OpenCodeClient().set_session_agent, session_id, agent)
     if not result.ok:
         return {"ok": False, "error": result.error}
     return {"ok": True, "agent": agent}
@@ -1182,7 +1183,7 @@ async def opencode_models(token: str = Depends(require_auth)):
     """Models the harness can run, as the picker needs them."""
     from server.opencode_bridge import OpenCodeClient
 
-    result = OpenCodeClient().list_models()
+    result = await asyncio.to_thread(OpenCodeClient().list_models)
     if not result.ok:
         return {"ok": False, "error": result.error, "models": []}
 
@@ -1220,7 +1221,7 @@ async def opencode_interrupt_session(
     """
     from server.opencode_bridge import OpenCodeClient
 
-    result = OpenCodeClient().interrupt(session_id)
+    result = await asyncio.to_thread(OpenCodeClient().interrupt, session_id)
     if not result.ok:
         return {"ok": False, "error": result.error}
     return {"ok": True, "interrupted": session_id}
@@ -1241,7 +1242,7 @@ async def opencode_session_prompt(
 
     from server.opencode_bridge import OpenCodeClient
 
-    result = OpenCodeClient().send_prompt(session_id, text)
+    result = await asyncio.to_thread(OpenCodeClient().send_prompt, session_id, text)
     if not result.ok:
         return {"ok": False, "error": result.error}
     return {"ok": True, "sent": text, "message": result.data}
@@ -1511,6 +1512,11 @@ async def websocket_endpoint(
     if not token or not verify_token(token):
         logger.warning("Unauthorized WebSocket connection rejected from client: %s in room: %s", client_id, room_id)
         await websocket.close(code=4401, reason="Unauthorized")
+        return
+
+    if room_id != "the-council" and get_room(room_id) is None:
+        logger.warning("WebSocket connection rejected: no such room: %s for client %s", room_id, client_id)
+        await websocket.close(code=4404, reason=f"no such room: {room_id}")
         return
 
     await websocket.accept()

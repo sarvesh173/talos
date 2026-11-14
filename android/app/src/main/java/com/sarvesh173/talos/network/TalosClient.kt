@@ -345,19 +345,25 @@ class TalosClient(private val context: Context, private val scope: CoroutineScop
         }
     }
 
-    fun spawnChildSubagent(delegateId: String, name: String, goal: String) {
-        scope.launch(Dispatchers.IO) {
+    /**
+     * Spawn a child subagent under [delegateId].
+     *
+     * Returns whether the server accepted it. Callers need this: the dialog that
+     * collects the name and goal used to close either way, so a rejected spawn
+     * threw away everything the user typed and showed nothing.
+     */
+    suspend fun spawnChildSubagent(delegateId: String, name: String, goal: String): Boolean =
+        withContext(Dispatchers.IO) {
             val payload = json.encodeToString(SpawnSubagentRequestDto(name, goal))
             val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
             val req = Request.Builder()
                 .url("$baseUrl/api/delegates/$delegateId/children")
                 .post(payload.toRequestBody(mediaType))
                 .build()
-            if (runCommand("Spawn") { httpClient.newCall(req).execute() }) {
-                fetchDelegationHierarchy()
-            }
+            val ok = runCommand("Spawn") { httpClient.newCall(req).execute() }
+            if (ok) fetchDelegationHierarchy()
+            ok
         }
-    }
 
     fun toggleChildPause(childId: String, isCurrentlyPaused: Boolean) {
         scope.launch(Dispatchers.IO) {

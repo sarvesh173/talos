@@ -390,6 +390,7 @@ async def review_endpoint(
     from server.tool_ledger import ledger as tool_ledger
 
     events = tool_ledger.recent(room_id=None, limit=2000)
+    events = [event for event in events if event.get("agent_id") == agent_id]
     try:
         return build_review(agent_id, events, since_ms=since_ms)
     except UnknownAgentError as exc:

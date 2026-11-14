@@ -174,7 +174,7 @@ fun ChamberHero(
                 } else {
                     Icon(
                         imageVector = TalosHub,
-                        contentDescription = null,
+                        contentDescription = room?.name ?: "TALOS Chamber",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(38.dp)
                     )

@@ -158,10 +158,12 @@ class MainActivity : FragmentActivity() {
 
     /**
      * Accept a pairing link from the agent or Chrome (link or QR) and store the
-     * endpoint + device token. Supports both talos://pair and http://.../pair
+     * endpoint + device token. Supports both talos://pair and http://.../pair.
+     * Returns true only when pairing completed, so the caller can gate the
+     * routing decision on the attempt finishing instead of racing isPaired.
      */
-    private fun handlePairingIntent(intent: Intent?) {
-        val data = intent?.data ?: return
+    private suspend fun handlePairingIntent(intent: Intent?): Boolean {
+        val data = intent?.data ?: return false
         var url: String? = null
         var token: String? = null
 
@@ -175,21 +177,20 @@ class MainActivity : FragmentActivity() {
             token = data.getQueryParameter("token")?.trim()
         }
 
-        if (url.isNullOrBlank() || !url.startsWith("http")) return
+        if (url.isNullOrBlank() || !url.startsWith("http")) return false
         client.updateConfig(url, token ?: "")
-        lifecycleScope.launch(Dispatchers.IO) {
-            client.pairDevice()
-            withContext(Dispatchers.Main) {
-                client.refreshRooms()
-                client.switchRoom("the-council")
-            }
+        val paired = client.pairDevice() != null
+        withContext(Dispatchers.Main) {
+            client.refreshRooms()
+            if (paired) client.switchRoom("the-council")
         }
+        return paired
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handlePairingIntent(intent)
+        lifecycleScope.launch { handlePairingIntent(intent) }
         // One call: the trailing duplicate this used to make resolved the same
         // intent a second time for no reason.
         resolveScreenFromIntent(intent)?.let { pendingScreen = it }
@@ -276,18 +277,25 @@ class MainActivity : FragmentActivity() {
         requestMissingRuntimePermissions()
 
         // Agent-first pairing link: talos://pair?url=<core>&token=<token>
-        handlePairingIntent(intent)
+        // Route only after pairing finishes: a cold start from a pairing link
+        // used to read isPaired before pairDevice completed and land in the wizard.
+        lifecycleScope.launch {
+            val paired = handlePairingIntent(intent)
+            withContext(Dispatchers.Main) {
+                if (paired) {
+                    pendingScreen = "main"
+                } else if (client.isPaired.value) {
+                    client.refreshRooms()
+                    client.switchRoom("the-council")
+                }
+            }
+        }
 
         // A cold start from a link (tap a notification, a talos:// URL, or a
         // launcher shortcut) never reached this screen before: resolveScreenFromIntent
         // was only called from onNewIntent, so the route was silently dropped and
         // every deep link landed on main. Read it here as well.
         pendingScreen = resolveScreenFromIntent(intent)
-
-        if (client.isPaired.value) {
-            client.refreshRooms()
-            client.switchRoom("the-council")
-        }
 
         appLockStore = AppLockStore(this)
         appLock = AppLockController(

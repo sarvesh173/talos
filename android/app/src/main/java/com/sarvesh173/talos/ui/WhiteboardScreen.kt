@@ -453,6 +453,10 @@ fun WhiteboardScreen(
                             y += spacing
                         }
                     }
+
+                    "Obsidian" -> {
+                        // Plain canvas: no grid drawn.
+                    }
                 }
 
                 // Render committed paths
@@ -648,6 +652,10 @@ fun exportStrokesToPngBase64(paths: List<StrokePath>, width: Int = 720, height: 
                     canvas.drawLine(0f, y, width.toFloat(), y, gridPaint)
                     y += spacing
                 }
+            }
+
+            "Obsidian" -> {
+                // Plain canvas: no grid drawn.
             }
         }
 

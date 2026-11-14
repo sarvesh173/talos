@@ -424,7 +424,7 @@ fun LookAndFeelScreen(
                             )
 
                             Text(
-                                text = "Tap to select • Long-press to remove",
+                                text = "Tap to select",
                                 fontSize = 12.sp,
                                 color = talosTextMuted.copy(alpha = 0.7f)
                             )

@@ -208,11 +208,10 @@ fun ThinkingOrbSettingsScreen(onBack: () -> Unit) {
                             CircleShape
                         )
                         .applePressable(0.92f, pressHaptic = true) {
-                            val hsv = FloatArray(3)
-                            android.graphics.Color.colorToHSV(c.value.toInt(), hsv)
-                            hue = hsv[0]
-                            saturation = hsv[1]
-                            lightness = hsv[2]
+                            val (h, s, l) = colorToHsl(c.value.toInt())
+                            hue = h
+                            saturation = s
+                            lightness = l
                         }
                 )
             }
@@ -577,6 +576,24 @@ internal fun hslToColor(hue: Float, s: Float, l: Float): Color {
         else -> Triple(c, 0f, x)
     }
     return Color(r + m, g + m, b + m)
+}
+
+/** RGB → HSL (degrees, 0..1, 0..1), matching the Hue / Saturation / Lightness sliders. */
+private fun colorToHsl(argb: Int): Triple<Float, Float, Float> {
+    val r = ((argb ushr 16) and 0xFF) / 255f
+    val g = ((argb ushr 8) and 0xFF) / 255f
+    val b = (argb and 0xFF) / 255f
+    val cmax = maxOf(r, maxOf(g, b))
+    val cmin = minOf(r, minOf(g, b))
+    val l = (cmax + cmin) / 2f
+    val s = if (cmax == cmin) 0f else if (l < 0.5f) (cmax - cmin) / (cmax + cmin) else (cmax - cmin) / (2f - cmax - cmin)
+    val h = when {
+        cmax == cmin -> 0f
+        cmax == r -> ((g - b) / (cmax - cmin)) % 6f
+        cmax == g -> ((b - r) / (cmax - cmin)) + 2f
+        else -> ((r - g) / (cmax - cmin)) + 4f
+    }
+    return Triple(((h * 60f) % 360f + 360f) % 360f, s, l)
 }
 
 /** A curated 24-swatch grid: Apple system colours plus accent families. */

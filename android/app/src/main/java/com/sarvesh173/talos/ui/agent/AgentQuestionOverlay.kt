@@ -118,15 +118,15 @@ fun AgentQuestionOverlay(
     val muted = if (isDark) Color.White.copy(alpha = 0.55f) else Color.Black.copy(alpha = 0.48f)
     val accent = question.brandColor
 
-    var customText by remember(question.id) { mutableStateOf("") }
-    var customOpen by remember(question.id) { mutableStateOf(false) }
-    var selectedScope by remember(question.id) { mutableStateOf(GrantScope.Once) }
+    var customText by remember(question.id, question.timeoutSeconds, question.prompt, question.detail, question.command) { mutableStateOf("") }
+    var customOpen by remember(question.id, question.timeoutSeconds, question.prompt, question.detail, question.command) { mutableStateOf(false) }
+    var selectedScope by remember(question.id, question.timeoutSeconds, question.prompt, question.detail, question.command) { mutableStateOf(GrantScope.Once) }
 
     // Countdown. The remaining time is state the user can see, not a silent
     // background expiry — being denied by a timer you cannot see is the worst
     // version of this feature.
-    var remaining by remember(question.id) { mutableStateOf(question.timeoutSeconds ?: -1) }
-    LaunchedEffect(question.id) {
+    var remaining by remember(question.id, question.timeoutSeconds) { mutableStateOf(question.timeoutSeconds ?: -1) }
+    LaunchedEffect(question.id, question.timeoutSeconds) {
         val ttl = question.timeoutSeconds ?: return@LaunchedEffect
         while (remaining > 0) {
             delay(1000)

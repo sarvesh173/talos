@@ -634,9 +634,16 @@ fun AgentCanvasScreen(
                         if (subagentName.isNotBlank() && taskGoal.isNotBlank()) {
                             val delegateId = hierarchy?.engines?.find { it.id == selectedEngineId }?.delegates?.firstOrNull()?.id
                                 ?: "lead-$selectedEngineId-main"
-                            client.spawnChildSubagent(delegateId, subagentName, taskGoal)
-                            showSpawnDialog = false
-                            Toast.makeText(context, "Subagent spawned under $selectedEngineId", Toast.LENGTH_SHORT).show()
+                            // Same as the manager dialog: a rejected spawn must not
+                            // throw away the typed name and goal, and must not claim
+                            // success it did not get.
+                            scope.launch {
+                                val ok = client.spawnChildSubagent(delegateId, subagentName, taskGoal)
+                                if (ok) {
+                                    showSpawnDialog = false
+                                    Toast.makeText(context, "Subagent spawned under $selectedEngineId", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         }
                     },
                     enabled = subagentName.isNotBlank() && taskGoal.isNotBlank(),

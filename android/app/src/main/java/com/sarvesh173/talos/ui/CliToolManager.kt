@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.sarvesh173.talos.network.CliEngineDto
 import com.sarvesh173.talos.network.DelegateLeadDto
 import com.sarvesh173.talos.network.SubagentChildDto
@@ -41,6 +42,7 @@ fun CliToolManagerScreen(
     val hierarchyLoading by client.delegationLoading.collectAsState()
     val commandError by client.commandError.collectAsState()
     var spawningDelegateId by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         client.fetchDelegationHierarchy()
@@ -209,8 +211,10 @@ fun CliToolManagerScreen(
                 Button(
                     onClick = {
                         if (subagentName.isNotBlank() && subagentGoal.isNotBlank()) {
-                            client.spawnChildSubagent(delegateId, subagentName, subagentGoal)
-                            spawningDelegateId = null
+                            scope.launch {
+                                val ok = client.spawnChildSubagent(delegateId, subagentName, subagentGoal)
+                                if (ok) spawningDelegateId = null
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)

@@ -351,7 +351,7 @@ fun AgentFleetScreen(client: TalosClient) {
             onDismiss = { showSummonSheet = false },
             onSummon = { name, _, model, reasoning, ttl, prompt, _ ->
                 scope.launch {
-                    client.delegateChildAgent(
+                    val ok = client.delegateChildAgent(
                         parentId = "main",
                         name = name,
                         task = prompt,
@@ -360,8 +360,10 @@ fun AgentFleetScreen(client: TalosClient) {
                         reasoningEffort = reasoning,
                         ttlMinutes = ttl
                     )
-                    showSummonSheet = false
-                    doRefresh()
+                    if (ok) {
+                        showSummonSheet = false
+                        doRefresh()
+                    }
                 }
             }
         )

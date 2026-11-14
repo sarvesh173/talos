@@ -6,7 +6,9 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.runtime.mutableStateListOf
+import com.sarvesh173.talos.ui.CliToolManagerScreen
 import com.sarvesh173.talos.ui.TalosBrowserScreen
 import com.sarvesh173.talos.ui.features.AgentFleetScreen
 import com.sarvesh173.talos.ui.features.ContextTelemetryScreen
@@ -45,6 +47,21 @@ object FeatureCatalog {
                 order = 10
             ) { scope ->
                 AgentFleetScreen(client = scope.client)
+            }
+        )
+
+        registerFeature(
+            featureSlot(
+                id = "cli",
+                title = "Multi-CLI governance",
+                summary = "OmniRush, OpenCode, Codex & command quota sliders",
+                icon = Icons.Default.Terminal,
+                order = 15
+            ) { scope ->
+                // The screen took an onBack lambda, but the shell renders a slot's
+                // content inline with its own back affordance, so pass a no-op:
+                // back is the rail, not the screen's own button.
+                CliToolManagerScreen(client = scope.client, onBack = {})
             }
         )
 

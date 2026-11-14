@@ -62,7 +62,9 @@ fun ImageGalleryScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${galleryImages.size} artifacts in SQLite gallery",
+                            text = "${galleryImages.size} " +
+                                if (galleryImages.size == 1) "artifact" else "artifacts" +
+                                " in SQLite gallery",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )

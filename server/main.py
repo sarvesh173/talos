@@ -39,6 +39,7 @@ from core.models import (
 from core.room_bus import bus
 from core.consensus import deliberate_proposal, list_room_proposals
 from server.agent_orchestrator import orchestrator
+from server import images
 from server.cli_engines import build_hierarchy
 import server.remote_control as remote_control
 from server.auth import (
@@ -1645,6 +1646,24 @@ async def remote_artifact(command_id: str, token: str = Depends(require_auth)):
     if not path.exists():
         raise HTTPException(status_code=404, detail="no screenshot")
     return FileResponse(str(path), media_type="image/png")
+
+
+@app.get("/api/image/gallery")
+async def image_gallery(token: str = Depends(require_auth)):
+    """Gallery rows the core wrote.
+
+    The app pairs with this API, but the gallery table belongs to the core, so
+    without this route the screen answered 404 every time. Never invents rows:
+    an empty list is an honest empty list.
+    """
+    return images.list_images(100)
+
+
+@app.delete("/api/image/gallery/{image_id}")
+async def image_gallery_delete(image_id: str, token: str = Depends(require_auth)):
+    if not images.delete_image(image_id):
+        raise HTTPException(status_code=404, detail="no such image")
+    return {"deleted": True}
 
 
 if __name__ == "__main__":

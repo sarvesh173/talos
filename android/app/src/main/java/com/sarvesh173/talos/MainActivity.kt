@@ -76,7 +76,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -1358,17 +1357,9 @@ fun MainScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(20.dp))
-                                .hazeChild(
-                                    state = hazeState,
-                                    shape = RoundedCornerShape(20.dp),
-                                    style = HazeDefaults.style(
-                                        backgroundColor = if (isDark) Color(0xFF1C1C1E).copy(alpha = 0.75f) else Color(0xFFF2F2F7).copy(alpha = 0.85f),
-                                        blurRadius = 24.dp
-                                    )
-                                ),
+                                .clip(RoundedCornerShape(20.dp)),
                             shape = RoundedCornerShape(20.dp),
-                            color = Color.Transparent,
+                            color = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7),
                             border = talosSpecularGlassBorder(isDark = isDark, strokeWidth = 1.dp)
                         ) {
                             Row(
@@ -1606,16 +1597,8 @@ fun MainScreen(
                             .fillMaxWidth()
                             .navigationBarsPadding()
                             .imePadding()
-                            // Windows Fluent acrylic: real backdrop blur with a
-                            // tonal wash, so the composer reads as a floating
-                            // material layer rather than an opaque strip.
-                            .hazeChild(
-                                state = hazeState,
-                                style = HazeDefaults.style(
-                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.65f),
-                                    blurRadius = 24.dp
-                                )
-                            )
+                            // Solid: no backdrop blur. The blur read as a
+                            // translucent strip, not a material layer.
                             .background(
                                 Brush.verticalGradient(
                                     colors = listOf(

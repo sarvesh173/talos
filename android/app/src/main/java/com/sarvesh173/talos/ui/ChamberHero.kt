@@ -76,10 +76,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
 import com.sarvesh173.talos.ui.talosSpecularGlassBorder
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription

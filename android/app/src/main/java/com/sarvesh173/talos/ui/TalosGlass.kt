@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,10 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.hazeChild
 
 /**
  * TALOS Aggressive Apple Liquid Glass Design System (iOS 26+ Specification)
@@ -42,13 +41,11 @@ fun talosSpecularGlassBorder(
     highlightAlpha: Float = if (isDark) 0.38f else 0.70f,
     shadowAlpha: Float = if (isDark) 0.05f else 0.10f
 ): BorderStroke {
-    val highlightColor = Color.White.copy(alpha = highlightAlpha)
-    val shadowColor = Color.White.copy(alpha = shadowAlpha)
+    // A white-to-white gradient rim is a hairline, not glass: it reads as a
+    // plastic edge and carries no information. Callers keep the name.
     return BorderStroke(
         width = strokeWidth,
-        brush = Brush.verticalGradient(
-            colors = listOf(highlightColor, shadowColor)
-        )
+        color = MaterialTheme.colorScheme.outlineVariant
     )
 }
 
@@ -140,14 +137,7 @@ fun Modifier.talosGlassSurface(
     isDark: Boolean = true
 ): Modifier = this
     .clip(shape)
-    .hazeChild(
-        state = hazeState,
-        shape = shape,
-        style = HazeDefaults.style(
-            backgroundColor = backgroundColor,
-            blurRadius = blurRadius
-        )
-    )
+    .background(backgroundColor)
     // Below API 31 Haze draws no blur — only a flat scrim. In light theme that
     // scrim is White over a White page (contrast 1.000:1), so without a rim the
     // bars are invisible. A hairline gives the surface an edge on every API.

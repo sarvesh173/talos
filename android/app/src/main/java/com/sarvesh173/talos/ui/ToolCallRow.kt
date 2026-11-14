@@ -117,13 +117,21 @@ fun ToolCallRow(
             enter = expandVertically(tween(180)) + fadeIn(tween(140)),
             exit = shrinkVertically(tween(150)) + fadeOut(tween(110))
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 14.dp, top = 2.dp, bottom = 4.dp)
-            ) {
-                calls.forEach { call ->
-                    ToolCallDetail(call, isDark)
+            // Rail up the glyph column, body at the text column — the same
+            // anatomy as the thinking row, so a turn's tools read as the same
+            // list rather than a second, differently indented block.
+            ProcessRow.Thread(color = if (isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.10f)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.width(ProcessRow.INDENT))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 2.dp, end = 4.dp, bottom = 4.dp)
+                    ) {
+                        calls.forEach { call ->
+                            ToolCallDetail(call, isDark)
+                        }
+                    }
                 }
             }
         }

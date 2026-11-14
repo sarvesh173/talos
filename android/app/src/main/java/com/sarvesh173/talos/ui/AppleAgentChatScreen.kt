@@ -1584,17 +1584,6 @@ private fun AgentBubble(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Reasoning sits above the answer, folded to one row. It is the
-            // agent's scratchpad: full text would bury the reply.
-            if (!msg.thought.isNullOrBlank()) {
-                ThinkingPill(
-                    thought = msg.thought,
-                    isDark = isDark,
-                    brandColor = brandColor,
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
-            }
-
             val shape = RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
             // Same reasoning as the user bubble: content sits on a flat
             // backdrop, so it gets a solid tonal fill. The agent's identity is
@@ -1678,6 +1667,20 @@ private fun AgentBubble(
                     }
                 }
             }
+        }
+        // Reasoning sits between the avatar line and the answer, folded to one
+        // row. It is the agent's scratchpad: full text would bury the reply.
+        // It owns a full-width line of its own — nested in the avatar Row it
+        // inherited that Row's 48dp floor, and the rail stacked above the text.
+        if (!msg.thought.isNullOrBlank()) {
+            ThinkingPill(
+                thought = msg.thought,
+                isDark = isDark,
+                brandColor = brandColor,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 36.dp, end = 8.dp, bottom = 2.dp)
+            )
         }
         // Tool calls: one collapsed row per turn, detail behind a tap. Kept
         // outside the bubble so a long run does not stretch it to full width.

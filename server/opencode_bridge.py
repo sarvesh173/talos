@@ -262,7 +262,18 @@ class OpenCodeClient:
         return self._get(f"/api/session/{session_id}/message?limit={limit}")
 
     def send_prompt(self, session_id: str, text: str) -> OpenCodeResult:
-        return self._post(f"/api/session/{session_id}/prompt", {"text": text, "delivery": "queue"})
+        # Flat {"text": ...}, verified against the live server: the nested
+        # {"prompt": {"text": ...}} shape is rejected with
+        # InvalidRequestError "Missing key at [text]".
+        #
+        # `steer` rather than `queue`: steer is v2's default and delivers at the
+        # next safe step boundary, so a message typed mid-turn still lands in
+        # order. `queue` parks it behind every queued item, which is what made a
+        # live composer feel like it was dropping messages.
+        return self._post(
+            f"/api/session/{session_id}/prompt",
+            {"text": text, "delivery": "steer"},
+        )
 
     def interrupt(self, session_id: str) -> OpenCodeResult:
         """Stop the turn in flight.

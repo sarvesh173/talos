@@ -175,7 +175,12 @@ private fun parseRoster(body: String): List<RealAgent> {
                 id = a.optString("id", ""),
                 name = a.optString("name", a.optString("id", "Agent")).ifBlank { a.optString("id", "Agent") },
                 installed = a.optBoolean("installed", false),
-                connected = a.optBoolean("connected", false),
+                // The host does not send "connected" — every row reads false,
+                // the filter below dropped them all, and the hub showed
+                // "0 connected" over an installed, running engine. A row is
+                // usable when the host reports it installed, or when it says so
+                // explicitly.
+                connected = a.optBoolean("connected", a.optBoolean("installed", false)),
                 description = a.optString("description", "").ifBlank { a.optString("id", "Agent") },
                 sessionCount = a.optInt("session_count", sessions.size),
                 sessions = sessions,

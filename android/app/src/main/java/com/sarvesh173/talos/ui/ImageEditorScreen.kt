@@ -51,19 +51,20 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 
 import androidx.compose.ui.platform.LocalDensity
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.size
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -304,7 +305,7 @@ fun ImageEditorScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(previewBg)
-                    .onSizeChanged { viewSize = it.size }
+                    .onSizeChanged { viewSize = Size(it.width.toFloat(), it.height.toFloat()) }
                     .pointerInput(placement) {
                         detectDragGestures(
                             onDragStart = ::onDragStart,
@@ -353,7 +354,7 @@ fun ImageEditorScreen(
 
                     if (tool == EditTool.CROP) {
                         val frame = Paint().apply {
-                            color = if (isDark) ComposeColor.White else ComposeColor.Black
+                            color = if (isDark) ComposeColor.White.toArgb() else ComposeColor.Black.toArgb()
                             alpha = 46
                             style = Paint.Style.STROKE
                             strokeWidth = 2f
@@ -660,7 +661,7 @@ private fun clampRect(r: RectF, maxW: Int, maxH: Int): RectF {
 
 /** Scale + centre placement that fits the output rect into the view (never upscales). */
 private fun placementMatrix(viewW: Float, viewH: Float, outW: Int, outH: Int): Matrix {
-    if (!viewW.isFinite || !viewH.isFinite || outW <= 0 || outH <= 0) return Matrix()
+    if (!viewW.isFinite() || !viewH.isFinite() || outW <= 0 || outH <= 0) return Matrix()
     val scale = minOf(viewW / outW, viewH / outH, 1f)
     return Matrix().apply {
         postScale(scale, scale)
@@ -669,7 +670,7 @@ private fun placementMatrix(viewW: Float, viewH: Float, outW: Int, outH: Int): M
 }
 
 private fun placementScale(viewW: Float, viewH: Float, outW: Int, outH: Int): Float =
-    if (!viewW.isFinite || !viewH.isFinite || outW <= 0 || outH <= 0) 1f else minOf(viewW / outW, viewH / outH, 1f)
+    if (!viewW.isFinite() || !viewH.isFinite() || outW <= 0 || outH <= 0) 1f else minOf(viewW / outW, viewH / outH, 1f)
 
 /**
  * Builds the source->output matrix for the current crop/rotate/fill state.
@@ -685,12 +686,12 @@ private fun editLayout(sw: Int, sh: Int, crop: RectF, rotation: Int, flipX: Bool
     // Operations are pre-concatenated so they apply to the point in this physical order:
     // 1) shift crop top-left to origin, 2) centre on origin, 3) flip, 4) rotate, 5) un-centre,
     // 6) shift the transformed rect's bounding box to the origin.
-    m.preConcat(Matrix().setTranslate(-crop.left, -crop.top))
-    m.preConcat(Matrix().setTranslate(-cw / 2f, -ch / 2f))
-    if (flipX) m.preConcat(Matrix().setScale(-1f, 1f))
-    if (flipY) m.preConcat(Matrix().setScale(1f, -1f))
-    m.preConcat(Matrix().setRotate(rotation.toFloat()))
-    m.preConcat(Matrix().setTranslate(cw / 2f, ch / 2f))
+    m.preConcat(Matrix().apply { setTranslate(-crop.left, -crop.top) })
+    m.preConcat(Matrix().apply { setTranslate(-cw / 2f, -ch / 2f) })
+    if (flipX) m.preConcat(Matrix().apply { setScale(-1f, 1f) })
+    if (flipY) m.preConcat(Matrix().apply { setScale(1f, -1f) })
+    m.preConcat(Matrix().apply { setRotate(rotation.toFloat()) })
+    m.preConcat(Matrix().apply { setTranslate(cw / 2f, ch / 2f) })
     val bounds = RectF()
     m.mapRect(bounds, RectF(0f, 0f, cw, ch))
     m.preConcat(Matrix().setTranslate(-bounds.left, -bounds.top))

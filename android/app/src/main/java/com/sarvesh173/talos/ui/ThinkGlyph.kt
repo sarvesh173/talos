@@ -97,8 +97,13 @@ private fun DrawScope.drawThinkGlyph(color: Color, strokeWidth: Float) {
 private fun parseOrbit(d: String, k: Float = 1f): Path {
     val path = Path()
     val tokens = Regex("[MCZ]|-?\\d*\\.?\\d+").findAll(d).map { it.value }.iterator()
+    // Read one number. This used to burn a token first, as if the command
+    // letter were still queued -- but the loop above already consumed it, so
+    // every read skipped a coordinate and the parser ran off the end. The
+    // resulting throw escaped the draw phase and killed the process, which is
+    // the crash: a malformed glyph took the whole screen down.
     fun next(): Float {
-        tokens.next()
+        if (!tokens.hasNext()) return 0f
         return tokens.next().toFloat() * k
     }
     while (tokens.hasNext()) {

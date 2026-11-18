@@ -469,7 +469,7 @@ fun ImageEditorScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     drawColors.forEach { c ->
                         val selected = strokeColor == c
-                        Box(
+                        Spacer(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
@@ -694,7 +694,7 @@ private fun editLayout(sw: Int, sh: Int, crop: RectF, rotation: Int, flipX: Bool
     m.preConcat(Matrix().apply { setTranslate(cw / 2f, ch / 2f) })
     val bounds = RectF()
     m.mapRect(bounds, RectF(0f, 0f, cw, ch))
-    m.preConcat(Matrix().setTranslate(-bounds.left, -bounds.top))
+    m.preConcat(Matrix().apply { setTranslate(-bounds.left, -bounds.top) })
     return EditLayout(m, bounds.width().roundToInt(), bounds.height().roundToInt())
 }
 
@@ -768,7 +768,7 @@ private suspend fun exportImage(
         strokeJoin = Paint.Join.ROUND
     }
     strokes.forEach { s ->
-        sp.color = Color.argb((s.color.alpha * 255).toInt(), s.color.red, s.color.green, s.color.blue)
+        sp.color = Color.argb((s.color.alpha * 255).toInt(), s.color.red.toInt(), s.color.green.toInt(), s.color.blue.toInt())
         sp.strokeWidth = s.strokeWidth
         val path = Path().apply {
             moveTo(s.points.first().x, s.points.first().y)

@@ -482,8 +482,7 @@ fun ImageEditorScreen(
                                 .clickable {
                                     strokeColor = c
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                },
-                            contentAlignment = Alignment.Center
+                                }
                         )
                     }
                     Spacer(modifier = Modifier.weight(1f))

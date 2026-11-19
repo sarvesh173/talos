@@ -6,7 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import android.provider.MediaStore
+import android.graphics.BitmapFactory
 import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -440,7 +440,9 @@ fun ImageConfirmSheet(
 private suspend fun decodeToPending(context: Context, uri: Uri): PendingImage? =
     withContext(Dispatchers.IO) {
         runCatching {
-            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            val bitmap = context.contentResolver.openInputStream(uri)?.use { input ->
+                BitmapFactory.decodeStream(input)
+            } ?: return@withContext null
             // Cap the long edge: a 12 MP photo is wasted tokens and slow to upload.
             val maxEdge = 1600
             val scale = minOf(
